@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -117,233 +118,235 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 animate-fade-in">
-      <div className="space-y-2 text-center mb-8">
+    <div className="w-full space-y-4 animate-fade-in">
+      <div className="space-y-2 text-center">
         <h2 className="text-3xl font-bold tracking-tight">Create an Account</h2>
         <p className="text-sm text-muted-foreground">
           Fill in your details to register for an account
         </p>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* English Names */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Full Name (English)</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  placeholder="First Name"
-                  value={firstNameEn}
-                  onChange={(e) => setFirstNameEn(e.target.value)}
-                  required
-                />
-                <Input
-                  placeholder="Second Name"
-                  value={secondNameEn}
-                  onChange={(e) => setSecondNameEn(e.target.value)}
-                  required
-                />
-                <Input
-                  placeholder="Third Name"
-                  value={thirdNameEn}
-                  onChange={(e) => setThirdNameEn(e.target.value)}
-                />
-                <Input
-                  placeholder="Last Name"
-                  value={lastNameEn}
-                  onChange={(e) => setLastNameEn(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Arabic Names */}
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Full Name (Arabic)</Label>
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  placeholder="الاسم الأول"
-                  value={firstNameAr}
-                  onChange={(e) => setFirstNameAr(e.target.value)}
-                  dir="rtl"
-                  required
-                />
-                <Input
-                  placeholder="الاسم الثاني"
-                  value={secondNameAr}
-                  onChange={(e) => setSecondNameAr(e.target.value)}
-                  dir="rtl"
-                  required
-                />
-                <Input
-                  placeholder="الاسم الثالث"
-                  value={thirdNameAr}
-                  onChange={(e) => setThirdNameAr(e.target.value)}
-                  dir="rtl"
-                />
-                <Input
-                  placeholder="اسم العائلة"
-                  value={lastNameAr}
-                  onChange={(e) => setLastNameAr(e.target.value)}
-                  dir="rtl"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* ID Number */}
-            <div className="space-y-3">
-              <Label htmlFor="idNumber" className="text-sm font-medium">ID Number</Label>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* English Names */}
+        <div className="space-y-2">
+          <Label>Full Name (English)</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <Input
-                id="idNumber"
-                type="text"
-                placeholder="Enter your ID number"
-                value={idNumber}
-                onChange={(e) => setIdNumber(e.target.value)}
+                placeholder="First Name"
+                value={firstNameEn}
+                onChange={(e) => setFirstNameEn(e.target.value)}
                 required
               />
             </div>
-
-            {/* Email */}
-            <div className="space-y-3">
-              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Date of Birth */}
-            <div className="space-y-3">
-              <Label htmlFor="dob" className="text-sm font-medium">Date of Birth</Label>
+            <div>
               <Input
-                id="dob"
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
+                placeholder="Second Name"
+                value={secondNameEn}
+                onChange={(e) => setSecondNameEn(e.target.value)}
                 required
               />
             </div>
-
-            {/* Gender */}
-            <div className="space-y-3">
-              <Label htmlFor="gender" className="text-sm font-medium">Gender</Label>
-              <Select onValueChange={setGender} value={gender} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                </SelectContent>
-              </Select>
+            <div>
+              <Input
+                placeholder="Third Name"
+                value={thirdNameEn}
+                onChange={(e) => setThirdNameEn(e.target.value)}
+              />
+            </div>
+            <div>
+              <Input
+                placeholder="Last Name"
+                value={lastNameEn}
+                onChange={(e) => setLastNameEn(e.target.value)}
+                required
+              />
             </div>
           </div>
         </div>
 
-        {/* Password Section */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Password */}
-          <div className="space-y-3">
-            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        {/* Arabic Names */}
+        <div className="space-y-2">
+          <Label>Full Name (Arabic)</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10"
+                placeholder="الاسم الأول"
+                value={firstNameAr}
+                onChange={(e) => setFirstNameAr(e.target.value)}
+                dir="rtl"
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-              >
-                {showPassword ? (
-                  <EyeOffIcon className="h-4 w-4" />
-                ) : (
-                  <EyeIcon className="h-4 w-4" />
-                )}
-              </button>
             </div>
-            {password && (
-              <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <div className={`w-full overflow-hidden rounded-full`}>
-                    <Progress
-                      value={passwordStrength}
-                      className={`h-1 ${getProgressColor()}`}
-                    />
-                  </div>
-                  <span className={`text-xs ml-2 ${getPasswordStatusColor()}`}>
-                    {passwordStatus}
-                  </span>
+            <div>
+              <Input
+                placeholder="الاسم الثاني"
+                value={secondNameAr}
+                onChange={(e) => setSecondNameAr(e.target.value)}
+                dir="rtl"
+                required
+              />
+            </div>
+            <div>
+              <Input
+                placeholder="الاسم الثالث"
+                value={thirdNameAr}
+                onChange={(e) => setThirdNameAr(e.target.value)}
+                dir="rtl"
+              />
+            </div>
+            <div>
+              <Input
+                placeholder="اسم العائلة"
+                value={lastNameAr}
+                onChange={(e) => setLastNameAr(e.target.value)}
+                dir="rtl"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ID Number */}
+        <div className="space-y-2">
+          <Label htmlFor="idNumber">ID Number</Label>
+          <Input
+            id="idNumber"
+            type="text"
+            placeholder="Enter your ID number"
+            value={idNumber}
+            onChange={(e) => setIdNumber(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Email */}
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Date of Birth */}
+        <div className="space-y-2">
+          <Label htmlFor="dob">Date of Birth</Label>
+          <Input
+            id="dob"
+            type="date"
+            value={dob}
+            onChange={(e) => setDob(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Gender */}
+        <div className="space-y-2">
+          <Label htmlFor="gender">Gender</Label>
+          <Select onValueChange={setGender} value={gender} required>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your gender" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Password */}
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+            >
+              {showPassword ? (
+                <EyeOffIcon className="h-4 w-4" />
+              ) : (
+                <EyeIcon className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+          {password && (
+            <div className="space-y-1">
+              <div className="flex justify-between items-center">
+                <div className={`w-full overflow-hidden rounded-full`}>
+                  <Progress
+                    value={passwordStrength}
+                    className={`h-1 ${getProgressColor()}`}
+                  />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Use 8+ characters with a mix of letters, numbers & symbols
-                </p>
+                <span className={`text-xs ml-2 ${getPasswordStatusColor()}`}>
+                  {passwordStatus}
+                </span>
               </div>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div className="space-y-3">
-            <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="pl-10"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-              >
-                {showConfirmPassword ? (
-                  <EyeOffIcon className="h-4 w-4" />
-                ) : (
-                  <EyeIcon className="h-4 w-4" />
-                )}
-              </button>
+              <p className="text-xs text-muted-foreground">
+                Use 8+ characters with a mix of letters, numbers & symbols
+              </p>
             </div>
-            {confirmPassword && password !== confirmPassword && (
-              <p className="text-xs text-red-500">Passwords do not match</p>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Submit Button */}
-        <div className="mt-8">
-          <Button type="submit" className="w-full">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Create Account
-          </Button>
+        {/* Confirm Password */}
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="pl-10"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+            >
+              {showConfirmPassword ? (
+                <EyeOffIcon className="h-4 w-4" />
+              ) : (
+                <EyeIcon className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+          {confirmPassword && password !== confirmPassword && (
+            <p className="text-xs text-red-500">Passwords do not match</p>
+          )}
         </div>
+
+        <Button type="submit" className="w-full">
+          <UserPlus className="mr-2 h-4 w-4" />
+          Create Account
+        </Button>
       </form>
 
-      <div className="text-center text-sm mt-6">
+      <div className="text-center text-sm">
         Already have an account?{" "}
         <button
           type="button"
@@ -356,5 +359,4 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     </div>
   );
 };
-
 export default RegisterForm;
