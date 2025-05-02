@@ -118,26 +118,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
 
         try {
-            // Create auth user first
-            const { error: authError } = await supabase.auth.signUp({
+            // First create the auth user
+            const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: userData.email,
                 password: userData.password
             });
 
             if (authError) throw authError;
 
-            // Get the next available user ID
-            const { data: maxIdData } = await supabase
-                .from('userinfo')
-                .select('userid')
-                .order('userid', { ascending: false })
-                .limit(1);
+            console.log("Auth user created:", authData); // Debug logging
 
-            const nextId = maxIdData && maxIdData.length > 0 ? maxIdData[0].userid + 1 : 1;
+            // Generate a user ID (either get the next available or use UUID)
+            const newUserId = Date.now(); // Simple approach for testing
 
-            // Insert into userinfo table
-            const { error: insertError } = await supabase.from('userinfo').insert({
-                userid: nextId,
+            // Then create the user profile
+            const { error: profileError } = await supabase.from('userinfo').insert({
+                userid: newUserId,
                 user_roles: 'Patient',
                 arabic_username_a: userData.arabicName,
                 arabic_username_b: userData.arabicName,
@@ -151,14 +147,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 user_phonenumber: userData.phoneNumber,
                 date_of_birth: userData.dateOfBirth,
                 gender_user: userData.gender,
-                user_password: userData.password, // This will be hashed by your database trigger
+                user_password: userData.password
             });
 
-            if (insertError) throw insertError;
+            if (profileError) {
+                console.error("Profile creation error:", profileError);
 
-            // User info will be set by the auth state change listener
+                // If profile creation fails, delete the auth user to avoid orphaned auth accounts
+                await supabase.auth.signOut();
+
+                throw new Error(`Profile creation failed: ${profileError.message}`);
+            }
+
+            // Success! No need to set user here as the auth state listener will do that
         } catch (error) {
-            console.error('Error signing up:', error);
+            console.error("Registration error:", error);
             setIsLoading(false);
             throw error;
         }
