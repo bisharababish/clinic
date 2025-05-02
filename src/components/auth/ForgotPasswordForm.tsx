@@ -1,4 +1,4 @@
-
+// components/auth/ForgotPasswordForm.tsx
 import * as React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "../../lib/supabase";
 
 interface ForgotPasswordFormProps {
   onSwitchToLogin: () => void;
@@ -14,11 +15,12 @@ interface ForgotPasswordFormProps {
 const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin }) => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
       toast({
         title: "Error",
@@ -28,13 +30,31 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
       return;
     }
 
-    // Simulate password reset
-    toast({
-      title: "Reset Link Sent",
-      description: "If your email exists in our system, you'll receive a password reset link",
-    });
-    
-    setIsSubmitted(true);
+    setIsLoading(true);
+
+    try {
+      // Send password reset email using Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setIsSubmitted(true);
+      toast({
+        title: "Reset Link Sent",
+        description: "If your email exists in our system, you'll receive a password reset link",
+      });
+    } catch (error) {
+      console.error("Password reset error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send reset link",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -46,7 +66,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
             We've sent a password reset link to <span className="font-medium">{email}</span>
           </p>
         </div>
-        
+
         <div className="space-y-4 text-center">
           <p className="text-sm text-muted-foreground">
             Didn't receive an email? Check your spam folder or try again.
@@ -94,8 +114,8 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
           </div>
         </div>
 
-        <Button type="submit" className="w-full">
-          Send Reset Link
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Sending..." : "Send Reset Link"}
         </Button>
       </form>
 

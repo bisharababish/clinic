@@ -1,4 +1,4 @@
-
+// pages/Auth.tsx
 import * as React from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,7 +37,8 @@ const Auth: React.FC = () => {
               transition={{ duration: 0.5 }}
             >
               <h1 className="text-4xl font-bold text-primary mb-2">
-                Bethlehem Clinic Center              </h1>
+                Bethlehem Clinic Center
+              </h1>
               <p className="text-muted-foreground">
                 Patient Portal
               </p>

@@ -1,11 +1,13 @@
-
+// components/auth/LoginForm.tsx
 import * as React from "react";
-import { useState } from "react"; 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EyeIcon, EyeOffIcon, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -19,9 +21,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate fields
@@ -34,15 +39,25 @@ const LoginForm: React.FC<LoginFormProps> = ({
       return;
     }
 
-    // Simulated login
-    toast({
-      title: "Login Attempted",
-      description: "This would connect to your backend in a real implementation",
-    });
+    setIsLoading(true);
 
-    // Reset form
-    setEmail("");
-    setPassword("");
+    try {
+      await login(email, password);
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      navigate("/");
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login Failed",
+        description: error instanceof Error ? error.message : "Invalid email or password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -107,8 +122,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
           </div>
         </div>
 
-        <Button type="submit" className="w-full">
-          Sign In
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Signing in..." : "Sign In"}
         </Button>
       </form>
 
@@ -121,6 +136,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
         >
           Sign Up
         </button>
+      </div>
+
+      {/* Demo login info - remove this in production */}
+      <div className="text-xs text-muted-foreground border-t pt-4">
+        <p className="mb-1 font-medium">Demo Accounts:</p>
+        <p>Email: admin@clinic.com (for admin access)</p>
+        <p>Email: patient@example.com (for patient access)</p>
+        <p>Password: password123 (for all demo accounts)</p>
       </div>
     </div>
   );

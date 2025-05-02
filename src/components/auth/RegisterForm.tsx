@@ -1,93 +1,44 @@
-
+// src/components/auth/RegisterForm.tsx
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
-import { EyeIcon, EyeOffIcon, Mail, Lock, UserPlus } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Mail, Lock, User, Phone, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface RegisterFormProps {
   onSwitchToLogin: () => void;
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
-  // Name fields
-  const [firstNameEn, setFirstNameEn] = useState("");
-  const [secondNameEn, setSecondNameEn] = useState("");
-  const [thirdNameEn, setThirdNameEn] = useState("");
-  const [lastNameEn, setLastNameEn] = useState("");
-
-  const [firstNameAr, setFirstNameAr] = useState("");
-  const [secondNameAr, setSecondNameAr] = useState("");
-  const [thirdNameAr, setThirdNameAr] = useState("");
-  const [lastNameAr, setLastNameAr] = useState("");
-
-  // Other fields
-  const [idNumber, setIdNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState("");
-
-  // Password fields
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState({
+    englishName: "",
+    arabicName: "",
+    email: "",
+    phoneNumber: "",
+    dateOfBirth: "",
+    gender: "male",
+    password: "",
+    confirmPassword: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
-  const [passwordStatus, setPasswordStatus] = useState("");
-
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { signup } = useAuth();
 
-  // Password strength checker
-  useEffect(() => {
-    if (!password) {
-      setPasswordStrength(0);
-      setPasswordStatus("");
-      return;
-    }
-
-    let strength = 0;
-
-    // Length check
-    if (password.length >= 8) strength += 25;
-
-    // Complexity checks
-    if (/[A-Z]/.test(password)) strength += 25; // Uppercase
-    if (/[0-9]/.test(password)) strength += 25; // Number
-    if (/[^A-Za-z0-9]/.test(password)) strength += 25; // Special char
-
-    setPasswordStrength(strength);
-
-    if (strength <= 25) {
-      setPasswordStatus("Weak");
-    } else if (strength <= 75) {
-      setPasswordStatus("Medium");
-    } else {
-      setPasswordStatus("Strong");
-    }
-  }, [password]);
-
-  const getPasswordStatusColor = () => {
-    if (passwordStatus === "Weak") return "text-red-500";
-    if (passwordStatus === "Medium") return "text-yellow-500";
-    if (passwordStatus === "Strong") return "text-green-500";
-    return "";
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const getProgressColor = () => {
-    if (passwordStrength <= 25) return "bg-red-500";
-    if (passwordStrength <= 75) return "bg-yellow-500";
-    return "bg-green-500";
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate fields
-    if (password !== confirmPassword) {
+    
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Error",
         description: "Passwords do not match",
@@ -95,185 +46,168 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
       });
       return;
     }
-
-    if (passwordStrength < 50) {
+    
+    if (!formData.englishName || !formData.arabicName || !formData.email || 
+        !formData.phoneNumber || !formData.dateOfBirth || !formData.password) {
       toast({
-        title: "Weak Password",
-        description: "Please choose a stronger password",
+        title: "Error",
+        description: "Please fill in all required fields",
         variant: "destructive",
       });
       return;
     }
-
-    // Simulate registration success
-    toast({
-      title: "Account Created",
-      description: "This would connect to your backend in a real implementation",
-    });
-
-    // Reset form and switch to login
-    setTimeout(() => {
+    
+    setIsLoading(true);
+    
+    try {
+      await signup({
+        email: formData.email,
+        password: formData.password,
+        englishName: formData.englishName,
+        arabicName: formData.arabicName,
+        phoneNumber: formData.phoneNumber,
+        dateOfBirth: formData.dateOfBirth,
+        gender: formData.gender,
+      });
+      
+      toast({
+        title: "Registration Successful",
+        description: "Your account has been created successfully",
+      });
+      
+      // Redirect to login
       onSwitchToLogin();
-    }, 2000);
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="w-full space-y-4 animate-fade-in">
+    <div className="w-full space-y-6 animate-fade-in">
       <div className="space-y-2 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Create an Account</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Create Account</h2>
         <p className="text-sm text-muted-foreground">
-          Fill in your details to register for an account
+          Register as a patient to access our services
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* English Names */}
-        <div className="space-y-2">
-          <Label>Full Name (English)</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="englishName">Full Name (English)</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="First Name"
-                value={firstNameEn}
-                onChange={(e) => setFirstNameEn(e.target.value)}
+                id="englishName"
+                name="englishName"
+                value={formData.englishName}
+                onChange={handleInputChange}
+                className="pl-10"
                 required
               />
             </div>
-            <div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="arabicName">Full Name (Arabic)</Label>
+            <div className="relative">
+              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Second Name"
-                value={secondNameEn}
-                onChange={(e) => setSecondNameEn(e.target.value)}
+                id="arabicName"
+                name="arabicName"
+                value={formData.arabicName}
+                onChange={handleInputChange}
+                className="pl-10"
                 required
-              />
-            </div>
-            <div>
-              <Input
-                placeholder="Third Name"
-                value={thirdNameEn}
-                onChange={(e) => setThirdNameEn(e.target.value)}
-              />
-            </div>
-            <div>
-              <Input
-                placeholder="Last Name"
-                value={lastNameEn}
-                onChange={(e) => setLastNameEn(e.target.value)}
-                required
+                dir="rtl"
               />
             </div>
           </div>
         </div>
 
-        {/* Arabic Names */}
-        <div className="space-y-2">
-          <Label>Full Name (Arabic)</Label>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Input
-                placeholder="الاسم الأول"
-                value={firstNameAr}
-                onChange={(e) => setFirstNameAr(e.target.value)}
-                dir="rtl"
-                required
-              />
-            </div>
-            <div>
-              <Input
-                placeholder="الاسم الثاني"
-                value={secondNameAr}
-                onChange={(e) => setSecondNameAr(e.target.value)}
-                dir="rtl"
-                required
-              />
-            </div>
-            <div>
-              <Input
-                placeholder="الاسم الثالث"
-                value={thirdNameAr}
-                onChange={(e) => setThirdNameAr(e.target.value)}
-                dir="rtl"
-              />
-            </div>
-            <div>
-              <Input
-                placeholder="اسم العائلة"
-                value={lastNameAr}
-                onChange={(e) => setLastNameAr(e.target.value)}
-                dir="rtl"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* ID Number */}
-        <div className="space-y-2">
-          <Label htmlFor="idNumber">ID Number</Label>
-          <Input
-            id="idNumber"
-            type="text"
-            placeholder="Enter your ID number"
-            value={idNumber}
-            onChange={(e) => setIdNumber(e.target.value)}
-            required
-          />
-        </div>
-
-        {/* Email */}
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               id="email"
+              name="email"
               type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={handleInputChange}
               className="pl-10"
               required
             />
           </div>
         </div>
-
-        {/* Date of Birth */}
+        
         <div className="space-y-2">
-          <Label htmlFor="dob">Date of Birth</Label>
-          <Input
-            id="dob"
-            type="date"
-            value={dob}
-            onChange={(e) => setDob(e.target.value)}
-            required
-          />
+          <Label htmlFor="phoneNumber">Phone Number</Label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              type="tel"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              className="pl-10"
+              required
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="dateOfBirth">Date of Birth</Label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="dateOfBirth"
+              name="dateOfBirth"
+              type="date"
+              value={formData.dateOfBirth}
+              onChange={handleInputChange}
+              className="pl-10"
+              required
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Gender</Label>
+          <RadioGroup
+            value={formData.gender}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="male" id="male" />
+              <Label htmlFor="male">Male</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="female" id="female" />
+              <Label htmlFor="female">Female</Label>
+            </div>
+          </RadioGroup>
         </div>
 
-        {/* Gender */}
-        <div className="space-y-2">
-          <Label htmlFor="gender">Gender</Label>
-          <Select onValueChange={setGender} value={gender} required>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your gender" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="male">Male</SelectItem>
-              <SelectItem value="female">Female</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Password */}
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={handleInputChange}
               className="pl-10"
               required
             />
@@ -283,66 +217,38 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
               className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
             >
               {showPassword ? (
-                <EyeOffIcon className="h-4 w-4" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-2.796 0-5.487-1.292-7.596-3.683C3.044 13.685 2 11.577 2 10c0-1.575 1.043-3.684 2.404-5.318A10.016 10.016 0 0112 1a10.033 10.033 0 017.553 3.643C20.975 6.281 22 8.359 22 10c0 1.578-1.029 3.667-2.372 5.265" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
               ) : (
-                <EyeIcon className="h-4 w-4" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-2.796 0-5.487-1.292-7.596-3.683C3.044 13.685 2 11.577 2 10c0-1.575 1.043-3.684 2.404-5.318A10.016 10.016 0 0112 1a10.033 10.033 0 017.553 3.643C20.975 6.281 22 8.359 22 10c0 1.578-1.029 3.667-2.372 5.265" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10l.003.003m9.003.003h0a3 3 0 01-3-3 3 3 0 016 0 3 3 0 01-3 3m-9.003 4.5l4.5-4.5m6-6l4.5-4.5" />
+                </svg>
               )}
             </button>
           </div>
-          {password && (
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <div className={`w-full overflow-hidden rounded-full`}>
-                  <Progress
-                    value={passwordStrength}
-                    className={`h-1 ${getProgressColor()}`}
-                  />
-                </div>
-                <span className={`text-xs ml-2 ${getPasswordStatusColor()}`}>
-                  {passwordStatus}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Use 8+ characters with a mix of letters, numbers & symbols
-              </p>
-            </div>
-          )}
         </div>
 
-        {/* Confirm Password */}
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirm Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               id="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              name="confirmPassword"
+              type={showPassword ? "text" : "password"}
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
               className="pl-10"
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-            >
-              {showConfirmPassword ? (
-                <EyeOffIcon className="h-4 w-4" />
-              ) : (
-                <EyeIcon className="h-4 w-4" />
-              )}
-            </button>
           </div>
-          {confirmPassword && password !== confirmPassword && (
-            <p className="text-xs text-red-500">Passwords do not match</p>
-          )}
         </div>
 
-        <Button type="submit" className="w-full">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Create Account
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
 
@@ -359,4 +265,5 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     </div>
   );
 };
+
 export default RegisterForm;
