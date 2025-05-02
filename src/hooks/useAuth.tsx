@@ -99,21 +99,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             // Authenticate with Supabase Auth
-            const { error: authError } = await supabase.auth.signInWithPassword({
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email,
                 password
             });
 
             if (authError) throw authError;
 
-            // User info will be set by the auth state change listener
+            console.log("Auth successful:", authData); // Debug log
+
+            // Fetch user data from your userinfo table
+            const { data: userData, error: userError } = await supabase
+                .from('userinfo')
+                .select('*')
+                .eq('user_email', email)
+                .single();
+
+            if (userError) {
+                console.error("Error fetching user data:", userError);
+                throw userError;
+            }
+
+            console.log("User data fetched:", userData); // Debug log
+
+            // Set user data in state
+            setUser({
+                id: userData.userid.toString(),
+                email: userData.user_email,
+                name: userData.english_username_a,
+                role: userData.user_roles.toLowerCase()
+            });
+
+            setIsLoading(false);
+            return userData; // Return user data for navigation
         } catch (error) {
             console.error('Error logging in:', error);
             setIsLoading(false);
             throw error;
         }
     };
-
     const signup = async (userData: SignupData) => {
         setIsLoading(true);
 

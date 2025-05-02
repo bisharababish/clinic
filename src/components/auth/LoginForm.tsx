@@ -42,12 +42,19 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const userData = await login(email, password);
+
       toast({
         title: "Login Successful",
         description: "Welcome back!",
       });
-      navigate("/");
+
+      console.log("Login successful, navigating to home"); // Debug log
+
+      // Force the navigation to occur after state updates are complete
+      setTimeout(() => {
+        navigate("/");
+      }, 100);
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -59,7 +66,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
       setIsLoading(false);
     }
   };
-
   return (
     <div className="w-full space-y-6 animate-fade-in">
       <div className="space-y-2 text-center">
