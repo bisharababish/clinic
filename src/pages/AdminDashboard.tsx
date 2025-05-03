@@ -1,5 +1,5 @@
 // pages/AdminDashboard.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,13 +35,14 @@ interface ActivityLog {
 }
 
 const AdminDashboard = () => {
-    const { user } = useAuth();
+    const { user, isLoading: authLoading } = useAuth();
     const { toast } = useToast();
     const [users, setUsers] = useState<UserInfo[]>([]);
     const [userStats, setUserStats] = useState<UserStats>({ total: 0, byRole: {} });
     const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
     const [activeTab, setActiveTab] = useState("overview");
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Form state for creating/editing users
     const [formMode, setFormMode] = useState<"create" | "edit">("create");
@@ -55,43 +56,78 @@ const AdminDashboard = () => {
 
     // Load data on mount
     useEffect(() => {
-        Promise.all([
-            loadUsers(),
-            loadUserStats(),
-            loadActivityLog()
-        ]);
-    }, []);
+        const initDashboard = async () => {
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                console.log('Starting dashboard init...', { authLoading, user });
+
+                if (!authLoading && user) {
+                    console.log('User data:', user);
+
+                    const loadPromises = [
+                        loadUsers().catch(err => {
+                            console.error('Error loading users:', err);
+                            throw err;
+                        }),
+                        loadUserStats().catch(err => {
+                            console.error('Error loading stats:', err);
+                            throw err;
+                        }),
+                        loadActivityLog().catch(err => {
+                            console.error('Error loading logs:', err);
+                            throw err;
+                        })
+                    ];
+
+                    await Promise.all(loadPromises);
+                    console.log('Dashboard init complete');
+                }
+            } catch (error) {
+                console.error('Dashboard init error:', error);
+                setError(error instanceof Error ? error.message : 'Failed to load dashboard');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        initDashboard();
+    }, [authLoading, user]);
 
     const loadUsers = async () => {
-        setIsLoading(true);
+        console.log('Loading users...');
         try {
             const { data, error } = await supabase
                 .from('userinfo')
                 .select('userid, user_email, english_username_a, user_roles, created_at')
                 .order('userid', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase error:', error);
+                throw error;
+            }
+
+            console.log('Users loaded:', data);
             setUsers(data || []);
         } catch (error) {
             console.error('Error loading users:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load users",
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
+            throw error;
         }
     };
 
     const loadUserStats = async () => {
+        console.log('Loading stats...');
         try {
             const { data, error } = await supabase
                 .from('userinfo')
                 .select('user_roles')
                 .order('userid', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase error:', error);
+                throw error;
+            }
 
             const stats: UserStats = {
                 total: data?.length || 0,
@@ -102,20 +138,29 @@ const AdminDashboard = () => {
                 stats.byRole[user.user_roles] = (stats.byRole[user.user_roles] || 0) + 1;
             });
 
+            console.log('Stats loaded:', stats);
             setUserStats(stats);
         } catch (error) {
             console.error('Error loading user stats:', error);
+            throw error;
         }
     };
 
     const loadActivityLog = async () => {
-        // Simulated activity log data
-        const mockActivities: ActivityLog[] = [
-            { id: '1', action: 'User Login', user: 'admin@clinic.com', timestamp: new Date().toISOString(), status: 'success' },
-            { id: '2', action: 'User Created', user: 'admin@clinic.com', timestamp: new Date(Date.now() - 86400000).toISOString(), status: 'success' },
-            { id: '3', action: 'Failed Login Attempt', user: 'unknown@clinic.com', timestamp: new Date(Date.now() - 172800000).toISOString(), status: 'failed' },
-        ];
-        setActivityLog(mockActivities);
+        console.log('Loading activity log...');
+        try {
+            // Simulated activity log data
+            const mockActivities: ActivityLog[] = [
+                { id: '1', action: 'User Login', user: 'admin@clinic.com', timestamp: new Date().toISOString(), status: 'success' },
+                { id: '2', action: 'User Created', user: 'admin@clinic.com', timestamp: new Date(Date.now() - 86400000).toISOString(), status: 'success' },
+                { id: '3', action: 'Failed Login Attempt', user: 'unknown@clinic.com', timestamp: new Date(Date.now() - 172800000).toISOString(), status: 'failed' },
+            ];
+            console.log('Activity log loaded');
+            setActivityLog(mockActivities);
+        } catch (error) {
+            console.error('Error loading activity log:', error);
+            throw error;
+        }
     };
 
     const getRoleChartData = () => {
@@ -125,148 +170,44 @@ const AdminDashboard = () => {
         }));
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
+    // ... (rest of the handlers remain the same) ...
 
-    const handleRoleChange = (role: string) => {
-        setFormData((prev) => ({
-            ...prev,
-            role: role as UserRole,
-        }));
-    };
+    if (authLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Authenticating...</p>
+                </div>
+            </div>
+        );
+    }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading Admin Dashboard...</p>
+                </div>
+            </div>
+        );
+    }
 
-        try {
-            if (formMode === "create") {
-                // Get the highest userid and increment
-                const { data: maxUserData, error: maxError } = await supabase
-                    .from('userinfo')
-                    .select('userid')
-                    .order('userid', { ascending: false })
-                    .limit(1);
-
-                let newUserId = 1;
-                if (!maxError && maxUserData && maxUserData.length > 0) {
-                    newUserId = maxUserData[0].userid + 1;
-                }
-
-                // Create user in database
-                const { error: insertError } = await supabase.from('userinfo').insert({
-                    userid: newUserId,
-                    user_roles: formData.role.charAt(0).toUpperCase() + formData.role.slice(1),
-                    english_username_a: formData.name,
-                    english_username_b: formData.name,
-                    english_username_c: formData.name,
-                    english_username_d: formData.name,
-                    arabic_username_a: formData.name,
-                    arabic_username_b: formData.name,
-                    arabic_username_c: formData.name,
-                    arabic_username_d: formData.name,
-                    user_email: formData.email,
-                    user_password: formData.password,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-
-                if (insertError) throw insertError;
-
-                toast({
-                    title: "User Created",
-                    description: `${formData.name} has been added as a ${formData.role}`,
-                });
-            } else if (formMode === "edit" && selectedUser) {
-                const { error: updateError } = await supabase
-                    .from('userinfo')
-                    .update({
-                        english_username_a: formData.name,
-                        user_email: formData.email,
-                        user_roles: formData.role.charAt(0).toUpperCase() + formData.role.slice(1),
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('userid', selectedUser);
-
-                if (updateError) throw updateError;
-
-                toast({
-                    title: "User Updated",
-                    description: `${formData.name}'s information has been updated`,
-                });
-            }
-
-            // Reset form and reload data
-            setFormData({
-                name: "",
-                email: "",
-                role: "patient",
-                password: "",
-            });
-            setFormMode("create");
-            setSelectedUser(null);
-            loadUsers();
-            loadUserStats();
-        } catch (error) {
-            console.error('Error saving user:', error);
-            toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to save user",
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleEditUser = (userId: number) => {
-        const userToEdit = users.find((u) => u.userid === userId);
-
-        if (userToEdit) {
-            setFormData({
-                name: userToEdit.english_username_a,
-                email: userToEdit.user_email,
-                role: userToEdit.user_roles.toLowerCase() as UserRole,
-                password: "", // Don't populate password for security
-            });
-            setSelectedUser(userId);
-            setFormMode("edit");
-        }
-    };
-
-    const handleDeleteUser = async (userId: number) => {
-        setIsLoading(true);
-        try {
-            const { error } = await supabase
-                .from('userinfo')
-                .delete()
-                .eq('userid', userId);
-
-            if (error) throw error;
-
-            toast({
-                title: "User Deleted",
-                description: "User has been removed",
-            });
-
-            loadUsers();
-            loadUserStats();
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            toast({
-                title: "Error",
-                description: "Failed to delete user",
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    if (error) {
+        return (
+            <div className="text-center py-12">
+                <h1 className="text-2xl font-bold text-red-600">Error</h1>
+                <p className="mt-2">{error}</p>
+                <Button
+                    className="mt-4"
+                    onClick={() => window.location.reload()}
+                >
+                    Reload Page
+                </Button>
+            </div>
+        );
+    }
 
     if (!user || user.role !== "admin") {
         return (
@@ -275,6 +216,174 @@ const AdminDashboard = () => {
                 <p className="mt-2">Only administrators can access this page.</p>
             </div>
         );
+    }
+    function handleRoleChange(value: string): void {
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            role: value as UserRole,
+        }));
+    }
+
+    async function handleDeleteUser(userid: number): Promise<void> {
+        if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const { error } = await supabase
+                .from("userinfo")
+                .delete()
+                .eq("userid", userid);
+
+            if (error) {
+                console.error("Error deleting user:", error);
+                toast({
+                    title: "Error",
+                    description: "Failed to delete user. Please try again.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            setUsers((prevUsers) => prevUsers.filter((user) => user.userid !== userid));
+            toast({
+                title: "Success",
+                description: "User deleted successfully.",
+            });
+        } catch (error) {
+            console.error("Unexpected error:", error);
+            toast({
+                title: "Error",
+                description: "An unexpected error occurred. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    function handleEditUser(userid: number): void {
+        const userToEdit = users.find((u) => u.userid === userid);
+        if (!userToEdit) {
+            toast({
+                title: "Error",
+                description: "User not found.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setFormMode("edit");
+        setSelectedUser(userid);
+        setFormData({
+            name: userToEdit.english_username_a,
+            email: userToEdit.user_email,
+            role: userToEdit.user_roles as UserRole,
+            password: "", // Password is not editable for security reasons
+        });
+    }
+
+    async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+        event.preventDefault();
+
+        if (formMode === "create") {
+            try {
+                setIsLoading(true);
+                const { error } = await supabase
+                    .from("userinfo")
+                    .insert({
+                        english_username_a: formData.name,
+                        user_email: formData.email,
+                        user_roles: formData.role,
+                        password: formData.password, // Assuming password is hashed server-side
+                    });
+
+                if (error) {
+                    console.error("Error creating user:", error);
+                    toast({
+                        title: "Error",
+                        description: "Failed to create user. Please try again.",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                toast({
+                    title: "Success",
+                    description: "User created successfully.",
+                });
+                await loadUsers(); // Refresh user list
+                setFormData({
+                    name: "",
+                    email: "",
+                    role: "patient",
+                    password: "",
+                });
+            } catch (error) {
+                console.error("Unexpected error:", error);
+                toast({
+                    title: "Error",
+                    description: "An unexpected error occurred. Please try again.",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        } else if (formMode === "edit" && selectedUser !== null) {
+            try {
+                setIsLoading(true);
+                const { error } = await supabase
+                    .from("userinfo")
+                    .update({
+                        english_username_a: formData.name,
+                        user_email: formData.email,
+                        user_roles: formData.role,
+                    })
+                    .eq("userid", selectedUser);
+
+                if (error) {
+                    console.error("Error updating user:", error);
+                    toast({
+                        title: "Error",
+                        description: "Failed to update user. Please try again.",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                toast({
+                    title: "Success",
+                    description: "User updated successfully.",
+                });
+                await loadUsers(); // Refresh user list
+                setFormMode("create");
+                setSelectedUser(null);
+                setFormData({
+                    name: "",
+                    email: "",
+                    role: "patient",
+                    password: "",
+                });
+            } catch (error) {
+                console.error("Unexpected error:", error);
+                toast({
+                    title: "Error",
+                    description: "An unexpected error occurred. Please try again.",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    }
+
+    function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
+        const { name, value } = event.target;
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            [name]: value,
+        }));
     }
 
     return (
@@ -397,12 +506,12 @@ const AdminDashboard = () => {
                                                         <div className="text-sm text-gray-500">{u.user_email}</div>
                                                         <div className="mt-1">
                                                             <span className={`inline-block px-2 py-1 text-xs rounded-full capitalize ${u.user_roles.toLowerCase() === "admin"
-                                                                    ? "bg-red-100 text-red-800"
-                                                                    : u.user_roles.toLowerCase() === "doctor"
-                                                                        ? "bg-blue-100 text-blue-800"
-                                                                        : u.user_roles.toLowerCase() === "secretary"
-                                                                            ? "bg-purple-100 text-purple-800"
-                                                                            : "bg-green-100 text-green-800"
+                                                                ? "bg-red-100 text-red-800"
+                                                                : u.user_roles.toLowerCase() === "doctor"
+                                                                    ? "bg-blue-100 text-blue-800"
+                                                                    : u.user_roles.toLowerCase() === "secretary"
+                                                                        ? "bg-purple-100 text-purple-800"
+                                                                        : "bg-green-100 text-green-800"
                                                                 }`}>
                                                                 {u.user_roles}
                                                             </span>
