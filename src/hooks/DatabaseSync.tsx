@@ -15,12 +15,26 @@ const DatabaseSync = () => {
           .eq('user_roles', 'Admin')
           .limit(1);
 
-        if (error) throw error;
+        if (error && error.code !== 'PGRST116') { // PGRST116 means relation doesn't exist
+          throw error;
+        }
 
         // If no admin exists, create one
         if (!adminUsers || adminUsers.length === 0) {
           console.log('No admin user found. Creating default admin...');
-          
+
+          // Check if table exists first
+          const { data: tableExists, error: tableError } = await supabase
+            .from('userinfo')
+            .select('*')
+            .limit(1);
+
+          if (tableError && tableError.code === 'PGRST116') {
+            console.log('Table does not exist. Please create the userinfo table in Supabase first.');
+            setIsChecking(false);
+            return;
+          }
+
           // Create auth user for admin
           const { error: authError } = await supabase.auth.signUp({
             email: 'admin@clinic.com',
@@ -40,7 +54,7 @@ const DatabaseSync = () => {
             user_roles: 'Admin',
             english_username_a: 'System Admin',
             english_username_b: 'System Admin',
-            english_username_c: 'System Admin',  
+            english_username_c: 'System Admin',
             english_username_d: 'System Admin',
             arabic_username_a: 'مدير النظام',
             arabic_username_b: 'مدير النظام',
@@ -57,9 +71,13 @@ const DatabaseSync = () => {
           }
 
           console.log('Default admin user created successfully');
+        } else {
+          console.log('Admin user already exists');
         }
       } catch (error) {
         console.error('Error setting up initial data:', error);
+        // If there's an error, we should still proceed
+        // This allows the app to continue even if setup fails
       } finally {
         setIsChecking(false);
       }
@@ -68,15 +86,9 @@ const DatabaseSync = () => {
     setupInitialData();
   }, []);
 
+  // Don't render anything at all during checking
   if (isChecking) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold mb-2">Initializing Database...</h2>
-          <p className="text-sm text-muted-foreground">Please wait while the system is being set up.</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return null;
