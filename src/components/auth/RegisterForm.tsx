@@ -8,6 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Mail, Lock, User, Phone, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface RegisterFormProps {
     onSwitchToLogin: () => void;
@@ -27,7 +28,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
-    const { signup } = useAuth();
+    const { signup, login } = useAuth();
+    const navigate = useNavigate();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -75,7 +77,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 description: "Your account has been created successfully",
             });
 
-            onSwitchToLogin();
+            // Wait a moment for the signup to complete
+            setTimeout(async () => {
+                try {
+                    // Auto-login the user after registration
+                    await login(formData.email, formData.password);
+                    navigate("/"); // Redirect to home page for patients
+                } catch (error) {
+                    console.error("Auto-login failed:", error);
+                    onSwitchToLogin(); // Fallback to login form
+                }
+            }, 1000);
         } catch (error) {
             console.error("Registration error:", error);
 
@@ -89,7 +101,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 description: errorMessage,
                 variant: "destructive",
             });
-        } finally {
             setIsLoading(false);
         }
     };
@@ -221,17 +232,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                         >
-                            {showPassword ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-2.796 0-5.487-1.292-7.596-3.683C3.044 13.685 2 11.577 2 10c0-1.575 1.043-3.684 2.404-5.318A10.016 10.016 0 0112 1a10.033 10.033 0 017.553 3.643C20.975 6.281 22 8.359 22 10c0 1.578-1.029 3.667-2.372 5.265" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-2.796 0-5.487-1.292-7.596-3.683C3.044 13.685 2 11.577 2 10c0-1.575 1.043-3.684 2.404-5.318A10.016 10.016 0 0112 1a10.033 10.033 0 017.553 3.643C20.975 6.281 22 8.359 22 10c0 1.578-1.029 3.667-2.372 5.265" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10l.003.003m9.003.003h0a3 3 0 01-3-3 3 3 0 016 0 3 3 0 01-3 3m-9.003 4.5l4.5-4.5m6-6l4.5-4.5" />
-                                </svg>
-                            )}
+                            {showPassword ? "Hide" : "Show"}
                         </button>
                     </div>
                 </div>

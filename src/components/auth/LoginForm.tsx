@@ -29,7 +29,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate fields
     if (!email || !password) {
       toast({
         title: "Error",
@@ -46,15 +45,23 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       toast({
         title: "Login Successful",
-        description: "Welcome back!",
+        description: `Welcome back, ${userData.name}!`,
       });
 
-      console.log("Login successful, navigating to home"); // Debug log
-
-      // Force the navigation to occur after state updates are complete
-      setTimeout(() => {
-        navigate("/");
-      }, 100);
+      // Redirect based on role
+      switch (userData.role) {
+        case 'admin':
+          navigate("/admin");
+          break;
+        case 'doctor':
+        case 'secretary':
+          navigate("/labs"); // Doctors and secretaries go to labs
+          break;
+        case 'patient':
+        default:
+          navigate("/"); // Patients go to home page
+          break;
+      }
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -66,6 +73,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       setIsLoading(false);
     }
   };
+
   return (
     <div className="w-full space-y-6 animate-fade-in">
       <div className="space-y-2 text-center">
@@ -142,14 +150,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
         >
           Sign Up
         </button>
-      </div>
-
-      {/* Demo login info - remove this in production */}
-      <div className="text-xs text-muted-foreground border-t pt-4">
-        <p className="mb-1 font-medium">Demo Accounts:</p>
-        <p>Email: admin@clinic.com (for admin access)</p>
-        <p>Email: patient@example.com (for patient access)</p>
-        <p>Password: password123 (for all demo accounts)</p>
       </div>
     </div>
   );

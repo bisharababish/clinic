@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import AdminLoginButton from "@/components/auth/AdminLoginButton";
 import Footer from "@/components/layout/Footer";
 
 const Auth: React.FC = () => {
@@ -49,8 +50,13 @@ const Auth: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white/80 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-gray-200"
+            className="bg-white/80 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-gray-200 relative"
           >
+            {/* Admin access button positioned at top right */}
+            <div className="absolute top-4 right-4">
+              <AdminLoginButton />
+            </div>
+
             <AnimatePresence mode="wait">
               {showForgotPassword ? (
                 <motion.div

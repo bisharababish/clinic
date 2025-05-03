@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AuthProvider } from "./hooks/useAuth";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import DatabaseSync from "./hooks/DatabaseSync";
 
 // Pages
 import Auth from "./pages/Auth";
@@ -23,6 +24,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <DatabaseSync />
         <Routes>
           {/* Public routes */}
           <Route path="/auth" element={<Auth />} />
