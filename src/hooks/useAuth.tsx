@@ -197,16 +197,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
 
         try {
-            // First, check if email exists in database
+            // Check if email already exists in database
             const { data: existingUser, error: checkError } = await supabase
                 .from('userinfo')
                 .select('*')
                 .eq('user_email', userData.email)
                 .single();
 
-            // If checkError has code 'PGRST116', it means no rows were found (good)
-            // If we found a user, throw error
-            if (existingUser && !checkError) {
+            // If we found a user (no error), email already exists
+            if (existingUser) {
                 throw new Error('This email is already registered. Please login.');
             }
 
@@ -216,13 +215,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 password: userData.password,
                 options: {
                     emailRedirectTo: window.location.origin,
-                    data: {
-                        name: userData.englishName
-                    }
                 }
             });
 
-            // Check if error is about user already exists
             if (authError) {
                 if (authError.message.includes('User already registered')) {
                     throw new Error('This email is already registered. Please login.');
@@ -240,6 +235,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             let newUserId = 1;
             if (!maxError && maxUserData && maxUserData.length > 0) {
                 newUserId = maxUserData[0].userid + 1;
+            }
+
+            // Double-check that this userid doesn't exist
+            const { data: existingId, error: idError } = await supabase
+                .from('userinfo')
+                .select('userid')
+                .eq('userid', newUserId)
+                .single();
+
+            // If userid exists, find an unused one
+            if (existingId) {
+                // Find the first available userid
+                for (let i = 1; i <= 10000; i++) {
+                    const { data: checkId, error: checkError } = await supabase
+                        .from('userinfo')
+                        .select('userid')
+                        .eq('userid', i)
+                        .single();
+
+                    if (!checkId) {
+                        newUserId = i;
+                        break;
+                    }
+                }
             }
 
             // Create user profile in database
