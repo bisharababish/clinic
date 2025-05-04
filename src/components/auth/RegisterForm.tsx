@@ -45,6 +45,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 title: "Error",
                 description: "Passwords do not match",
                 variant: "destructive",
+                duration: 3000,
             });
             return;
         }
@@ -55,6 +56,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 title: "Error",
                 description: "Please fill in all required fields",
                 variant: "destructive",
+                duration: 3000,
             });
             return;
         }
@@ -75,6 +77,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             toast({
                 title: "Registration Successful",
                 description: "Your account has been created successfully",
+                duration: 3000,
             });
 
             // Wait a moment for the signup to complete
@@ -100,6 +103,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 title: "Registration Failed",
                 description: errorMessage,
                 variant: "destructive",
+                duration: 5000,
             });
             setIsLoading(false);
         }
