@@ -101,29 +101,63 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 description: errorMessage,
                 variant: "destructive",
             });
+        } finally {
             setIsLoading(false);
         }
     };
 
-    return (
-        <div className="w-full space-y-6 animate-fade-in">
-            <div className="space-y-2 text-center">
-                <h2 className="text-3xl font-bold tracking-tight">Create Account</h2>
-                <p className="text-sm text-muted-foreground">
-                    Register as a patient to access our services
-                </p>
-            </div>
+        return (
+            <div className="w-full space-y-6 animate-fade-in">
+                <div className="space-y-2 text-center">
+                    <h2 className="text-3xl font-bold tracking-tight">Create Account</h2>
+                    <p className="text-sm text-muted-foreground">
+                        Register as a patient to access our services
+                    </p>
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="englishName">Full Name (English)</Label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="englishName"
+                                    name="englishName"
+                                    value={formData.englishName}
+                                    onChange={handleInputChange}
+                                    className="pl-10"
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="arabicName">Full Name (Arabic)</Label>
+                            <div className="relative">
+                                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="arabicName"
+                                    name="arabicName"
+                                    value={formData.arabicName}
+                                    onChange={handleInputChange}
+                                    className="pl-10"
+                                    required
+                                    dir="rtl"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
-                        <Label htmlFor="englishName">Full Name (English)</Label>
+                        <Label htmlFor="email">Email</Label>
                         <div className="relative">
-                            <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
-                                id="englishName"
-                                name="englishName"
-                                value={formData.englishName}
+                                id="email"
+                                name="email"
+                                type="email"
+                                value={formData.email}
                                 onChange={handleInputChange}
                                 className="pl-10"
                                 required
@@ -132,144 +166,111 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="arabicName">Full Name (Arabic)</Label>
+                        <Label htmlFor="phoneNumber">Phone Number</Label>
                         <div className="relative">
-                            <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                             <Input
-                                id="arabicName"
-                                name="arabicName"
-                                value={formData.arabicName}
+                                id="phoneNumber"
+                                name="phoneNumber"
+                                type="tel"
+                                value={formData.phoneNumber}
                                 onChange={handleInputChange}
                                 className="pl-10"
                                 required
-                                dir="rtl"
                             />
                         </div>
                     </div>
-                </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            className="pl-10"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Phone Number</Label>
-                    <div className="relative">
-                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="phoneNumber"
-                            name="phoneNumber"
-                            type="tel"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            className="pl-10"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                    <div className="relative">
-                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="dateOfBirth"
-                            name="dateOfBirth"
-                            type="date"
-                            value={formData.dateOfBirth}
-                            onChange={handleInputChange}
-                            className="pl-10"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Gender</Label>
-                    <RadioGroup
-                        value={formData.gender}
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
-                        className="flex space-x-4"
-                    >
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="male" id="male" />
-                            <Label htmlFor="male">Male</Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="dateOfBirth"
+                                name="dateOfBirth"
+                                type="date"
+                                value={formData.dateOfBirth}
+                                onChange={handleInputChange}
+                                className="pl-10"
+                                required
+                            />
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="female" id="female" />
-                            <Label htmlFor="female">Female</Label>
-                        </div>
-                    </RadioGroup>
-                </div>
+                    </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="password"
-                            name="password"
-                            type={showPassword ? "text" : "password"}
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            className="pl-10"
-                            required
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                    <div className="space-y-2">
+                        <Label>Gender</Label>
+                        <RadioGroup
+                            value={formData.gender}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
+                            className="flex space-x-4"
                         >
-                            {showPassword ? "Hide" : "Show"}
-                        </button>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="male" id="male" />
+                                <Label htmlFor="male">Male</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="female" id="female" />
+                                <Label htmlFor="female">Female</Label>
+                            </div>
+                        </RadioGroup>
                     </div>
-                </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type={showPassword ? "text" : "password"}
-                            value={formData.confirmPassword}
-                            onChange={handleInputChange}
-                            className="pl-10"
-                            required
-                        />
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="password"
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                className="pl-10"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                            >
+                                {showPassword ? "Hide" : "Show"}
+                            </button>
+                        </div>
                     </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.confirmPassword}
+                                onChange={handleInputChange}
+                                className="pl-10"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Creating Account..." : "Create Account"}
+                    </Button>
+                </form>
+
+                <div className="text-center text-sm">
+                    Already have an account?{" "}
+                    <button
+                        type="button"
+                        onClick={onSwitchToLogin}
+                        className="text-primary font-medium hover:underline"
+                    >
+                        Sign In
+                    </button>
                 </div>
-
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Creating Account..." : "Create Account"}
-                </Button>
-            </form>
-
-            <div className="text-center text-sm">
-                Already have an account?{" "}
-                <button
-                    type="button"
-                    onClick={onSwitchToLogin}
-                    className="text-primary font-medium hover:underline"
-                >
-                    Sign In
-                </button>
             </div>
-        </div>
-    );
-};
+        );
+    };
 
-export default RegisterForm;
+    export default RegisterForm;
