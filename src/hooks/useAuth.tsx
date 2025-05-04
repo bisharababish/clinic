@@ -192,23 +192,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // Replace the signup function in useAuth.tsx with this fixed version
+    // Replace your signup function in useAuth.tsx with this version
     const signup = async (userData: SignupData) => {
         setIsLoading(true);
 
         try {
-            // First check if email already exists
+            // Check if email already exists in YOUR database (not just auth)
             const { data: existingUser, error: checkError } = await supabase
                 .from('userinfo')
                 .select('user_email')
                 .eq('user_email', userData.email)
                 .single();
 
-            if (existingUser) {
-                throw new Error('Email already registered. Please login instead.');
+            if (existingUser && !checkError) {
+                throw new Error('Email already registered in database. Please login instead.');
             }
 
-            // First create the auth user
+            // Try to create the auth user
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: userData.email,
                 password: userData.password,
@@ -217,9 +217,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 }
             });
 
-            if (authError) throw authError;
+            // If auth user already exists, that's ok - we'll just proceed
+            if (authError && authError.message.includes('User already registered')) {
+                console.log('Auth user exists, continuing with profile creation...');
+            } else if (authError) {
+                throw authError;
+            }
 
-            console.log("Auth user created:", authData);
+            console.log("Auth process completed");
 
             // Get the highest userid and increment
             const { data: maxUserData, error: maxError } = await supabase
@@ -233,7 +238,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 newUserId = maxUserData[0].userid + 1;
             }
 
-            // Then create the user profile
+            // Create the user profile
             const { error: profileError } = await supabase.from('userinfo').insert({
                 userid: newUserId,
                 user_roles: 'Patient',
@@ -257,12 +262,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (profileError) {
                 console.error("Profile creation error:", profileError);
 
-                // If profile creation fails, delete the auth user to avoid orphaned accounts
-                await supabase.auth.signOut();
-
                 // Handle specific error messages
                 if (profileError.message.includes('duplicate key value')) {
-                    throw new Error('Email already registered. Please login instead.');
+                    throw new Error('This email is already registered. Please use a different email or login.');
                 }
 
                 throw new Error(`Profile creation failed: ${profileError.message}`);
