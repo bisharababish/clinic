@@ -1,4 +1,4 @@
-
+// components/auth/AdminLoginButton.tsx
 import * as React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ const AdminLoginButton: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
       toast({
         title: "Error",
@@ -31,10 +31,10 @@ const AdminLoginButton: React.FC = () => {
       title: "Admin Login Attempted",
       description: "This would connect to your backend in a real implementation",
     });
-    
+
     // Close modal
     setIsOpen(false);
-    
+
     // Reset form
     setUsername("");
     setPassword("");
@@ -42,9 +42,7 @@ const AdminLoginButton: React.FC = () => {
 
   return (
     <>
-      <Button 
-        variant="outline" 
-        size="sm" 
+      <Button
         onClick={() => setIsOpen(true)}
         className="text-xs px-2 py-1 h-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all"
       >
@@ -52,7 +50,7 @@ const AdminLoginButton: React.FC = () => {
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Admin Login</DialogTitle>
             <DialogDescription>
@@ -60,15 +58,14 @@ const AdminLoginButton: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="admin-username">Username</Label>
+              <Label htmlFor="username">Username</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="admin-username"
+                  id="username"
                   type="text"
-                  placeholder="Admin username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="pl-10"
@@ -78,13 +75,12 @@ const AdminLoginButton: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="admin-password">Password</Label>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="admin-password"
+                  id="password"
                   type="password"
-                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
