@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 console.log('Auth state change:', event);
-                
+
                 if (session) {
                     try {
                         const { data: userData, error: userError } = await supabase
@@ -122,33 +122,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             console.log('Attempting login for:', email);
-            
-            // First, try to login with Supabase Auth
+
+            // First check if user exists in database
+            const { data: userData, error: dbError } = await supabase
+                .from('userinfo')
+                .select('*')
+                .eq('user_email', email)
+                .eq('user_password', password)
+                .single();
+
+            if (dbError || !userData) {
+                console.log('User not found in database');
+                throw new Error('Invalid email or password');
+            }
+
+            console.log('User found in database:', userData);
+
+            // Try to login with Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email,
                 password
             });
 
             if (authError) {
-                console.error('Auth error:', authError);
-                // If auth fails with "Invalid login credentials", check if user exists in database
+                console.log('Auth error:', authError);
+                // If user exists in database but not in auth, create auth account
                 if (authError.message.includes('Invalid login credentials')) {
-                    console.log('User not found in auth, checking database...');
-                    
-                    // Check if user exists in database with matching password
-                    const { data: userData, error: userError } = await supabase
-                        .from('userinfo')
-                        .select('*')
-                        .eq('user_email', email)
-                        .eq('user_password', password)
-                        .single();
+                    console.log('Creating auth account for existing user...');
 
-                    if (userError || !userData) {
-                        throw new Error('Invalid email or password');
-                    }
-
-                    // User exists in database but not in auth, create auth user
-                    console.log('Creating auth user for existing database user...');
                     const { error: signupError } = await supabase.auth.signUp({
                         email,
                         password,
@@ -157,48 +158,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         }
                     });
 
-                    if (signupError) throw signupError;
+                    if (signupError) {
+                        console.error('Error creating auth account:', signupError);
+                    }
 
-                    // Try login again
+                    // Try login again after creating auth account
                     const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
                         email,
                         password
                     });
 
-                    if (retryError) throw retryError;
-                    
-                    // Set user data
-                    const userObj: User = {
-                        id: userData.userid.toString(),
-                        email: userData.user_email,
-                        name: userData.english_username_a,
-                        role: userData.user_roles.toLowerCase() as UserRole
-                    };
-
-                    setUser(userObj);
-                    return userObj;
-                } else {
-                    throw authError;
+                    if (retryError) {
+                        console.error('Login failed after creating auth account:', retryError);
+                    }
                 }
             }
 
-            console.log('Auth successful:', authData);
-
-            // Fetch user data from database
-            const { data: userData, error: userError } = await supabase
-                .from('userinfo')
-                .select('*')
-                .eq('user_email', email)
-                .single();
-
-            if (userError) {
-                console.error("Error fetching user data:", userError);
-                throw userError;
-            }
-
-            console.log("User data fetched:", userData);
-
-            // Set user data in state
+            // Set user data
             const userObj: User = {
                 id: userData.userid.toString(),
                 email: userData.user_email,
