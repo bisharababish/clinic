@@ -4,7 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AuthProvider } from "./hooks/useAuth";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import DatabaseSync from "./hooks/DatabaseSync";
+import { useEffect, useState } from "react";
+import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
 
 // Pages
 import Auth from "./pages/Auth";
@@ -19,12 +20,40 @@ import XRay from "./pages/XRay";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 
-
 function App() {
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        // Create default admin and migrate existing users
+        await createDefaultAdmin();
+        // Comment this out after first run to avoid unnecessary API calls
+        // await migrateExistingUsers();
+      } catch (error) {
+        console.error('Error initializing app:', error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeApp();
+  }, []);
+
+  if (isInitializing) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Initializing application...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AuthProvider>
       <Router>
-        <DatabaseSync />
         <Routes>
           {/* Public routes */}
           <Route path="/auth" element={<Auth />} />
@@ -124,7 +153,6 @@ function App() {
       </Router>
       <Toaster />
     </AuthProvider>
-
   );
 }
 

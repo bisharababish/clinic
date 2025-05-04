@@ -1,3 +1,4 @@
+
 // src/hooks/useAuth.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
@@ -42,7 +43,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             try {
                 const { data, error } = await supabase.auth.getSession();
 
-                if (!error && data.session) {
+                if (error) {
+                    console.error('Session error:', error);
+                    return;
+                }
+
+                if (data.session) {
+                    console.log('Session found:', data.session);
                     const { data: userData, error: userError } = await supabase
                         .from('userinfo')
                         .select('*')
@@ -57,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                             role: userData.user_roles.toLowerCase() as UserRole
                         });
                     } else {
+                        console.error('User info error:', userError);
                         // Session exists but no user info, sign out
                         await supabase.auth.signOut();
                     }
@@ -74,21 +82,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 console.log('Auth state change:', event);
-
+                
                 if (session) {
-                    const { data: userData, error: userError } = await supabase
-                        .from('userinfo')
-                        .select('*')
-                        .eq('user_email', session.user.email)
-                        .single();
+                    try {
+                        const { data: userData, error: userError } = await supabase
+                            .from('userinfo')
+                            .select('*')
+                            .eq('user_email', session.user.email)
+                            .single();
 
-                    if (!userError && userData) {
-                        setUser({
-                            id: userData.userid.toString(),
-                            email: userData.user_email,
-                            name: userData.english_username_a,
-                            role: userData.user_roles.toLowerCase() as UserRole
-                        });
+                        if (!userError && userData) {
+                            setUser({
+                                id: userData.userid.toString(),
+                                email: userData.user_email,
+                                name: userData.english_username_a,
+                                role: userData.user_roles.toLowerCase() as UserRole
+                            });
+                        } else {
+                            console.error('User info error:', userError);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching user info:', error);
                     }
                 } else {
                     setUser(null);
@@ -107,27 +121,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
 
         try {
-            // First, check if user exists in database with matching credentials
-            const { data: userData, error: userError } = await supabase
-                .from('userinfo')
-                .select('*')
-                .eq('user_email', email)
-                .eq('user_password', password)
-                .single();
-
-            if (userError || !userData) {
-                throw new Error('Invalid email or password');
-            }
-
-            // Create auth session without requiring Supabase auth signup
-            const { error: authError } = await supabase.auth.signInWithPassword({
+            console.log('Attempting login for:', email);
+            
+            // First, try to login with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email,
                 password
             });
 
-            // If auth fails but user exists in database, create auth user
             if (authError) {
+                console.error('Auth error:', authError);
+                // If auth fails with "Invalid login credentials", check if user exists in database
                 if (authError.message.includes('Invalid login credentials')) {
+                    console.log('User not found in auth, checking database...');
+                    
+                    // Check if user exists in database with matching password
+                    const { data: userData, error: userError } = await supabase
+                        .from('userinfo')
+                        .select('*')
+                        .eq('user_email', email)
+                        .eq('user_password', password)
+                        .single();
+
+                    if (userError || !userData) {
+                        throw new Error('Invalid email or password');
+                    }
+
+                    // User exists in database but not in auth, create auth user
+                    console.log('Creating auth user for existing database user...');
                     const { error: signupError } = await supabase.auth.signUp({
                         email,
                         password,
@@ -139,16 +160,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     if (signupError) throw signupError;
 
                     // Try login again
-                    const { error: retryError } = await supabase.auth.signInWithPassword({
+                    const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
                         email,
                         password
                     });
 
                     if (retryError) throw retryError;
+                    
+                    // Set user data
+                    const userObj: User = {
+                        id: userData.userid.toString(),
+                        email: userData.user_email,
+                        name: userData.english_username_a,
+                        role: userData.user_roles.toLowerCase() as UserRole
+                    };
+
+                    setUser(userObj);
+                    return userObj;
                 } else {
                     throw authError;
                 }
             }
+
+            console.log('Auth successful:', authData);
+
+            // Fetch user data from database
+            const { data: userData, error: userError } = await supabase
+                .from('userinfo')
+                .select('*')
+                .eq('user_email', email)
+                .single();
+
+            if (userError) {
+                console.error("Error fetching user data:", userError);
+                throw userError;
+            }
+
+            console.log("User data fetched:", userData);
 
             // Set user data in state
             const userObj: User = {
@@ -182,6 +230,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
 
             if (authError) throw authError;
+
+            console.log("Auth user created:", authData);
 
             // Get the highest userid and increment
             const { data: maxUserData, error: maxError } = await supabase
