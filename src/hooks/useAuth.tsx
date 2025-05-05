@@ -97,6 +97,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, []);
 
+    // Fixed signup function in useAuth.tsx 
+
     const signup = async (userData: SignupData) => {
         setIsLoading(true);
 
@@ -112,22 +114,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('This email is already registered. Please login.');
             }
 
-            // 2. Get next available userid
+            // 2. FIXED: Get next available userid more reliably
             let newUserId = 1;
-            try {
-                const { data: maxUserData } = await supabase
-                    .from('userinfo')
-                    .select('userid')
-                    .order('userid', { ascending: false })
-                    .limit(1)
-                    .single();
+            const { data: maxUserData, error: maxError } = await supabase
+                .from('userinfo')
+                .select('userid')
+                .order('userid', { ascending: false })
+                .limit(1)
+                .maybeSingle(); // Use maybeSingle() to handle case when no users exist
 
-                if (maxUserData) {
-                    newUserId = maxUserData.userid + 1;
-                }
-            } catch (error) {
-                console.log('No existing users found, starting with userid: 1');
+            if (maxError && maxError.code !== 'PGRST116') { // PGRST116 means no rows found
+                throw maxError;
             }
+
+            if (maxUserData && maxUserData.userid) {
+                newUserId = maxUserData.userid + 1;
+            }
+
+            console.log('Assigning new userid:', newUserId); // Debug log
 
             // 3. Create auth user
             const { error: authError } = await supabase.auth.signUp({
@@ -147,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             const { error: profileError } = await supabase.from('userinfo').insert({
                 userid: newUserId,
-                user_roles: 'Patient', // Exact case as in table
+                user_roles: 'Patient',
                 arabic_username_a: userData.arabicName,
                 arabic_username_b: userData.arabicName,
                 arabic_username_c: userData.arabicName,
@@ -160,26 +164,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 user_phonenumber: userData.phoneNumber,
                 date_of_birth: userData.dateOfBirth,
                 gender_user: userData.gender,
-                user_password: userData.password, // Store plain password (not recommended for production)
+                user_password: userData.password,
                 created_at: currentTimestamp,
                 updated_at: currentTimestamp,
-                pdated_at: currentTimestamp // Note: This seems to be a typo in your table
+                pdated_at: currentTimestamp // Keep this field to match your table
             });
 
             if (profileError) {
+                console.error('Profile creation error:', profileError); // Debug log
                 // Rollback auth user if profile creation fails
                 await supabase.auth.signOut();
                 throw new Error(`Failed to create profile: ${profileError.message}`);
             }
 
+            console.log('User profile created successfully'); // Debug log
+
         } catch (error) {
             setIsLoading(false);
+            console.error('Signup error:', error); // Debug log
             throw error;
         } finally {
             setIsLoading(false);
         }
     };
-
     const login = async (email: string, password: string): Promise<User> => {
         setIsLoading(true);
 
