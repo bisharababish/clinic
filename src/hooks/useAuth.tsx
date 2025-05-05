@@ -172,25 +172,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
 
         try {
-            // 1. Try to login with Supabase Auth
-            const { error: authError } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
+            console.log('Attempting login with:', { email }); // Debug log
 
-            if (authError) {
-                throw new Error('Invalid email or password');
-            }
-
-            // 2. Get user data from database
+            // 1. First check if user exists in our database
             const { data: userData, error: dbError } = await supabase
                 .from('userinfo')
                 .select('*')
                 .eq('user_email', email)
                 .single();
 
+            console.log('Database lookup result:', { userData, dbError }); // Debug log
+
             if (!userData || dbError) {
-                throw new Error('User profile not found');
+                throw new Error('User not found in database');
+            }
+
+            // 2. Try to login with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            console.log('Auth response:', { authData, authError }); // Debug log
+
+            if (authError) {
+                // If auth user doesn't exist, create one
+                if (authError.message.includes('Invalid login credentials')) {
+                    console.log('Auth user not found, creating one...');
+
+                    const { error: signupError } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: {
+                            emailRedirectTo: `${window.location.origin}/auth/callback`
+                        }
+                    });
+
+                    if (signupError) {
+                        console.error('Signup error:', signupError);
+                        throw signupError;
+                    }
+
+                    // Wait a moment for the auth user to be created
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    // Try login again
+                    const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+                    if (retryError) {
+                        console.error('Retry login error:', retryError);
+                        throw retryError;
+                    }
+                } else {
+                    throw authError;
+                }
             }
 
             // 3. Set user data in context
@@ -206,12 +244,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         } catch (error) {
             setIsLoading(false);
+            console.error('Login error:', error); // Debug log
             throw error;
         } finally {
             setIsLoading(false);
         }
     };
-
     const logout = async () => {
         try {
             await supabase.auth.signOut();
