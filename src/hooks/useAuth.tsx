@@ -1,5 +1,4 @@
-// src/hooks/useAuth.tsx - Complete fixed version
-
+// src/hooks/useAuth.tsx - Fully fixed version
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -43,10 +42,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session?.user) {
+                    // Use case-insensitive query
                     const { data: userData } = await supabase
                         .from('userinfo')
                         .select('*')
-                        .eq('user_email', session.user.email)
+                        .ilike('user_email', session.user.email)
                         .single();
 
                     if (userData) {
@@ -71,10 +71,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 if (session?.user) {
+                    // Use case-insensitive query
                     const { data: userData } = await supabase
                         .from('userinfo')
                         .select('*')
-                        .eq('user_email', session.user.email)
+                        .ilike('user_email', session.user.email)
                         .single();
 
                     if (userData) {
@@ -101,11 +102,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
 
         try {
-            // 1. Check email availability
+            console.log("Starting signup process");
+
+            // 1. Check email availability (case insensitive)
             const { data: existingEmail, error: emailCheckError } = await supabase
                 .from('userinfo')
                 .select('user_email')
-                .eq('user_email', userData.email)
+                .ilike('user_email', userData.email)
                 .maybeSingle();
 
             if (existingEmail) {
@@ -113,6 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             // 2. Create auth user
+            console.log("Creating auth user");
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: userData.email,
                 password: userData.password,
@@ -130,7 +134,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('Failed to create auth user');
             }
 
+            console.log("Auth user created successfully");
+
             // 3. Create user profile
+            console.log("Creating user profile in database");
             const currentTimestamp = new Date().toISOString();
 
             const { error: profileError } = await supabase.from('userinfo').insert({
@@ -174,11 +181,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
 
         try {
+            console.log('Login attempt starting:', email);
+
             // 1. Try to login with Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email,
                 password
             });
+
+            console.log('Auth attempt result:', authError ? 'Error' : 'Success');
 
             if (authError) {
                 console.error('Auth login error:', authError);
@@ -189,12 +200,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('Authentication failed');
             }
 
-            // 2. Check if user exists in database
+            // 2. Check if user exists in database (case insensitive)
+            console.log('Looking for user profile in database');
             const { data: userData, error: dbError } = await supabase
                 .from('userinfo')
                 .select('*')
-                .eq('user_email', email)
+                .ilike('user_email', email)
                 .single();
+
+            console.log('Database lookup result:', userData ? 'Found' : 'Not found');
 
             // 3. If user doesn't exist in database, create profile automatically
             if (!userData || dbError) {
@@ -202,7 +216,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
                 const currentTimestamp = new Date().toISOString();
 
-                // First try to create with returning
+                // Create new profile
                 const { data: insertData, error: createError } = await supabase
                     .from('userinfo')
                     .insert({
@@ -232,10 +246,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 // Fetch the new user data
+                console.log('Fetching newly created profile');
                 const { data: newUserData, error: fetchError } = await supabase
                     .from('userinfo')
                     .select('*')
-                    .eq('user_email', email)
+                    .ilike('user_email', email)
                     .single();
 
                 if (fetchError || !newUserData) {
@@ -243,6 +258,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     throw new Error('Failed to retrieve user profile');
                 }
 
+                console.log('New profile created successfully');
                 const userObj: User = {
                     id: newUserData.userid.toString(),
                     email: newUserData.user_email,
@@ -255,6 +271,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             // 4. User exists, return data
+            console.log('Existing profile found, login successful');
             const userObj: User = {
                 id: userData.userid.toString(),
                 email: userData.user_email,
