@@ -174,20 +174,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             console.log('Attempting login with:', { email }); // Debug log
 
-            // 1. First check if user exists in our database
-            const { data: userData, error: dbError } = await supabase
-                .from('userinfo')
-                .select('*')
-                .eq('user_email', email)
-                .single();
-
-            console.log('Database lookup result:', { userData, dbError }); // Debug log
-
-            if (!userData || dbError) {
-                throw new Error('User not found in database');
-            }
-
-            // 2. Try to login with Supabase Auth
+            // 1. Try to login with Supabase Auth first
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email,
                 password
@@ -213,9 +200,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         throw signupError;
                     }
 
-                    // Wait a moment for the auth user to be created
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-
                     // Try login again
                     const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
                         email,
@@ -226,9 +210,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         console.error('Retry login error:', retryError);
                         throw retryError;
                     }
+
+                    // Update authData with retry result
+                    if (retryData) {
+                        authData.session = retryData.session;
+                        authData.user = retryData.user;
+                    }
                 } else {
                     throw authError;
                 }
+            }
+
+            // 2. Now get user data from database
+            const { data: userData, error: dbError } = await supabase
+                .from('userinfo')
+                .select('*')
+                .eq('user_email', email)
+                .single();
+
+            console.log('Database lookup result:', { userData, dbError }); // Debug log
+
+            if (!userData || dbError) {
+                // Create fallback user data if database entry doesn't exist
+                throw new Error('User profile not found in database');
             }
 
             // 3. Set user data in context
@@ -244,6 +248,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         } catch (error) {
             setIsLoading(false);
+
+            // Provide more specific error messages
+            if (error instanceof Error) {
+                if (error.message.includes('Invalid login credentials')) {
+                    throw new Error('Incorrect password');
+                } else if (error.message.includes('User already registered')) {
+                    throw new Error('This email already has an account. Please login.');
+                } else if (error.message.includes('Email not confirmed')) {
+                    throw new Error('Please check your email to confirm your account');
+                }
+            }
+
             console.error('Login error:', error); // Debug log
             throw error;
         } finally {
