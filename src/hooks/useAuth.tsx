@@ -1,4 +1,4 @@
-// Fixed useAuth.tsx - Patient Registration and Login
+// src/hooks/useAuth.tsx - Complete fixed version
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
@@ -97,117 +97,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, []);
 
-    // Fixed signup function in useAuth.tsx 
-
-    // 1. First, update the login function to handle missing profiles
-    const login = async (email: string, password: string): Promise<User> => {
-        setIsLoading(true);
-
-        try {
-            // Step 1: Try to login with Supabase Auth first
-            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            if (authError) {
-                console.error('Auth login error:', authError);
-                throw new Error('Invalid email or password');
-            }
-
-            if (!authData.user) {
-                throw new Error('Authentication failed');
-            }
-
-            // Step 2: Get user data from database
-            const { data: userData, error: dbError } = await supabase
-                .from('userinfo')
-                .select('*')
-                .eq('user_email', email)
-                .single();
-
-            // Step 3: Check if userData exists
-            if (!userData || dbError) {
-                console.log('User profile not found, creating one...');
-
-                // Create a new profile if it doesn't exist
-                const currentTimestamp = new Date().toISOString();
-
-                const { error: createError } = await supabase.from('userinfo').insert({
-                    user_roles: 'Patient',
-                    arabic_username_a: email, // Fallback
-                    arabic_username_b: email,
-                    arabic_username_c: email,
-                    arabic_username_d: email,
-                    english_username_a: authData.user.email || email,
-                    english_username_b: authData.user.email || email,
-                    english_username_c: authData.user.email || email,
-                    english_username_d: authData.user.email || email,
-                    user_email: email,
-                    user_phonenumber: '',
-                    date_of_birth: currentTimestamp,
-                    gender_user: 'unknown',
-                    user_password: password,
-                    created_at: currentTimestamp,
-                    updated_at: currentTimestamp,
-                    pdated_at: currentTimestamp
-                });
-
-                if (createError) {
-                    console.error('Error creating user profile:', createError);
-                    throw new Error('Failed to create user profile');
-                }
-
-                // Fetch the newly created profile
-                const { data: newUserData, error: newFetchError } = await supabase
-                    .from('userinfo')
-                    .select('*')
-                    .eq('user_email', email)
-                    .single();
-
-                if (newFetchError || !newUserData) {
-                    console.error('Error fetching new profile:', newFetchError);
-                    throw new Error('Failed to fetch user profile');
-                }
-
-                // Set the user with the new profile
-                const userObj: User = {
-                    id: newUserData.userid.toString(),
-                    email: newUserData.user_email,
-                    name: newUserData.english_username_a,
-                    role: newUserData.user_roles.toLowerCase() as UserRole
-                };
-
-                setUser(userObj);
-                return userObj;
-            }
-
-            // If userData exists, use it
-            const userObj: User = {
-                id: userData.userid.toString(),
-                email: userData.user_email,
-                name: userData.english_username_a,
-                role: userData.user_roles.toLowerCase() as UserRole
-            };
-
-            setUser(userObj);
-            return userObj;
-
-        } catch (error) {
-            setIsLoading(false);
-            console.error('Login error:', error);
-            throw error;
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // 2. Update the signup function to ensure it works correctly
     const signup = async (userData: SignupData) => {
         setIsLoading(true);
 
         try {
-            // 1. Check email availability 
+            // 1. Check email availability
             const { data: existingEmail, error: emailCheckError } = await supabase
                 .from('userinfo')
                 .select('user_email')
@@ -218,21 +112,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('This email is already registered. Please login.');
             }
 
-            // 2. Create auth user with proper redirect URLs
+            // 2. Create auth user
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: userData.email,
                 password: userData.password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`,
-                    data: {
-                        name: userData.englishName
-                    }
+                    emailRedirectTo: `${window.location.origin}/auth/callback`
                 }
             });
 
             if (authError) {
                 console.error('Auth signup error:', authError);
                 throw authError;
+            }
+
+            if (!authData.user) {
+                throw new Error('Failed to create auth user');
             }
 
             // 3. Create user profile
@@ -260,25 +155,125 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (profileError) {
                 console.error('Profile creation error:', profileError);
+                // Try to rollback auth user if profile creation fails
+                await supabase.auth.signOut();
                 throw new Error(`Failed to create profile: ${profileError.message}`);
             }
 
-            // 4. Try auto-login if no email confirmation required
-            try {
-                await login(userData.email, userData.password);
-            } catch (loginError) {
-                console.log('Auto-login after signup failed:', loginError);
-                // This is not critical, so we don't throw or rethrow
-            }
+            console.log('User profile created successfully during signup');
 
         } catch (error) {
-            setIsLoading(false);
             console.error('Signup error:', error);
             throw error;
         } finally {
             setIsLoading(false);
         }
     };
+
+    const login = async (email: string, password: string): Promise<User> => {
+        setIsLoading(true);
+
+        try {
+            // 1. Try to login with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (authError) {
+                console.error('Auth login error:', authError);
+                throw new Error('Invalid email or password');
+            }
+
+            if (!authData.user) {
+                throw new Error('Authentication failed');
+            }
+
+            // 2. Check if user exists in database
+            const { data: userData, error: dbError } = await supabase
+                .from('userinfo')
+                .select('*')
+                .eq('user_email', email)
+                .single();
+
+            // 3. If user doesn't exist in database, create profile automatically
+            if (!userData || dbError) {
+                console.log('User profile not found, creating one...');
+
+                const currentTimestamp = new Date().toISOString();
+
+                // First try to create with returning
+                const { data: insertData, error: createError } = await supabase
+                    .from('userinfo')
+                    .insert({
+                        user_roles: 'Patient',
+                        arabic_username_a: email,
+                        arabic_username_b: email,
+                        arabic_username_c: email,
+                        arabic_username_d: email,
+                        english_username_a: email,
+                        english_username_b: email,
+                        english_username_c: email,
+                        english_username_d: email,
+                        user_email: email,
+                        user_phonenumber: '0000000000',
+                        date_of_birth: currentTimestamp,
+                        gender_user: 'unknown',
+                        user_password: password,
+                        created_at: currentTimestamp,
+                        updated_at: currentTimestamp,
+                        pdated_at: currentTimestamp
+                    })
+                    .select();
+
+                if (createError) {
+                    console.error('Error creating user profile:', createError);
+                    throw new Error('Failed to create user profile');
+                }
+
+                // Fetch the new user data
+                const { data: newUserData, error: fetchError } = await supabase
+                    .from('userinfo')
+                    .select('*')
+                    .eq('user_email', email)
+                    .single();
+
+                if (fetchError || !newUserData) {
+                    console.error('Error fetching new user:', fetchError);
+                    throw new Error('Failed to retrieve user profile');
+                }
+
+                const userObj: User = {
+                    id: newUserData.userid.toString(),
+                    email: newUserData.user_email,
+                    name: newUserData.english_username_a,
+                    role: newUserData.user_roles.toLowerCase() as UserRole
+                };
+
+                setUser(userObj);
+                return userObj;
+            }
+
+            // 4. User exists, return data
+            const userObj: User = {
+                id: userData.userid.toString(),
+                email: userData.user_email,
+                name: userData.english_username_a,
+                role: userData.user_roles.toLowerCase() as UserRole
+            };
+
+            setUser(userObj);
+            return userObj;
+
+        } catch (error) {
+            setIsLoading(false);
+            console.error('Login error:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const logout = async () => {
         try {
             await supabase.auth.signOut();
