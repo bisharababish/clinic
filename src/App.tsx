@@ -10,6 +10,7 @@ import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
 // Pages
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import AuthCallback from "./pages/AuthCallback";
 import Index from "./pages/Index";
 import AboutUs from "./pages/Aboutus";
 import Clinics from "./pages/Clinics";
@@ -58,7 +59,7 @@ function App() {
           {/* Public routes */}
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
-
+          <Route path="/auth/callback" element={<AuthCallback />} />
           {/* Protected routes with MainLayout */}
           <Route
             path="/"

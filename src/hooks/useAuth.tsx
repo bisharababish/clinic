@@ -114,12 +114,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('This email is already registered. Please login.');
             }
 
-            // 2. Create auth user
+            // 2. Create auth user with proper redirect URLs
             const { error: authError } = await supabase.auth.signUp({
                 email: userData.email,
                 password: userData.password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                    emailRedirectTo: `${window.location.origin}/auth/callback`,
+                    data: {
+                        name: userData.englishName
+                    }
                 }
             });
 
@@ -127,11 +130,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw authError;
             }
 
-            // 3. Create user profile - DON'T include userid, let the database auto-increment it
+            // 3. Create user profile
             const currentTimestamp = new Date().toISOString();
 
             const { error: profileError } = await supabase.from('userinfo').insert({
-                // Remove userid - the database will auto-assign it
                 user_roles: 'Patient',
                 arabic_username_a: userData.arabicName,
                 arabic_username_b: userData.arabicName,
@@ -168,7 +170,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setIsLoading(false);
         }
     };
-    const login = async (email: string, password: string): Promise<User> => {
+     const login = async (email: string, password: string): Promise<User> => {
         setIsLoading(true);
 
         try {
