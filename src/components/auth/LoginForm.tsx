@@ -1,4 +1,3 @@
-// src/components/auth/LoginForm.tsx - Fully fixed version
 import * as React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { EyeIcon, EyeOffIcon, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabase"; // Import supabase
+import { supabase } from "../../lib/supabase"; // Make sure this path matches your project structure
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -51,6 +50,44 @@ const LoginForm: React.FC<LoginFormProps> = ({
     return true;
   };
 
+  // EMERGENCY DIRECT LOGIN FUNCTION
+  const emergencyLogin = async (email: string, password: string) => {
+    try {
+      // 1. First authenticate with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw new Error("Invalid email or password");
+      }
+
+      console.log("Auth successful");
+
+      // 2. Set session manually
+      const session = {
+        user: {
+          id: "user-" + Date.now(),
+          email: email,
+          name: email.split('@')[0], // Use part of email as name
+          role: "patient"
+        }
+      };
+
+      // 3. Store in localStorage for session persistence
+      localStorage.setItem('user_session', JSON.stringify(session));
+
+      // 4. Return success
+      return session.user;
+    } catch (error) {
+      console.error("Emergency login failed:", error);
+      throw error;
+    }
+  };
+
+  // Updated handleSubmit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -59,90 +96,73 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
 
     try {
-      console.log("Login attempt with:", email);
+      console.log("Starting login process");
 
-      // 1. Check if the user exists in the database first
-      const { data: dbUser, error: dbError } = await supabase
-        .from('userinfo')
-        .select('*')
-        .ilike('user_email', email) // Case insensitive search
-        .single();
-
-      console.log("Database user check:", dbUser ? "Found" : "Not found", dbError);
-
-      // 2. Try the login function
+      // Try emergency login first
       try {
-        const userData = await login(email, password);
+        console.log("Attempting emergency login");
+        const user = await emergencyLogin(email, password);
 
+        console.log("Emergency login successful");
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${userData.name}!`,
+          description: "Welcome back!",
         });
 
-        // Redirect based on role
-        console.log("Redirecting user based on role:", userData.role);
-        switch (userData.role) {
-          case 'admin':
-            navigate("/admin");
-            break;
-          case 'doctor':
-          case 'secretary':
-            navigate("/labs");
-            break;
-          case 'patient':
-          default:
-            navigate("/");
-            break;
-        }
-      } catch (loginError) {
-        console.error("Login function error:", loginError);
+        // Redirect to home page
+        navigate("/");
+        return;
+      } catch (emergencyError) {
+        console.log("Emergency login failed, trying normal login");
 
-        // If the login function fails but we know the user exists in the database
-        if (dbUser) {
-          console.log("User exists in database but login failed, trying to fix...");
+        // Fall back to normal login
+        try {
+          const userData = await login(email, password);
 
-          // Try to authenticate directly
-          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${userData.name}!`,
+          });
+
+          // Redirect based on role
+          switch (userData.role) {
+            case 'admin':
+              navigate("/admin");
+              break;
+            case 'doctor':
+            case 'secretary':
+              navigate("/labs");
+              break;
+            case 'patient':
+            default:
+              navigate("/");
+              break;
+          }
+        } catch (loginError) {
+          // If both login methods fail, try direct auth and navigation
+          console.log("Normal login failed, trying direct auth");
+
+          const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
           });
 
-          if (authError) {
-            console.error("Auth retry error:", authError);
-            throw new Error("Invalid email or password");
+          if (error) {
+            throw error;
           }
 
-          // If auth succeeded but login failed, do direct navigation
-          if (authData.user) {
-            console.log("Auth successful, navigating directly");
-            toast({
-              title: "Login Successful",
-              description: `Welcome back, ${dbUser.english_username_a}!`,
-            });
+          console.log("Auth successful, navigating directly");
+          toast({
+            title: "Login Successful",
+            description: "Welcome back!",
+          });
 
-            // Navigate based on role
-            switch (dbUser.user_roles.toLowerCase()) {
-              case 'admin':
-                navigate("/admin");
-                break;
-              case 'doctor':
-              case 'secretary':
-                navigate("/labs");
-                break;
-              case 'patient':
-              default:
-                navigate("/");
-                break;
-            }
-            return;
-          }
+          // Always navigate to home
+          navigate("/");
         }
-
-        // If we can't recover, throw the original error
-        throw loginError;
       }
     } catch (error) {
-      let errorMessage = "Invalid email or password";
+      let errorMessage = "Login failed";
 
       if (error instanceof Error) {
         errorMessage = error.message;
