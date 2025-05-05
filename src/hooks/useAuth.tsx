@@ -114,26 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error('This email is already registered. Please login.');
             }
 
-            // 2. FIXED: Get next available userid more reliably
-            let newUserId = 1;
-            const { data: maxUserData, error: maxError } = await supabase
-                .from('userinfo')
-                .select('userid')
-                .order('userid', { ascending: false })
-                .limit(1)
-                .maybeSingle(); // Use maybeSingle() to handle case when no users exist
-
-            if (maxError && maxError.code !== 'PGRST116') { // PGRST116 means no rows found
-                throw maxError;
-            }
-
-            if (maxUserData && maxUserData.userid) {
-                newUserId = maxUserData.userid + 1;
-            }
-
-            console.log('Assigning new userid:', newUserId); // Debug log
-
-            // 3. Create auth user
+            // 2. Create auth user
             const { error: authError } = await supabase.auth.signUp({
                 email: userData.email,
                 password: userData.password,
@@ -146,11 +127,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 throw authError;
             }
 
-            // 4. Create user profile with all required fields
+            // 3. Create user profile - DON'T include userid, let the database auto-increment it
             const currentTimestamp = new Date().toISOString();
 
             const { error: profileError } = await supabase.from('userinfo').insert({
-                userid: newUserId,
+                // Remove userid - the database will auto-assign it
                 user_roles: 'Patient',
                 arabic_username_a: userData.arabicName,
                 arabic_username_b: userData.arabicName,
@@ -167,21 +148,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 user_password: userData.password,
                 created_at: currentTimestamp,
                 updated_at: currentTimestamp,
-                pdated_at: currentTimestamp // Keep this field to match your table
+                pdated_at: currentTimestamp
             });
 
             if (profileError) {
-                console.error('Profile creation error:', profileError); // Debug log
+                console.error('Profile creation error:', profileError);
                 // Rollback auth user if profile creation fails
                 await supabase.auth.signOut();
                 throw new Error(`Failed to create profile: ${profileError.message}`);
             }
 
-            console.log('User profile created successfully'); // Debug log
+            console.log('User profile created successfully');
 
         } catch (error) {
             setIsLoading(false);
-            console.error('Signup error:', error); // Debug log
+            console.error('Signup error:', error);
             throw error;
         } finally {
             setIsLoading(false);
