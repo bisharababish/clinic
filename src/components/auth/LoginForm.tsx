@@ -1,3 +1,4 @@
+// src/components/auth/LoginForm.tsx
 import * as React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,25 @@ const LoginForm: React.FC<LoginFormProps> = ({
     }
   };
 
+  // Force navigation to Index page
+  const forceNavigateToIndex = () => {
+    console.log("Attempting force navigation to Index");
+
+    // Try multiple navigation methods
+    try {
+      navigate("/");
+      console.log("React Router navigation attempted");
+    } catch (navError) {
+      console.error("Navigation error:", navError);
+    }
+
+    // Use setTimeout to ensure the navigation happens after current execution
+    setTimeout(() => {
+      console.log("Fallback navigation with window.location.href");
+      window.location.href = "/";
+    }, 500);
+  };
+
   // Updated handleSubmit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +130,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         });
 
         // Redirect to home page
-        navigate("/");
+        forceNavigateToIndex();
         return;
       } catch (emergencyError) {
         console.log("Emergency login failed, trying normal login");
@@ -135,7 +155,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
               break;
             case 'patient':
             default:
-              navigate("/");
+              forceNavigateToIndex();
               break;
           }
         } catch (loginError) {
@@ -158,7 +178,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           });
 
           // Always navigate to home
-          navigate("/");
+          forceNavigateToIndex();
         }
       }
     } catch (error) {
@@ -254,6 +274,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
         >
           Sign Up
         </button>
+      </div>
+
+      {/* Emergency Home Link */}
+      <div className="text-center mt-4">
+        <a href="/" className="text-primary font-medium hover:underline">
+          Go to Home Page
+        </a>
       </div>
     </div>
   );
