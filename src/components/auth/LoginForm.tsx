@@ -1,4 +1,4 @@
-// components/auth/LoginForm.tsx
+// src/components/auth/LoginForm.tsx
 import * as React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -26,17 +26,34 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!email || !password) {
+      toast({
+        title: "Missing Credentials",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsLoading(true);
 
@@ -55,18 +72,23 @@ const LoginForm: React.FC<LoginFormProps> = ({
           break;
         case 'doctor':
         case 'secretary':
-          navigate("/labs"); // Doctors and secretaries go to labs
+          navigate("/labs");
           break;
         case 'patient':
         default:
-          navigate("/"); // Patients go to home page
+          navigate("/");
           break;
       }
     } catch (error) {
-      console.error("Login error:", error);
+      let errorMessage = "Invalid email or password";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Login Failed",
-        description: error instanceof Error ? error.message : "Invalid email or password",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
