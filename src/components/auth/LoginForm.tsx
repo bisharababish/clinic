@@ -262,15 +262,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </button>
       </div>
 
-      {/* Emergency redirect button */}
-      <div className="text-center mt-4">
-        <button
-          onClick={handleEmergencyRedirect}
-          className="text-primary underline"
-        >
-          Emergency Home Link
-        </button>
-      </div>
+
     </div>
   );
 };

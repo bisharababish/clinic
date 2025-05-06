@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
   const location = useLocation();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [hasDirectAuth, setHasDirectAuth] = useState(false);
-  
+
   // Check for direct authentication state without relying on the hook
   useEffect(() => {
     const checkAuthDirectly = async () => {
@@ -27,7 +27,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
           setIsCheckingAuth(false);
           return;
         }
-        
+
         // Check localStorage for cached user profile
         const cachedUserProfile = localStorage.getItem('clinic_user_profile');
         if (cachedUserProfile) {
@@ -36,17 +36,17 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
           setIsCheckingAuth(false);
           return;
         }
-        
+
         // Check Supabase session directly
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error('Error checking auth directly:', error);
           setHasDirectAuth(false);
           setIsCheckingAuth(false);
           return;
         }
-        
+
         if (data && data.session) {
           console.log('Direct auth check: User is authenticated');
           setHasDirectAuth(true);
@@ -61,7 +61,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
         setIsCheckingAuth(false);
       }
     };
-    
+
     checkAuthDirectly();
   }, [location.pathname]);
 
@@ -83,7 +83,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
   if (allowedRoles.length > 0) {
     // Get role from user context or cached profile
     let userRole: UserRole = 'patient'; // Default
-    
+
     if (user) {
       userRole = user.role;
     } else {
@@ -98,7 +98,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
         }
       }
     }
-    
+
     if (!allowedRoles.includes(userRole)) {
       console.log("User doesn't have required role:", userRole, "Required:", allowedRoles);
       return <Navigate to="/" replace />;
