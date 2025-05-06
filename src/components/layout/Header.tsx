@@ -1,20 +1,66 @@
 // components/layout/Header.tsx
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabase';
 
 export function Header() {
     const { user, logout } = useAuth();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    // Extra check for authentication state on mount and when user changes
+    useEffect(() => {
+        const checkAuthStatus = async () => {
+            // Check if we have user in the context
+            if (user) {
+                console.log("User found in context:", user);
+                setIsAuthenticated(true);
+                return;
+            }
+
+            // Fallback check for session directly from Supabase
+            try {
+                const { data } = await supabase.auth.getSession();
+                if (data.session) {
+                    console.log("Session found but no user in context");
+                    setIsAuthenticated(true);
+                    return;
+                }
+
+                // Also check localStorage as a last resort
+                const cachedUser = localStorage.getItem('clinic_user_profile');
+                if (cachedUser) {
+                    console.log("Cached user found in localStorage");
+                    setIsAuthenticated(true);
+                    return;
+                }
+
+                console.log("No authentication found");
+                setIsAuthenticated(false);
+            } catch (error) {
+                console.error("Error checking auth status:", error);
+                setIsAuthenticated(false);
+            }
+        };
+
+        checkAuthStatus();
+    }, [user]);
 
     // Define which navigation items are visible based on role
     const isAdmin = user?.role === "admin";
-    const canViewLabs = user?.role === "admin" || user?.role === "doctor" || user?.role === "secretary";
-    const canViewXray = user?.role === "admin" || user?.role === "doctor" || user?.role === "secretary";
+    const canViewLabs = isAuthenticated && (user?.role === "admin" || user?.role === "doctor" || user?.role === "secretary");
+    const canViewXray = isAuthenticated && (user?.role === "admin" || user?.role === "doctor" || user?.role === "secretary");
 
     // Handle logout click
     const handleLogout = async () => {
         try {
             await logout();
+            // Force state update immediately
+            setIsAuthenticated(false);
+            // Clear any cached auth data
+            localStorage.removeItem('clinic_user_profile');
+            localStorage.removeItem('supabase.auth.token');
             // Redirect to login page after logout
             window.location.href = "/auth";
         } catch (error) {
@@ -64,7 +110,7 @@ export function Header() {
                 )}
 
                 {/* Conditional button for Login/Logout */}
-                {user ? (
+                {isAuthenticated ? (
                     <Button
                         variant="ghost"
                         onClick={handleLogout}
@@ -82,10 +128,10 @@ export function Header() {
             {user && user.role !== "patient" && (
                 <div className="hidden md:block">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize border ${user.role === "admin"
-                        ? "bg-red-100 text-red-800 border-red-200"
-                        : user.role === "doctor"
-                            ? "bg-blue-100 text-blue-800 border-blue-200"
-                            : "bg-purple-100 text-purple-800 border-purple-200"
+                            ? "bg-red-100 text-red-800 border-red-200"
+                            : user.role === "doctor"
+                                ? "bg-blue-100 text-blue-800 border-blue-200"
+                                : "bg-purple-100 text-purple-800 border-purple-200"
                         }`}>
                         {user.role}
                     </span>
