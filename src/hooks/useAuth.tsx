@@ -19,14 +19,34 @@ interface AuthContextType {
     logout: () => Promise<void>;
 }
 
+// Updated to include individual name fields
 interface SignupData {
-    email: string;
-    password: string;
-    englishName: string;
-    arabicName: string;
-    phoneNumber: string;
-    dateOfBirth: string;
-    gender: string;
+    // Original fields - kept for backward compatibility
+    email?: string;
+    password?: string;
+    englishName?: string;
+    arabicName?: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    gender?: string;
+
+    // New fields for separate name components
+    english_username_a?: string;
+    english_username_b?: string;
+    english_username_c?: string;
+    english_username_d?: string;
+    arabic_username_a?: string;
+    arabic_username_b?: string;
+    arabic_username_c?: string;
+    arabic_username_d?: string;
+
+    // Database field names
+    user_email?: string;
+    user_password?: string;
+    user_phonenumber?: string;
+    date_of_birth?: string;
+    gender_user?: string;
+    user_roles?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -303,17 +323,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
+    // Modified to handle both the old and new field formats
     const signup = async (userData: SignupData) => {
         setIsLoading(true);
 
         try {
             console.log("Starting signup process");
 
+            // Normalize data - extract email from different possible sources
+            const email = userData.user_email || userData.email;
+            const password = userData.user_password || userData.password;
+
+            if (!email || !password) {
+                throw new Error('Email and password are required');
+            }
+
             // 1. Check email availability (case insensitive)
             const { data: existingEmail, error: emailCheckError } = await supabase
                 .from('userinfo')
                 .select('user_email')
-                .ilike('user_email', userData.email)
+                .ilike('user_email', email)
                 .maybeSingle();
 
             if (existingEmail) {
@@ -323,8 +352,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // 2. Create auth user
             console.log("Creating auth user");
             const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: userData.email,
-                password: userData.password,
+                email,
+                password,
                 options: {
                     emailRedirectTo: `${window.location.origin}/auth/callback`
                 }
@@ -345,27 +374,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log("Creating user profile in database");
             const currentTimestamp = new Date().toISOString();
 
+            // Prepare insert data - handle both formats of input data
+            const insertData = {
+                user_roles: userData.user_roles || 'Patient',
+
+                // Handle separate name fields (preferred)
+                english_username_a: userData.english_username_a || userData.englishName || email,
+                english_username_b: userData.english_username_b || userData.englishName || email,
+                english_username_c: userData.english_username_c || userData.englishName || email,
+                english_username_d: userData.english_username_d || userData.englishName || email,
+
+                arabic_username_a: userData.arabic_username_a || userData.arabicName || email,
+                arabic_username_b: userData.arabic_username_b || userData.arabicName || email,
+                arabic_username_c: userData.arabic_username_c || userData.arabicName || email,
+                arabic_username_d: userData.arabic_username_d || userData.arabicName || email,
+
+                // Other fields
+                user_email: email,
+                user_phonenumber: userData.user_phonenumber || userData.phoneNumber || '0000000000',
+                date_of_birth: userData.date_of_birth || userData.dateOfBirth || currentTimestamp,
+                gender_user: userData.gender_user || userData.gender || 'unknown',
+                user_password: password,
+
+                // Timestamps
+                created_at: currentTimestamp,
+                updated_at: currentTimestamp,
+                pdated_at: currentTimestamp
+            };
+
             const { data: userInsertData, error: profileError } = await supabase
                 .from('userinfo')
-                .insert({
-                    user_roles: 'Patient',
-                    arabic_username_a: userData.arabicName,
-                    arabic_username_b: userData.arabicName,
-                    arabic_username_c: userData.arabicName,
-                    arabic_username_d: userData.arabicName,
-                    english_username_a: userData.englishName,
-                    english_username_b: userData.englishName,
-                    english_username_c: userData.englishName,
-                    english_username_d: userData.englishName,
-                    user_email: userData.email,
-                    user_phonenumber: userData.phoneNumber,
-                    date_of_birth: userData.dateOfBirth,
-                    gender_user: userData.gender,
-                    user_password: userData.password,
-                    created_at: currentTimestamp,
-                    updated_at: currentTimestamp,
-                    pdated_at: currentTimestamp
-                })
+                .insert(insertData)
                 .select();
 
             if (profileError) {
