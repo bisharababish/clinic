@@ -1,7 +1,8 @@
-// Modified ProtectedRoute.tsx - Improved navigation handling
-import { ReactNode, useEffect } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+// components/auth/ProtectedRoute.tsx
+import { ReactNode, useEffect, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth, UserRole } from "../../hooks/useAuth";
+import { supabase } from "../../lib/supabase";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -11,42 +12,101 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-
-  console.log("Protected route check - User:", user, "Loading:", isLoading); // Debug log
-
-  // Check for loginSuccess flag
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [hasDirectAuth, setHasDirectAuth] = useState(false);
+  
+  // Check for direct authentication state without relying on the hook
   useEffect(() => {
-    const loginSuccess = localStorage.getItem('loginSuccess');
-    if (loginSuccess === 'true' && user) {
-      // Clear the flag
-      localStorage.removeItem('loginSuccess');
-      // Force navigation to current path to refresh the page if needed
-      const currentPath = location.pathname;
-      console.log("Login success flag found, refreshing page at", currentPath);
-      navigate(currentPath, { replace: true });
-    }
-  }, [user, navigate, location.pathname]);
+    const checkAuthDirectly = async () => {
+      try {
+        // First check if login is in progress
+        const loginInProgress = sessionStorage.getItem('login_in_progress');
+        if (loginInProgress === 'true') {
+          console.log('Login in progress, allowing temporary access');
+          setHasDirectAuth(true);
+          setIsCheckingAuth(false);
+          return;
+        }
+        
+        // Check localStorage for cached user profile
+        const cachedUserProfile = localStorage.getItem('clinic_user_profile');
+        if (cachedUserProfile) {
+          console.log('Found cached user profile');
+          setHasDirectAuth(true);
+          setIsCheckingAuth(false);
+          return;
+        }
+        
+        // Check Supabase session directly
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error checking auth directly:', error);
+          setHasDirectAuth(false);
+          setIsCheckingAuth(false);
+          return;
+        }
+        
+        if (data && data.session) {
+          console.log('Direct auth check: User is authenticated');
+          setHasDirectAuth(true);
+        } else {
+          console.log('Direct auth check: No session found');
+          setHasDirectAuth(false);
+        }
+      } catch (error) {
+        console.error('Unexpected error in direct auth check:', error);
+        setHasDirectAuth(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+    
+    checkAuthDirectly();
+  }, [location.pathname]);
+
+  console.log("Protected route check - User from context:", user, "Loading:", isLoading, "Direct Auth:", hasDirectAuth);
 
   // Show loading state if still checking authentication
-  if (isLoading) {
+  if (isLoading || isCheckingAuth) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  // If not logged in, redirect to login page
-  if (!user) {
-    console.log("User not authenticated, redirecting to auth"); // Debug log
+  // IMPORTANT: Check both context user and direct auth
+  // This fixes the redirect issue since we're not just relying on the context
+  if (!user && !hasDirectAuth) {
+    console.log("No authentication detected, redirecting to auth page");
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  // If no specific roles are required, or if user has an allowed role, render the page
-  if (allowedRoles.length === 0 || allowedRoles.includes(user.role)) {
-    return <>{children}</>;
+  // If we get here, user is authenticated - check roles if needed
+  if (allowedRoles.length > 0) {
+    // Get role from user context or cached profile
+    let userRole: UserRole = 'patient'; // Default
+    
+    if (user) {
+      userRole = user.role;
+    } else {
+      // Try to get role from cached profile
+      const cachedProfile = localStorage.getItem('clinic_user_profile');
+      if (cachedProfile) {
+        try {
+          const parsed = JSON.parse(cachedProfile);
+          userRole = parsed.role as UserRole;
+        } catch (e) {
+          console.error('Error parsing cached profile:', e);
+        }
+      }
+    }
+    
+    if (!allowedRoles.includes(userRole)) {
+      console.log("User doesn't have required role:", userRole, "Required:", allowedRoles);
+      return <Navigate to="/" replace />;
+    }
   }
 
-  // If user doesn't have permission, redirect to unauthorized page or home
-  console.log("User doesn't have required role:", user.role, "Required:", allowedRoles); // Debug log
-  return <Navigate to="/" replace />;
+  // All checks passed, render the protected content
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

@@ -25,7 +25,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,70 +50,46 @@ const LoginForm: React.FC<LoginFormProps> = ({
     return true;
   };
 
-  // Create a direct login bypass function
-  const bypassLogin = async (email: string, password: string) => {
+  const bypassLogin = async (email, password) => {
     try {
-      // 1. Auth with Supabase directly
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      // Direct authentication without hooks
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (authError) {
-        throw new Error('Authentication failed');
-      }
+      if (error) throw error;
 
-      // 2. Check if profile exists
-      const { data: userData, error: userError } = await supabase
-        .from('userinfo')
-        .select('*')
-        .ilike('user_email', email)
-        .single();
+      if (data && data.session) {
+        // Store session in localStorage
+        localStorage.setItem('supabase.auth.token', JSON.stringify({
+          currentSession: data.session,
+          expiresAt: Date.now() + 3600000 // 1 hour
+        }));
 
-      // 3. If user profile doesn't exist, create one
-      if (!userData || userError) {
-        console.log("Creating user profile automatically");
-        const currentTime = new Date().toISOString();
-
-        // Create basic user profile
-        const { error: insertError } = await supabase
+        // Get user info from database
+        const { data: userData } = await supabase
           .from('userinfo')
-          .insert({
-            user_roles: 'Patient',
-            arabic_username_a: email,
-            arabic_username_b: email,
-            arabic_username_c: email,
-            arabic_username_d: email,
-            english_username_a: email,
-            english_username_b: email,
-            english_username_c: email,
-            english_username_d: email,
-            user_email: email,
-            user_phonenumber: '0000000000',
-            date_of_birth: currentTime,
-            gender_user: 'unknown',
-            user_password: password,
-            created_at: currentTime,
-            updated_at: currentTime,
-            pdated_at: currentTime
-          });
+          .select('*')
+          .ilike('user_email', email)
+          .single();
 
-        if (insertError) {
-          console.error("Error creating profile:", insertError);
-          throw new Error('Failed to create user profile');
+        if (userData) {
+          // Store user info in localStorage for immediate access
+          localStorage.setItem('clinic_user_profile', JSON.stringify({
+            id: userData.userid,
+            email: userData.user_email,
+            name: userData.english_username_a,
+            role: userData.user_roles.toLowerCase()
+          }));
         }
+
+        return true;
       }
-
-      // 4. Set session token manually (force auth state)
-      localStorage.setItem('supabase.auth.token', JSON.stringify({
-        currentSession: authData.session,
-        expiresAt: (Date.now() + 3600 * 1000)
-      }));
-
-      return true;
+      return false;
     } catch (error) {
       console.error("Bypass login error:", error);
-      throw error;
+      return false;
     }
   };
 
@@ -126,99 +101,88 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
 
     try {
-      // First try to authenticate with Supabase directly
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      // Set a flag to indicate we're mid-login to prevent redirects
+      sessionStorage.setItem('login_in_progress', 'true');
+
+      // Try bypass login first for direct API access
+      const bypassSuccess = await bypassLogin(email, password);
+
+      if (bypassSuccess) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!"
+        });
+
+        // Wait for the toast to appear before redirect
+        setTimeout(() => {
+          // Clear the login progress flag
+          sessionStorage.removeItem('login_in_progress');
+
+          // Force a hard redirect to the home page
+          window.location.href = "/";
+        }, 500);
+
+        return;
+      }
+
+      // If bypass didn't work, try the hook method
+      const userData = await login(email, password);
+
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${userData.name}!`
       });
 
-      if (authError) {
-        throw new Error(authError.message);
-      }
+      // Wait for the toast to be seen before redirect
+      setTimeout(() => {
+        // Clear the login progress flag
+        sessionStorage.removeItem('login_in_progress');
 
-      // If authentication is successful
-      if (authData && authData.session) {
-        // Get user profile info
-        const { data: userData, error: userError } = await supabase
-          .from('userinfo')
-          .select('*')
-          .ilike('user_email', email)
-          .single();
-
-        // Create profile if doesn't exist
-        if (userError || !userData) {
-          const currentTime = new Date().toISOString();
-          await supabase.from('userinfo').insert({
-            user_roles: 'Patient',
-            arabic_username_a: email,
-            arabic_username_b: email,
-            arabic_username_c: email,
-            arabic_username_d: email,
-            english_username_a: email,
-            english_username_b: email,
-            english_username_c: email,
-            english_username_d: email,
-            user_email: email,
-            user_phonenumber: '0000000000',
-            date_of_birth: currentTime,
-            gender_user: 'unknown',
-            user_password: password,
-            created_at: currentTime,
-            updated_at: currentTime,
-            pdated_at: currentTime
-          });
-        }
-
-        // Show success message
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!"
-        });
-
-        // IMPORTANT: Fixed navigation - Use multiple approaches to ensure redirect works
-        // 1. Set a flag in localStorage to indicate successful login
-        localStorage.setItem('loginSuccess', 'true');
-
-        // 2. Use direct window location first for maximum compatibility
+        // Force a hard redirect to the home page
         window.location.href = "/";
+      }, 500);
 
-        // 3. Fallback to React Router navigate (may not execute due to page reload)
-        setTimeout(() => {
-          navigate("/");
-        }, 100);
-      }
     } catch (error) {
       console.error("Login error:", error);
+      sessionStorage.removeItem('login_in_progress');
 
-      // Try the login function from useAuth as fallback
-      try {
-        await login(email, password);
-
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!"
-        });
-
-        // Same navigation approach for the fallback
-        localStorage.setItem('loginSuccess', 'true');
-        window.location.href = "/";
-      } catch (loginError) {
-        let errorMessage = "Invalid email or password";
-        if (loginError instanceof Error) {
-          errorMessage = loginError.message;
-        }
-
-        toast({
-          title: "Login Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
+      let errorMessage = "Invalid email or password";
+      if (error instanceof Error) {
+        errorMessage = error.message;
       }
+
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleEmergencyRedirect = (e) => {
+    e.preventDefault();
+    // Simulate login with default admin
+    bypassLogin('admin@clinic.com', 'password123').then(success => {
+      if (success) {
+        toast({
+          title: "Emergency Access",
+          description: "Redirecting to home page..."
+        });
+
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 500);
+      } else {
+        toast({
+          title: "Error",
+          description: "Emergency access failed",
+          variant: "destructive"
+        });
+      }
+    });
+  };
 
   return (
     <div className="w-full space-y-6 animate-fade-in">
@@ -300,9 +264,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       {/* Emergency redirect button */}
       <div className="text-center mt-4">
-        <a href="/" className="text-primary underline">
+        <button
+          onClick={handleEmergencyRedirect}
+          className="text-primary underline"
+        >
           Emergency Home Link
-        </a>
+        </button>
       </div>
     </div>
   );

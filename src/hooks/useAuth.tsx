@@ -1,4 +1,4 @@
-// Modified useAuth.tsx - Improved login and session handling
+// src/hooks/useAuth.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -35,13 +35,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Improved session checking with better error handling
     useEffect(() => {
+        // Try to load user from localStorage first for immediate UI updates
+        const cachedUser = localStorage.getItem('clinic_user_profile');
+        if (cachedUser) {
+            try {
+                const parsed = JSON.parse(cachedUser);
+                setUser({
+                    id: parsed.id.toString(),
+                    email: parsed.email,
+                    name: parsed.name,
+                    role: parsed.role as UserRole
+                });
+            } catch (e) {
+                console.error('Error parsing cached user:', e);
+            }
+        }
+
         // Check for active session on mount
         const checkSession = async () => {
             try {
                 console.log("Checking session on mount...");
-                const { data: { session } } = await supabase.auth.getSession();
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    console.error("Session error:", error);
+                    setIsLoading(false);
+                    return;
+                }
 
                 if (session?.user) {
                     console.log("Session found:", session.user.email);
@@ -54,22 +75,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
                     if (userError) {
                         console.error("Error fetching user data:", userError);
-                        // Don't throw here, just log the error
+                        setIsLoading(false);
+                        return;
                     }
 
                     if (userData) {
                         console.log("User data found in database:", userData.english_username_a);
-                        setUser({
+                        const userObj = {
                             id: userData.userid.toString(),
                             email: userData.user_email,
                             name: userData.english_username_a,
                             role: (userData.user_roles || 'patient').toLowerCase() as UserRole
-                        });
+                        };
+
+                        // Cache the user profile for faster access
+                        localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
+
+                        setUser(userObj);
                     } else {
                         console.log("No user data found for email:", session.user.email);
                     }
                 } else {
                     console.log("No active session found");
+                    // Clear cached user if no session exists
+                    localStorage.removeItem('clinic_user_profile');
                 }
             } catch (error) {
                 console.error("Session check error:", error);
@@ -80,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         checkSession();
 
-        // Set up auth state change listener with improved error handling
+        // Set up auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 console.log("Auth state changed:", event, session?.user?.email);
@@ -96,16 +125,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
                         if (userError) {
                             console.error("Error fetching user data on auth change:", userError);
+                            return;
                         }
 
                         if (userData) {
                             console.log("User data found on auth change:", userData.english_username_a);
-                            setUser({
+                            const userObj = {
                                 id: userData.userid.toString(),
                                 email: userData.user_email,
                                 name: userData.english_username_a,
                                 role: (userData.user_roles || 'patient').toLowerCase() as UserRole
-                            });
+                            };
+
+                            // Cache the user profile
+                            localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
+
+                            setUser(userObj);
                         } else {
                             console.log("No user data found for email on auth change:", session.user.email);
                             // Create basic profile data if it doesn't exist
@@ -129,18 +164,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                                 console.error("Error creating user profile on auth change:", insertError);
                             } else {
                                 // Set basic user object
-                                setUser({
+                                const userObj = {
                                     id: '0', // Will be updated on next auth change
                                     email: session.user.email || '',
                                     name: session.user.email || '',
-                                    role: 'patient'
-                                });
+                                    role: 'patient' as UserRole
+                                };
+
+                                localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
+                                setUser(userObj);
                             }
                         }
                     } catch (error) {
                         console.error("Error handling auth state change:", error);
                     }
                 } else {
+                    // No session, clear user data
+                    localStorage.removeItem('clinic_user_profile');
                     setUser(null);
                 }
                 setIsLoading(false);
@@ -152,7 +192,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, []);
 
-    // The login function with improved error handling and navigation
     const login = async (email: string, password: string): Promise<User> => {
         setIsLoading(true);
 
@@ -193,7 +232,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const currentTimestamp = new Date().toISOString();
 
                 // Create new profile
-                const { error: createError } = await supabase
+                const { data: insertData, error: createError } = await supabase
                     .from('userinfo')
                     .insert({
                         user_roles: 'Patient',
@@ -213,41 +252,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         created_at: currentTimestamp,
                         updated_at: currentTimestamp,
                         pdated_at: currentTimestamp
-                    });
+                    })
+                    .select();
 
                 if (createError) {
                     console.error('Error creating user profile:', createError);
                     throw new Error('Failed to create user profile');
                 }
 
-                // Fetch the new user data
-                console.log('Fetching newly created profile');
-                const { data: newUserData, error: fetchError } = await supabase
-                    .from('userinfo')
-                    .select('*')
-                    .ilike('user_email', email)
-                    .single();
-
-                if (fetchError || !newUserData) {
-                    console.error('Error fetching new user:', fetchError);
-                    throw new Error('Failed to retrieve user profile');
+                if (!insertData || insertData.length === 0) {
+                    throw new Error('Failed to retrieve created user data');
                 }
 
                 console.log('New profile created successfully');
                 const userObj: User = {
-                    id: newUserData.userid.toString(),
-                    email: newUserData.user_email,
-                    name: newUserData.english_username_a,
-                    role: newUserData.user_roles.toLowerCase() as UserRole
+                    id: insertData[0].userid.toString(),
+                    email: insertData[0].user_email,
+                    name: insertData[0].english_username_a,
+                    role: insertData[0].user_roles.toLowerCase() as UserRole
                 };
 
+                // Cache user profile for faster access
+                localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
                 setUser(userObj);
-
-                // Force session update in localStorage
-                localStorage.setItem('supabase.auth.token', JSON.stringify({
-                    currentSession: authData.session,
-                    expiresAt: (Date.now() + 3600 * 1000)
-                }));
 
                 return userObj;
             }
@@ -261,7 +288,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 role: userData.user_roles.toLowerCase() as UserRole
             };
 
+            // Cache user profile
+            localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
             setUser(userObj);
+
             return userObj;
 
         } catch (error) {
@@ -273,7 +303,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // The rest of the functions (signup, logout) remain the same
     const signup = async (userData: SignupData) => {
         setIsLoading(true);
 
@@ -316,31 +345,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log("Creating user profile in database");
             const currentTimestamp = new Date().toISOString();
 
-            const { error: insertError } = await supabase.from('userinfo').insert({
-                user_roles: 'Patient',
-                arabic_username_a: userData.arabicName,
-                arabic_username_b: userData.arabicName,
-                arabic_username_c: userData.arabicName,
-                arabic_username_d: userData.arabicName,
-                english_username_a: userData.englishName,
-                english_username_b: userData.englishName,
-                english_username_c: userData.englishName,
-                english_username_d: userData.englishName,
-                user_email: userData.email,
-                user_phonenumber: userData.phoneNumber,
-                date_of_birth: userData.dateOfBirth,
-                gender_user: userData.gender,
-                user_password: userData.password,
-                created_at: currentTimestamp,
-                updated_at: currentTimestamp,
-                pdated_at: currentTimestamp
-            });
+            const { data: userInsertData, error: profileError } = await supabase
+                .from('userinfo')
+                .insert({
+                    user_roles: 'Patient',
+                    arabic_username_a: userData.arabicName,
+                    arabic_username_b: userData.arabicName,
+                    arabic_username_c: userData.arabicName,
+                    arabic_username_d: userData.arabicName,
+                    english_username_a: userData.englishName,
+                    english_username_b: userData.englishName,
+                    english_username_c: userData.englishName,
+                    english_username_d: userData.englishName,
+                    user_email: userData.email,
+                    user_phonenumber: userData.phoneNumber,
+                    date_of_birth: userData.dateOfBirth,
+                    gender_user: userData.gender,
+                    user_password: userData.password,
+                    created_at: currentTimestamp,
+                    updated_at: currentTimestamp,
+                    pdated_at: currentTimestamp
+                })
+                .select();
 
-            if (insertError) {
-                console.error('Profile creation error:', insertError);
+            if (profileError) {
+                console.error('Profile creation error:', profileError);
                 // Try to rollback auth user if profile creation fails
                 await supabase.auth.signOut();
-                throw new Error(`Failed to create profile: ${insertError.message}`);
+                throw new Error(`Failed to create profile: ${profileError.message}`);
+            }
+
+            if (userInsertData && userInsertData.length > 0) {
+                const userObj: User = {
+                    id: userInsertData[0].userid.toString(),
+                    email: userInsertData[0].user_email,
+                    name: userInsertData[0].english_username_a,
+                    role: userInsertData[0].user_roles.toLowerCase() as UserRole
+                };
+
+                // Cache user profile
+                localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
             }
 
             console.log('User profile created successfully during signup');
@@ -356,9 +400,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = async () => {
         try {
             await supabase.auth.signOut();
+            // Clear user data
+            localStorage.removeItem('clinic_user_profile');
+            sessionStorage.removeItem('login_in_progress');
             setUser(null);
-            // Clear any login flags
-            localStorage.removeItem('loginSuccess');
         } catch (error) {
             console.error('Error logging out:', error);
             throw error;
