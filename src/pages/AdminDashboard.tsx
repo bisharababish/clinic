@@ -36,7 +36,7 @@ interface ActivityLog {
 
 const AdminDashboard = () => {
     const { user, isLoading: authLoading } = useAuth();
-     const { toast } = useToast();
+    const { toast } = useToast();
     const [users, setUsers] = useState<UserInfo[]>([]);
     const [userStats, setUserStats] = useState<UserStats>({ total: 0, byRole: {} });
     const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
