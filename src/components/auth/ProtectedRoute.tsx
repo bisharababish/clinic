@@ -1,6 +1,6 @@
-// components/auth/ProtectedRoute.tsx
-import { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+// Modified ProtectedRoute.tsx - Improved navigation handling
+import { ReactNode, useEffect } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth, UserRole } from "../../hooks/useAuth";
 
 interface ProtectedRouteProps {
@@ -11,8 +11,22 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   console.log("Protected route check - User:", user, "Loading:", isLoading); // Debug log
+
+  // Check for loginSuccess flag
+  useEffect(() => {
+    const loginSuccess = localStorage.getItem('loginSuccess');
+    if (loginSuccess === 'true' && user) {
+      // Clear the flag
+      localStorage.removeItem('loginSuccess');
+      // Force navigation to current path to refresh the page if needed
+      const currentPath = location.pathname;
+      console.log("Login success flag found, refreshing page at", currentPath);
+      navigate(currentPath, { replace: true });
+    }
+  }, [user, navigate, location.pathname]);
 
   // Show loading state if still checking authentication
   if (isLoading) {
@@ -34,4 +48,5 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
   console.log("User doesn't have required role:", user.role, "Required:", allowedRoles); // Debug log
   return <Navigate to="/" replace />;
 };
+
 export default ProtectedRoute;

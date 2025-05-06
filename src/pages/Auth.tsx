@@ -7,7 +7,36 @@ import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import Footer from "@/components/layout/Footer";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
+const LoginRedirectHandler = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    // Check if we have a redirect request
+    const handleRedirectAttempt = () => {
+      const loginSuccess = localStorage.getItem('loginSuccess');
+      if (loginSuccess === 'true') {
+        console.log("Login success detected in Auth page, redirecting to home");
+        localStorage.removeItem('loginSuccess');
+        navigate('/', { replace: true });
+        // Fallback in case React Router navigation fails
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
+      }
+    };
+
+    handleRedirectAttempt();
+
+    // Set up a short interval to check for the login flag
+    const intervalId = setInterval(handleRedirectAttempt, 500);
+
+    return () => clearInterval(intervalId);
+  }, [navigate]);
+
+  return null;
+};
 const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -28,6 +57,7 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <LoginRedirectHandler />
       <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">

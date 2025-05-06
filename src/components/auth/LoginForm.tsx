@@ -126,57 +126,84 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
 
     try {
-      // Try bypass login first
-      await bypassLogin(email, password);
-
-      // If successful, show toast and redirect
-      toast({
-        title: "Login Successful",
-        description: "Welcome back!",
+      // First try to authenticate with Supabase directly
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
 
-      // Force navigation with timeout and multiple approaches
-      setTimeout(() => {
-        try {
-          // Try React Router navigate
-          navigate("/");
-          console.log("Navigation attempted with React Router");
+      if (authError) {
+        throw new Error(authError.message);
+      }
 
-          // Also try direct window.location as backup
-          setTimeout(() => {
-            window.location.href = "/";
-          }, 200);
-        } catch (navError) {
-          console.error("Navigation error:", navError);
-          // Last resort: direct navigation
-          window.location.href = "/";
+      // If authentication is successful
+      if (authData && authData.session) {
+        // Get user profile info
+        const { data: userData, error: userError } = await supabase
+          .from('userinfo')
+          .select('*')
+          .ilike('user_email', email)
+          .single();
+
+        // Create profile if doesn't exist
+        if (userError || !userData) {
+          const currentTime = new Date().toISOString();
+          await supabase.from('userinfo').insert({
+            user_roles: 'Patient',
+            arabic_username_a: email,
+            arabic_username_b: email,
+            arabic_username_c: email,
+            arabic_username_d: email,
+            english_username_a: email,
+            english_username_b: email,
+            english_username_c: email,
+            english_username_d: email,
+            user_email: email,
+            user_phonenumber: '0000000000',
+            date_of_birth: currentTime,
+            gender_user: 'unknown',
+            user_password: password,
+            created_at: currentTime,
+            updated_at: currentTime,
+            pdated_at: currentTime
+          });
         }
-      }, 300);
 
+        // Show success message
+        toast({
+          title: "Login Successful",
+          description: "Welcome back!"
+        });
+
+        // IMPORTANT: Fixed navigation - Use multiple approaches to ensure redirect works
+        // 1. Set a flag in localStorage to indicate successful login
+        localStorage.setItem('loginSuccess', 'true');
+
+        // 2. Use direct window location first for maximum compatibility
+        window.location.href = "/";
+
+        // 3. Fallback to React Router navigate (may not execute due to page reload)
+        setTimeout(() => {
+          navigate("/");
+        }, 100);
+      }
     } catch (error) {
       console.error("Login error:", error);
 
-      // Try standard login as fallback
+      // Try the login function from useAuth as fallback
       try {
-        const userData = await login(email, password);
+        await login(email, password);
 
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${userData.name}!`,
+          description: "Welcome back!"
         });
 
-        // Force navigation with timeout
-        setTimeout(() => {
-          try {
-            navigate("/");
-          } catch (err) {
-            window.location.href = "/";
-          }
-        }, 300);
-
+        // Same navigation approach for the fallback
+        localStorage.setItem('loginSuccess', 'true');
+        window.location.href = "/";
       } catch (loginError) {
-        let errorMessage = "Login failed";
-
+        let errorMessage = "Invalid email or password";
         if (loginError instanceof Error) {
           errorMessage = loginError.message;
         }
@@ -191,6 +218,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="w-full space-y-6 animate-fade-in">
@@ -270,8 +298,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </button>
       </div>
 
-      {/* Emergency redirect button (will be hidden after debugging) */}
-      <div className="text-center mt-4" style={{ opacity: 0.2 }}>
+      {/* Emergency redirect button */}
+      <div className="text-center mt-4">
         <a href="/" className="text-primary underline">
           Emergency Home Link
         </a>
