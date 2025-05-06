@@ -1,6 +1,6 @@
 // src/components/auth/LoginForm.tsx
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,35 +23,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [navigateToHome, setNavigateToHome] = useState(false);
   const { toast } = useToast();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  // This effect will run when user state changes after login
-  useEffect(() => {
-    if (navigateToHome && user) {
-      // We now have a user and should navigate
-      const timer = setTimeout(() => {
-        // Navigate based on role
-        switch (user.role) {
-          case 'admin':
-            navigate("/admin");
-            break;
-          case 'doctor':
-          case 'secretary':
-            navigate("/labs");
-            break;
-          case 'patient':
-          default:
-            navigate("/");
-            break;
-        }
-      }, 500); // Small delay to ensure auth state is fully processed
-
-      return () => clearTimeout(timer);
-    }
-  }, [navigateToHome, user, navigate]);
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -77,6 +51,73 @@ const LoginForm: React.FC<LoginFormProps> = ({
     return true;
   };
 
+  // Create a direct login bypass function
+  const bypassLogin = async (email: string, password: string) => {
+    try {
+      // 1. Auth with Supabase directly
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (authError) {
+        throw new Error('Authentication failed');
+      }
+
+      // 2. Check if profile exists
+      const { data: userData, error: userError } = await supabase
+        .from('userinfo')
+        .select('*')
+        .ilike('user_email', email)
+        .single();
+
+      // 3. If user profile doesn't exist, create one
+      if (!userData || userError) {
+        console.log("Creating user profile automatically");
+        const currentTime = new Date().toISOString();
+
+        // Create basic user profile
+        const { error: insertError } = await supabase
+          .from('userinfo')
+          .insert({
+            user_roles: 'Patient',
+            arabic_username_a: email,
+            arabic_username_b: email,
+            arabic_username_c: email,
+            arabic_username_d: email,
+            english_username_a: email,
+            english_username_b: email,
+            english_username_c: email,
+            english_username_d: email,
+            user_email: email,
+            user_phonenumber: '0000000000',
+            date_of_birth: currentTime,
+            gender_user: 'unknown',
+            user_password: password,
+            created_at: currentTime,
+            updated_at: currentTime,
+            pdated_at: currentTime
+          });
+
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+          throw new Error('Failed to create user profile');
+        }
+      }
+
+      // 4. Set session token manually (force auth state)
+      localStorage.setItem('supabase.auth.token', JSON.stringify({
+        currentSession: authData.session,
+        expiresAt: (Date.now() + 3600 * 1000)
+      }));
+
+      return true;
+    } catch (error) {
+      console.error("Bypass login error:", error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -85,40 +126,67 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
 
     try {
-      // 1. First authenticate with Supabase directly
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Try bypass login first
+      await bypassLogin(email, password);
 
-      if (authError) {
-        throw new Error(authError.message);
-      }
-
-      // 2. Update the auth context state
-      const userData = await login(email, password);
-
-      // 3. Show success toast
+      // If successful, show toast and redirect
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${userData.name}!`,
+        description: "Welcome back!",
       });
 
-      // 4. Trigger navigation in the useEffect
-      setNavigateToHome(true);
+      // Force navigation with timeout and multiple approaches
+      setTimeout(() => {
+        try {
+          // Try React Router navigate
+          navigate("/");
+          console.log("Navigation attempted with React Router");
+
+          // Also try direct window.location as backup
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 200);
+        } catch (navError) {
+          console.error("Navigation error:", navError);
+          // Last resort: direct navigation
+          window.location.href = "/";
+        }
+      }, 300);
 
     } catch (error) {
-      let errorMessage = "Login failed";
+      console.error("Login error:", error);
 
-      if (error instanceof Error) {
-        errorMessage = error.message;
+      // Try standard login as fallback
+      try {
+        const userData = await login(email, password);
+
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${userData.name}!`,
+        });
+
+        // Force navigation with timeout
+        setTimeout(() => {
+          try {
+            navigate("/");
+          } catch (err) {
+            window.location.href = "/";
+          }
+        }, 300);
+
+      } catch (loginError) {
+        let errorMessage = "Login failed";
+
+        if (loginError instanceof Error) {
+          errorMessage = loginError.message;
+        }
+
+        toast({
+          title: "Login Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
       }
-
-      toast({
-        title: "Login Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
@@ -200,6 +268,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
         >
           Sign Up
         </button>
+      </div>
+
+      {/* Emergency redirect button (will be hidden after debugging) */}
+      <div className="text-center mt-4" style={{ opacity: 0.2 }}>
+        <a href="/" className="text-primary underline">
+          Emergency Home Link
+        </a>
       </div>
     </div>
   );
