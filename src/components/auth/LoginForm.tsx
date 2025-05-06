@@ -1,6 +1,6 @@
 // src/components/auth/LoginForm.tsx
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,7 @@ import { EyeIcon, EyeOffIcon, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabase"; // Make sure this path matches your project structure
+import { supabase } from "../../lib/supabase";
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -23,9 +23,35 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [navigateToHome, setNavigateToHome] = useState(false);
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  // This effect will run when user state changes after login
+  useEffect(() => {
+    if (navigateToHome && user) {
+      // We now have a user and should navigate
+      const timer = setTimeout(() => {
+        // Navigate based on role
+        switch (user.role) {
+          case 'admin':
+            navigate("/admin");
+            break;
+          case 'doctor':
+          case 'secretary':
+            navigate("/labs");
+            break;
+          case 'patient':
+          default:
+            navigate("/");
+            break;
+        }
+      }, 500); // Small delay to ensure auth state is fully processed
+
+      return () => clearTimeout(timer);
+    }
+  }, [navigateToHome, user, navigate]);
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,63 +77,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
     return true;
   };
 
-  // EMERGENCY DIRECT LOGIN FUNCTION
-  const emergencyLogin = async (email: string, password: string) => {
-    try {
-      // 1. First authenticate with Supabase
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (authError) {
-        console.error("Auth error:", authError);
-        throw new Error("Invalid email or password");
-      }
-
-      console.log("Auth successful");
-
-      // 2. Set session manually
-      const session = {
-        user: {
-          id: "user-" + Date.now(),
-          email: email,
-          name: email.split('@')[0], // Use part of email as name
-          role: "patient"
-        }
-      };
-
-      // 3. Store in localStorage for session persistence
-      localStorage.setItem('user_session', JSON.stringify(session));
-
-      // 4. Return success
-      return session.user;
-    } catch (error) {
-      console.error("Emergency login failed:", error);
-      throw error;
-    }
-  };
-
-  // Force navigation to Index page
-  const forceNavigateToIndex = () => {
-    console.log("Attempting force navigation to Index");
-
-    // Try multiple navigation methods
-    try {
-      navigate("/");
-      console.log("React Router navigation attempted");
-    } catch (navError) {
-      console.error("Navigation error:", navError);
-    }
-
-    // Use setTimeout to ensure the navigation happens after current execution
-    setTimeout(() => {
-      console.log("Fallback navigation with window.location.href");
-      window.location.href = "/";
-    }, 500);
-  };
-
-  // Updated handleSubmit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -116,71 +85,28 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
 
     try {
-      console.log("Starting login process");
+      // 1. First authenticate with Supabase directly
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      // Try emergency login first
-      try {
-        console.log("Attempting emergency login");
-        const user = await emergencyLogin(email, password);
-
-        console.log("Emergency login successful");
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!",
-        });
-
-        // Redirect to home page
-        forceNavigateToIndex();
-        return;
-      } catch (emergencyError) {
-        console.log("Emergency login failed, trying normal login");
-
-        // Fall back to normal login
-        try {
-          const userData = await login(email, password);
-
-          toast({
-            title: "Login Successful",
-            description: `Welcome back, ${userData.name}!`,
-          });
-
-          // Redirect based on role
-          switch (userData.role) {
-            case 'admin':
-              navigate("/admin");
-              break;
-            case 'doctor':
-            case 'secretary':
-              navigate("/labs");
-              break;
-            case 'patient':
-            default:
-              forceNavigateToIndex();
-              break;
-          }
-        } catch (loginError) {
-          // If both login methods fail, try direct auth and navigation
-          console.log("Normal login failed, trying direct auth");
-
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-          });
-
-          if (error) {
-            throw error;
-          }
-
-          console.log("Auth successful, navigating directly");
-          toast({
-            title: "Login Successful",
-            description: "Welcome back!",
-          });
-
-          // Always navigate to home
-          forceNavigateToIndex();
-        }
+      if (authError) {
+        throw new Error(authError.message);
       }
+
+      // 2. Update the auth context state
+      const userData = await login(email, password);
+
+      // 3. Show success toast
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${userData.name}!`,
+      });
+
+      // 4. Trigger navigation in the useEffect
+      setNavigateToHome(true);
+
     } catch (error) {
       let errorMessage = "Login failed";
 
@@ -274,13 +200,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
         >
           Sign Up
         </button>
-      </div>
-
-      {/* Emergency Home Link */}
-      <div className="text-center mt-4">
-        <a href="/" className="text-primary font-medium hover:underline">
-          Go to Home Page
-        </a>
       </div>
     </div>
   );
