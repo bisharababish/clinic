@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase';
 export function Header() {
     const { user, logout } = useAuth();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [effectiveRole, setEffectiveRole] = useState<string | null>(null);
 
     // Extra check for authentication state on mount and when user changes
     useEffect(() => {
@@ -16,6 +17,16 @@ export function Header() {
             if (user) {
                 console.log("User found in context:", user);
                 setIsAuthenticated(true);
+                setEffectiveRole(user.role);
+                return;
+            }
+
+            // Check admin login success flag
+            const adminLoginSuccess = sessionStorage.getItem('admin_login_success');
+            if (adminLoginSuccess === 'true') {
+                console.log('Admin login flag detected');
+                setIsAuthenticated(true);
+                setEffectiveRole('admin');
                 return;
             }
 
@@ -25,6 +36,17 @@ export function Header() {
                 if (data.session) {
                     console.log("Session found but no user in context");
                     setIsAuthenticated(true);
+                    
+                    // Try to get user profile from database
+                    const { data: userData, error: userError } = await supabase
+                        .from('userinfo')
+                        .select('user_roles')
+                        .ilike('user_email', data.session.user.email || '')
+                        .single();
+                        
+                    if (!userError && userData) {
+                        setEffectiveRole(userData.user_roles.toLowerCase());
+                    }
                     return;
                 }
 
@@ -33,14 +55,18 @@ export function Header() {
                 if (cachedUser) {
                     console.log("Cached user found in localStorage");
                     setIsAuthenticated(true);
+                    const userObj = JSON.parse(cachedUser);
+                    setEffectiveRole(userObj.role);
                     return;
                 }
 
                 console.log("No authentication found");
                 setIsAuthenticated(false);
+                setEffectiveRole(null);
             } catch (error) {
                 console.error("Error checking auth status:", error);
                 setIsAuthenticated(false);
+                setEffectiveRole(null);
             }
         };
 
@@ -48,23 +74,37 @@ export function Header() {
     }, [user]);
 
     // Define which navigation items are visible based on role
-    const isAdmin = user?.role === "admin";
-    const canViewLabs = isAuthenticated && (user?.role === "admin" || user?.role === "doctor" || user?.role === "secretary");
-    const canViewXray = isAuthenticated && (user?.role === "admin" || user?.role === "doctor" || user?.role === "secretary");
+    const isAdmin = effectiveRole === "admin";
+    const canViewLabs = isAuthenticated && (effectiveRole === "admin" || effectiveRole === "doctor" || effectiveRole === "secretary");
+    const canViewXray = isAuthenticated && (effectiveRole === "admin" || effectiveRole === "doctor" || effectiveRole === "secretary");
 
     // Handle logout click
     const handleLogout = async () => {
         try {
-            await logout();
-            // Force state update immediately
-            setIsAuthenticated(false);
-            // Clear any cached auth data
+            // First clear any local storage and session storage items
             localStorage.removeItem('clinic_user_profile');
             localStorage.removeItem('supabase.auth.token');
+            sessionStorage.removeItem('login_in_progress');
+            sessionStorage.removeItem('admin_login_success');
+            
+            // Then try to logout through the hook
+            if (logout) {
+                await logout();
+            } else {
+                // Fallback to direct Supabase logout
+                await supabase.auth.signOut();
+            }
+            
+            // Force state update immediately
+            setIsAuthenticated(false);
+            setEffectiveRole(null);
+            
             // Redirect to login page after logout
             window.location.href = "/auth";
         } catch (error) {
             console.error('Logout error:', error);
+            // Force a hard redirect in case of error
+            window.location.href = "/auth";
         }
     };
 
@@ -124,16 +164,19 @@ export function Header() {
                 )}
             </nav>
 
-            {/* Show role indicator only for non-patients */}
-            {user && user.role !== "patient" && (
+            {/* Show role indicator */}
+            {effectiveRole && (
                 <div className="hidden md:block">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize border ${user.role === "admin"
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize border ${
+                        effectiveRole === "admin"
                             ? "bg-red-100 text-red-800 border-red-200"
-                            : user.role === "doctor"
+                            : effectiveRole === "doctor"
                                 ? "bg-blue-100 text-blue-800 border-blue-200"
-                                : "bg-purple-100 text-purple-800 border-purple-200"
-                        }`}>
-                        {user.role}
+                                : effectiveRole === "secretary"
+                                    ? "bg-purple-100 text-purple-800 border-purple-200"
+                                    : "bg-green-100 text-green-800 border-green-200"
+                    }`}>
+                        {effectiveRole}
                     </span>
                 </div>
             )}

@@ -14,6 +14,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
   const location = useLocation();
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [hasDirectAuth, setHasDirectAuth] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
   // Check for direct authentication state without relying on the hook
   useEffect(() => {
@@ -28,10 +29,22 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
           return;
         }
 
+        // Check for admin login success flag
+        const adminLoginSuccess = sessionStorage.getItem('admin_login_success');
+        if (adminLoginSuccess === 'true') {
+          console.log('Admin login flag detected, allowing access');
+          setHasDirectAuth(true);
+          setUserRole('admin');
+          setIsCheckingAuth(false);
+          return;
+        }
+
         // Check localStorage for cached user profile
         const cachedUserProfile = localStorage.getItem('clinic_user_profile');
         if (cachedUserProfile) {
           console.log('Found cached user profile');
+          const userObj = JSON.parse(cachedUserProfile);
+          setUserRole(userObj.role as UserRole);
           setHasDirectAuth(true);
           setIsCheckingAuth(false);
           return;
@@ -49,6 +62,19 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
 
         if (data && data.session) {
           console.log('Direct auth check: User is authenticated');
+          // Try to get user profile from database
+          const { data: userData, error: userError } = await supabase
+            .from('userinfo')
+            .select('*')
+            .ilike('user_email', data.session.user.email || '')
+            .single();
+
+          if (!userError && userData) {
+            setUserRole(userData.user_roles.toLowerCase() as UserRole);
+          } else {
+            setUserRole('patient'); // Default role
+          }
+
           setHasDirectAuth(true);
         } else {
           console.log('Direct auth check: No session found');
@@ -65,15 +91,19 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
     checkAuthDirectly();
   }, [location.pathname]);
 
-  console.log("Protected route check - User from context:", user, "Loading:", isLoading, "Direct Auth:", hasDirectAuth);
-
   // Show loading state if still checking authentication
   if (isLoading || isCheckingAuth) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   // IMPORTANT: Check both context user and direct auth
-  // This fixes the redirect issue since we're not just relying on the context
   if (!user && !hasDirectAuth) {
     console.log("No authentication detected, redirecting to auth page");
     return <Navigate to="/auth" state={{ from: location }} replace />;
@@ -81,26 +111,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
 
   // If we get here, user is authenticated - check roles if needed
   if (allowedRoles.length > 0) {
-    // Get role from user context or cached profile
-    let userRole: UserRole = 'patient'; // Default
+    // Get role from user context, our direct check, or cached profile
+    const effectiveRole: UserRole = userRole || (user ? user.role : 'patient');
 
-    if (user) {
-      userRole = user.role;
-    } else {
-      // Try to get role from cached profile
-      const cachedProfile = localStorage.getItem('clinic_user_profile');
-      if (cachedProfile) {
-        try {
-          const parsed = JSON.parse(cachedProfile);
-          userRole = parsed.role as UserRole;
-        } catch (e) {
-          console.error('Error parsing cached profile:', e);
-        }
-      }
-    }
-
-    if (!allowedRoles.includes(userRole)) {
-      console.log("User doesn't have required role:", userRole, "Required:", allowedRoles);
+    if (!allowedRoles.includes(effectiveRole)) {
+      console.log("User doesn't have required role:", effectiveRole, "Required:", allowedRoles);
       return <Navigate to="/" replace />;
     }
   }
