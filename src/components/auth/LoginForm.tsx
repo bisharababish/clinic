@@ -67,7 +67,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           expiresAt: Date.now() + 3600000 // 1 hour
         }));
 
-        // Get user info from database
+        // Get user info from database - case insensitive query
         const { data: userData } = await supabase
           .from('userinfo')
           .select('*')
@@ -75,13 +75,22 @@ const LoginForm: React.FC<LoginFormProps> = ({
           .single();
 
         if (userData) {
+          // Normalize role to lowercase for consistency
+          const role = userData.user_roles.toLowerCase();
+
           // Store user info in localStorage for immediate access
           localStorage.setItem('clinic_user_profile', JSON.stringify({
             id: userData.userid,
             email: userData.user_email,
             name: userData.english_username_a,
-            role: userData.user_roles.toLowerCase()
+            role: role
           }));
+
+          // Special handling for admin
+          if (role === 'admin' || userData.user_roles === 'Admin') {
+            console.log("Setting admin_login_success flag in bypass login");
+            sessionStorage.setItem('admin_login_success', 'true');
+          }
         }
 
         return true;
@@ -104,10 +113,62 @@ const LoginForm: React.FC<LoginFormProps> = ({
       // Set a flag to indicate we're mid-login to prevent redirects
       sessionStorage.setItem('login_in_progress', 'true');
 
-      // Try bypass login first for direct API access
+      // Special case for admin login
+      if (email.toLowerCase() === 'admin@clinic.com' && password === 'password123') {
+        console.log('Admin login detected');
+
+        // Try direct authentication first
+        const bypassSuccess = await bypassLogin(email, password);
+
+        if (bypassSuccess) {
+          // Set admin session flag
+          sessionStorage.setItem('admin_login_success', 'true');
+
+          toast({
+            title: "Admin Login Successful",
+            description: "Welcome, Administrator!"
+          });
+
+          // Wait for the toast to appear before redirect
+          setTimeout(() => {
+            // Clear the login progress flag
+            sessionStorage.removeItem('login_in_progress');
+
+            // Force a hard redirect to the admin dashboard
+            window.location.href = "/admin";
+          }, 500);
+
+          return;
+        }
+      }
+
+      // Regular bypass login for non-admin users
       const bypassSuccess = await bypassLogin(email, password);
 
       if (bypassSuccess) {
+        // Check if user is admin from the cached profile
+        const cachedUserProfile = localStorage.getItem('clinic_user_profile');
+        if (cachedUserProfile) {
+          const userObj = JSON.parse(cachedUserProfile);
+          if (userObj.role === 'admin') {
+            // Set admin login success flag
+            sessionStorage.setItem('admin_login_success', 'true');
+
+            toast({
+              title: "Admin Login Successful",
+              description: "Welcome, Administrator!"
+            });
+
+            // Redirect admin to admin dashboard
+            setTimeout(() => {
+              sessionStorage.removeItem('login_in_progress');
+              window.location.href = "/admin";
+            }, 500);
+
+            return;
+          }
+        }
+
         toast({
           title: "Login Successful",
           description: "Welcome back!"
@@ -127,6 +188,25 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       // If bypass didn't work, try the hook method
       const userData = await login(email, password);
+
+      // Check if user is admin
+      if (userData.role === 'admin') {
+        // Set admin login success flag
+        sessionStorage.setItem('admin_login_success', 'true');
+
+        toast({
+          title: "Admin Login Successful",
+          description: `Welcome, ${userData.name}!`
+        });
+
+        // Redirect admin to admin dashboard
+        setTimeout(() => {
+          sessionStorage.removeItem('login_in_progress');
+          window.location.href = "/admin";
+        }, 500);
+
+        return;
+      }
 
       toast({
         title: "Login Successful",
@@ -166,6 +246,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
     // Simulate login with default admin
     bypassLogin('admin@clinic.com', 'password123').then(success => {
       if (success) {
+        // Set admin flag
+        sessionStorage.setItem('admin_login_success', 'true');
+
         toast({
           title: "Emergency Access",
           description: "Redirecting to home page..."
@@ -261,8 +344,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
           Sign Up
         </button>
       </div>
-
-
     </div>
   );
 };

@@ -245,6 +245,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             console.log('Database lookup result:', userData ? 'Found' : 'Not found');
 
+            // Handle admin special case
+            if (userData && userData.user_roles.toLowerCase() === 'admin') {
+                console.log('Admin user detected');
+
+                // Set special flag for admin session
+                sessionStorage.setItem('admin_login_success', 'true');
+
+                const userObj: User = {
+                    id: userData.userid.toString(),
+                    email: userData.user_email,
+                    name: userData.english_username_a,
+                    role: 'admin'
+                };
+
+                // Cache user profile for faster access
+                localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
+                setUser(userObj);
+
+                return userObj;
+            }
             // 3. If user doesn't exist in database, create profile automatically
             if (!userData || dbError) {
                 console.log('User profile not found, creating one...');

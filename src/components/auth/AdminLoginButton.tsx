@@ -9,13 +9,9 @@ import { Lock, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "../../lib/supabase";
 
-// Hard-coded admin credentials
-const ADMIN_EMAIL = "admin@clinic.com";
-const ADMIN_PASSWORD = "password123";
-
 const AdminLoginButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [email, setEmail] = useState(ADMIN_EMAIL);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -45,10 +41,10 @@ const AdminLoginButton: React.FC = () => {
 
   // Handle admin login
   const handleAdminLogin = async () => {
-    if (email !== ADMIN_EMAIL) {
+    if (!email || !password) {
       toast({
-        title: "Access Denied",
-        description: "Invalid admin email",
+        title: "Missing Credentials",
+        description: "Please enter both email and password",
         variant: "destructive",
       });
       return false;
@@ -57,33 +53,65 @@ const AdminLoginButton: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // First try to authenticate with Supabase
+      // Authenticate with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: ADMIN_EMAIL,
-        password: password
+        email,
+        password
       });
 
       if (error) {
-        if (password !== ADMIN_PASSWORD) {
-          toast({
-            title: "Access Denied",
-            description: "Invalid admin password",
-            variant: "destructive",
-          });
-          return false;
-        }
+        toast({
+          title: "Access Denied",
+          description: "Invalid credentials",
+          variant: "destructive",
+        });
+        return false;
+      }
 
-        // If Supabase auth fails but password matches hardcoded value,
-        // allow login anyway with manual session creation
-        console.warn("Supabase auth error:", error);
-        console.log("Using hardcoded admin authentication as fallback");
+      if (!data.user) {
+        toast({
+          title: "Login Failed",
+          description: "Authentication failed",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Check if the user is an admin
+      const { data: userData, error: userError } = await supabase
+        .from('userinfo')
+        .select('*')
+        .ilike('user_email', email)
+        .single();
+
+      if (userError || !userData) {
+        toast({
+          title: "Access Denied",
+          description: "User profile not found",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Check if user has admin role
+      const userRole = userData.user_roles.toLowerCase();
+      if (userRole !== 'admin') {
+        toast({
+          title: "Access Denied",
+          description: "You don't have administrator privileges",
+          variant: "destructive",
+        });
+
+        // Sign out the user since they're not an admin
+        await supabase.auth.signOut();
+        return false;
       }
 
       // Set admin auth in localStorage
       localStorage.setItem('clinic_user_profile', JSON.stringify({
-        id: '1',
-        email: ADMIN_EMAIL,
-        name: 'System Admin',
+        id: userData.userid.toString(),
+        email: userData.user_email,
+        name: userData.english_username_a,
         role: 'admin'
       }));
 
@@ -92,7 +120,7 @@ const AdminLoginButton: React.FC = () => {
 
       toast({
         title: "Admin Login Successful",
-        description: "Welcome, Administrator!"
+        description: `Welcome, ${userData.english_username_a}!`
       });
 
       // Close dialog
@@ -117,12 +145,6 @@ const AdminLoginButton: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await handleAdminLogin();
-  };
-
-  // Quick access button function
-  const handleQuickAccess = async () => {
-    setPassword(ADMIN_PASSWORD);
     await handleAdminLogin();
   };
 
@@ -155,6 +177,7 @@ const AdminLoginButton: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
+                  placeholder="admin@example.com"
                   required
                 />
               </div>
@@ -177,21 +200,9 @@ const AdminLoginButton: React.FC = () => {
             </div>
 
             <div className="pt-2">
-              <p className="text-xs text-muted-foreground mb-3">Test login: password123</p>
-              <div className="flex justify-between">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleQuickAccess}
-                  disabled={isLoading}
-                >
-                  Quick Access
-                </Button>
-
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Signing in..." : "Sign In as Admin"}
-                </Button>
-              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In as Admin"}
+              </Button>
             </div>
           </form>
         </DialogContent>

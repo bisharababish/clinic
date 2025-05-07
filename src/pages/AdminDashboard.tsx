@@ -43,8 +43,7 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("overview");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    // Form state for creating/editing users
+    const [isAdmin, setIsAdmin] = useState(false);
     const [formMode, setFormMode] = useState<"create" | "edit">("create");
     const [selectedUser, setSelectedUser] = useState<number | null>(null);
     const [formData, setFormData] = useState({
@@ -53,6 +52,55 @@ const AdminDashboard = () => {
         role: "patient" as UserRole,
         password: "",
     });
+    // Check admin status
+    useEffect(() => {
+        const verifyAdminAccess = async () => {
+            // Check context user
+            if (user && user.role === 'admin') {
+                setIsAdmin(true);
+                return;
+            }
+            // Check admin login success flag
+            const adminLoginSuccess = sessionStorage.getItem('admin_login_success');
+            if (adminLoginSuccess === 'true') {
+                setIsAdmin(true);
+                return;
+            }
+            // Check localStorage for cached profile
+            const cachedUserProfile = localStorage.getItem('clinic_user_profile');
+            if (cachedUserProfile) {
+                try {
+                    const userObj = JSON.parse(cachedUserProfile);
+                    if (userObj.role === 'admin') {
+                        setIsAdmin(true);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error parsing cached user profile:', error);
+                }
+            }
+            // Check Supabase session
+            try {
+                const { data } = await supabase.auth.getSession();
+                if (data.session) {
+                    const { data: userData, error: userError } = await supabase
+                        .from('userinfo')
+                        .select('user_roles')
+                        .ilike('user_email', data.session.user.email || '')
+                        .single();
+                    if (!userError && userData && userData.user_roles.toLowerCase() === 'admin') {
+                        setIsAdmin(true);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking auth session:', error);
+            }
+            // If we get here, user is not an admin
+            setIsAdmin(false);
+        };
+        verifyAdminAccess();
+    }, [user]);
 
     // Load data on mount
     useEffect(() => {
@@ -170,8 +218,6 @@ const AdminDashboard = () => {
         }));
     };
 
-    // ... (rest of the handlers remain the same) ...
-
     if (authLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -209,14 +255,22 @@ const AdminDashboard = () => {
         );
     }
 
-    if (!user || user.role !== "admin") {
+    // Check for admin access - Our new admin check
+    if (!isAdmin && !authLoading && !isLoading) {
         return (
             <div className="text-center py-12">
                 <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
                 <p className="mt-2">Only administrators can access this page.</p>
+                <Button
+                    className="mt-4"
+                    onClick={() => window.location.href = "/"}
+                >
+                    Return to Home
+                </Button>
             </div>
         );
     }
+
     function handleRoleChange(value: string): void {
         setFormData((prevFormData) => ({
             ...prevFormData,
@@ -283,6 +337,8 @@ const AdminDashboard = () => {
             password: "", // Password is not editable for security reasons
         });
     }
+
+
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
         event.preventDefault();
@@ -525,7 +581,7 @@ const AdminDashboard = () => {
                                                             variant="destructive"
                                                             size="sm"
                                                             onClick={() => handleDeleteUser(u.userid)}
-                                                            disabled={u.user_email === user.email}
+                                                            disabled={u.user_email === user?.email}
                                                         >
                                                             Delete
                                                         </Button>

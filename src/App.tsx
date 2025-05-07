@@ -1,4 +1,3 @@
-// App.tsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
