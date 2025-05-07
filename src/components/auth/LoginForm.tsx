@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { EyeIcon, EyeOffIcon, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 
 interface LoginFormProps {
@@ -50,49 +49,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
     return true;
   };
 
-  const bypassLogin = async (email, password) => {
-    try {
-      // Direct authentication without hooks
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      if (data && data.session) {
-        // Store session in localStorage
-        localStorage.setItem('supabase.auth.token', JSON.stringify({
-          currentSession: data.session,
-          expiresAt: Date.now() + 3600000 // 1 hour
-        }));
-
-        // Get user info from database
-        const { data: userData } = await supabase
-          .from('userinfo')
-          .select('*')
-          .ilike('user_email', email)
-          .single();
-
-        if (userData) {
-          // Store user info in localStorage for immediate access
-          localStorage.setItem('clinic_user_profile', JSON.stringify({
-            id: userData.userid,
-            email: userData.user_email,
-            name: userData.english_username_a,
-            role: userData.user_roles.toLowerCase()
-          }));
-        }
-
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Bypass login error:", error);
-      return false;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -104,28 +60,63 @@ const LoginForm: React.FC<LoginFormProps> = ({
       // Set a flag to indicate we're mid-login to prevent redirects
       sessionStorage.setItem('login_in_progress', 'true');
 
-      // Try bypass login first for direct API access
-      const bypassSuccess = await bypassLogin(email, password);
+      // Direct authentication with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      if (bypassSuccess) {
-        toast({
-          title: "Login Successful",
-          description: "Welcome back!"
-        });
-
-        // Wait for the toast to appear before redirect
-        setTimeout(() => {
-          // Clear the login progress flag
-          sessionStorage.removeItem('login_in_progress');
-
-          // Force a hard redirect to the home page
-          window.location.href = "/";
-        }, 500);
-
-        return;
+      if (error) {
+        throw error;
       }
 
-      // If bypass didn't work, try the hook method
+      if (data && data.session) {
+        // Get user info from database
+        const { data: userData, error: userError } = await supabase
+          .from('userinfo')
+          .select('*')
+          .ilike('user_email', email)
+          .single();
+
+        if (userError) {
+          throw userError;
+        }
+
+        if (userData) {
+          // Normalize role case for consistency
+          const userRole = userData.user_roles.toLowerCase();
+
+          // Store minimal user info in localStorage for performance
+          localStorage.setItem('clinic_user_profile', JSON.stringify({
+            id: userData.userid,
+            email: userData.user_email,
+            name: userData.english_username_a,
+            role: userRole
+          }));
+
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${userData.english_username_a}!`
+          });
+
+          // Wait for toast to show before redirecting
+          setTimeout(() => {
+            // Clear the login progress flag
+            sessionStorage.removeItem('login_in_progress');
+
+            // Redirect based on user role
+            if (userRole === 'admin') {
+              window.location.href = "/admin";
+            } else {
+              window.location.href = "/";
+            }
+          }, 500);
+
+          return;
+        }
+      }
+
+      // Fallback to login hook if needed
       const userData = await login(email, password);
 
       toast({
@@ -133,13 +124,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
         description: `Welcome back, ${userData.name}!`
       });
 
-      // Wait for the toast to be seen before redirect
       setTimeout(() => {
-        // Clear the login progress flag
         sessionStorage.removeItem('login_in_progress');
 
-        // Force a hard redirect to the home page
-        window.location.href = "/";
+        if (userData.role === 'admin') {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/";
+        }
       }, 500);
 
     } catch (error) {
@@ -159,29 +151,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleEmergencyRedirect = (e) => {
-    e.preventDefault();
-    // Simulate login with default admin
-    bypassLogin('admin@clinic.com', 'password123').then(success => {
-      if (success) {
-        toast({
-          title: "Emergency Access",
-          description: "Redirecting to home page..."
-        });
-
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 500);
-      } else {
-        toast({
-          title: "Error",
-          description: "Emergency access failed",
-          variant: "destructive"
-        });
-      }
-    });
   };
 
   return (
@@ -261,8 +230,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
           Sign Up
         </button>
       </div>
-
-
     </div>
   );
 };

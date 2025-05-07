@@ -1,6 +1,6 @@
+// components/layout/Footer.tsx
 import * as React from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
-import AdminLoginButton from "../auth/AdminLoginButton";
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -51,10 +51,6 @@ const Footer: React.FC = () => {
               </div>
             </div>
           </div>
-
-
-
-
         </div>
 
         <div className="mt-8 pt-4 border-t flex flex-col md:flex-row justify-between items-center gap-4">
@@ -63,7 +59,6 @@ const Footer: React.FC = () => {
               © {currentYear} Clinic. All rights reserved.
             </p>
           </div>
-          <AdminLoginButton />
         </div>
       </div>
     </footer>
