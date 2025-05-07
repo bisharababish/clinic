@@ -29,19 +29,28 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
           return;
         }
 
-        // Check localStorage for cached user profile for quick UI response
-        const cachedUserProfile = localStorage.getItem('clinic_user_profile');
-        if (cachedUserProfile) {
-          try {
-            const userObj = JSON.parse(cachedUserProfile);
-            setUserRole(userObj.role as UserRole);
-            setHasDirectAuth(true);
-          } catch (e) {
-            console.error('Error parsing cached profile:', e);
-          }
+        // Check for admin login success flag
+        const adminLoginSuccess = sessionStorage.getItem('admin_login_success');
+        if (adminLoginSuccess === 'true') {
+          console.log('Admin login flag detected, allowing access');
+          setHasDirectAuth(true);
+          setUserRole('admin');
+          setIsCheckingAuth(false);
+          return;
         }
 
-        // Always verify with Supabase as the source of truth
+        // Check localStorage for cached user profile
+        const cachedUserProfile = localStorage.getItem('clinic_user_profile');
+        if (cachedUserProfile) {
+          console.log('Found cached user profile');
+          const userObj = JSON.parse(cachedUserProfile);
+          setUserRole(userObj.role as UserRole);
+          setHasDirectAuth(true);
+          setIsCheckingAuth(false);
+          return;
+        }
+
+        // Check Supabase session directly
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -52,30 +61,27 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
         }
 
         if (data && data.session) {
-          // Authenticated with Supabase
-          setHasDirectAuth(true);
+          console.log('Direct auth check: User is authenticated');
+          // Try to get user profile from database
+          const { data: userData, error: userError } = await supabase
+            .from('userinfo')
+            .select('*')
+            .ilike('user_email', data.session.user.email || '')
+            .single();
 
-          // Get user details if we don't have them from cache
-          if (!userRole) {
-            const { data: userData, error: userError } = await supabase
-              .from('userinfo')
-              .select('user_roles')
-              .ilike('user_email', data.session.user.email || '')
-              .single();
-
-            if (!userError && userData) {
-              setUserRole(userData.user_roles.toLowerCase() as UserRole);
-            } else {
-              setUserRole('patient'); // Default role
-            }
+          if (!userError && userData) {
+            setUserRole(userData.user_roles.toLowerCase() as UserRole);
+          } else {
+            setUserRole('patient'); // Default role
           }
+
+          setHasDirectAuth(true);
         } else {
-          // No valid session with Supabase, clear any cached data
+          console.log('Direct auth check: No session found');
           setHasDirectAuth(false);
-          localStorage.removeItem('clinic_user_profile');
         }
       } catch (error) {
-        console.error('Unexpected error in auth check:', error);
+        console.error('Unexpected error in direct auth check:', error);
         setHasDirectAuth(false);
       } finally {
         setIsCheckingAuth(false);
@@ -83,9 +89,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
     };
 
     checkAuthDirectly();
-  }, [location.pathname, userRole]);
+  }, [location.pathname]);
 
-  // Show loading state while checking authentication
+  // Show loading state if still checking authentication
   if (isLoading || isCheckingAuth) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -97,19 +103,19 @@ const ProtectedRoute = ({ children, allowedRoles = [] }: ProtectedRouteProps) =>
     );
   }
 
-  // Check authentication status
+  // IMPORTANT: Check both context user and direct auth
   if (!user && !hasDirectAuth) {
-    console.log("Not authenticated, redirecting to login");
+    console.log("No authentication detected, redirecting to auth page");
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // If we get here, user is authenticated - check roles if needed
   if (allowedRoles.length > 0) {
-    // Get role from user context or direct check
+    // Get role from user context, our direct check, or cached profile
     const effectiveRole: UserRole = userRole || (user ? user.role : 'patient');
 
     if (!allowedRoles.includes(effectiveRole)) {
-      console.log("Access denied - user role:", effectiveRole, "Required:", allowedRoles);
+      console.log("User doesn't have required role:", effectiveRole, "Required:", allowedRoles);
       return <Navigate to="/" replace />;
     }
   }

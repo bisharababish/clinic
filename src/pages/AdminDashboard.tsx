@@ -172,9 +172,6 @@ const AdminDashboard = () => {
 
     // ... (rest of the handlers remain the same) ...
 
-    // Partial update to AdminDashboard.tsx (just the access control section)
-    // Place this at the appropriate location in your AdminDashboard component
-
     if (authLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -212,65 +209,14 @@ const AdminDashboard = () => {
         );
     }
 
-    // Check for admin access - try multiple sources
-    let isAdmin = false;
-
-    // 1. Check context user first
-    if (user && user.role === "admin") {
-        isAdmin = true;
-    }
-
-    // 2. Check cached profile as fallback
-    if (!isAdmin) {
-        try {
-            const cachedProfile = localStorage.getItem('clinic_user_profile');
-            if (cachedProfile) {
-                const parsedProfile = JSON.parse(cachedProfile);
-                if (parsedProfile.role === "admin") {
-                    isAdmin = true;
-                }
-            }
-        } catch (e) {
-            console.error("Error parsing cached profile:", e);
-        }
-    }
-
-    // 3. If still not admin, verify with Supabase directly
-    if (!isAdmin) {
-        // This code would run asynchronously, but for immediate UI response,
-        // we've already checked the cached profile and context user
-        supabase.auth.getSession().then(({ data }) => {
-            if (data && data.session) {
-                supabase
-                    .from('userinfo')
-                    .select('user_roles')
-                    .ilike('user_email', data.session.user.email || '')
-                    .single()
-                    .then(({ data: userData }) => {
-                        if (userData && userData.user_roles.toLowerCase() === 'admin') {
-                            // If we find they're an admin, reload the page to apply
-                            window.location.reload();
-                        }
-                    });
-            }
-        });
-    }
-
-    if (!isAdmin) {
+    if (!user || user.role !== "admin") {
         return (
             <div className="text-center py-12">
                 <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
                 <p className="mt-2">Only administrators can access this page.</p>
-                <Button
-                    className="mt-4"
-                    onClick={() => window.location.href = "/"}
-                >
-                    Return to Home
-                </Button>
             </div>
         );
     }
-
     function handleRoleChange(value: string): void {
         setFormData((prevFormData) => ({
             ...prevFormData,
