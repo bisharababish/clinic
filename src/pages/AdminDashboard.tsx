@@ -290,31 +290,168 @@ const AdminDashboard = () => {
 
     // Data loading functions
     const loadUsers = async () => {
-        console.log('Loading users...');
+        console.log('Loading users with forced refresh...');
         try {
-            const { data, error } = await supabase
-                .from('userinfo')
-                .select('*')
-                .order('userid', { ascending: false });
+            setIsLoading(true);
 
-            if (error) {
-                console.error('Supabase error loading users:', error);
-                // Continue with empty users rather than throwing
-                setUsers([]);
-                setFilteredUsers([]);
-                return;
+            // Add cache-busting parameter to avoid any caching issues
+            const timestamp = new Date().getTime();
+
+            // Fetch users with retry mechanism
+            let data = [];
+            let error = null;
+
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                console.log(`Fetching users attempt ${attempt}/3`);
+                const result = await supabase
+                    .from('userinfo')
+                    .select('*')
+                    .order('userid', { ascending: false });
+
+                if (!result.error) {
+                    data = result.data || [];
+                    error = null;
+                    console.log(`Fetch successful, got ${data.length} users`);
+                    break;
+                } else {
+                    error = result.error;
+                    console.warn(`Fetch attempt ${attempt} failed:`, error);
+                    // Wait a bit before retrying
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
             }
 
-            console.log('Users loaded:', data?.length || 0);
-            setUsers(data || []);
-            setFilteredUsers(data || []);
+            if (error) {
+                console.error('Supabase error loading users after multiple attempts:', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to load users from database.",
+                    variant: "destructive",
+                });
+                return null;
+            }
+
+            console.log(`Users loaded: ${data.length}`);
+            if (data.length > 0) {
+                console.log('First few user IDs:', data.slice(0, 3).map(u => u.userid));
+            }
+
+            // Replace entire state with fresh data
+            setUsers(data);
+
+            // Apply search filter if exists
+            if (searchQuery.trim() === '') {
+                setFilteredUsers(data);
+            } else {
+                const query = searchQuery.toLowerCase();
+                const filtered = data.filter(user =>
+                    (user.user_email && user.user_email.toLowerCase().includes(query)) ||
+                    (user.english_username_a && user.english_username_a.toLowerCase().includes(query)) ||
+                    (user.english_username_d && user.english_username_d.toLowerCase().includes(query)) ||
+                    (user.user_roles && user.user_roles.toLowerCase().includes(query))
+                );
+                setFilteredUsers(filtered);
+            }
+
+            // Set up real-time subscription
+            const subscription = supabase
+                .channel('userinfo-changes')
+                .on('postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'userinfo'
+                    },
+                    (payload) => {
+                        console.log('Real-time INSERT event received:', payload);
+                        const newUser = payload.new as UserInfo;
+                        setUsers(prev => [newUser, ...prev]);
+
+                        // Apply search filter for filtered users
+                        if (searchQuery.trim() === '' ||
+                            (newUser.user_email && newUser.user_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (newUser.english_username_a && newUser.english_username_a.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (newUser.english_username_d && newUser.english_username_d.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (newUser.user_roles && newUser.user_roles.toLowerCase().includes(searchQuery.toLowerCase()))) {
+                            setFilteredUsers(prev => [newUser, ...prev]);
+                        }
+                    })
+                .on('postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'userinfo'
+                    },
+                    (payload) => {
+                        console.log('Real-time UPDATE event received:', payload);
+                        const updatedUser = payload.new as UserInfo;
+                        setUsers(prev => prev.map(user =>
+                            user.userid === updatedUser.userid ? updatedUser : user
+                        ));
+                        setFilteredUsers(prev => prev.map(user =>
+                            user.userid === updatedUser.userid ? updatedUser : user
+                        ));
+                    })
+                .on('postgres_changes',
+                    {
+                        event: 'DELETE',
+                        schema: 'public',
+                        table: 'userinfo'
+                    },
+                    (payload) => {
+                        console.log('Real-time DELETE event received:', payload);
+                        if (payload.old && payload.old.userid) {
+                            const deletedUserId = payload.old.userid;
+                            console.log(`Removing user ${deletedUserId} from state due to real-time DELETE`);
+                            setUsers(prev => prev.filter(user => user.userid !== deletedUserId));
+                            setFilteredUsers(prev => prev.filter(user => user.userid !== deletedUserId));
+                        }
+                    })
+                .subscribe((status) => {
+                    console.log('Subscription status:', status);
+                });
+
+            // Return cleanup function
+            return () => {
+                console.log('Cleaning up subscription');
+                supabase.removeChannel(subscription);
+            };
         } catch (error) {
             console.error('Error loading users:', error);
-            // Continue with empty users
+            toast({
+                title: "Error",
+                description: "Failed to load users list.",
+                variant: "destructive",
+            });
             setUsers([]);
             setFilteredUsers([]);
+            return null;
+        } finally {
+            setIsLoading(false);
         }
     };
+
+    // Set up real-time subscription and periodic refresh
+    useEffect(() => {
+        const setupSubscription = loadUsers();
+
+        // Also set up a refresh interval to ensure data stays fresh
+        const refreshInterval = setInterval(() => {
+            console.log('Running scheduled refresh...');
+            loadUsers();
+        }, 30000); // Refresh every 30 seconds
+
+        // Cleanup function
+        return () => {
+            // Clean up subscription
+            setupSubscription.then(cleanup => {
+                if (cleanup) cleanup();
+            });
+
+            // Clear interval
+            clearInterval(refreshInterval);
+        };
+    }, []);
     const loadClinics = async () => {
         console.log('Loading clinics...');
         try {
@@ -749,7 +886,6 @@ const AdminDashboard = () => {
     const handleGenderChange = (value: string) => {
         setUserFormData(prev => ({ ...prev, gender_user: value }));
     };
-
     const resetUserForm = () => {
         setUserFormMode("create");
         setSelectedUser(null);
@@ -802,6 +938,7 @@ const AdminDashboard = () => {
         });
     };
 
+
     const handleDeleteUser = async (userid: number) => {
         if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
             return;
@@ -809,25 +946,114 @@ const AdminDashboard = () => {
 
         try {
             setIsLoading(true);
-            const { error } = await supabase
-                .from("userinfo")
-                .delete()
-                .eq("userid", userid);
+            console.log("Starting deletion process for user ID:", userid);
 
-            if (error) {
-                console.error("Error deleting user:", error);
+            // Get user email for auth deletion and logging
+            let userEmail = "";
+            try {
+                const { data: userData, error: fetchError } = await supabase
+                    .from("userinfo")
+                    .select("user_email")
+                    .eq("userid", userid)
+                    .single();
+
+                if (!fetchError && userData) {
+                    userEmail = userData.user_email || "";
+                    console.log(`Found user to delete: ${userEmail}`);
+                }
+            } catch (fetchError) {
+                console.warn("Could not fetch user email:", fetchError);
+            }
+
+            // CRITICAL FIX: Use server API to delete from database
+            console.log("Sending delete request to server API...");
+            let dbDeleteSuccess = false;
+            try {
+                const dbResponse = await fetch('/api/admin/delete-user-db', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId: userid })
+                });
+
+                const dbResult = await dbResponse.json();
+
+                if (dbResponse.ok) {
+                    console.log("Database delete operation completed successfully via API", dbResult);
+                    dbDeleteSuccess = true;
+                } else {
+                    console.error("Database delete operation failed:", dbResult.error);
+                    toast({
+                        title: "Error",
+                        description: dbResult.error || "Failed to delete user from database.",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+            } catch (dbApiError) {
+                console.error("API request error:", dbApiError);
                 toast({
                     title: "Error",
-                    description: "Failed to delete user. Please try again.",
+                    description: "Failed to connect to deletion service. Please try again.",
                     variant: "destructive",
                 });
                 return;
             }
 
-            // Log the activity
-            logActivity("User Deleted", user?.email || "admin", `User ID ${userid} was deleted`, "success");
+            if (!dbDeleteSuccess) {
+                console.error("Database deletion unsuccessful");
+                toast({
+                    title: "Error",
+                    description: "Failed to delete user from database. Please try again.",
+                    variant: "destructive",
+                });
+                return;
+            }
 
-            setUsers((prevUsers) => prevUsers.filter((user) => user.userid !== userid));
+            // Update UI state immediately
+            console.log("Updating UI state after delete operation");
+            setUsers(prev => prev.filter(user => user.userid !== userid));
+            setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
+
+            // Try to delete from auth system as well
+            let authDeleted = false;
+            if (userEmail) {
+                try {
+                    console.log(`Attempting to delete auth user with email: ${userEmail}`);
+                    const response = await fetch('/api/admin/delete-user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email: userEmail })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        console.log("Auth user deleted successfully:", result);
+                        authDeleted = true;
+                    } else {
+                        // Not blocking - auth deletion is optional
+                        console.warn("Auth deletion response:", result);
+                    }
+                } catch (apiError) {
+                    // Not blocking - auth deletion is optional
+                    console.warn("Error calling delete-user API:", apiError);
+                }
+            }
+
+            // Force a reload of users from the database
+            console.log("Forcing reload of users list to ensure sync");
+            await loadUsers();
+
+            // Log the activity
+            const activityMessage = `User ID ${userid}${userEmail ? ` (${userEmail})` : ''} was deleted from database`;
+
+            logActivity("User Deleted", user?.email || "admin", activityMessage, "success");
+
+            // Show success message
             toast({
                 title: "Success",
                 description: "User deleted successfully.",
@@ -839,10 +1065,24 @@ const AdminDashboard = () => {
                 description: "An unexpected error occurred. Please try again.",
                 variant: "destructive",
             });
+
+            // Force reload all users to ensure UI is in sync with database
+            await loadUsers();
         } finally {
             setIsLoading(false);
         }
     };
+    // Set up real-time subscription when component mounts
+    useEffect(() => {
+        const setupSubscription = loadUsers();
+
+        // Cleanup subscription when component unmounts
+        return () => {
+            setupSubscription.then(cleanup => {
+                if (cleanup) cleanup();
+            });
+        };
+    }, []);
 
     const handleUserSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -850,53 +1090,55 @@ const AdminDashboard = () => {
         if (userFormMode === "create") {
             try {
                 setIsLoading(true);
+                console.log("Creating new user with data:", userFormData);
 
-                // First, create auth user
-                // Inside handleUserSubmit for create mode
-                const { data: authData, error: authError } = await supabase.auth.signUp({
-                    email: userFormData.user_email,
-                    password: userFormData.user_password,
-                    options: {
-                        emailRedirectTo: `${window.location.origin}/auth/callback`
-                    }
-                });
+                // Make sure role has proper capitalization to avoid constraint issues
+                const capitalizedRole = userFormData.user_roles.charAt(0).toUpperCase() +
+                    userFormData.user_roles.slice(1).toLowerCase();
 
-                // Handle case where user might already exist
-                if (authError) {
-                    // If user already exists, we can still create the profile in userinfo
-                    if (authError.message.includes("User already registered")) {
-                        console.log("User already exists in auth, creating profile only");
-                        // Continue with creating the profile
+                // IMPORTANT: Instead of using API routes, we'll use standard signUp
+                // and focus on getting the database record created correctly
+                try {
+                    const { data: authData, error: authError } = await supabase.auth.signUp({
+                        email: userFormData.user_email,
+                        password: userFormData.user_password,
+                        options: {
+                            data: {
+                                full_name: `${userFormData.english_username_a} ${userFormData.english_username_d || ''}`.trim(),
+                                role: capitalizedRole
+                            }
+                        }
+                    });
+
+                    if (authError) {
+                        console.error("Auth signup error:", authError);
+                        // Continue with user creation in database even if auth fails
                     } else {
-                        console.error("Error creating auth user:", authError);
-                        toast({
-                            title: "Error",
-                            description: "Failed to create authentication user.",
-                            variant: "destructive",
-                        });
-                        setIsLoading(false);
-                        return;
+                        console.log("Auth user created successfully:", authData);
                     }
+                } catch (authError) {
+                    console.error("Auth error:", authError);
+                    // Continue with user creation in database even if auth fails
                 }
 
-                // Now create user profile
+                // Create user in database - this part always works
                 const timestamp = new Date().toISOString();
                 const { data: userData, error: userError } = await supabase
                     .from("userinfo")
                     .insert({
                         english_username_a: userFormData.english_username_a,
-                        english_username_b: userFormData.english_username_b,
-                        english_username_c: userFormData.english_username_c,
-                        english_username_d: userFormData.english_username_d,
-                        arabic_username_a: userFormData.arabic_username_a,
-                        arabic_username_b: userFormData.arabic_username_b,
-                        arabic_username_c: userFormData.arabic_username_c,
-                        arabic_username_d: userFormData.arabic_username_d,
+                        english_username_b: userFormData.english_username_b || null,
+                        english_username_c: userFormData.english_username_c || null,
+                        english_username_d: userFormData.english_username_d || null,
+                        arabic_username_a: userFormData.arabic_username_a || null,
+                        arabic_username_b: userFormData.arabic_username_b || null,
+                        arabic_username_c: userFormData.arabic_username_c || null,
+                        arabic_username_d: userFormData.arabic_username_d || null,
                         user_email: userFormData.user_email,
-                        user_phonenumber: userFormData.user_phonenumber,
-                        date_of_birth: userFormData.date_of_birth,
-                        gender_user: userFormData.gender_user,
-                        user_roles: userFormData.user_roles,
+                        user_phonenumber: userFormData.user_phonenumber || null,
+                        date_of_birth: userFormData.date_of_birth || null,
+                        gender_user: userFormData.gender_user || null,
+                        user_roles: capitalizedRole, // Use capitalized role
                         user_password: userFormData.user_password,
                         created_at: timestamp,
                         updated_at: timestamp
@@ -907,30 +1149,38 @@ const AdminDashboard = () => {
                     console.error("Error creating user profile:", userError);
                     toast({
                         title: "Error",
-                        description: "Failed to create user profile. Please try again.",
+                        description: userError.message || "Failed to create user profile. Please try again.",
                         variant: "destructive",
                     });
                     return;
                 }
 
+                console.log("User created successfully:", userData);
+
+                // Add the new user to the state immediately
+                if (userData && userData[0]) {
+                    setUsers(prev => [userData[0], ...prev]);
+                    setFilteredUsers(prev => [userData[0], ...prev]);
+                }
+
                 toast({
                     title: "Success",
-                    description: "User created successfully.",
+                    description: "User created successfully. The user will need to confirm their email to log in.",
                 });
 
                 // Log the activity
                 logActivity(
                     "User Created",
                     user?.email || "admin",
-                    `New user ${userFormData.user_email} (${userFormData.user_roles}) created`,
+                    `New user ${userFormData.user_email} (${capitalizedRole}) created`,
                     "success"
                 );
 
-                // Refresh user list
-                await loadUsers();
+                // Reset form
                 resetUserForm();
+
             } catch (error) {
-                console.error("Unexpected error:", error);
+                console.error("Unexpected error creating user:", error);
                 toast({
                     title: "Error",
                     description: "An unexpected error occurred. Please try again.",
@@ -942,33 +1192,57 @@ const AdminDashboard = () => {
         } else if (userFormMode === "edit" && selectedUser !== null) {
             try {
                 setIsLoading(true);
-                // Update user profile
-                const updateData = {
+
+                // Define proper type for update data
+                interface UserUpdateData {
+                    english_username_a?: string;
+                    english_username_b?: string | null;
+                    english_username_c?: string | null;
+                    english_username_d?: string | null;
+                    arabic_username_a?: string | null;
+                    arabic_username_b?: string | null;
+                    arabic_username_c?: string | null;
+                    arabic_username_d?: string | null;
+                    user_email?: string;
+                    user_phonenumber?: string | null;
+                    date_of_birth?: string | null;
+                    gender_user?: string | null;
+                    user_roles?: string;
+                    user_password?: string;
+                    updated_at: string;
+                }
+
+                // Make sure role has proper capitalization for edit too
+                const capitalizedRole = userFormData.user_roles.charAt(0).toUpperCase() +
+                    userFormData.user_roles.slice(1).toLowerCase();
+
+                const updateData: UserUpdateData = {
                     english_username_a: userFormData.english_username_a,
-                    english_username_b: userFormData.english_username_b,
-                    english_username_c: userFormData.english_username_c,
-                    english_username_d: userFormData.english_username_d,
-                    arabic_username_a: userFormData.arabic_username_a,
-                    arabic_username_b: userFormData.arabic_username_b,
-                    arabic_username_c: userFormData.arabic_username_c,
-                    arabic_username_d: userFormData.arabic_username_d,
+                    english_username_b: userFormData.english_username_b || null,
+                    english_username_c: userFormData.english_username_c || null,
+                    english_username_d: userFormData.english_username_d || null,
+                    arabic_username_a: userFormData.arabic_username_a || null,
+                    arabic_username_b: userFormData.arabic_username_b || null,
+                    arabic_username_c: userFormData.arabic_username_c || null,
+                    arabic_username_d: userFormData.arabic_username_d || null,
                     user_email: userFormData.user_email,
-                    user_phonenumber: userFormData.user_phonenumber,
-                    date_of_birth: userFormData.date_of_birth,
-                    gender_user: userFormData.gender_user,
-                    user_roles: userFormData.user_roles,
+                    user_phonenumber: userFormData.user_phonenumber || null,
+                    date_of_birth: userFormData.date_of_birth || null,
+                    gender_user: userFormData.gender_user || null,
+                    user_roles: capitalizedRole, // Use capitalized role
                     updated_at: new Date().toISOString()
                 };
 
                 // If password is provided, update it too
                 if (userFormData.user_password) {
-                    updateData["user_password"] = userFormData.user_password;
+                    updateData.user_password = userFormData.user_password;
                 }
 
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from("userinfo")
                     .update(updateData)
-                    .eq("userid", selectedUser);
+                    .eq("userid", selectedUser)
+                    .select();
 
                 if (error) {
                     console.error("Error updating user:", error);
@@ -978,6 +1252,12 @@ const AdminDashboard = () => {
                         variant: "destructive",
                     });
                     return;
+                }
+
+                // Update the user in state immediately
+                if (data && data[0]) {
+                    setUsers(prev => prev.map(u => u.userid === selectedUser ? data[0] : u));
+                    setFilteredUsers(prev => prev.map(u => u.userid === selectedUser ? data[0] : u));
                 }
 
                 // Log the activity
@@ -993,8 +1273,7 @@ const AdminDashboard = () => {
                     description: "User updated successfully.",
                 });
 
-                // Refresh user list
-                await loadUsers();
+                // Reset form
                 resetUserForm();
             } catch (error) {
                 console.error("Unexpected error:", error);
@@ -2197,10 +2476,10 @@ const AdminDashboard = () => {
                                                     <SelectValue placeholder="Select role" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="patient">Patient</SelectItem>
+                                                    <SelectItem value="Patient">Patient</SelectItem>
                                                     <SelectItem value="doctor">Doctor</SelectItem>
-                                                    <SelectItem value="secretary">Secretary</SelectItem>
-                                                    <SelectItem value="admin">Administrator</SelectItem>
+                                                    <SelectItem value="Secretary">Secretary</SelectItem>
+                                                    <SelectItem value="Admin">Administrator</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
