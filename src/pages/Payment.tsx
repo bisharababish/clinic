@@ -101,7 +101,7 @@ const Payment = () => {
                         <div>{appointmentTime}</div>
 
                         <div className="text-sm font-medium">Total Amount:</div>
-                        <div className="font-bold">${price}</div>
+                        <div className="font-bold">₪{price}</div>
                     </div>
                 </CardContent>
             </Card>

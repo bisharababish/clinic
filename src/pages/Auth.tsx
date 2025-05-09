@@ -105,7 +105,7 @@ const Auth: React.FC = () => {
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <LoginForm
+                        <LoginForm 
                           onSwitchToRegister={handleSwitchToRegister}
                           onSwitchToForgotPassword={handleSwitchToForgotPassword}
                         />

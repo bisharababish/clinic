@@ -1,10 +1,11 @@
-// pages/AuthCallback.tsx
+// src/pages/AuthCallback.tsx
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const AuthCallback = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -12,7 +13,35 @@ const AuthCallback = () => {
             try {
                 console.log("Processing auth callback...");
 
-                // Handle the auth callback
+                // Check for token in the URL hash (Supabase format)
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = hashParams.get('access_token');
+                const refreshToken = hashParams.get('refresh_token');
+                const type = hashParams.get('type');
+
+                console.log("Auth callback type:", type, "Has token:", !!accessToken);
+
+                // Handle password reset flow
+                if (type === 'recovery' && accessToken) {
+                    console.log("Password reset flow detected, redirecting to reset page");
+
+                    try {
+                        // Set up the session with the token
+                        await supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken || '',
+                        });
+
+                        // Redirect to reset password page with the token
+                        window.location.href = "/auth/reset-password" + window.location.hash;
+                        return;
+                    } catch (sessionError) {
+                        console.error("Error setting session:", sessionError);
+                        throw sessionError;
+                    }
+                }
+
+                // Normal auth flow - check for session
                 const { data, error } = await supabase.auth.getSession();
 
                 if (error) {
@@ -26,7 +55,25 @@ const AuthCallback = () => {
                     // Set a flag to indicate successful authentication
                     localStorage.setItem('auth_success', 'true');
 
-                    // Use direct location change instead of React Router for maximum compatibility
+                    // Get user profile to check if admin
+                    try {
+                        const { data: userData } = await supabase
+                            .from('userinfo')
+                            .select('user_roles')
+                            .eq('user_email', data.session.user.email)
+                            .single();
+
+                        if (userData && (userData.user_roles === 'Admin' || userData.user_roles === 'admin')) {
+                            // Admin user - redirect to admin dashboard
+                            console.log("Admin user detected, redirecting to admin dashboard");
+                            window.location.href = "/admin";
+                            return;
+                        }
+                    } catch (userError) {
+                        console.error("Error getting user data:", userError);
+                    }
+
+                    // Regular user or error getting user data - redirect to clinics
                     window.location.href = "/clinics";
                 } else {
                     console.log("No session found, redirecting to login...");
@@ -45,7 +92,7 @@ const AuthCallback = () => {
         };
 
         handleCallback();
-    }, [navigate]);
+    }, [navigate, location]);
 
     if (error) {
         return (
