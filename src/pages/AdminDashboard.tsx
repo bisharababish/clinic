@@ -946,6 +946,7 @@ const AdminDashboard = () => {
 
     // Frontend: handleDeleteUser function
     const handleDeleteUser = async (userid: number) => {
+        // Find user to delete
         const userToDelete = users.find(u => u.userid === userid);
         if (!userToDelete) {
             toast({
@@ -985,45 +986,40 @@ const AdminDashboard = () => {
 
         try {
             setIsLoading(true);
+            console.log("Starting deletion process for user ID:", userid);
 
-            // Delete user from database using the API route (by user_id)
-            const response = await fetch('/api/admin/delete-user-db', {
+            const response = await fetch('/api/admin/delete-user', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ user_id: userToDelete.user_id })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userid })
             });
 
             if (!response.ok) {
-                let errorMessage = 'Failed to delete user from database';
+                const errorText = await response.text();
+                console.error("Error response text:", errorText);
                 try {
-                    const text = await response.text();
-                    if (text) {
-                        const errorData = JSON.parse(text);
-                        errorMessage = errorData.error || errorMessage;
-                        if (errorData.details) {
-                            errorMessage += `: ${errorData.details}`;
-                        }
-                    }
+                    const errorJson = JSON.parse(errorText);
+                    throw new Error(errorJson.error || `Error: ${response.status}`);
                 } catch (e) {
-                    // Ignore JSON parse errors, use default message
+                    throw new Error(errorText || `Error: ${response.status}`);
                 }
-                throw new Error(errorMessage);
             }
 
-            // Update UI immediately after successful deletion
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.error || "Failed to delete user");
+            }
+
             setUsers(prev => prev.filter(user => user.userid !== userid));
             setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
 
-            // Success message
             toast({
                 title: "Success",
                 description: "User deleted successfully.",
             });
 
-            // Log the activity
-            if (logActivity) {
+            if (typeof logActivity === 'function') {
                 const activityMessage = `User ID ${userid} was deleted`;
                 logActivity("User Deleted", user?.email || "admin", activityMessage, "success");
             }
@@ -1032,12 +1028,14 @@ const AdminDashboard = () => {
             console.error("Error deleting user:", error);
             toast({
                 title: "Error",
-                description: error.message || "Failed to delete user",
+                description: error instanceof Error ? error.message : "Failed to delete user from database",
                 variant: "destructive",
             });
 
-            // Refresh the data
-            if (loadUsers) await loadUsers();
+            if (typeof loadUsers === 'function') {
+                await loadUsers();
+            }
+
         } finally {
             setIsLoading(false);
         }
@@ -1389,7 +1387,7 @@ const AdminDashboard = () => {
             } else if (clinicFormMode === "edit" && selectedClinic) {
                 // Update in database
                 const { error } = await supabase
-                    .from('clinics')
+                    .from('doctors')
                     .update({
                         name: clinicFormData.name,
                         category: clinicFormData.category,
@@ -2395,7 +2393,7 @@ const AdminDashboard = () => {
                                                     id="id_number"
                                                     name="id_number"
                                                     type="text"
-                                                    value={userFormData.id_number} // Change from formData to userFormData
+                                                    value={userFormData.id_number}
                                                     onChange={handleUserInputChange}
                                                     className="pl-10"
                                                     required
