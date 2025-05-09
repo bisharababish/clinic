@@ -36,14 +36,14 @@ export function Header() {
                 if (data.session) {
                     console.log("Session found but no user in context");
                     setIsAuthenticated(true);
-                    
+
                     // Try to get user profile from database
                     const { data: userData, error: userError } = await supabase
                         .from('userinfo')
                         .select('user_roles')
                         .ilike('user_email', data.session.user.email || '')
                         .single();
-                        
+
                     if (!userError && userData) {
                         setEffectiveRole(userData.user_roles.toLowerCase());
                     }
@@ -86,7 +86,7 @@ export function Header() {
             localStorage.removeItem('supabase.auth.token');
             sessionStorage.removeItem('login_in_progress');
             sessionStorage.removeItem('admin_login_success');
-            
+
             // Then try to logout through the hook
             if (logout) {
                 await logout();
@@ -94,11 +94,11 @@ export function Header() {
                 // Fallback to direct Supabase logout
                 await supabase.auth.signOut();
             }
-            
+
             // Force state update immediately
             setIsAuthenticated(false);
             setEffectiveRole(null);
-            
+
             // Redirect to login page after logout
             window.location.href = "/auth";
         } catch (error) {
@@ -114,7 +114,7 @@ export function Header() {
                 <Link to="/" className="flex items-center gap-2">
                     {/* Logo */}
                     <div className="w-10 h-10 bg-blue-500 rounded-full" />
-                    <span className="text-xl font-bold">Bethlehem Clinic Center</span>
+                    <span className="text-xl font-bold">Bethlehem Med Center</span>
                 </Link>
             </div>
 
@@ -167,15 +167,14 @@ export function Header() {
             {/* Show role indicator */}
             {effectiveRole && (
                 <div className="hidden md:block">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize border ${
-                        effectiveRole === "admin"
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize border ${effectiveRole === "admin"
                             ? "bg-red-100 text-red-800 border-red-200"
                             : effectiveRole === "doctor"
                                 ? "bg-blue-100 text-blue-800 border-blue-200"
                                 : effectiveRole === "secretary"
                                     ? "bg-purple-100 text-purple-800 border-purple-200"
                                     : "bg-green-100 text-green-800 border-green-200"
-                    }`}>
+                        }`}>
                         {effectiveRole}
                     </span>
                 </div>

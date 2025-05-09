@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
 
           {/* Clinic Info (Right) */}
           <div className="space-y-2">
-            <h3 className="font-semibold text-lg">Bethlehem Clinic Center</h3>
+            <h3 className="font-semibold text-lg">Bethlehem Med Center</h3>
             <p className="text-sm text-muted-foreground">
               Providing quality healthcare services since 2025
             </p>
@@ -24,9 +24,6 @@ const Footer: React.FC = () => {
             <h3 className="font-semibold text-lg">Quick Links</h3>
             <div className="grid grid-cols-2 gap-2">
               <a href="#" className="text-sm text-primary hover:underline">About Us</a>
-              <a href="#" className="text-sm text-primary hover:underline">Services</a>
-              <a href="#" className="text-sm text-primary hover:underline">Doctors</a>
-              <a href="#" className="text-sm text-primary hover:underline">Appointments</a>
               <a href="#" className="text-sm text-primary hover:underline">Privacy Policy</a>
               <a href="#" className="text-sm text-primary hover:underline">Terms of Use</a>
             </div>
@@ -47,7 +44,7 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4 mr-2" />
-                <span>Beit Sahour, ASSAKJHD</span>
+                <span>Beit Sahour, random later</span>
               </div>
             </div>
           </div>

@@ -236,7 +236,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             <div className="space-y-2 text-center">
                 <h2 className="text-3xl font-bold tracking-tight">Create Account</h2>
                 <p className="text-sm text-muted-foreground">
-                    Register as a patient to access our services
+                    Register as a patient to access our services.
                 </p>
             </div>
 
@@ -303,7 +303,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     <Label className="text-base font-medium">Full Name (Arabic) *</Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                         <div>
-                            <Label htmlFor="arabic_username_a" className="text-xs">First Name</Label>
+                            <Label htmlFor="arabic_username_a" className="text-xs">الاسم الأول</Label>
                             <div className="relative">
                                 <Input
                                     id="arabic_username_a"
@@ -317,7 +317,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="arabic_username_b" className="text-xs">Second Name</Label>
+                            <Label htmlFor="arabic_username_b" className="text-xs">الاسم الثاني</Label>
                             <div className="relative">
                                 <Input
                                     id="arabic_username_b"
@@ -330,7 +330,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="arabic_username_c" className="text-xs">Third Name</Label>
+                            <Label htmlFor="arabic_username_c" className="text-xs">الاسم الثالث</Label>
                             <div className="relative">
                                 <Input
                                     id="arabic_username_c"
@@ -343,7 +343,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="arabic_username_d" className="text-xs">Last Name</Label>
+                            <Label htmlFor="arabic_username_d" className="text-xs">الاسم الرابع</Label>
                             <div className="relative">
                                 <Input
                                     id="arabic_username_d"

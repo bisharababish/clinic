@@ -36,6 +36,7 @@ import {
     RefreshCw,
     Download
 } from "lucide-react"; import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { deleteUser } from "../lib/api";
 
 // Interfaces
 interface UserInfo {
@@ -944,103 +945,106 @@ const AdminDashboard = () => {
     };
 
 
-    // Frontend: handleDeleteUser function
-    const handleDeleteUser = async (userid: number) => {
-        // Find user to delete
-        const userToDelete = users.find(u => u.userid === userid);
-        if (!userToDelete) {
-            toast({
-                title: "Error",
-                description: "User not found.",
-                variant: "destructive",
-            });
-            return;
-        }
-
-        // Custom confirmation toast
-        let confirmed = false;
-        await new Promise((resolve) => {
-            toast({
-                title: "Confirm Deletion",
-                description: "Are you sure you want to delete this user? This action cannot be undone.",
-                action: (
-                    <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                            style={{ background: '#dc2626', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
-                            onClick={() => { confirmed = true; resolve(undefined); }}
-                        >
-                            Confirm
-                        </button>
-                        <button
-                            style={{ background: '#374151', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
-                            onClick={() => { confirmed = false; resolve(undefined); }}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                ),
-                duration: 10000,
-            });
+  
+// Replace your existing handleDeleteUser function with this one
+const handleDeleteUser = async (userid: number) => {
+    // Find user to delete
+    const userToDelete = users.find(u => u.userid === userid);
+    if (!userToDelete) {
+        toast({
+            title: "Error",
+            description: "User not found.",
+            variant: "destructive",
         });
-        if (!confirmed) return;
+        return;
+    }
 
-        try {
-            setIsLoading(true);
-            console.log("Starting deletion process for user ID:", userid);
+    // Custom confirmation toast
+    let confirmed = false;
+    await new Promise((resolve) => {
+        toast({
+            title: "Confirm Deletion",
+            description: `Are you sure you want to delete ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (${userToDelete.user_email})? This action cannot be undone.`,
+            action: (
+                <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                        style={{ background: '#dc2626', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
+                        onClick={() => { confirmed = true; resolve(undefined); }}
+                    >
+                        Confirm
+                    </button>
+                    <button
+                        style={{ background: '#374151', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
+                        onClick={() => { confirmed = false; resolve(undefined); }}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            ),
+            duration: 10000,
+        });
+    });
+    if (!confirmed) return;
 
-            const response = await fetch('/api/admin/delete-user', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userid })
-            });
+    try {
+        setIsLoading(true);
+        console.log("Starting deletion process for user ID:", userid);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error("Error response text:", errorText);
-                try {
-                    const errorJson = JSON.parse(errorText);
-                    throw new Error(errorJson.error || `Error: ${response.status}`);
-                } catch (e) {
-                    throw new Error(errorText || `Error: ${response.status}`);
-                }
+        // Try to call our database function first - this is the most reliable approach
+        const { data: rpcData, error: rpcError } = await supabase.rpc('delete_user_by_admin', {
+            user_id_to_delete: userid
+        });
+        
+        // If RPC fails, fall back to direct deletion
+        if (rpcError) {
+            console.warn("RPC function failed, trying direct deletion", rpcError);
+            
+            // Try direct deletion
+            const { error } = await supabase
+                .from('userinfo')
+                .delete()
+                .eq('userid', userid);
+                
+            if (error) {
+                console.error("Direct deletion also failed", error);
+                throw new Error(error.message);
             }
-
-            const result = await response.json();
-
-            if (!result.success) {
-                throw new Error(result.error || "Failed to delete user");
-            }
-
-            setUsers(prev => prev.filter(user => user.userid !== userid));
-            setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
-
-            toast({
-                title: "Success",
-                description: "User deleted successfully.",
-            });
-
-            if (typeof logActivity === 'function') {
-                const activityMessage = `User ID ${userid} was deleted`;
-                logActivity("User Deleted", user?.email || "admin", activityMessage, "success");
-            }
-
-        } catch (error) {
-            console.error("Error deleting user:", error);
-            toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to delete user from database",
-                variant: "destructive",
-            });
-
-            if (typeof loadUsers === 'function') {
-                await loadUsers();
-            }
-
-        } finally {
-            setIsLoading(false);
         }
-    };
 
+        // Update the UI
+        setUsers(prev => prev.filter(user => user.userid !== userid));
+        setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
+
+        toast({
+            title: "Success",
+            description: "User deleted successfully.",
+        });
+
+        // Log the activity
+        if (typeof logActivity === 'function') {
+            const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was deleted`;
+            logActivity("User Deleted", user?.email || "admin", activityMessage, "success");
+        }
+
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        toast({
+            title: "Error",
+            description: error instanceof Error 
+                ? error.message 
+                : "Failed to delete user from database. Make sure you have admin permissions.",
+            variant: "destructive",
+        });
+
+        // Refresh the user list to ensure UI is in sync with the database
+        if (typeof loadUsers === 'function') {
+            await loadUsers();
+        }
+
+    } finally {
+        setIsLoading(false);
+    }
+};
     const handleUserSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 

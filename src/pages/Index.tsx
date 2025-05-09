@@ -8,8 +8,27 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
+import { EyeIcon, EyeOffIcon, Mail, Lock, User, Phone, Calendar, CreditCard } from "lucide-react";
 
 const Index = () => {
+  const [formData, setFormData] = useState({
+    english_username_a: "",
+    english_username_b: "",
+    english_username_c: "",
+    english_username_d: "",
+    arabic_username_a: "",
+    arabic_username_b: "",
+    arabic_username_c: "",
+    arabic_username_d: "",
+    email: "",
+    id_number: "",
+    phoneNumber: "",
+    dateOfBirth: "",
+    gender: "",
+    password: "",
+    confirmPassword: "",
+  });
+
   const [patientInfo, setPatientInfo] = useState({
     name: "",
     weight: "",
@@ -18,11 +37,12 @@ const Index = () => {
   });
 
   const [selectedDisease, setSelectedDisease] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [selectedMedicines, setSelectedMedicines] = useState<string[]>([]);
   const [patientLogs, setPatientLogs] = useState<string[]>([]);
 
   const commonDiseases = [
-    "Hypertension", "Diabetes", "Asthma", "Arthritis", "Migraine"
+    "High blood pressure", "Diabetes", `Cholesterol HDL`, `Cholesterol LDL`, "Kidney", "Cancer", `Heart Disease`, "Asthma", "Alzheimer/Dementia", "Arthritis"
   ];
 
   const medicineCategories = [
@@ -36,7 +56,10 @@ const Index = () => {
     const { name, value } = e.target;
     setPatientInfo(prev => ({ ...prev, [name]: value }));
   };
-
+  const handleFormDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
   const handleSaveInfo = () => {
     const logEntry = `Patient info updated at ${new Date().toLocaleString()}`;
     setPatientLogs(prev => [...prev, logEntry]);
@@ -60,21 +83,261 @@ const Index = () => {
           </Button>
         </AlertDescription>
       </Alert>
+      <section className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">User Creation</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Label className="text-base font-medium">Full Name (English) *</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+              <div>
+                <Label htmlFor="english_username_a" className="text-xs">First Name</Label>
+                <div className="relative">
+                  <Input
+                    id="english_username_a"
+                    name="english_username_a"
+                    value={formData.english_username_a}
+                    onChange={handleFormDataChange}
+                    required
+                    placeholder="First"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="english_username_b" className="text-xs">Second Name</Label>
+                <div className="relative">
+                  <Input
+                    id="english_username_b"
+                    name="english_username_b"
+                    value={formData.english_username_b}
+                    onChange={handleFormDataChange}
+                    placeholder="Second"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="english_username_c" className="text-xs">Third Name</Label>
+                <div className="relative">
+                  <Input
+                    id="english_username_c"
+                    name="english_username_c"
+                    value={formData.english_username_c}
+                    onChange={handleFormDataChange}
+                    placeholder="Third"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="english_username_d" className="text-xs">Last Name</Label>
+                <div className="relative">
+                  <Input
+                    id="english_username_d"
+                    name="english_username_d"
+                    value={formData.english_username_d}
+                    onChange={handleFormDataChange}
+                    required
+                    placeholder="Last"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Arabic Name Fields */}
+          <div>
+            <Label className="text-base font-medium">Full Name (Arabic) *</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+              <div>
+                <Label htmlFor="arabic_username_a" className="text-xs">الاسم الأول</Label>
+                <div className="relative">
+                  <Input
+                    id="arabic_username_a"
+                    name="arabic_username_a"
+                    value={formData.arabic_username_a}
+                    onChange={handleFormDataChange}
+                    required
+                    dir="rtl"
+                    placeholder="الأول"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="arabic_username_b" className="text-xs">الاسم الثاني</Label>
+                <div className="relative">
+                  <Input
+                    id="arabic_username_b"
+                    name="arabic_username_b"
+                    value={formData.arabic_username_b}
+                    onChange={handleFormDataChange}
+                    dir="rtl"
+                    placeholder="الثاني"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="arabic_username_c" className="text-xs">الاسم الثالث</Label>
+                <div className="relative">
+                  <Input
+                    id="arabic_username_c"
+                    name="arabic_username_c"
+                    value={formData.arabic_username_c}
+                    onChange={handleFormDataChange}
+                    dir="rtl"
+                    placeholder="الثالث"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="arabic_username_d" className="text-xs">الاسم الرابع</Label>
+                <div className="relative">
+                  <Input
+                    id="arabic_username_d"
+                    name="arabic_username_d"
+                    value={formData.arabic_username_d}
+                    onChange={handleFormDataChange}
+                    required
+                    dir="rtl"
+                    placeholder="الأخير"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email *</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleFormDataChange}
+                className="pl-10"
+                required
+                placeholder="name@example.com"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="id_number">ID Number *</Label>
+            <div className="relative">
+              <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="id_number"
+                name="id_number"
+                type="text"
+                value={formData.id_number}
+                onChange={handleFormDataChange}
+                className="pl-10"
+                required
+                placeholder="Your ID Number"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phoneNumber">Phone Number *</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
+                value={formData.phoneNumber}
+                onChange={handleFormDataChange}
+                className="pl-10"
+                required
+                placeholder="123456789"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={handleFormDataChange}
+                className="pl-10"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Gender *</Label>
+            <RadioGroup
+              value={formData.gender}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
+              className="flex gap-4 mt-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="male" id="male" />
+                <Label htmlFor="male">Male</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="female" id="female" />
+                <Label htmlFor="female">Female</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Password *</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleFormDataChange}
+                className="pl-10"
+                required
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? (
+                  <EyeOffIcon className="h-4 w-4" />
+                ) : (
+                  <EyeIcon className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password *</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={handleFormDataChange}
+                className="pl-10"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+        </div>
+
+      </section>
       {/* Section 1: Patient Information */}
       <section className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Patient Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              name="name"
-              value={patientInfo.name}
-              onChange={handleInputChange}
-              placeholder="John Doe"
-            />
-          </div>
-          
           <div className="space-y-2">
             <Label htmlFor="weight">Weight (kg)</Label>
             <Input
@@ -82,7 +345,7 @@ const Index = () => {
               name="weight"
               type="number"
               value={patientInfo.weight}
-              onChange={handleInputChange}
+              onChange={handleFormDataChange}
               placeholder="70"
             />
           </div>
@@ -93,7 +356,7 @@ const Index = () => {
               name="height"
               type="number"
               value={patientInfo.height}
-              onChange={handleInputChange}
+              onChange={handleFormDataChange}
               placeholder="175"
             />
           </div>
@@ -113,7 +376,7 @@ const Index = () => {
             </RadioGroup>
           </div>
         </div>
-        
+
       </section>
 
       {/* Section 2: Common Diseases */}
@@ -126,8 +389,8 @@ const Index = () => {
         >
           {commonDiseases.map(disease => (
             <div key={disease} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-              <RadioGroupItem value={disease} id={disease} />
-              <Label htmlFor={disease} className="text-lg cursor-pointer w-full">
+              <RadioGroupItem value={disease} id={`disease-${disease}`} />
+              <Label htmlFor={`disease-${disease}`} className="text-lg cursor-pointer w-full">
                 {disease}
               </Label>
             </div>
@@ -182,8 +445,8 @@ const Index = () => {
         </ScrollArea>
       </section>
       <Button className="mt-6 w-full md:w-auto" onClick={handleSaveInfo}>
-          Save Information
-        </Button>
+        Save Information
+      </Button>
     </div>
   );
 };

@@ -94,9 +94,22 @@ const Clinics = () => {
 
     const categories = [
         { id: "all", name: "All Clinics" },
-        { id: "cardiology", name: "Cardiology" },
+        { id: "cardiology", name: "Cardiologist" },
         { id: "dental", name: "Dental" },
-        { id: "neurology", name: "Neurology" },
+        { id: "neurology", name: "Neurologist" },
+        { id: "dermatology", name: "Dermatologist" },
+        { id: "orthopedics", name: "Orthopaedist" },
+        { id: "mentalhealth", name: "Mental health professional" },
+        { id: "pediatrics", name: "Pediatricians" },
+        { id: "urology", name: "Urology" },
+        { id: "obgyn", name: "Obstetrics and Gynaecology" },
+        { id: "physicaltherapy", name: "Physicaltherapy" },
+        { id: "gastroenterology", name: "Gastroenterologist" },
+        { id: "oncology", name: "Oncologist" },
+        { id: "internal", name: "Internist" },
+        { id: "psychiatry", name: "Psychiatrist" },
+        { id: "nephrology", name: "Nephrologist" },
+
     ];
 
     const filteredClinics = selectedCategory === "all"
@@ -136,6 +149,7 @@ const Clinics = () => {
                         key={category.id}
                         variant={selectedCategory === category.id ? "default" : "outline"}
                         onClick={() => setSelectedCategory(category.id)}
+                        className="min-w-fit"
                     >
                         {category.name}
                     </Button>
@@ -176,7 +190,7 @@ const Clinics = () => {
                                 <div key={doctor.id} className="border-b pb-4">
                                     <h3 className="text-lg font-semibold">{doctor.name}</h3>
                                     <p className="text-gray-600">{doctor.specialty}</p>
-                                    <p className="font-medium mt-2">Fee: ${doctor.price}</p>
+                                    <p className="font-medium mt-2">Fee: ₪{doctor.price}</p>
 
                                     <div className="mt-3">
                                         <h4 className="font-medium mb-2">Available Hours:</h4>

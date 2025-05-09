@@ -67,11 +67,9 @@ const Auth: React.FC = () => {
               transition={{ duration: 0.5 }}
             >
               <h1 className="text-4xl font-bold text-primary mb-2">
-                Bethlehem Clinic Center
+                Bethlehem Med Center
               </h1>
-              <p className="text-muted-foreground">
-                Patient Portal
-              </p>
+           
             </motion.div>
           </div>
 
