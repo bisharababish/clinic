@@ -49,6 +49,7 @@ interface UserInfo {
     arabic_username_b?: string;
     arabic_username_c?: string;
     arabic_username_d?: string;
+    id_number?: string;
     user_roles: string;
     user_phonenumber?: string;
     date_of_birth?: string;
@@ -154,6 +155,7 @@ const AdminDashboard = () => {
         arabic_username_c: "",
         arabic_username_d: "",
         user_email: "",
+        id_number: "",
         user_phonenumber: "",
         date_of_birth: "",
         gender_user: "",
@@ -899,6 +901,7 @@ const AdminDashboard = () => {
             arabic_username_c: "",
             arabic_username_d: "",
             user_email: "",
+            id_number: "",
             user_phonenumber: "",
             date_of_birth: "",
             gender_user: "",
@@ -930,6 +933,7 @@ const AdminDashboard = () => {
             arabic_username_c: userToEdit.arabic_username_c || "",
             arabic_username_d: userToEdit.arabic_username_d || "",
             user_email: userToEdit.user_email || "",
+            id_number: userToEdit.id_number || "",
             user_phonenumber: userToEdit.user_phonenumber || "",
             date_of_birth: userToEdit.date_of_birth || "",
             gender_user: userToEdit.gender_user || "",
@@ -1135,6 +1139,7 @@ const AdminDashboard = () => {
                         arabic_username_c: userFormData.arabic_username_c || null,
                         arabic_username_d: userFormData.arabic_username_d || null,
                         user_email: userFormData.user_email,
+                        id_number: userFormData.id_number || null,
                         user_phonenumber: userFormData.user_phonenumber || null,
                         date_of_birth: userFormData.date_of_birth || null,
                         gender_user: userFormData.gender_user || null,
@@ -1204,6 +1209,7 @@ const AdminDashboard = () => {
                     arabic_username_c?: string | null;
                     arabic_username_d?: string | null;
                     user_email?: string;
+                    id_number?: string | null;
                     user_phonenumber?: string | null;
                     date_of_birth?: string | null;
                     gender_user?: string | null;
@@ -1226,6 +1232,7 @@ const AdminDashboard = () => {
                     arabic_username_c: userFormData.arabic_username_c || null,
                     arabic_username_d: userFormData.arabic_username_d || null,
                     user_email: userFormData.user_email,
+                    id_number: userFormData.id_number || null,
                     user_phonenumber: userFormData.user_phonenumber || null,
                     date_of_birth: userFormData.date_of_birth || null,
                     gender_user: userFormData.gender_user || null,
@@ -2247,6 +2254,9 @@ const AdminDashboard = () => {
                                                     <div>
                                                         <h3 className="font-medium">{u.english_username_a} {u.english_username_d}</h3>
                                                         <div className="text-sm text-gray-500">{u.user_email}</div>
+                                                        {u.id_number && (
+                                                            <div className="text-sm text-gray-500">ID: {u.id_number}</div>
+                                                        )}
                                                         <div className="mt-1 flex items-center space-x-2">
                                                             <span className={`inline-block px-2 py-1 text-xs rounded-full capitalize ${u.user_roles.toLowerCase() === "admin"
                                                                 ? "bg-red-100 text-red-800"
@@ -2411,7 +2421,6 @@ const AdminDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div className="space-y-2">
                                             <Label htmlFor="user_email">Email *</Label>
                                             <Input
@@ -2420,9 +2429,24 @@ const AdminDashboard = () => {
                                                 type="email"
                                                 value={userFormData.user_email}
                                                 onChange={handleUserInputChange}
-                                                placeholder="user@example.com"
                                                 required
+                                                placeholder="user@example.com"
                                             />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="id_number">ID Number *</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="id_number"
+                                                    name="id_number"
+                                                    type="text"
+                                                    value={userFormData.id_number} // Change from formData to userFormData
+                                                    onChange={handleUserInputChange}
+                                                    className="pl-10"
+                                                    required
+                                                    placeholder="Your ID Number"
+                                                />
+                                            </div>
                                         </div>
 
                                         <div className="space-y-2">

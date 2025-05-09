@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { EyeIcon, EyeOffIcon, Mail, Lock, User, Phone, Calendar } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Mail, Lock, User, Phone, Calendar, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +31,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
         // Other fields 
         email: "",
+        id_number: "",
         phoneNumber: "",
         dateOfBirth: "",
         gender: "male",
@@ -102,6 +103,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             return false;
         }
 
+        if (!/^\d{9}$/.test(formData.id_number)) {
+            toast({
+                title: "Invalid ID Number",
+                description: "Please enter a valid 9-digit Palestinian ID number",
+                variant: "destructive",
+            });
+            return false;
+        }
+
         // Password match
         if (formData.password !== formData.confirmPassword) {
             toast({
@@ -161,6 +171,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     arabic_username_b: formData.arabic_username_b || "",
                     arabic_username_c: formData.arabic_username_c || "",
                     arabic_username_d: formData.arabic_username_d,
+                    id_number: formData.id_number,
                     user_email: formData.email,
                     user_phonenumber: formData.phoneNumber,
                     date_of_birth: formData.dateOfBirth,
@@ -364,7 +375,22 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                         />
                     </div>
                 </div>
-
+                <div className="space-y-2">
+                    <Label htmlFor="id_number">ID Number *</Label>
+                    <div className="relative">
+                        <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            id="id_number"
+                            name="id_number"
+                            type="text"
+                            value={formData.id_number}
+                            onChange={handleInputChange}
+                            className="pl-10"
+                            required
+                            placeholder="Your ID Number"
+                        />
+                    </div>
+                </div>
                 <div className="space-y-2">
                     <Label htmlFor="phoneNumber">Phone Number *</Label>
                     <div className="relative">
