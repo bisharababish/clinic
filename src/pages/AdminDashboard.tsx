@@ -39,6 +39,7 @@ import {
 
 // Interfaces
 interface UserInfo {
+    user_id: string; // uuid/text primary key
     userid: number;
     user_email: string;
     english_username_a: string;
@@ -943,150 +944,104 @@ const AdminDashboard = () => {
     };
 
 
+    // Frontend: handleDeleteUser function
     const handleDeleteUser = async (userid: number) => {
-        if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
+        const userToDelete = users.find(u => u.userid === userid);
+        if (!userToDelete) {
+            toast({
+                title: "Error",
+                description: "User not found.",
+                variant: "destructive",
+            });
             return;
         }
 
+        // Custom confirmation toast
+        let confirmed = false;
+        await new Promise((resolve) => {
+            toast({
+                title: "Confirm Deletion",
+                description: "Are you sure you want to delete this user? This action cannot be undone.",
+                action: (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                            style={{ background: '#dc2626', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
+                            onClick={() => { confirmed = true; resolve(undefined); }}
+                        >
+                            Confirm
+                        </button>
+                        <button
+                            style={{ background: '#374151', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
+                            onClick={() => { confirmed = false; resolve(undefined); }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                ),
+                duration: 10000,
+            });
+        });
+        if (!confirmed) return;
+
         try {
             setIsLoading(true);
-            console.log("Starting deletion process for user ID:", userid);
 
-            // Get user email for auth deletion and logging
-            let userEmail = "";
-            try {
-                const { data: userData, error: fetchError } = await supabase
-                    .from("userinfo")
-                    .select("user_email")
-                    .eq("userid", userid)
-                    .single();
+            // Delete user from database using the API route (by user_id)
+            const response = await fetch('/api/admin/delete-user-db', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: userToDelete.user_id })
+            });
 
-                if (!fetchError && userData) {
-                    userEmail = userData.user_email || "";
-                    console.log(`Found user to delete: ${userEmail}`);
+            if (!response.ok) {
+                let errorMessage = 'Failed to delete user from database';
+                try {
+                    const text = await response.text();
+                    if (text) {
+                        const errorData = JSON.parse(text);
+                        errorMessage = errorData.error || errorMessage;
+                        if (errorData.details) {
+                            errorMessage += `: ${errorData.details}`;
+                        }
+                    }
+                } catch (e) {
+                    // Ignore JSON parse errors, use default message
                 }
-            } catch (fetchError) {
-                console.warn("Could not fetch user email:", fetchError);
+                throw new Error(errorMessage);
             }
 
-            // CRITICAL FIX: Use server API to delete from database
-            console.log("Sending delete request to server API...");
-            let dbDeleteSuccess = false;
-            try {
-                const dbResponse = await fetch('/api/admin/delete-user-db', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ userId: userid })
-                });
-
-                const dbResult = await dbResponse.json();
-
-                if (dbResponse.ok) {
-                    console.log("Database delete operation completed successfully via API", dbResult);
-                    dbDeleteSuccess = true;
-                } else {
-                    console.error("Database delete operation failed:", dbResult.error);
-                    toast({
-                        title: "Error",
-                        description: dbResult.error || "Failed to delete user from database.",
-                        variant: "destructive",
-                    });
-                    return;
-                }
-            } catch (dbApiError) {
-                console.error("API request error:", dbApiError);
-                toast({
-                    title: "Error",
-                    description: "Failed to connect to deletion service. Please try again.",
-                    variant: "destructive",
-                });
-                return;
-            }
-
-            if (!dbDeleteSuccess) {
-                console.error("Database deletion unsuccessful");
-                toast({
-                    title: "Error",
-                    description: "Failed to delete user from database. Please try again.",
-                    variant: "destructive",
-                });
-                return;
-            }
-
-            // Update UI state immediately
-            console.log("Updating UI state after delete operation");
+            // Update UI immediately after successful deletion
             setUsers(prev => prev.filter(user => user.userid !== userid));
             setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
 
-            // Try to delete from auth system as well
-            let authDeleted = false;
-            if (userEmail) {
-                try {
-                    console.log(`Attempting to delete auth user with email: ${userEmail}`);
-                    const response = await fetch('/api/admin/delete-user', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ email: userEmail })
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        console.log("Auth user deleted successfully:", result);
-                        authDeleted = true;
-                    } else {
-                        // Not blocking - auth deletion is optional
-                        console.warn("Auth deletion response:", result);
-                    }
-                } catch (apiError) {
-                    // Not blocking - auth deletion is optional
-                    console.warn("Error calling delete-user API:", apiError);
-                }
-            }
-
-            // Force a reload of users from the database
-            console.log("Forcing reload of users list to ensure sync");
-            await loadUsers();
-
-            // Log the activity
-            const activityMessage = `User ID ${userid}${userEmail ? ` (${userEmail})` : ''} was deleted from database`;
-
-            logActivity("User Deleted", user?.email || "admin", activityMessage, "success");
-
-            // Show success message
+            // Success message
             toast({
                 title: "Success",
                 description: "User deleted successfully.",
             });
+
+            // Log the activity
+            if (logActivity) {
+                const activityMessage = `User ID ${userid} was deleted`;
+                logActivity("User Deleted", user?.email || "admin", activityMessage, "success");
+            }
+
         } catch (error) {
-            console.error("Unexpected error:", error);
+            console.error("Error deleting user:", error);
             toast({
                 title: "Error",
-                description: "An unexpected error occurred. Please try again.",
+                description: error.message || "Failed to delete user",
                 variant: "destructive",
             });
 
-            // Force reload all users to ensure UI is in sync with database
-            await loadUsers();
+            // Refresh the data
+            if (loadUsers) await loadUsers();
         } finally {
             setIsLoading(false);
         }
     };
-    // Set up real-time subscription when component mounts
-    useEffect(() => {
-        const setupSubscription = loadUsers();
-
-        // Cleanup subscription when component unmounts
-        return () => {
-            setupSubscription.then(cleanup => {
-                if (cleanup) cleanup();
-            });
-        };
-    }, []);
 
     const handleUserSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
