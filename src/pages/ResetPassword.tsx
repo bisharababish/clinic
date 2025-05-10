@@ -1,5 +1,5 @@
 // src/pages/ResetPassword.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -12,8 +12,8 @@ export default function ResetPassword() {
     const [error, setError] = useState<string | null>(null);
     const [hasSession, setHasSession] = useState(false);
     const [initializing, setInitializing] = useState(true);
-    const [isSuccess, setIsSuccess] = useState(false);
     const [buttonText, setButtonText] = useState('Reset Password');
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
     const navigate = useNavigate();
     const location = useLocation();
     const { toast } = useToast();
@@ -24,7 +24,6 @@ export default function ResetPassword() {
             try {
                 console.log("Checking for session in ResetPassword");
 
-                // Check if we have a session
                 const { data, error } = await supabase.auth.getSession();
 
                 if (error) {
@@ -35,7 +34,6 @@ export default function ResetPassword() {
                     console.log("Valid session found for password reset");
                     setHasSession(true);
                 } else {
-                    // Try to get token from URL hash if present
                     const hashParams = new URLSearchParams(window.location.hash.substring(1));
                     const accessToken = hashParams.get('access_token');
                     const refreshToken = hashParams.get('refresh_token');
@@ -44,7 +42,6 @@ export default function ResetPassword() {
                     console.log("URL hash check:", { type, hasToken: !!accessToken });
 
                     if (type === 'recovery' && accessToken) {
-                        // Set up session with the token
                         const { error: sessionError } = await supabase.auth.setSession({
                             access_token: accessToken,
                             refresh_token: refreshToken || '',
@@ -84,13 +81,13 @@ export default function ResetPassword() {
             return;
         }
 
-        // Set loading state and initial button text
         setLoading(true);
         setButtonText('Updating...');
+        setButtonText('Password Changed!');
         setError(null);
 
         try {
-            // Update the user's password with the current session
+            // Update the user's password
             const { error: updateError } = await supabase.auth.updateUser({
                 password: password
             });
@@ -99,10 +96,12 @@ export default function ResetPassword() {
                 throw updateError;
             }
 
-            // Immediately show success state
-            setLoading(false);
-            setButtonText('Password Updated!');
-            setIsSuccess(true);
+            // Immediately update the button text and style
+            setButtonText('Password Changed!');
+            if (buttonRef.current) {
+                buttonRef.current.style.backgroundColor = '#16a34a'; // green-600
+                buttonRef.current.disabled = true;
+            }
 
             // Show success message
             toast({
@@ -110,15 +109,13 @@ export default function ResetPassword() {
                 description: "Your password has been reset successfully. You can now log in with your new password.",
             });
 
-            // Handle sign out and redirect after showing success
+            // Sign out and redirect after delay
             setTimeout(async () => {
                 try {
-                    // Sign out to clear the recovery session
                     await supabase.auth.signOut();
                 } catch (signOutError) {
                     console.error("Error during sign out:", signOutError);
                 } finally {
-                    // Redirect to login page
                     window.location.href = "/auth";
                 }
             }, 1500);
@@ -127,6 +124,7 @@ export default function ResetPassword() {
             console.error('Error resetting password:', error);
             setError(error instanceof Error ? error.message : 'Failed to reset password');
             setButtonText('Reset Password');
+        } finally {
             setLoading(false);
         }
     };
@@ -178,69 +176,63 @@ export default function ResetPassword() {
                                     </p>
                                 </div>
 
-                                {isSuccess ? (
-                                    <div className="p-4 bg-green-50 rounded-md text-center">
-                                        <p className="text-green-800 font-medium">Password updated successfully!</p>
-                                        <p className="text-gray-600 mt-2">Redirecting to login page...</p>
-                                    </div>
-                                ) : (
-                                    <form onSubmit={handlePasswordReset} className="space-y-4">
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label htmlFor="password" className="block text-sm font-medium">
-                                                    New Password
-                                                </label>
-                                                <input
-                                                    id="password"
-                                                    name="password"
-                                                    type="password"
-                                                    required
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
-                                                    value={password}
-                                                    onChange={(e) => setPassword(e.target.value)}
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label htmlFor="confirmPassword" className="block text-sm font-medium">
-                                                    Confirm Password
-                                                </label>
-                                                <input
-                                                    id="confirmPassword"
-                                                    name="confirmPassword"
-                                                    type="password"
-                                                    required
-                                                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
-                                                    value={confirmPassword}
-                                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                                />
-                                            </div>
+                                <form onSubmit={handlePasswordReset} className="space-y-4">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label htmlFor="password" className="block text-sm font-medium">
+                                                New Password
+                                            </label>
+                                            <input
+                                                id="password"
+                                                name="password"
+                                                type="password"
+                                                required
+                                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                            />
                                         </div>
-
-                                        {error && (
-                                            <div className="rounded-md bg-red-50 p-4">
-                                                <div className="flex">
-                                                    <div className="ml-3">
-                                                        <h3 className="text-sm font-medium text-red-800">{error}</h3>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
 
                                         <div>
-                                            <button
-                                                type="submit"
-                                                disabled={loading && buttonText !== 'Password Updated!'}
-                                                className={`group relative flex w-full justify-center rounded-md border border-transparent ${buttonText === 'Password Updated!'
-                                                    ? 'bg-green-600 hover:bg-green-700'
-                                                    : 'bg-primary hover:bg-primary/90'
-                                                    } px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-70`}
-                                            >
-                                                {buttonText}
-                                            </button>
+                                            <label htmlFor="confirmPassword" className="block text-sm font-medium">
+                                                Confirm Password
+                                            </label>
+                                            <input
+                                                id="confirmPassword"
+                                                name="confirmPassword"
+                                                type="password"
+                                                required
+                                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary focus:outline-none focus:ring-primary sm:text-sm"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                            />
                                         </div>
-                                    </form>
-                                )}
+                                    </div>
+
+                                    {error && (
+                                        <div className="rounded-md bg-red-50 p-4">
+                                            <div className="flex">
+                                                <div className="ml-3">
+                                                    <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <button
+                                            ref={buttonRef}
+                                            type="submit"
+                                            disabled={loading || buttonText === 'Password Changed!'}
+                                            className={`group relative flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors duration-200 ${buttonText === 'Password Changed!'
+                                                ? 'bg-green-600 hover:bg-green-600'
+                                                : 'bg-primary hover:bg-primary/90'
+                                                } ${loading ? 'opacity-70' : ''}`}
+                                        >
+                                            {buttonText}
+                                        </button>
+                                    </div>
+                                </form>
 
                                 <div className="text-center mt-4">
                                     <a href="/auth" className="text-sm text-primary hover:underline">
