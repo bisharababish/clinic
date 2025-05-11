@@ -26,6 +26,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
 interface ClinicInfo {
     id: string;
     name: string;
@@ -42,14 +43,28 @@ interface CategoryInfo {
     is_active: boolean;
 }
 
+interface DoctorInfo {
+    id: string;
+    name: string;
+    specialty: string;
+    clinic_id: string;
+    clinic_name?: string;
+    email: string;
+    phone?: string;
+    is_available: boolean;
+    price: number;
+}
+
 const ClinicManagement = () => {
     // State for clinics
     const [clinics, setClinics] = useState<ClinicInfo[]>([]);
     const [categories, setCategories] = useState<CategoryInfo[]>([]);
+    const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredClinics, setFilteredClinics] = useState<ClinicInfo[]>([]);
     const [activeTab, setActiveTab] = useState<"clinics" | "categories">("clinics");
+
     // State for clinic form
     const [clinicFormMode, setClinicFormMode] = useState<"create" | "edit">("create");
     const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
@@ -69,14 +84,20 @@ const ClinicManagement = () => {
     });
 
     const { toast } = useToast();
+
+    // Alert dialog state
     const [showDeleteClinicDialog, setShowDeleteClinicDialog] = useState(false);
     const [clinicToDelete, setClinicToDelete] = useState<string | null>(null);
     const [showDeleteCategoryDialog, setShowDeleteCategoryDialog] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+    const [showDeleteDoctorDialog, setShowDeleteDoctorDialog] = useState(false);
+    const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
+
     // Load clinics and categories on mount
     useEffect(() => {
         loadCategories();
         loadClinics();
+        loadDoctors();
     }, []);
 
     useEffect(() => {
@@ -85,6 +106,7 @@ const ClinicManagement = () => {
             setActiveTab("categories");
         }
     }, [categories, activeTab]);
+
     // Handle search filtering
     useEffect(() => {
         if (searchQuery.trim() === '') {
@@ -172,6 +194,60 @@ const ClinicManagement = () => {
         }
     };
 
+    // Load doctors from database
+    const loadDoctors = async () => {
+        try {
+            setIsLoading(true);
+
+            // Check if doctors table exists
+            const { error: tableCheckError } = await supabase
+                .from('doctors')
+                .select('id')
+                .limit(1);
+
+            if (tableCheckError && tableCheckError.code === 'PGRST116') {
+                // Table doesn't exist yet
+                setDoctors([]);
+                return;
+            }
+
+            // Query doctors with their related clinic
+            const { data, error } = await supabase
+                .from('doctors')
+                .select(`
+                    *,
+                    clinics:clinic_id (name)
+                `)
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+
+            // Transform to match our interface
+            const mappedDoctors: DoctorInfo[] = data.map(doctor => ({
+                id: doctor.id,
+                name: doctor.name,
+                specialty: doctor.specialty,
+                clinic_id: doctor.clinic_id,
+                clinic_name: doctor.clinics?.name || "Unknown Clinic",
+                email: doctor.email,
+                phone: doctor.phone || '',
+                is_available: doctor.is_available,
+                price: doctor.price
+            }));
+
+            setDoctors(mappedDoctors);
+        } catch (error) {
+            console.error("Error loading doctors:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load doctors.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // Clinic form handlers
     const handleClinicInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -179,6 +255,19 @@ const ClinicManagement = () => {
     };
 
     const handleClinicCategoryChange = (value: string) => {
+        console.log("Category selected with ID:", value);
+
+        // Find the category to log its name for debugging
+        if (value) {
+            const selectedCategory = categories.find(cat => cat.id === value);
+            if (selectedCategory) {
+                console.log("Selected category name:", selectedCategory.name);
+            } else {
+                console.warn("Selected category ID not found in categories list:", value);
+            }
+        }
+
+        // Update form data with the selected category ID
         setClinicFormData(prev => ({ ...prev, category_id: value }));
     };
 
@@ -218,28 +307,27 @@ const ClinicManagement = () => {
         });
     };
 
-    const handleDeleteClinic = async (id: string) => {
+    const handleDeleteClinic = (id: string) => {
         setClinicToDelete(id);
         setShowDeleteClinicDialog(true);
+    };
 
+    const confirmDeleteClinic = async () => {
+        if (!clinicToDelete) return;
 
         try {
             setIsLoading(true);
 
             // First check if there are doctors associated with this clinic
-            const { data: doctorData, error: doctorError } = await supabase
-                .from('doctors')
-                .select('id')
-                .eq('clinic_id', id);
+            const doctorsInClinic = doctors.filter(d => d.clinic_id === clinicToDelete);
 
-            if (doctorError) throw doctorError;
-
-            if (doctorData && doctorData.length > 0) {
+            if (doctorsInClinic.length > 0) {
                 toast({
                     title: "Cannot Delete",
-                    description: "This clinic has doctors assigned to it. Please remove the doctors first.",
+                    description: `This clinic has ${doctorsInClinic.length} doctor(s) assigned to it. Please remove the doctors first.`,
                     variant: "destructive",
                 });
+                setShowDeleteClinicDialog(false);
                 return;
             }
 
@@ -247,20 +335,19 @@ const ClinicManagement = () => {
             const { error } = await supabase
                 .from('clinics')
                 .delete()
-                .eq('id', id);
+                .eq('id', clinicToDelete);
 
             if (error) throw error;
 
             // Update state
-            setClinics(prev => prev.filter(clinic => clinic.id !== id));
-            setFilteredClinics(prev => prev.filter(clinic => clinic.id !== id));
+            setClinics(prev => prev.filter(clinic => clinic.id !== clinicToDelete));
+            setFilteredClinics(prev => prev.filter(clinic => clinic.id !== clinicToDelete));
 
             toast({
                 title: "Success",
                 description: "Clinic deleted successfully.",
             });
         } catch (error) {
-            console.error("Error deleting clinic:", error);
             toast({
                 title: "Error",
                 description: "Failed to delete clinic. Please try again.",
@@ -268,82 +355,173 @@ const ClinicManagement = () => {
             });
         } finally {
             setIsLoading(false);
+            setShowDeleteClinicDialog(false);
         }
     };
 
     const handleClinicSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        console.log("Form submitted with data:", clinicFormData);
 
         try {
             setIsLoading(true);
+
+            // Basic validation
+            if (!clinicFormData.name || !clinicFormData.name.trim()) {
+                toast({
+                    title: "Error",
+                    description: "Clinic name is required.",
+                    variant: "destructive",
+                });
+                setIsLoading(false);
+                return;
+            }
+
+            // Get category - this is the critical part
+            if (!clinicFormData.category_id) {
+                toast({
+                    title: "Error",
+                    description: "Please select a category.",
+                    variant: "destructive",
+                });
+                setIsLoading(false);
+                return;
+            }
+
+            // Print debug info to console
+            console.log("Looking for category with ID:", clinicFormData.category_id);
+            console.log("Available categories:", categories);
+
+            // Find the selected category by ID
+            const selectedCategory = categories.find(cat => cat.id === clinicFormData.category_id);
+
+            // If not found, show error
+            if (!selectedCategory) {
+                console.error("Category not found with ID:", clinicFormData.category_id);
+                toast({
+                    title: "Error",
+                    description: "Selected category not found. Please select a valid category.",
+                    variant: "destructive",
+                });
+                setIsLoading(false);
+                return;
+            }
+
+            console.log("Found category:", selectedCategory);
+
+            // Prepare clinic data with the proper category info
+            const clinicData: {
+                name: string;
+                category_id: string;
+                category: string;
+                description: string | null;
+                is_active: boolean;
+                created_at?: string;
+                updated_at?: string;
+            } = {
+                name: clinicFormData.name,
+                category_id: selectedCategory.id,
+                category: selectedCategory.name,
+                description: clinicFormData.description || null,
+                is_active: clinicFormData.is_active
+            };
+
+            // Add timestamps
+            if (clinicFormMode === "create") {
+                clinicData.created_at = new Date().toISOString();
+                clinicData.updated_at = new Date().toISOString();
+            } else {
+                clinicData.updated_at = new Date().toISOString();
+            }
+
+            console.log("Submitting clinic data:", clinicData);
 
             if (clinicFormMode === "create") {
                 // Create new clinic
                 const { data, error } = await supabase
                     .from('clinics')
-                    .insert({
-                        name: clinicFormData.name,
-                        category_id: clinicFormData.category_id,
-                        description: clinicFormData.description,
-                        is_active: clinicFormData.is_active,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    })
+                    .insert(clinicData)
                     .select();
 
-                if (error) throw error;
+                console.log("Database response:", { data, error });
 
-                if (data && data.length > 0) {
-                    setClinics(prev => [...prev, data[0]]);
-                    setFilteredClinics(prev => [...prev, data[0]]);
+                if (error) {
+                    console.error("Error creating clinic:", error);
+                    toast({
+                        title: "Error",
+                        description: error.message || "Failed to save clinic. Please try again.",
+                        variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
                 }
 
-                toast({
-                    title: "Success",
-                    description: "Clinic created successfully.",
-                });
+                if (data && data.length > 0) {
+                    // Update local state
+                    setClinics(prev => [...prev, data[0]]);
+                    setFilteredClinics(prev => [...prev, data[0]]);
 
-                resetClinicForm();
+                    toast({
+                        title: "Success",
+                        description: "Clinic created successfully.",
+                    });
+
+                    // Reset form
+                    resetClinicForm();
+                }
             } else if (clinicFormMode === "edit" && selectedClinic) {
                 // Update existing clinic
                 const { data, error } = await supabase
                     .from('clinics')
                     .update({
                         name: clinicFormData.name,
-                        category_id: clinicFormData.category_id,
-                        description: clinicFormData.description,
+                        category_id: selectedCategory.id,
+                        category: selectedCategory.name,
+                        description: clinicFormData.description || null,
                         is_active: clinicFormData.is_active,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', selectedClinic)
                     .select();
 
-                if (error) throw error;
+                console.log("Database update response:", { data, error });
 
-                if (data && data.length > 0) {
-                    setClinics(prev => prev.map(c => c.id === selectedClinic ? data[0] : c));
-                    setFilteredClinics(prev => prev.map(c => c.id === selectedClinic ? data[0] : c));
+                if (error) {
+                    console.error("Error updating clinic:", error);
+                    toast({
+                        title: "Error",
+                        description: error.message || "Failed to update clinic. Please try again.",
+                        variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
                 }
 
-                toast({
-                    title: "Success",
-                    description: "Clinic updated successfully.",
-                });
+                if (data && data.length > 0) {
+                    // Update local state
+                    setClinics(prev => prev.map(c => c.id === selectedClinic ? data[0] : c));
+                    setFilteredClinics(prev => prev.map(c => c.id === selectedClinic ? data[0] : c));
 
-                resetClinicForm();
+                    toast({
+                        title: "Success",
+                        description: "Clinic updated successfully.",
+                    });
+
+                    // Reset form
+                    resetClinicForm();
+                }
             }
         } catch (error) {
-            console.error("Error saving clinic:", error);
+            console.error("Unexpected error:", error);
             toast({
                 title: "Error",
-                description: "Failed to save clinic. Please try again.",
+                description: "An unexpected error occurred. Please try again.",
                 variant: "destructive",
             });
         } finally {
             setIsLoading(false);
         }
     };
-
     // Category form handlers
     const handleCategoryInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -382,28 +560,44 @@ const ClinicManagement = () => {
         });
     };
 
-    const handleDeleteCategory = async (id: string) => {
-        if (!window.confirm("Are you sure you want to delete this category? This action cannot be undone.")) {
-            return;
-        }
+    // Updated to use AlertDialog instead of window.confirm
+    const handleDeleteCategory = (id: string) => {
+        setCategoryToDelete(id);
+        setShowDeleteCategoryDialog(true);
+    };
+
+    const confirmDeleteCategory = async () => {
+        if (!categoryToDelete) return;
 
         try {
             setIsLoading(true);
 
-            // Check if there are clinics using this category
-            const { data: clinicData, error: clinicError } = await supabase
-                .from('clinics')
-                .select('id')
-                .eq('category', categories.find(c => c.id === id)?.name || '');
-
-            if (clinicError) throw clinicError;
-
-            if (clinicData && clinicData.length > 0) {
+            // First, get the category name
+            const categoryToDeleteObj = categories.find(c => c.id === categoryToDelete);
+            if (!categoryToDeleteObj) {
                 toast({
-                    title: "Cannot Delete",
-                    description: "This category is used by one or more clinics. Please reassign those clinics first.",
+                    title: "Error",
+                    description: "Category not found.",
                     variant: "destructive",
                 });
+                setShowDeleteCategoryDialog(false);
+                return;
+            }
+
+            // Check if there are clinics using this category
+            const clinicsUsingCategory = clinics.filter(clinic =>
+                clinic.category === categoryToDeleteObj.name ||
+                clinic.category === categoryToDelete
+            );
+
+            if (clinicsUsingCategory.length > 0) {
+                const clinicNames = clinicsUsingCategory.map(c => c.name).join(", ");
+                toast({
+                    title: "Cannot Delete",
+                    description: `This category is used by the following clinic(s): ${clinicNames}. Please reassign those clinics first.`,
+                    variant: "destructive",
+                });
+                setShowDeleteCategoryDialog(false);
                 return;
             }
 
@@ -411,19 +605,25 @@ const ClinicManagement = () => {
             const { error } = await supabase
                 .from('clinic_categories')
                 .delete()
-                .eq('id', id);
+                .eq('id', categoryToDelete);
 
-            if (error) throw error;
+            if (error) {
+                toast({
+                    title: "Error",
+                    description: "Database error: " + error.message,
+                    variant: "destructive",
+                });
+                return;
+            }
 
             // Update state
-            setCategories(prev => prev.filter(category => category.id !== id));
+            setCategories(prev => prev.filter(category => category.id !== categoryToDelete));
 
             toast({
                 title: "Success",
                 description: "Category deleted successfully.",
             });
         } catch (error) {
-            console.error("Error deleting category:", error);
             toast({
                 title: "Error",
                 description: "Failed to delete category. Please try again.",
@@ -431,13 +631,60 @@ const ClinicManagement = () => {
             });
         } finally {
             setIsLoading(false);
+            setShowDeleteCategoryDialog(false);
         }
     };
+
+    // Doctor deletion handling
+    const handleDeleteDoctor = (id: string) => {
+        setDoctorToDelete(id);
+        setShowDeleteDoctorDialog(true);
+    };
+
+    const confirmDeleteDoctor = async () => {
+        if (!doctorToDelete) return;
+
+        try {
+            setIsLoading(true);
+
+            // Delete the doctor
+            const { error } = await supabase
+                .from('doctors')
+                .delete()
+                .eq('id', doctorToDelete);
+
+            if (error) {
+                toast({
+                    title: "Error",
+                    description: "Database error: " + error.message,
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Update state
+            setDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete));
+
+            toast({
+                title: "Success",
+                description: "Doctor deleted successfully.",
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to delete doctor. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+            setShowDeleteDoctorDialog(false);
+        }
+    };
+
     const getCategoryNameById = (id: string) => {
         const category = categories.find(cat => cat.id === id);
         return category ? category.name : "Unknown";
     };
-
 
     const handleCategorySubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -496,17 +743,33 @@ const ClinicManagement = () => {
 
                     // Update category name in all clinics using this category
                     if (oldName && oldName !== categoryFormData.name) {
+                        // Update the related clinics in state first
+                        setClinics(prev => prev.map(clinic =>
+                            clinic.category === oldName
+                                ? { ...clinic, category: categoryFormData.name }
+                                : clinic
+                        ));
+                        setFilteredClinics(prev => prev.map(clinic =>
+                            clinic.category === oldName
+                                ? { ...clinic, category: categoryFormData.name }
+                                : clinic
+                        ));
+
+                        // Then update in the database
                         const { error: updateError } = await supabase
                             .from('clinics')
                             .update({ category: categoryFormData.name })
                             .eq('category', oldName);
 
                         if (updateError) {
-                            console.error("Error updating clinic categories:", updateError);
-                            // Still show success for category update
+                            toast({
+                                title: "Warning",
+                                description: "Category updated but failed to update related clinics.",
+                                variant: "default",
+                            });
                         } else {
-                            // Refresh clinics to get updated category names
-                            loadClinics();
+                            // Refresh clinics to ensure data consistency
+                            await loadClinics();
                         }
                     }
                 }
@@ -519,7 +782,6 @@ const ClinicManagement = () => {
                 resetCategoryForm();
             }
         } catch (error) {
-            console.error("Error saving category:", error);
             toast({
                 title: "Error",
                 description: "Failed to save category. Please try again.",
@@ -650,7 +912,7 @@ const ClinicManagement = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="category">Category *</Label>
+                                            <Label htmlFor="category_id">Category *</Label>
                                             <select
                                                 id="category_id"
                                                 name="category_id"
@@ -659,7 +921,7 @@ const ClinicManagement = () => {
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                 required
                                             >
-                                                <option value="" disabled>Select a category</option>
+                                                <option value="">Select a category</option>
                                                 {categories
                                                     .filter(cat => cat.is_active) // Only show active categories
                                                     .map(category => (
@@ -687,7 +949,6 @@ const ClinicManagement = () => {
                                                 </div>
                                             )}
                                         </div>
-
                                         <div className="space-y-2">
                                             <Label htmlFor="description">Description</Label>
                                             <Textarea
@@ -883,6 +1144,123 @@ const ClinicManagement = () => {
                     </div>
                 </TabsContent>
             </Tabs>
+
+            {/* DOCTORS SECTION FOR DELETION */}
+            {doctors.length > 0 && (
+                <Card className="mt-8">
+                    <CardHeader>
+                        <CardTitle>Doctors Management</CardTitle>
+                        <CardDescription>
+                            View and manage doctors associated with clinics
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {doctors.map((doctor) => (
+                                <div key={doctor.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                                    <div>
+                                        <h3 className="font-medium">{doctor.name}</h3>
+                                        <div className="text-sm text-gray-500">Specialty: {doctor.specialty}</div>
+                                        <div className="text-sm text-gray-500">Clinic: {doctor.clinic_name}</div>
+                                        <div className="mt-1">
+                                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${doctor.is_available
+                                                ? "bg-green-100 text-green-800"
+                                                : "bg-red-100 text-red-800"
+                                                }`}>
+                                                {doctor.is_available ? "Available" : "Unavailable"}
+                                            </span>
+                                            <span className="ml-2 text-sm">₪{doctor.price}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleDeleteDoctor(doctor.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4 mr-1" />
+                                            Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Alert Dialogs */}
+            {/* Clinic Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteClinicDialog} onOpenChange={setShowDeleteClinicDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Clinic</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this clinic? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setShowDeleteClinicDialog(false)}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDeleteClinic}
+                            className="bg-red-600 hover:bg-red-700"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Category Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteCategoryDialog} onOpenChange={setShowDeleteCategoryDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this category? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setShowDeleteCategoryDialog(false)}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDeleteCategory}
+                            className="bg-red-600 hover:bg-red-700"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Doctor Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteDoctorDialog} onOpenChange={setShowDeleteDoctorDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Doctor</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this doctor? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setShowDeleteDoctorDialog(false)}>
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDeleteDoctor}
+                            className="bg-red-600 hover:bg-red-700"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };
