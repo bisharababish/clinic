@@ -14,9 +14,18 @@ type PaymentMethod = "paypal" | "creditCard" | "insurance";
 const Payment = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { clinicName, doctorName, appointmentTime, price } = location.state || {
+    const {
+        clinicName,
+        doctorName,
+        specialty,
+        appointmentDay,
+        appointmentTime,
+        price
+    } = location.state || {
         clinicName: "Selected Clinic",
         doctorName: "Selected Doctor",
+        specialty: "Selected Specialty",
+        appointmentDay: "Selected Day",
         appointmentTime: "Selected Time",
         price: 150,
     };
@@ -97,7 +106,13 @@ const Payment = () => {
                         <div className="text-sm font-medium">Doctor:</div>
                         <div>{doctorName}</div>
 
-                        <div className="text-sm font-medium">Appointment Time:</div>
+                        <div className="text-sm font-medium">Specialty:</div>
+                        <div>{specialty}</div>
+
+                        <div className="text-sm font-medium">Day:</div>
+                        <div>{appointmentDay}</div>
+
+                        <div className="text-sm font-medium">Time:</div>
                         <div>{appointmentTime}</div>
 
                         <div className="text-sm font-medium">Total Amount:</div>

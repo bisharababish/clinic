@@ -1,137 +1,193 @@
-import React, { useState } from "react";
+// pages/Clinics.tsx
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../components/ui/button";
-import { Alert, AlertDescription } from "../components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "../lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-type Clinic = {
+type AvailabilitySlot = {
     id: string;
-    name: string;
-    category: string;
-    doctors: Doctor[];
+    day: string;
+    start_time: string;
+    end_time: string;
 };
 
 type Doctor = {
     id: string;
     name: string;
     specialty: string;
-    availableHours: {
-        day: string;
-        times: string[];
-    }[];
     price: number;
+    availability: AvailabilitySlot[];
+};
+
+type Clinic = {
+    id: string;
+    name: string;
+    category: string;
+    description?: string;
+    doctors: Doctor[];
+};
+
+type Category = {
+    id: string;
+    name: string;
 };
 
 const Clinics = () => {
     const navigate = useNavigate();
+    const { toast } = useToast();
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+    const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
     const [selectedTime, setSelectedTime] = useState("");
+    const [selectedDay, setSelectedDay] = useState("");
 
-    // Sample clinic data
-    const clinics: Clinic[] = [
-        {
-            id: "1",
-            name: "Cardiology Center",
-            category: "cardiology",
-            doctors: [
-                {
-                    id: "d1",
-                    name: "Dr. Smith",
-                    specialty: "Cardiologist",
-                    availableHours: [
-                        { day: "Monday", times: ["8:00-10:00", "14:00-16:00"] },
-                        { day: "Wednesday", times: ["9:00-11:00", "15:00-17:00"] },
-                    ],
-                    price: 150,
-                },
-                {
-                    id: "d2",
-                    name: "Dr. Johnson",
-                    specialty: "Cardiac Surgeon",
-                    availableHours: [
-                        { day: "Tuesday", times: ["10:00-12:00"] },
-                        { day: "Thursday", times: ["8:00-10:00", "13:00-15:00"] },
-                    ],
-                    price: 200,
-                },
-            ],
-        },
-        {
-            id: "2",
-            name: "Dental Care",
-            category: "dental",
-            doctors: [
-                {
-                    id: "d3",
-                    name: "Dr. Williams",
-                    specialty: "Dentist",
-                    availableHours: [
-                        { day: "Monday", times: ["9:00-12:00"] },
-                        { day: "Friday", times: ["10:00-13:00", "14:00-17:00"] },
-                    ],
-                    price: 120,
-                },
-            ],
-        },
-        {
-            id: "3",
-            name: "Neurology Institute",
-            category: "neurology",
-            doctors: [
-                {
-                    id: "d4",
-                    name: "Dr. Brown",
-                    specialty: "Neurologist",
-                    availableHours: [
-                        { day: "Tuesday", times: ["8:00-11:00"] },
-                        { day: "Thursday", times: ["13:00-16:00"] },
-                    ],
-                    price: 180,
-                },
-            ],
-        },
-    ];
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [clinics, setClinics] = useState<Clinic[]>([]);
 
-    const categories = [
-        { id: "all", name: "All Clinics" },
-        { id: "cardiology", name: "Cardiologist" },
-        { id: "dental", name: "Dental" },
-        { id: "neurology", name: "Neurologist" },
-        { id: "dermatology", name: "Dermatologist" },
-        { id: "orthopedics", name: "Orthopaedist" },
-        { id: "mentalhealth", name: "Mental health professional" },
-        { id: "pediatrics", name: "Pediatricians" },
-        { id: "urology", name: "Urology" },
-        { id: "obgyn", name: "Obstetrics and Gynaecology" },
-        { id: "physicaltherapy", name: "Physicaltherapy" },
-        { id: "gastroenterology", name: "Gastroenterologist" },
-        { id: "oncology", name: "Oncologist" },
-        { id: "internal", name: "Internist" },
-        { id: "psychiatry", name: "Psychiatrist" },
-        { id: "nephrology", name: "Nephrologist" },
+    useEffect(() => {
+        loadData();
+    }, []);
 
-    ];
+    const loadData = async () => {
+        try {
+            setIsLoading(true);
+
+            // Load categories
+            const { data: categoryData, error: categoryError } = await supabase
+                .from('clinic_categories')
+                .select('*')
+                .eq('is_active', true)
+                .order('name');
+
+            if (categoryError) throw categoryError;
+            setCategories(categoryData || []);
+
+            // Load clinics with active status
+            const { data: clinicData, error: clinicError } = await supabase
+                .from('clinics')
+                .select('*')
+                .eq('is_active', true)
+                .order('name');
+
+            if (clinicError) throw clinicError;
+
+            // Load doctors for each clinic
+            const clinicsWithDoctors: Clinic[] = [];
+
+            for (const clinic of clinicData || []) {
+                const { data: doctorData, error: doctorError } = await supabase
+                    .from('doctors')
+                    .select('*')
+                    .eq('clinic_id', clinic.id)
+                    .eq('is_available', true);
+
+                if (doctorError) throw doctorError;
+
+                // For each doctor, load their availability
+                const doctorsWithAvailability: Doctor[] = [];
+
+                for (const doctor of doctorData || []) {
+                    const { data: availabilityData, error: availabilityError } = await supabase
+                        .from('doctor_availability')
+                        .select('*')
+                        .eq('doctor_id', doctor.id)
+                        .order('day', { ascending: true })
+                        .order('start_time', { ascending: true });
+
+                    if (availabilityError) throw availabilityError;
+
+                    doctorsWithAvailability.push({
+                        id: doctor.id,
+                        name: doctor.name,
+                        specialty: doctor.specialty,
+                        price: doctor.price,
+                        availability: availabilityData || []
+                    });
+                }
+
+                clinicsWithDoctors.push({
+                    id: clinic.id,
+                    name: clinic.name,
+                    category: clinic.category,
+                    description: clinic.description,
+                    doctors: doctorsWithAvailability
+                });
+            }
+
+            setClinics(clinicsWithDoctors);
+        } catch (error) {
+            console.error('Error loading clinic data:', error);
+            toast({
+                title: "Error",
+                description: "Failed to load clinics. Please try again later.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const filteredClinics = selectedCategory === "all"
         ? clinics
         : clinics.filter(clinic => clinic.category === selectedCategory);
 
+    const handleViewClinic = (clinic: Clinic) => {
+        setSelectedClinic(clinic);
+        setSelectedDoctor(null);
+        setSelectedTime("");
+        setSelectedDay("");
+    };
+
+    const handleSelectDoctor = (doctor: Doctor) => {
+        setSelectedDoctor(doctor);
+        setSelectedTime("");
+        setSelectedDay("");
+    };
+
+    const handleSelectTimeSlot = (day: string, time: string) => {
+        setSelectedDay(day);
+        setSelectedTime(time);
+    };
+
     const handleBookAppointment = () => {
-        // Find the selected doctor to get their price
-        const selectedDoctor = selectedClinic?.doctors.find(doctor =>
-            doctor.availableHours.some(day => day.times.includes(selectedTime))
-        );
+        if (!selectedClinic || !selectedDoctor || !selectedTime) return;
 
         // Navigate to payment page with appointment details
         navigate("/payment", {
             state: {
-                clinicName: selectedClinic?.name,
-                doctorName: selectedDoctor?.name,
+                clinicName: selectedClinic.name,
+                doctorName: selectedDoctor.name,
+                specialty: selectedDoctor.specialty,
+                appointmentDay: selectedDay,
                 appointmentTime: selectedTime,
-                price: selectedDoctor?.price
+                price: selectedDoctor.price
             }
         });
     };
+
+    // Format time for display (e.g., "09:00" to "9:00 AM")
+    const formatTime = (time: string) => {
+        try {
+            const [hours, minutes] = time.split(':');
+            const date = new Date();
+            date.setHours(parseInt(hours, 10));
+            date.setMinutes(parseInt(minutes, 10));
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return time;
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[300px]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto py-8 space-y-6">
@@ -144,11 +200,20 @@ const Clinics = () => {
 
             {/* Category Selection */}
             <div className="flex flex-wrap gap-2">
+                <Button
+                    key="all"
+                    variant={selectedCategory === "all" ? "default" : "outline"}
+                    onClick={() => setSelectedCategory("all")}
+                    className="min-w-fit"
+                >
+                    All Clinics
+                </Button>
+
                 {categories.map(category => (
                     <Button
                         key={category.id}
-                        variant={selectedCategory === category.id ? "default" : "outline"}
-                        onClick={() => setSelectedCategory(category.id)}
+                        variant={selectedCategory === category.name ? "default" : "outline"}
+                        onClick={() => setSelectedCategory(category.name)}
                         className="min-w-fit"
                     >
                         {category.name}
@@ -162,13 +227,19 @@ const Clinics = () => {
                     <div
                         key={clinic.id}
                         className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => setSelectedClinic(clinic)}
+                        onClick={() => handleViewClinic(clinic)}
                     >
                         <h3 className="text-xl font-bold">{clinic.name}</h3>
                         <p className="text-sm text-gray-500 capitalize mt-1">{clinic.category}</p>
-                        <p className="mt-2">{clinic.doctors.length} available doctors</p>
+                        <p className="mt-2">{clinic.doctors.length} available doctor{clinic.doctors.length !== 1 ? 's' : ''}</p>
                     </div>
                 ))}
+
+                {filteredClinics.length === 0 && (
+                    <div className="col-span-full text-center py-10 text-gray-500">
+                        No clinics found for this category.
+                    </div>
+                )}
             </div>
 
             {/* Clinic Details Modal */}
@@ -185,35 +256,66 @@ const Clinics = () => {
                             </button>
                         </div>
 
-                        <div className="mt-6 space-y-6">
-                            {selectedClinic.doctors.map(doctor => (
-                                <div key={doctor.id} className="border-b pb-4">
-                                    <h3 className="text-lg font-semibold">{doctor.name}</h3>
-                                    <p className="text-gray-600">{doctor.specialty}</p>
-                                    <p className="font-medium mt-2">Fee: ₪{doctor.price}</p>
+                        {selectedClinic.description && (
+                            <p className="text-gray-600 mt-2">{selectedClinic.description}</p>
+                        )}
 
-                                    <div className="mt-3">
-                                        <h4 className="font-medium mb-2">Available Hours:</h4>
-                                        <div className="space-y-2">
-                                            {doctor.availableHours.map((day, i) => (
-                                                <div key={i} className="flex flex-wrap gap-2">
-                                                    <span className="font-medium">{day.day}:</span>
-                                                    {day.times.map(time => (
-                                                        <Button
-                                                            key={time}
-                                                            variant={selectedTime === time ? "default" : "outline"}
-                                                            size="sm"
-                                                            onClick={() => setSelectedTime(time)}
-                                                        >
-                                                            {time}
-                                                        </Button>
-                                                    ))}
-                                                </div>
-                                            ))}
-                                        </div>
+                        <div className="mt-6 space-y-6">
+                            {selectedClinic.doctors.length === 0 ? (
+                                <p className="text-center py-4 text-gray-500">No doctors available at this clinic.</p>
+                            ) : (
+                                selectedClinic.doctors.map(doctor => (
+                                    <div
+                                        key={doctor.id}
+                                        className={`border-b pb-4 ${selectedDoctor?.id === doctor.id ? 'bg-blue-50 border rounded-lg p-4' : ''}`}
+                                        onClick={() => handleSelectDoctor(doctor)}
+                                    >
+                                        <h3 className="text-lg font-semibold">{doctor.name}</h3>
+                                        <p className="text-gray-600">{doctor.specialty}</p>
+                                        <p className="font-medium mt-2">Fee: ₪{doctor.price}</p>
+
+                                        {selectedDoctor?.id === doctor.id && (
+                                            <div className="mt-3">
+                                                <h4 className="font-medium mb-2">Available Hours:</h4>
+                                                {doctor.availability.length === 0 ? (
+                                                    <p className="text-gray-500">No availability set for this doctor.</p>
+                                                ) : (
+                                                    <div className="space-y-2">
+                                                        {/* Group availability by day */}
+                                                        {Array.from(new Set(doctor.availability.map(slot => slot.day))).map(day => (
+                                                            <div key={day} className="flex flex-wrap gap-2">
+                                                                <span className="font-medium">{day}:</span>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {doctor.availability
+                                                                        .filter(slot => slot.day === day)
+                                                                        .map(slot => {
+                                                                            const timeDisplay = `${formatTime(slot.start_time)}-${formatTime(slot.end_time)}`;
+                                                                            const isSelected = selectedDay === day && selectedTime === timeDisplay;
+
+                                                                            return (
+                                                                                <Button
+                                                                                    key={slot.id}
+                                                                                    variant={isSelected ? "default" : "outline"}
+                                                                                    size="sm"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handleSelectTimeSlot(day, timeDisplay);
+                                                                                    }}
+                                                                                >
+                                                                                    {timeDisplay}
+                                                                                </Button>
+                                                                            );
+                                                                        })}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
 
                         <div className="mt-6 flex justify-end gap-3">
@@ -224,7 +326,7 @@ const Clinics = () => {
                                 Cancel
                             </Button>
                             <Button
-                                disabled={!selectedTime}
+                                disabled={!selectedDoctor || !selectedTime}
                                 onClick={handleBookAppointment}
                             >
                                 Book Appointment Now

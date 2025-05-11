@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ClinicManagement from "./api/admin/ClinicManagement";
+import DoctorManagement from "./api/admin/DoctorManagement";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -945,106 +947,106 @@ const AdminDashboard = () => {
     };
 
 
-  
-// Replace your existing handleDeleteUser function with this one
-const handleDeleteUser = async (userid: number) => {
-    // Find user to delete
-    const userToDelete = users.find(u => u.userid === userid);
-    if (!userToDelete) {
-        toast({
-            title: "Error",
-            description: "User not found.",
-            variant: "destructive",
-        });
-        return;
-    }
 
-    // Custom confirmation toast
-    let confirmed = false;
-    await new Promise((resolve) => {
-        toast({
-            title: "Confirm Deletion",
-            description: `Are you sure you want to delete ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (${userToDelete.user_email})? This action cannot be undone.`,
-            action: (
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                        style={{ background: '#dc2626', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
-                        onClick={() => { confirmed = true; resolve(undefined); }}
-                    >
-                        Confirm
-                    </button>
-                    <button
-                        style={{ background: '#374151', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
-                        onClick={() => { confirmed = false; resolve(undefined); }}
-                    >
-                        Cancel
-                    </button>
-                </div>
-            ),
-            duration: 10000,
-        });
-    });
-    if (!confirmed) return;
+    // Replace your existing handleDeleteUser function with this one
+    const handleDeleteUser = async (userid: number) => {
+        // Find user to delete
+        const userToDelete = users.find(u => u.userid === userid);
+        if (!userToDelete) {
+            toast({
+                title: "Error",
+                description: "User not found.",
+                variant: "destructive",
+            });
+            return;
+        }
 
-    try {
-        setIsLoading(true);
-        console.log("Starting deletion process for user ID:", userid);
-
-        // Try to call our database function first - this is the most reliable approach
-        const { data: rpcData, error: rpcError } = await supabase.rpc('delete_user_by_admin', {
-            user_id_to_delete: userid
+        // Custom confirmation toast
+        let confirmed = false;
+        await new Promise((resolve) => {
+            toast({
+                title: "Confirm Deletion",
+                description: `Are you sure you want to delete ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (${userToDelete.user_email})? This action cannot be undone.`,
+                action: (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                            style={{ background: '#dc2626', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
+                            onClick={() => { confirmed = true; resolve(undefined); }}
+                        >
+                            Confirm
+                        </button>
+                        <button
+                            style={{ background: '#374151', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
+                            onClick={() => { confirmed = false; resolve(undefined); }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                ),
+                duration: 10000,
+            });
         });
-        
-        // If RPC fails, fall back to direct deletion
-        if (rpcError) {
-            console.warn("RPC function failed, trying direct deletion", rpcError);
-            
-            // Try direct deletion
-            const { error } = await supabase
-                .from('userinfo')
-                .delete()
-                .eq('userid', userid);
-                
-            if (error) {
-                console.error("Direct deletion also failed", error);
-                throw new Error(error.message);
+        if (!confirmed) return;
+
+        try {
+            setIsLoading(true);
+            console.log("Starting deletion process for user ID:", userid);
+
+            // Try to call our database function first - this is the most reliable approach
+            const { data: rpcData, error: rpcError } = await supabase.rpc('delete_user_by_admin', {
+                user_id_to_delete: userid
+            });
+
+            // If RPC fails, fall back to direct deletion
+            if (rpcError) {
+                console.warn("RPC function failed, trying direct deletion", rpcError);
+
+                // Try direct deletion
+                const { error } = await supabase
+                    .from('userinfo')
+                    .delete()
+                    .eq('userid', userid);
+
+                if (error) {
+                    console.error("Direct deletion also failed", error);
+                    throw new Error(error.message);
+                }
             }
+
+            // Update the UI
+            setUsers(prev => prev.filter(user => user.userid !== userid));
+            setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
+
+            toast({
+                title: "Success",
+                description: "User deleted successfully.",
+            });
+
+            // Log the activity
+            if (typeof logActivity === 'function') {
+                const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was deleted`;
+                logActivity("User Deleted", user?.email || "admin", activityMessage, "success");
+            }
+
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            toast({
+                title: "Error",
+                description: error instanceof Error
+                    ? error.message
+                    : "Failed to delete user from database. Make sure you have admin permissions.",
+                variant: "destructive",
+            });
+
+            // Refresh the user list to ensure UI is in sync with the database
+            if (typeof loadUsers === 'function') {
+                await loadUsers();
+            }
+
+        } finally {
+            setIsLoading(false);
         }
-
-        // Update the UI
-        setUsers(prev => prev.filter(user => user.userid !== userid));
-        setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
-
-        toast({
-            title: "Success",
-            description: "User deleted successfully.",
-        });
-
-        // Log the activity
-        if (typeof logActivity === 'function') {
-            const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was deleted`;
-            logActivity("User Deleted", user?.email || "admin", activityMessage, "success");
-        }
-
-    } catch (error) {
-        console.error("Error deleting user:", error);
-        toast({
-            title: "Error",
-            description: error instanceof Error 
-                ? error.message 
-                : "Failed to delete user from database. Make sure you have admin permissions.",
-            variant: "destructive",
-        });
-
-        // Refresh the user list to ensure UI is in sync with the database
-        if (typeof loadUsers === 'function') {
-            await loadUsers();
-        }
-
-    } finally {
-        setIsLoading(false);
-    }
-};
+    };
     const handleUserSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -2512,361 +2514,13 @@ const handleDeleteUser = async (userid: number) => {
 
                 {/* CLINICS TAB */}
                 <TabsContent value="clinics" className="pt-6">
-                    <div className="flex flex-col lg:flex-row gap-8">
-                        <div className="w-full lg:w-2/3 space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle>Clinics Management</CardTitle>
-                                        <Button onClick={resetClinicForm}>
-                                            <Plus className="h-4 w-4 mr-2" />
-                                            Add Clinic
-                                        </Button>
-                                    </div>
-                                    <CardDescription>
-                                        Manage clinic departments and specialties
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        {clinics.map((clinic) => (
-                                            <div key={clinic.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                                <div>
-                                                    <h3 className="font-medium">{clinic.name}</h3>
-                                                    <div className="text-sm text-gray-500 capitalize">{clinic.category}</div>
-                                                    {clinic.description && (
-                                                        <div className="text-sm text-gray-500 mt-1">{clinic.description}</div>
-                                                    )}
-                                                    <div className="mt-1">
-                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${clinic.isActive
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-red-100 text-red-800"
-                                                            }`}>
-                                                            {clinic.isActive ? "Active" : "Inactive"}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex space-x-2">
-                                                    <Button variant="outline" size="sm" onClick={() => handleEditClinic(clinic.id)}>
-                                                        <Edit className="h-4 w-4 mr-1" />
-                                                        Edit
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteClinic(clinic.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 mr-1" />
-                                                        Delete
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-
-                                        {clinics.length === 0 && (
-                                            <div className="text-center py-8 text-gray-500">
-                                                No clinics found. Add a new clinic to get started.
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        <div className="w-full lg:w-1/3">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>{clinicFormMode === "create" ? "Create New Clinic" : "Edit Clinic"}</CardTitle>
-                                    <CardDescription>
-                                        {clinicFormMode === "create"
-                                            ? "Add a new clinic department"
-                                            : "Modify existing clinic details"}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <form onSubmit={handleClinicSubmit} id="clinicForm" className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="name">Clinic Name *</Label>
-                                            <Input
-                                                id="name"
-                                                name="name"
-                                                value={clinicFormData.name}
-                                                onChange={handleClinicInputChange}
-                                                placeholder="e.g. Cardiology Center"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="category">Category *</Label>
-                                            <Input
-                                                id="category"
-                                                name="category"
-                                                value={clinicFormData.category}
-                                                onChange={handleClinicInputChange}
-                                                placeholder="e.g. cardiology"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="description">Description</Label>
-                                            <Textarea
-                                                id="description"
-                                                name="description"
-                                                value={clinicFormData.description}
-                                                onChange={handleClinicInputChange}
-                                                placeholder="Describe this clinic's services and specialties"
-                                                rows={4}
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <Label htmlFor="isActive">Active Status</Label>
-                                                <Switch
-                                                    id="isActive"
-                                                    checked={clinicFormData.isActive}
-                                                    onCheckedChange={handleClinicActiveChange}
-                                                />
-                                            </div>
-                                            <p className="text-sm text-gray-500">
-                                                {clinicFormData.isActive
-                                                    ? "This clinic is visible and accepting appointments"
-                                                    : "This clinic is hidden and not accepting appointments"}
-                                            </p>
-                                        </div>
-                                    </form>
-                                </CardContent>
-                                <CardFooter className="flex justify-between border-t pt-4">
-                                    {clinicFormMode === "edit" && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={resetClinicForm}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    )}
-                                    <Button
-                                        type="submit"
-                                        form="clinicForm"
-                                        className={clinicFormMode === "edit" ? "" : "w-full"}
-                                        disabled={isLoading}
-                                    >
-                                        {isLoading
-                                            ? "Saving..."
-                                            : clinicFormMode === "create"
-                                                ? "Create Clinic"
-                                                : "Update Clinic"
-                                        }
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        </div>
-                    </div>
+                    <ClinicManagement />
                 </TabsContent>
 
                 {/* DOCTORS TAB */}
                 <TabsContent value="doctors" className="pt-6">
-                    <div className="flex flex-col lg:flex-row gap-8">
-                        <div className="w-full lg:w-2/3 space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle>Doctors Management</CardTitle>
-                                        <Button onClick={resetDoctorForm}>
-                                            <Plus className="h-4 w-4 mr-2" />
-                                            Add Doctor
-                                        </Button>
-                                    </div>
-                                    <CardDescription>
-                                        Manage doctor profiles and assignments
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        {doctors.map((doctor) => (
-                                            <div key={doctor.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                                <div>
-                                                    <h3 className="font-medium">{doctor.name}</h3>
-                                                    <div className="text-sm text-gray-500">{doctor.specialty}</div>
-                                                    <div className="text-sm text-gray-500">
-                                                        {clinics.find(c => c.id === doctor.clinic_id)?.name || 'Unknown Clinic'}
-                                                    </div>
-                                                    <div className="mt-1 flex items-center space-x-2">
-                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${doctor.isAvailable
-                                                            ? "bg-green-100 text-green-800"
-                                                            : "bg-red-100 text-red-800"
-                                                            }`}>
-                                                            {doctor.isAvailable ? "Available" : "Unavailable"}
-                                                        </span>
-                                                        <span className="text-sm font-medium">${doctor.price}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex space-x-2">
-                                                    <Button variant="outline" size="sm" onClick={() => handleEditDoctor(doctor.id)}>
-                                                        <Edit className="h-4 w-4 mr-1" />
-                                                        Edit
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteDoctor(doctor.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4 mr-1" />
-                                                        Delete
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
+                    <DoctorManagement />
 
-                                        {doctors.length === 0 && (
-                                            <div className="text-center py-8 text-gray-500">
-                                                No doctors found. Add a new doctor to get started.
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-
-                        <div className="w-full lg:w-1/3">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>{doctorFormMode === "create" ? "Create New Doctor" : "Edit Doctor"}</CardTitle>
-                                    <CardDescription>
-                                        {doctorFormMode === "create"
-                                            ? "Add a new doctor profile"
-                                            : "Modify existing doctor details"}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <form onSubmit={handleDoctorSubmit} id="doctorForm" className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="name">Doctor Name *</Label>
-                                            <Input
-                                                id="name"
-                                                name="name"
-                                                value={doctorFormData.name}
-                                                onChange={handleDoctorInputChange}
-                                                placeholder="Dr. Full Name"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="specialty">Specialty *</Label>
-                                            <Input
-                                                id="specialty"
-                                                name="specialty"
-                                                value={doctorFormData.specialty}
-                                                onChange={handleDoctorInputChange}
-                                                placeholder="e.g. Cardiologist"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="clinic_id">Clinic *</Label>
-                                            <Select
-                                                value={doctorFormData.clinic_id}
-                                                onValueChange={handleDoctorClinicChange}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select clinic" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {clinics.map(clinic => (
-                                                        <SelectItem key={clinic.id} value={clinic.id}>
-                                                            {clinic.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email">Email *</Label>
-                                            <Input
-                                                id="email"
-                                                name="email"
-                                                type="email"
-                                                value={doctorFormData.email}
-                                                onChange={handleDoctorInputChange}
-                                                placeholder="doctor@example.com"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="phone">Phone</Label>
-                                            <Input
-                                                id="phone"
-                                                name="phone"
-                                                value={doctorFormData.phone}
-                                                onChange={handleDoctorInputChange}
-                                                placeholder="e.g. +1234567890"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="price">Appointment Price *</Label>
-                                            <Input
-                                                id="price"
-                                                name="price"
-                                                type="number"
-                                                value={doctorFormData.price.toString()}
-                                                onChange={handleDoctorInputChange}
-                                                placeholder="0.00"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <Label htmlFor="isAvailable">Availability Status</Label>
-                                                <Switch
-                                                    id="isAvailable"
-                                                    checked={doctorFormData.isAvailable}
-                                                    onCheckedChange={handleDoctorAvailableChange}
-                                                />
-                                            </div>
-                                            <p className="text-sm text-gray-500">
-                                                {doctorFormData.isAvailable
-                                                    ? "This doctor is available for appointments"
-                                                    : "This doctor is not available for appointments"}
-                                            </p>
-                                        </div>
-                                    </form>
-                                </CardContent>
-                                <CardFooter className="flex justify-between border-t pt-4">
-                                    {doctorFormMode === "edit" && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={resetDoctorForm}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    )}
-                                    <Button
-                                        type="submit"
-                                        form="doctorForm"
-                                        className={doctorFormMode === "edit" ? "" : "w-full"}
-                                        disabled={isLoading}
-                                    >
-                                        {isLoading
-                                            ? "Saving..."
-                                            : doctorFormMode === "create"
-                                                ? "Create Doctor"
-                                                : "Update Doctor"
-                                        }
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        </div>
-                    </div>
                 </TabsContent>
 
                 {/* APPOINTMENTS TAB */}
