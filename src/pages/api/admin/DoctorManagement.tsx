@@ -16,7 +16,8 @@ import {
     Clock,
     RefreshCw,
     Search,
-    Calendar
+    Calendar,
+    AlertTriangle
 } from "lucide-react";
 
 interface DoctorInfo {
@@ -78,6 +79,10 @@ const DoctorManagement = () => {
         end_time: "",
     });
     const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
+
+    // State for delete confirmation dialog
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [doctorToDelete, setDoctorToDelete] = useState<DoctorInfo | null>(null);
 
     const { toast } = useToast();
 
@@ -257,10 +262,15 @@ const DoctorManagement = () => {
         });
     };
 
-    const handleDeleteDoctor = async (id: string) => {
-        if (!window.confirm("Are you sure you want to delete this doctor? This action cannot be undone.")) {
-            return;
-        }
+    // Open delete confirmation dialog
+    const confirmDeleteDoctor = (doctor: DoctorInfo) => {
+        setDoctorToDelete(doctor);
+        setShowDeleteDialog(true);
+    };
+
+    // Handle actual doctor deletion
+    const handleDeleteDoctor = async () => {
+        if (!doctorToDelete) return;
 
         try {
             setIsLoading(true);
@@ -269,7 +279,7 @@ const DoctorManagement = () => {
             const { error: availabilityError } = await supabase
                 .from('doctor_availability')
                 .delete()
-                .eq('doctor_id', id);
+                .eq('doctor_id', doctorToDelete.id);
 
             if (availabilityError) {
                 console.error("Error deleting availability slots:", availabilityError);
@@ -280,18 +290,22 @@ const DoctorManagement = () => {
             const { error } = await supabase
                 .from('doctors')
                 .delete()
-                .eq('id', id);
+                .eq('id', doctorToDelete.id);
 
             if (error) throw error;
 
             // Update state
-            setDoctors(prev => prev.filter(doctor => doctor.id !== id));
-            setFilteredDoctors(prev => prev.filter(doctor => doctor.id !== id));
+            setDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
+            setFilteredDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
 
             toast({
                 title: "Success",
-                description: "Doctor deleted successfully.",
+                description: `Dr. ${doctorToDelete.name} has been deleted successfully.`,
             });
+
+            // Close the dialog
+            setShowDeleteDialog(false);
+            setDoctorToDelete(null);
         } catch (error) {
             console.error("Error deleting doctor:", error);
             toast({
@@ -610,7 +624,7 @@ const DoctorManagement = () => {
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
-                                                onClick={() => handleDeleteDoctor(doctor.id)}
+                                                onClick={() => confirmDeleteDoctor(doctor)}
                                             >
                                                 <Trash2 className="h-4 w-4 mr-1" />
                                                 Delete
@@ -887,6 +901,38 @@ const DoctorManagement = () => {
                         <DialogClose asChild>
                             <Button>Done</Button>
                         </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                            Confirm Deletion
+                        </DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete Dr. {doctorToDelete?.name}? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p className="text-sm text-gray-500">
+                            This will permanently remove the doctor and all their availability slots from the system.
+                        </p>
+                    </div>
+                    <DialogFooter className="sm:justify-between">
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteDoctor}
+                            disabled={isLoading}
+                        >
+                            {isLoading ? "Deleting..." : "Delete Doctor"}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

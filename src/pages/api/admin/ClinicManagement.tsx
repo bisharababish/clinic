@@ -1145,49 +1145,7 @@ const ClinicManagement = () => {
                 </TabsContent>
             </Tabs>
 
-            {/* DOCTORS SECTION FOR DELETION */}
-            {doctors.length > 0 && (
-                <Card className="mt-8">
-                    <CardHeader>
-                        <CardTitle>Doctors Management</CardTitle>
-                        <CardDescription>
-                            View and manage doctors associated with clinics
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {doctors.map((doctor) => (
-                                <div key={doctor.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                    <div>
-                                        <h3 className="font-medium">{doctor.name}</h3>
-                                        <div className="text-sm text-gray-500">Specialty: {doctor.specialty}</div>
-                                        <div className="text-sm text-gray-500">Clinic: {doctor.clinic_name}</div>
-                                        <div className="mt-1">
-                                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${doctor.is_available
-                                                ? "bg-green-100 text-green-800"
-                                                : "bg-red-100 text-red-800"
-                                                }`}>
-                                                {doctor.is_available ? "Available" : "Unavailable"}
-                                            </span>
-                                            <span className="ml-2 text-sm">₪{doctor.price}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex space-x-2">
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() => handleDeleteDoctor(doctor.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4 mr-1" />
-                                            Delete
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+
 
             {/* Alert Dialogs */}
             {/* Clinic Delete Confirmation Dialog */}
