@@ -2003,6 +2003,41 @@ const AdminDashboard = () => {
             </div>
         );
     }
+    async function checkSystemStatus(): Promise<void> {
+        try {
+            setIsLoading(true);
+            setError(null);
+
+            // Simulate a system status check (replace with actual API call if available)
+            const response = await new Promise<{ status: string }>((resolve) =>
+                setTimeout(() => resolve({ status: "operational" }), 1000)
+            );
+
+            if (response.status === "operational") {
+                toast({
+                    title: "System Status",
+                    description: "All systems are operational.",
+                    variant: "default",
+                });
+            } else {
+                toast({
+                    title: "System Status",
+                    description: "Some systems are experiencing issues.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error("Error checking system status:", error);
+            toast({
+                title: "Error",
+                description: "Failed to check system status.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     // Main render
     return (
         <div className="max-w-7xl mx-auto py-8 px-4">
@@ -2020,55 +2055,107 @@ const AdminDashboard = () => {
 
                 {/* OVERVIEW TAB */}
                 <TabsContent value="overview" className="pt-6">
+                    {/* Stats Cards Section */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <Card>
+                        <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow duration-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                                <Users className="h-4 w-4 text-muted-foreground" />
+                                <CardTitle className="text-sm font-semibold text-blue-700">Total Users</CardTitle>
+                                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <Users className="h-4 w-4 text-blue-600" />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">{users.length}</div>
+                                <div className="text-3xl font-bold text-gray-800">{users.length}</div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {users.filter(u => u.created_at && new Date(u.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length} new this week
+                                </p>
                             </CardContent>
                         </Card>
-                        <Card>
+
+                        <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow duration-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Active Appointments</CardTitle>
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <CardTitle className="text-sm font-semibold text-green-700">Active Appointments</CardTitle>
+                                <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                                    <Calendar className="h-4 w-4 text-green-600" />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">
+                                <div className="text-3xl font-bold text-gray-800">
                                     {appointments.filter(a => a.status === 'scheduled').length}
                                 </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Next today: {appointments.filter(a =>
+                                        a.status === 'scheduled' &&
+                                        new Date(a.date).toDateString() === new Date().toDateString()
+                                    ).length}
+                                </p>
                             </CardContent>
                         </Card>
-                        <Card>
+
+                        <Card className="border-l-4 border-l-purple-500 shadow-md hover:shadow-lg transition-shadow duration-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Available Clinics</CardTitle>
-                                <Stethoscope className="h-4 w-4 text-muted-foreground" />
+                                <CardTitle className="text-sm font-semibold text-purple-700">Available Clinics</CardTitle>
+                                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                                    <Stethoscope className="h-4 w-4 text-purple-600" />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">
+                                <div className="text-3xl font-bold text-gray-800">
                                     {clinics.filter(c => c.isActive).length}
                                 </div>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Out of {clinics.length} total clinics
+                                </p>
                             </CardContent>
                         </Card>
-                        <Card>
+
+                        <Card className="border-l-4 border-l-emerald-500 shadow-md hover:shadow-lg transition-shadow duration-200">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">System Status</CardTitle>
-                                <Shield className="h-4 w-4 text-muted-foreground" />
+                                <CardTitle className="text-sm font-semibold text-emerald-700">System Status</CardTitle>
+                                <div
+                                    className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center cursor-pointer"
+                                    onClick={() => checkSystemStatus()}
+                                >
+                                    <Shield className="h-4 w-4 text-emerald-600" />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-sm font-bold text-green-600">All Systems OK</div>
+                                {isLoading ? (
+                                    <div className="flex items-center h-6">
+                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-700 mr-2"></div>
+                                        <p className="text-sm text-gray-600">Checking status...</p>
+                                    </div>
+                                ) : error ? (
+                                    <div className="flex items-center">
+                                        <div className="h-3 w-3 rounded-full bg-red-500 mr-2"></div>
+                                        <div className="text-sm font-bold text-red-600">System Issue Detected</div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center">
+                                        <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
+                                        <div className="text-sm font-bold text-green-600">All Systems Operational</div>
+                                    </div>
+                                )}
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Last checked: {new Date().toLocaleTimeString()}
+                                </p>
                             </CardContent>
                         </Card>
                     </div>
 
+                    {/* Middle section */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>User Distribution by Role</CardTitle>
+                        <Card className="shadow-md hover:shadow-lg transition-all duration-200">
+                            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+                                <div className="flex justify-between items-center">
+                                    <CardTitle className="text-blue-800">User Distribution by Role</CardTitle>
+                                    <RefreshCw
+                                        className="h-4 w-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors"
+                                        onClick={refreshReportData}
+                                    />
+                                </div>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="pt-4">
                                 <div className="h-80">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
@@ -2079,94 +2166,228 @@ const AdminDashboard = () => {
                                                 labelLine={false}
                                                 label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                                                 outerRadius={80}
-                                                fill="#8884d8"
+                                                innerRadius={40}
+                                                paddingAngle={5}
                                                 dataKey="count"
                                             >
                                                 {getRoleChartData().map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={entry.fill}
+                                                        stroke="#ffffff"
+                                                        strokeWidth={2}
+                                                    />
                                                 ))}
                                             </Pie>
-                                            <Tooltip />
-                                            <Legend />
+                                            <Tooltip formatter={(value, name) => [value, name]} />
+                                            <Legend
+                                                layout="vertical"
+                                                align="right"
+                                                verticalAlign="middle"
+                                                iconType="circle"
+                                                iconSize={10}
+                                            />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Recent Activity</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {activityLog.slice(0, 5).map((log) => (
-                                        <div key={log.id} className="flex items-center justify-between border-b pb-2">
-                                            <div>
-                                                <p className="font-medium">{log.action}</p>
-                                                <p className="text-sm text-gray-500">{log.user}</p>
-                                                {log.details && (
-                                                    <p className="text-xs text-gray-500">{log.details}</p>
-                                                )}
-                                            </div>
-                                            <div className="text-right">
-                                                <p className={`text-sm ${log.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {log.status}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    {new Date(log.timestamp).toLocaleString()}
-                                                </p>
-                                            </div>
+
+                                {/* Role Distribution Breakdown */}
+                                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div className="flex items-center p-2 rounded-lg border bg-blue-50">
+                                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                            <Users className="h-5 w-5 text-blue-600" />
                                         </div>
-                                    ))}
-                                </div>
-                                <div className="mt-4 text-center">
-                                    <Button variant="outline" size="sm" onClick={() => setActiveTab("reports")}>
-                                        View All Activity
-                                    </Button>
+                                        <div>
+                                            <p className="font-medium text-blue-800">Patients</p>
+                                            <p className="text-sm text-blue-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'patient').length} users
+                                                {' '}
+                                                ({users.length > 0 ?
+                                                    Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'patient').length / users.length) * 100) : 0}%)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center p-2 rounded-lg border bg-green-50">
+                                        <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                            <Stethoscope className="h-5 w-5 text-green-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-green-800">Doctors</p>
+                                            <p className="text-sm text-green-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length} users
+                                                {' '}
+                                                ({users.length > 0 ?
+                                                    Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length / users.length) * 100) : 0}%)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center p-2 rounded-lg border bg-purple-50">
+                                        <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                            <FileText className="h-5 w-5 text-purple-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-purple-800">Secretary</p>
+                                            <p className="text-sm text-purple-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length} users
+                                                {' '}
+                                                ({users.length > 0 ?
+                                                    Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length / users.length) * 100) : 0}%)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center p-2 rounded-lg border bg-pink-50">
+                                        <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center mr-3">
+                                            <Activity className="h-5 w-5 text-pink-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-pink-800">Nurses</p>
+                                            <p className="text-sm text-pink-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length} users
+                                                {' '}
+                                                ({users.length > 0 ?
+                                                    Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length / users.length) * 100) : 0}%)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center p-2 rounded-lg border bg-red-50">
+                                        <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                                            <Shield className="h-5 w-5 text-red-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-red-800">Administrators</p>
+                                            <p className="text-sm text-red-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length} users
+                                                {' '}
+                                                ({users.length > 0 ?
+                                                    Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length / users.length) * 100) : 0}%)
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center p-2 rounded-lg border bg-gray-50">
+                                        <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+                                            <Users className="h-5 w-5 text-gray-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-gray-800">Other Roles</p>
+                                            <p className="text-sm text-gray-600">
+                                                {users.filter(u => !['patient', 'doctor', 'secretary', 'nurse', 'admin', 'administrator'].includes(u.user_roles?.toLowerCase())).length} users
+                                                {' '}
+                                                ({users.length > 0 ?
+                                                    Math.round((users.filter(u => !['patient', 'doctor', 'secretary', 'nurse', 'admin', 'administrator'].includes(u.user_roles?.toLowerCase())).length / users.length) * 100) : 0}%)
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <Card>
+                    {/* Performance Summary */}
+                    <div className="mt-8">
+                        <Card className="border-none shadow-md bg-gradient-to-r from-gray-900 to-gray-800 text-white">
                             <CardHeader>
-                                <CardTitle>Appointments by Clinic</CardTitle>
+                                <CardTitle className="text-gray-100">Performance Summary</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="h-80">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={getClinicAppointmentsChartData()}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="clinic" />
-                                            <YAxis />
-                                            <Tooltip />
-                                            <Legend />
-                                            <Bar dataKey="count" name="Appointments" fill="#8884d8" />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="space-y-2">
+                                        <p className="text-gray-400 text-sm">Total Revenue</p>
+                                        <p className="text-3xl font-bold">${reportData?.revenue || 0}</p>
+                                        <div className="h-2 bg-gray-700 rounded-full">
+                                            <div
+                                                className="h-2 bg-green-500 rounded-full"
+                                                style={{ width: `${Math.min(100, ((reportData?.revenue || 0) / 10000) * 100)}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <p className="text-gray-400 text-sm">Appointment Completion Rate</p>
+                                        <p className="text-3xl font-bold">
+                                            {appointments.length ?
+                                                `${Math.round((appointments.filter(a => a.status === 'completed').length / appointments.length) * 100)}%` :
+                                                '0%'}
+                                        </p>
+                                        <div className="h-2 bg-gray-700 rounded-full">
+                                            <div
+                                                className="h-2 bg-blue-500 rounded-full"
+                                                style={{
+                                                    width: appointments.length ?
+                                                        `${(appointments.filter(a => a.status === 'completed').length / appointments.length) * 100}%` :
+                                                        '0%'
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <p className="text-gray-400 text-sm">Doctor Utilization</p>
+                                        <p className="text-3xl font-bold">
+                                            {doctors.length ?
+                                                `${Math.round((doctors.filter(d => d.isAvailable).length / doctors.length) * 100)}%` :
+                                                '0%'}
+                                        </p>
+                                        <div className="h-2 bg-gray-700 rounded-full">
+                                            <div
+                                                className="h-2 bg-purple-500 rounded-full"
+                                                style={{
+                                                    width: doctors.length ?
+                                                        `${(doctors.filter(d => d.isAvailable).length / doctors.length) * 100}%` :
+                                                        '0%'
+                                                }}
+                                            ></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Revenue by Clinic</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-80">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={getRevenueChartData()}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="clinic" />
-                                            <YAxis />
-                                            <Tooltip formatter={(value) => [`$${value}`, 'Revenue']} />
-                                            <Legend />
-                                            <Bar dataKey="amount" name="Revenue" fill="#82ca9d" />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </CardContent>
-                        </Card>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="mt-8 mb-4">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-700">Quick Actions</h2>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            <Button
+                                variant="outline"
+                                className="h-20 flex flex-col items-center justify-center bg-white hover:bg-blue-50 border-2 hover:border-blue-200 transition-all"
+                                onClick={() => setActiveTab("users")}
+                            >
+                                <UserPlus className="h-6 w-6 mb-1 text-blue-600" />
+                                <span>Add User</span>
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                className="h-20 flex flex-col items-center justify-center bg-white hover:bg-green-50 border-2 hover:border-green-200 transition-all"
+                                onClick={() => setActiveTab("appointments")}
+                            >
+                                <Calendar className="h-6 w-6 mb-1 text-green-600" />
+                                <span>View Appointments</span>
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                className="h-20 flex flex-col items-center justify-center bg-white hover:bg-purple-50 border-2 hover:border-purple-200 transition-all"
+                                onClick={() => setActiveTab("clinics")}
+                            >
+                                <Stethoscope className="h-6 w-6 mb-1 text-purple-600" />
+                                <span>Manage Clinics</span>
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                className="h-20 flex flex-col items-center justify-center bg-white hover:bg-amber-50 border-2 hover:border-amber-200 transition-all"
+                                onClick={refreshReportData}
+                            >
+                                <BarChart2 className="h-6 w-6 mb-1 text-amber-600" />
+                                <span>Refresh Data</span>
+                            </Button>
+                        </div>
                     </div>
                 </TabsContent>
 
