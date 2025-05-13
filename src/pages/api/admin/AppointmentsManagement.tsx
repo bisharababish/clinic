@@ -603,7 +603,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             // Log the activity
             await logActivity(
                 "Appointment Deleted",
-                userEmail || "admin",
+                userEmail || "admin", 
                 `Appointment ID ${id} was deleted`,
                 "success"
             );
@@ -1110,7 +1110,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
                                                 {appointment.payment_status}
                                             </span>
-                                            <div className="text-sm mt-1">${appointment.price}</div>
+                                            <div className="text-sm mt-1">₪{appointment.price}</div>
                                         </TableCell>
                                         <TableCell className="text-right space-x-2">
                                             <Button
@@ -1275,7 +1275,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
                                                             {appointment.payment_status}
                                                         </span>
-                                                        <div className="text-sm mt-1">${appointment.price}</div>
+                                                        <div className="text-sm mt-1">₪{appointment.price}</div>
                                                     </TableCell>
                                                     <TableCell className="text-right space-x-2">
                                                         <Button
