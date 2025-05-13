@@ -8,24 +8,13 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge"; // Assume this component exists
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "../../../lib/supabase";
+import { Label } from "@/components/ui/label";
 import { RefreshCw, Calendar, Filter, Search, ChevronsUpDown, Download, X, AlertTriangle, CheckCircle, Edit, Trash2, Plus, FileText, BarChart2 } from "lucide-react";
 import { format, isToday, isThisWeek, isThisMonth, parseISO, isBefore, isAfter } from "date-fns";
 import {
-    BarChart,
-    Bar,
-    LineChart,
-    Line,
-    PieChart,
-    Pie,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    Cell
+    BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell
 } from 'recharts';
 
 interface AppointmentInfo {
@@ -44,6 +33,39 @@ interface AppointmentInfo {
     notes?: string;
     created_at?: string;
     updated_at?: string;
+}
+
+interface PatientInfo {
+    userid: number;
+    english_username_a: string;
+    english_username_d: string;
+    user_email: string;
+}
+
+interface ClinicInfo {
+    id: string;
+    name: string;
+    category: string;
+    description?: string;
+    is_active: boolean;
+}
+
+interface DoctorInfo {
+    id: string;
+    name: string;
+    specialty: string;
+    clinic_id: string;
+    email: string;
+    price: number;
+    is_available: boolean;
+}
+
+interface AvailabilitySlot {
+    id: string;
+    doctor_id: string;
+    day: string;
+    start_time: string;
+    end_time: string;
 }
 
 interface AppointmentsManagementProps {
@@ -86,6 +108,21 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     const [isEditingAppointment, setIsEditingAppointment] = useState(false);
     const [editingAppointment, setEditingAppointment] = useState<AppointmentInfo | null>(null);
     const [appointmentNotes, setAppointmentNotes] = useState<string>("");
+
+    // Added for appointment creation from admin dashboard
+    const [clinics, setClinics] = useState<ClinicInfo[]>([]);
+    const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
+    const [patients, setPatients] = useState<PatientInfo[]>([]);
+    const [selectedClinicId, setSelectedClinicId] = useState<string>("");
+    const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
+    const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+    const [appointmentDate, setAppointmentDate] = useState<string>("");
+    const [appointmentTime, setAppointmentTime] = useState<string>("");
+    const [doctorAvailability, setDoctorAvailability] = useState<AvailabilitySlot[]>([]);
+    const [selectedDay, setSelectedDay] = useState<string>("");
+    const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
+    const [appointmentPrice, setAppointmentPrice] = useState<number>(0);
+    const [patientSearchQuery, setPatientSearchQuery] = useState<string>("");
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -140,13 +177,18 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         return Array.from(doctors);
     }, [propAppointments, appointments]);
 
-    // Load appointments on mount if we don't have prop appointments
+    // Load all necessary data on mount
     useEffect(() => {
         if (propAppointments) {
             setAppointments(propAppointments);
         } else if (!propLoadAppointments) {
             loadAppointments();
         }
+
+        // Load clinics, doctors, and patients for appointment creation
+        loadClinics();
+        loadDoctors();
+        loadPatients();
     }, [propAppointments]);
 
     // Calculate stats whenever appointments change
@@ -169,6 +211,49 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         };
         setStatsData(stats);
     }, [propAppointments, appointments]);
+
+    // Filter doctors when clinic is selected for appointment creation
+    useEffect(() => {
+        if (selectedClinicId) {
+            const filteredDoctors = doctors.filter(d => d.clinic_id === selectedClinicId && d.is_available);
+            if (filteredDoctors.length > 0 && selectedDoctorId === "") {
+                // Auto-select first doctor if none selected
+                setSelectedDoctorId(filteredDoctors[0].id);
+                setAppointmentPrice(filteredDoctors[0].price);
+            } else if (!filteredDoctors.some(d => d.id === selectedDoctorId)) {
+                // Reset doctor selection if current selection is invalid
+                setSelectedDoctorId("");
+                setAppointmentPrice(0);
+            }
+        } else {
+            setSelectedDoctorId("");
+            setAppointmentPrice(0);
+        }
+    }, [selectedClinicId, doctors]);
+
+    // Update price when doctor is selected
+    useEffect(() => {
+        if (selectedDoctorId) {
+            const doctor = doctors.find(d => d.id === selectedDoctorId);
+            if (doctor) {
+                setAppointmentPrice(doctor.price);
+                // Load doctor's availability
+                loadDoctorAvailability(selectedDoctorId);
+            }
+        }
+    }, [selectedDoctorId]);
+
+    // Filter patients by search query
+    const filteredPatients = useMemo(() => {
+        if (!patientSearchQuery.trim()) return patients;
+
+        const query = patientSearchQuery.toLowerCase();
+        return patients.filter(p =>
+            p.english_username_a.toLowerCase().includes(query) ||
+            p.english_username_d.toLowerCase().includes(query) ||
+            p.user_email.toLowerCase().includes(query)
+        );
+    }, [patients, patientSearchQuery]);
 
     // Load appointments from database
     const loadAppointments = async () => {
@@ -237,6 +322,94 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             });
         } finally {
             updateIsLoading(false);
+        }
+    };
+
+    // Load clinics from database
+    const loadClinics = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('clinics')
+                .select('*')
+                .eq('is_active', true)
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+            setClinics(data || []);
+        } catch (error) {
+            console.error('Error loading clinics:', error);
+            toast({
+                title: "Error",
+                description: "Failed to load clinics.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    // Load doctors from database
+    const loadDoctors = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('doctors')
+                .select('*')
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+            setDoctors(data || []);
+        } catch (error) {
+            console.error('Error loading doctors:', error);
+            toast({
+                title: "Error",
+                description: "Failed to load doctors.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    // Load patients from database
+    const loadPatients = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('userinfo')
+                .select('userid, english_username_a, english_username_d, user_email')
+                .eq('user_roles', 'Patient')
+                .order('english_username_a', { ascending: true });
+
+            if (error) throw error;
+            setPatients(data || []);
+        } catch (error) {
+            console.error('Error loading patients:', error);
+            toast({
+                title: "Error",
+                description: "Failed to load patients.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    // Load doctor availability
+    const loadDoctorAvailability = async (doctorId: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('doctor_availability')
+                .select('*')
+                .eq('doctor_id', doctorId)
+                .order('day', { ascending: true })
+                .order('start_time', { ascending: true });
+
+            if (error) throw error;
+            setDoctorAvailability(data || []);
+
+            // Reset day and time selection
+            setSelectedDay("");
+            setSelectedTimeSlot("");
+        } catch (error) {
+            console.error('Error loading doctor availability:', error);
+            toast({
+                title: "Error",
+                description: "Failed to load doctor availability.",
+                variant: "destructive",
+            });
         }
     };
 
@@ -444,6 +617,131 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             toast({
                 title: "Error",
                 description: "Failed to delete appointment.",
+                variant: "destructive",
+            });
+        } finally {
+            updateIsLoading(false);
+        }
+    };
+
+    // Handle adding a new appointment
+    const handleAddAppointment = async () => {
+        // Validate form
+        if (!selectedClinicId || !selectedDoctorId || !selectedPatientId || !selectedDay || !selectedTimeSlot) {
+            toast({
+                title: "Missing Information",
+                description: "Please fill in all required fields.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            updateIsLoading(true);
+
+            // Parse the time slot to start and end times
+            const [startTime, endTime] = selectedTimeSlot.split('-');
+
+            // Prepare appointment date in ISO format
+            // Get today's date and the next occurrence of the selected day
+            const today = new Date();
+            const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const todayIndex = today.getDay();
+            const selectedDayIndex = daysOfWeek.indexOf(selectedDay);
+
+            let daysToAdd = selectedDayIndex - todayIndex;
+            if (daysToAdd <= 0) daysToAdd += 7; // Next week if day has passed
+
+            const appointmentDate = new Date(today);
+            appointmentDate.setDate(today.getDate() + daysToAdd);
+
+            // Format date as ISO string and extract date part
+            const isoDate = appointmentDate.toISOString().split('T')[0];
+
+            // Create new appointment
+            const { data, error } = await supabase
+                .from('appointments')
+                .insert({
+                    patient_id: selectedPatientId,
+                    doctor_id: selectedDoctorId,
+                    clinic_id: selectedClinicId,
+                    date: isoDate,
+                    time: startTime.trim(),
+                    status: 'scheduled',
+                    payment_status: 'pending',
+                    price: appointmentPrice,
+                    notes: appointmentNotes,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .select();
+
+            if (error) {
+                console.error("Error creating appointment:", error);
+                toast({
+                    title: "Error",
+                    description: "Failed to create appointment.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Get associated data
+            const patient = patients.find(p => p.userid.toString() === selectedPatientId);
+            const doctor = doctors.find(d => d.id === selectedDoctorId);
+            const clinic = clinics.find(c => c.id === selectedClinicId);
+
+            // Create appointment object
+            if (data && data.length > 0) {
+                const newAppointment: AppointmentInfo = {
+                    id: data[0].id,
+                    patient_id: selectedPatientId,
+                    patient_name: patient ? `${patient.english_username_a} ${patient.english_username_d || ''}`.trim() : 'Unknown Patient',
+                    doctor_id: selectedDoctorId,
+                    doctor_name: doctor?.name || 'Unknown Doctor',
+                    clinic_id: selectedClinicId,
+                    clinic_name: clinic?.name || 'Unknown Clinic',
+                    date: isoDate,
+                    time: startTime.trim(),
+                    status: 'scheduled',
+                    payment_status: 'pending',
+                    price: appointmentPrice,
+                    notes: appointmentNotes,
+                    created_at: data[0].created_at,
+                    updated_at: data[0].updated_at
+                };
+
+                // Update state
+                updateAppointments(prev => [newAppointment, ...prev]);
+
+                // Log the activity
+                await logActivity(
+                    "Appointment Created",
+                    userEmail || "admin",
+                    `New appointment created for ${newAppointment.patient_name} with Dr. ${newAppointment.doctor_name} at ${newAppointment.clinic_name}`,
+                    "success"
+                );
+
+                toast({
+                    title: "Success",
+                    description: "Appointment created successfully.",
+                });
+
+                // Reset form
+                setSelectedClinicId("");
+                setSelectedDoctorId("");
+                setSelectedPatientId("");
+                setSelectedDay("");
+                setSelectedTimeSlot("");
+                setAppointmentNotes("");
+                setAppointmentPrice(0);
+                setIsAddingAppointment(false);
+            }
+        } catch (error) {
+            console.error("Error creating appointment:", error);
+            toast({
+                title: "Error",
+                description: "Failed to create appointment.",
                 variant: "destructive",
             });
         } finally {
@@ -701,6 +999,39 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     const currentAppointments = propAppointments || appointments;
     const paginatedAppointments = getCurrentPageItems();
 
+    // Format time for display (e.g., "09:00" to "9:00 AM")
+    const formatTime = (time: string) => {
+        try {
+            const [hours, minutes] = time.split(':');
+            const date = new Date();
+            date.setHours(parseInt(hours, 10));
+            date.setMinutes(parseInt(minutes, 10));
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return time;
+        }
+    };
+
+    // Handle selecting day for new appointment
+    const handleDaySelect = (day: string) => {
+        setSelectedDay(day);
+        setSelectedTimeSlot(""); // Reset time slot when day changes
+    };
+
+    // Handle selecting time slot for new appointment
+    const handleTimeSlotSelect = (slot: string) => {
+        setSelectedTimeSlot(slot);
+    };
+
+    // Get available time slots for selected day
+    const getAvailableTimeSlots = () => {
+        if (!selectedDay) return [];
+
+        return doctorAvailability
+            .filter(slot => slot.day === selectedDay)
+            .map(slot => `${slot.start_time}-${slot.end_time}`);
+    };
+
     // Render the appointment list view with fixed pagination
     const renderListView = () => {
         return (
@@ -754,51 +1085,59 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {paginatedAppointments.map((appointment) => (
-                                <TableRow key={appointment.id} className="hover:bg-gray-50">
-                                    <TableCell className="font-medium">{appointment.patient_name}</TableCell>
-                                    <TableCell>{appointment.doctor_name}</TableCell>
-                                    <TableCell>{appointment.clinic_name}</TableCell>
-                                    <TableCell>
-                                        <div>{new Date(appointment.date).toLocaleDateString()}</div>
-                                        <div className="text-xs text-gray-500">{appointment.time}</div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
-                                            {appointment.status}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
-                                            {appointment.payment_status}
-                                        </span>
-                                        <div className="text-sm mt-1">${appointment.price}</div>
-                                    </TableCell>
-                                    <TableCell className="text-right space-x-2">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => {
-                                                setSelectedAppointment(appointment);
-                                                setAppointmentNotes(appointment.notes || "");
-                                            }}
-                                            className="h-8 w-8 p-0"
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                            <span className="sr-only">Edit</span>
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleDeleteAppointment(appointment.id)}
-                                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                            <span className="sr-only">Delete</span>
-                                        </Button>
+                            {paginatedAppointments.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                                        No appointments found. Try adjusting your filters or add a new appointment.
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            ) : (
+                                paginatedAppointments.map((appointment) => (
+                                    <TableRow key={appointment.id} className="hover:bg-gray-50">
+                                        <TableCell className="font-medium">{appointment.patient_name}</TableCell>
+                                        <TableCell>{appointment.doctor_name}</TableCell>
+                                        <TableCell>{appointment.clinic_name}</TableCell>
+                                        <TableCell>
+                                            <div>{new Date(appointment.date).toLocaleDateString()}</div>
+                                            <div className="text-xs text-gray-500">{appointment.time}</div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
+                                                {appointment.status}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
+                                                {appointment.payment_status}
+                                            </span>
+                                            <div className="text-sm mt-1">${appointment.price}</div>
+                                        </TableCell>
+                                        <TableCell className="text-right space-x-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setSelectedAppointment(appointment);
+                                                    setAppointmentNotes(appointment.notes || "");
+                                                }}
+                                                className="h-8 w-8 p-0"
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                                <span className="sr-only">Edit</span>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDeleteAppointment(appointment.id)}
+                                                className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                                <span className="sr-only">Delete</span>
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </div>
@@ -891,79 +1230,88 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
         return (
             <div className="space-y-4">
-                {sortedDates.map(date => (
-                    <Card key={date}>
-                        <CardHeader className="bg-gray-50 p-4">
-                            <CardTitle className="text-lg">
-                                {format(parseISO(date), 'EEEE, MMMM d, yyyy')}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Time</TableHead>
-                                        <TableHead>Patient</TableHead>
-                                        <TableHead>Doctor</TableHead>
-                                        <TableHead>Clinic</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Payment</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {appointmentsByDate[date]
-                                        .sort((a, b) => a.time.localeCompare(b.time))
-                                        .map(appointment => (
-                                            <TableRow key={appointment.id} className="hover:bg-gray-50">
-                                                <TableCell>{appointment.time}</TableCell>
-                                                <TableCell className="font-medium">{appointment.patient_name}</TableCell>
-                                                <TableCell>{appointment.doctor_name}</TableCell>
-                                                <TableCell>{appointment.clinic_name}</TableCell>
-                                                <TableCell>
-                                                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
-                                                        {appointment.status}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
-                                                        {appointment.payment_status}
-                                                    </span>
-                                                    <div className="text-sm mt-1">${appointment.price}</div>
-                                                </TableCell>
-                                                <TableCell className="text-right space-x-2">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            setSelectedAppointment(appointment);
-                                                            setAppointmentNotes(appointment.notes || "");
-                                                        }}
-                                                        className="h-8 w-8 p-0"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                        <span className="sr-only">Edit</span>
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteAppointment(appointment.id)}
-                                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                        <span className="sr-only">Delete</span>
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                ))}
+                {sortedDates.length === 0 ? (
+                    <div className="text-center py-12 bg-gray-50 border rounded-lg">
+                        <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-600">No Appointments Scheduled</h3>
+                        <p className="text-gray-500 mt-2">Create a new appointment to see it here.</p>
+                    </div>
+                ) : (
+                    sortedDates.map(date => (
+                        <Card key={date}>
+                            <CardHeader className="bg-gray-50 p-4">
+                                <CardTitle className="text-lg">
+                                    {format(parseISO(date), 'EEEE, MMMM d, yyyy')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Time</TableHead>
+                                            <TableHead>Patient</TableHead>
+                                            <TableHead>Doctor</TableHead>
+                                            <TableHead>Clinic</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Payment</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {appointmentsByDate[date]
+                                            .sort((a, b) => a.time.localeCompare(b.time))
+                                            .map(appointment => (
+                                                <TableRow key={appointment.id} className="hover:bg-gray-50">
+                                                    <TableCell>{formatTime(appointment.time)}</TableCell>
+                                                    <TableCell className="font-medium">{appointment.patient_name}</TableCell>
+                                                    <TableCell>{appointment.doctor_name}</TableCell>
+                                                    <TableCell>{appointment.clinic_name}</TableCell>
+                                                    <TableCell>
+                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
+                                                            {appointment.status}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
+                                                            {appointment.payment_status}
+                                                        </span>
+                                                        <div className="text-sm mt-1">${appointment.price}</div>
+                                                    </TableCell>
+                                                    <TableCell className="text-right space-x-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setSelectedAppointment(appointment);
+                                                                setAppointmentNotes(appointment.notes || "");
+                                                            }}
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                            <span className="sr-only">Edit</span>
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteAppointment(appointment.id)}
+                                                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                            <span className="sr-only">Delete</span>
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    ))
+                )}
             </div>
         );
     };
+
     // Render statistics view
     const renderStatsView = () => {
         // Prepare data for charts
@@ -1017,7 +1365,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     <Card>
                         <CardHeader className="pb-2">
                             <CardDescription>Total Revenue</CardDescription>
-                            <CardTitle className="text-3xl">${statsData.revenue.toFixed(2)}</CardTitle>
+                            <CardTitle className="text-3xl">₪{statsData.revenue.toFixed(2)}</CardTitle>
                         </CardHeader>
                     </Card>
                 </div>
@@ -1030,25 +1378,31 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             <CardTitle>Appointment Status</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={statusData}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={false}
-                                        outerRadius={80}
-                                        fill="#8884d8"
-                                        dataKey="value"
-                                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                    >
-                                        {statusData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                </PieChart>
-                            </ResponsiveContainer>
+                            {statusData.some(item => item.value > 0) ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={statusData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                        >
+                                            {statusData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-gray-500">No data available</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -1058,25 +1412,31 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             <CardTitle>Payment Status</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={paymentData}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={false}
-                                        outerRadius={80}
-                                        fill="#8884d8"
-                                        dataKey="value"
-                                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                    >
-                                        {paymentData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                </PieChart>
-                            </ResponsiveContainer>
+                            {paymentData.some(item => item.value > 0) ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={paymentData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                        >
+                                            {paymentData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-gray-500">No data available</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -1086,16 +1446,22 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             <CardTitle>Revenue by Clinic</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[300px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={clinicRevenueData}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Bar dataKey="revenue" name="Revenue ($)" fill="#8884d8" />
-                                </BarChart>
-                            </ResponsiveContainer>
+                            {clinicRevenueData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={clinicRevenueData}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="name" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="revenue" name="Revenue ($)" fill="#8884d8" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-gray-500">No revenue data available</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -1259,220 +1625,60 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             </Card>
 
             {/* Content based on view mode */}
-            <div className="space-y-4">
+            < div className="space-y-4">
                 {viewMode === 'list' && renderListView()}
                 {viewMode === 'calendar' && renderCalendarView()}
                 {viewMode === 'stats' && renderStatsView()}
             </div>
 
             {/* Appointment Detail Dialog */}
-            {selectedAppointment && (
-                <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
-                    <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                            <DialogTitle>Appointment Details</DialogTitle>
-                            <DialogDescription>
-                                Manage appointment for {selectedAppointment.patient_name}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm font-medium">Patient</p>
-                                    <p>{selectedAppointment.patient_name}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium">Doctor</p>
-                                    <p>{selectedAppointment.doctor_name}</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm font-medium">Clinic</p>
-                                    <p>{selectedAppointment.clinic_name}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium">Date & Time</p>
-                                    <p>
-                                        {new Date(selectedAppointment.date).toLocaleDateString()} at {selectedAppointment.time}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm font-medium">Status</p>
-                                    <Select
-                                        value={selectedAppointment.status}
-                                        onValueChange={(value) => {
-                                            const newStatus = value as 'scheduled' | 'completed' | 'cancelled';
-                                            setSelectedAppointment({
-                                                ...selectedAppointment,
-                                                status: newStatus
-                                            });
-                                            handleUpdateAppointmentStatus(selectedAppointment.id, newStatus);
-                                        }}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="scheduled">Scheduled</SelectItem>
-                                            <SelectItem value="completed">Completed</SelectItem>
-                                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium">Payment Status</p>
-                                    <Select
-                                        value={selectedAppointment.payment_status}
-                                        onValueChange={(value) => {
-                                            const newPaymentStatus = value as 'pending' | 'paid' | 'refunded';
-                                            setSelectedAppointment({
-                                                ...selectedAppointment,
-                                                payment_status: newPaymentStatus
-                                            });
-                                            handleUpdatePaymentStatus(selectedAppointment.id, newPaymentStatus);
-                                        }}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select payment status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="pending">Pending</SelectItem>
-                                            <SelectItem value="paid">Paid</SelectItem>
-                                            <SelectItem value="refunded">Refunded</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium">Price</p>
-                                <Input
-                                    type="number"
-                                    value={selectedAppointment.price}
-                                    onChange={(e) => {
-                                        const newPrice = parseFloat(e.target.value);
-                                        if (!isNaN(newPrice)) {
-                                            setSelectedAppointment({
-                                                ...selectedAppointment,
-                                                price: newPrice
-                                            });
-                                        }
-                                    }}
-                                    onBlur={() => {
-                                        // Update price in database when input loses focus
-                                        supabase
-                                            .from('appointments')
-                                            .update({
-                                                price: selectedAppointment.price,
-                                                updated_at: new Date().toISOString()
-                                            })
-                                            .eq('id', selectedAppointment.id)
-                                            .then(({ error }) => {
-                                                if (error) {
-                                                    console.error("Error updating price:", error);
-                                                    toast({
-                                                        title: "Error",
-                                                        description: "Failed to update appointment price.",
-                                                        variant: "destructive",
-                                                    });
-                                                } else {
-                                                    toast({
-                                                        title: "Success",
-                                                        description: "Appointment price updated.",
-                                                    });
-                                                }
-                                            });
-                                    }}
-                                />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium">Notes</p>
-                                <textarea
-                                    className="w-full p-2 border rounded-md min-h-[100px]"
-                                    value={appointmentNotes}
-                                    onChange={(e) => setAppointmentNotes(e.target.value)}
-                                    placeholder="Add notes about this appointment..."
-                                />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                onClick={() => {
-                                    handleUpdateAppointmentNotes(selectedAppointment.id, appointmentNotes);
-                                    setSelectedAppointment(null);
-                                }}
-                            >
-                                Save Changes
-                            </Button>
-                            <DialogClose asChild>
-                                <Button variant="outline">Close</Button>
-                            </DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            )}
-
-            {/* Add Appointment Dialog */}
-            {isAddingAppointment && (
-                <Dialog open={isAddingAppointment} onOpenChange={setIsAddingAppointment}>
-                    <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                            <DialogTitle>Add New Appointment</DialogTitle>
-                            <DialogDescription>
-                                Create a new appointment for a patient
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            {/* Add form fields for new appointment */}
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-sm font-medium">Patient</p>
-                                    <Input placeholder="Search for patient..." />
-                                </div>
+            {
+                selectedAppointment && (
+                    <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
+                        <DialogContent className="sm:max-w-[600px]">
+                            <DialogHeader>
+                                <DialogTitle>Appointment Details</DialogTitle>
+                                <DialogDescription>
+                                    Manage appointment for {selectedAppointment.patient_name}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-sm font-medium">Patient</p>
+                                        <p>{selectedAppointment.patient_name}</p>
+                                    </div>
                                     <div>
                                         <p className="text-sm font-medium">Doctor</p>
-                                        <Select>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select doctor" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {uniqueDoctors.map(doctor => (
-                                                    <SelectItem key={doctor} value={doctor}>{doctor}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium">Clinic</p>
-                                        <Select>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select clinic" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {uniqueClinics.map(clinic => (
-                                                    <SelectItem key={clinic} value={clinic}>{clinic}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <p>{selectedAppointment.doctor_name}</p>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p className="text-sm font-medium">Date</p>
-                                        <Input type="date" />
+                                        <p className="text-sm font-medium">Clinic</p>
+                                        <p>{selectedAppointment.clinic_name}</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium">Time</p>
-                                        <Input type="time" />
+                                        <p className="text-sm font-medium">Date & Time</p>
+                                        <p>
+                                            {new Date(selectedAppointment.date).toLocaleDateString()} at {selectedAppointment.time}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-sm font-medium">Status</p>
-                                        <Select defaultValue="scheduled">
+                                        <Select
+                                            value={selectedAppointment.status}
+                                            onValueChange={(value) => {
+                                                const newStatus = value as 'scheduled' | 'completed' | 'cancelled';
+                                                setSelectedAppointment({
+                                                    ...selectedAppointment,
+                                                    status: newStatus
+                                                });
+                                                handleUpdateAppointmentStatus(selectedAppointment.id, newStatus);
+                                            }}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select status" />
                                             </SelectTrigger>
@@ -1485,7 +1691,17 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium">Payment Status</p>
-                                        <Select defaultValue="pending">
+                                        <Select
+                                            value={selectedAppointment.payment_status}
+                                            onValueChange={(value) => {
+                                                const newPaymentStatus = value as 'pending' | 'paid' | 'refunded';
+                                                setSelectedAppointment({
+                                                    ...selectedAppointment,
+                                                    payment_status: newPaymentStatus
+                                                });
+                                                handleUpdatePaymentStatus(selectedAppointment.id, newPaymentStatus);
+                                            }}
+                                        >
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select payment status" />
                                             </SelectTrigger>
@@ -1499,36 +1715,254 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Price</p>
-                                    <Input type="number" placeholder="0.00" />
+                                    <Input
+                                        type="number"
+                                        value={selectedAppointment.price}
+                                        onChange={(e) => {
+                                            const newPrice = parseFloat(e.target.value);
+                                            if (!isNaN(newPrice)) {
+                                                setSelectedAppointment({
+                                                    ...selectedAppointment,
+                                                    price: newPrice
+                                                });
+                                            }
+                                        }}
+                                        onBlur={() => {
+                                            // Update price in database when input loses focus
+                                            supabase
+                                                .from('appointments')
+                                                .update({
+                                                    price: selectedAppointment.price,
+                                                    updated_at: new Date().toISOString()
+                                                })
+                                                .eq('id', selectedAppointment.id)
+                                                .then(({ error }) => {
+                                                    if (error) {
+                                                        console.error("Error updating price:", error);
+                                                        toast({
+                                                            title: "Error",
+                                                            description: "Failed to update appointment price.",
+                                                            variant: "destructive",
+                                                        });
+                                                    } else {
+                                                        toast({
+                                                            title: "Success",
+                                                            description: "Appointment price updated.",
+                                                        });
+                                                    }
+                                                });
+                                        }}
+                                    />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium">Notes</p>
                                     <textarea
                                         className="w-full p-2 border rounded-md min-h-[100px]"
+                                        value={appointmentNotes}
+                                        onChange={(e) => setAppointmentNotes(e.target.value)}
                                         placeholder="Add notes about this appointment..."
                                     />
                                 </div>
                             </div>
+                            <DialogFooter>
+                                <Button
+                                    onClick={() => {
+                                        handleUpdateAppointmentNotes(selectedAppointment.id, appointmentNotes);
+                                        setSelectedAppointment(null);
+                                    }}
+                                >
+                                    Save Changes
+                                </Button>
+                                <DialogClose asChild>
+                                    <Button variant="outline">Close</Button>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                )
+            }
+
+            {/* Add Appointment Dialog */}
+            <Dialog open={isAddingAppointment} onOpenChange={setIsAddingAppointment}>
+                <DialogContent className="sm:max-w-[700px]">
+                    <DialogHeader>
+                        <DialogTitle>Create New Appointment</DialogTitle>
+                        <DialogDescription>
+                            Schedule a new appointment for a patient
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-6 py-4">
+                        {/* Clinic Selection */}
+                        <div>
+                            <Label htmlFor="clinic-select">Select Clinic *</Label>
+                            <Select
+                                value={selectedClinicId}
+                                onValueChange={setSelectedClinicId}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Choose a clinic" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {clinics.filter(c => c.is_active).map(clinic => (
+                                        <SelectItem key={clinic.id} value={clinic.id}>
+                                            {clinic.name} - {clinic.category}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {clinics.length === 0 && (
+                                <p className="text-yellow-600 text-sm mt-1">
+                                    No active clinics available. Please add clinics first.
+                                </p>
+                            )}
                         </div>
-                        <DialogFooter>
-                            <Button onClick={() => {
-                                // TODO: Implement add appointment logic
-                                setIsAddingAppointment(false);
-                                toast({
-                                    title: "Success",
-                                    description: "Appointment added successfully.",
-                                });
-                            }}>
-                                Add Appointment
-                            </Button>
-                            <DialogClose asChild>
-                                <Button variant="outline">Cancel</Button>
-                            </DialogClose>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            )}
-        </div>
+
+                        {/* Doctor Selection (filtered by clinic) */}
+                        <div>
+                            <Label htmlFor="doctor-select">Select Doctor *</Label>
+                            <Select
+                                value={selectedDoctorId}
+                                onValueChange={setSelectedDoctorId}
+                                disabled={!selectedClinicId}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder={selectedClinicId ? "Choose a doctor" : "Select a clinic first"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {doctors
+                                        .filter(d => d.clinic_id === selectedClinicId && d.is_available)
+                                        .map(doctor => (
+                                            <SelectItem key={doctor.id} value={doctor.id}>
+                                                {doctor.name} - {doctor.specialty} (₪{doctor.price})
+                                            </SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
+                            {selectedClinicId && doctors.filter(d => d.clinic_id === selectedClinicId && d.is_available).length === 0 && (
+                                <p className="text-yellow-600 text-sm mt-1">
+                                    No available doctors for this clinic.
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Patient Selection with search */}
+                        <div>
+                            <Label htmlFor="patient-select">Select Patient *</Label>
+                            <div className="space-y-2">
+                                <Input
+                                    placeholder="Search patients by name or email..."
+                                    value={patientSearchQuery}
+                                    onChange={(e) => setPatientSearchQuery(e.target.value)}
+                                />
+                                <div className="max-h-40 overflow-y-auto border rounded-md">
+                                    {filteredPatients.length === 0 ? (
+                                        <div className="p-3 text-center text-gray-500">No patients found</div>
+                                    ) : (
+                                        filteredPatients.map(patient => (
+                                            <div
+                                                key={patient.userid}
+                                                className={`p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${selectedPatientId === patient.userid.toString() ? 'bg-blue-50' : ''}`}
+                                                onClick={() => setSelectedPatientId(patient.userid.toString())}
+                                            >
+                                                <div className="font-medium">{patient.english_username_a} {patient.english_username_d}</div>
+                                                <div className="text-xs text-gray-500">{patient.user_email}</div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Appointment Time Selection */}
+                        {selectedDoctorId && (
+                            <div className="space-y-4">
+                                <div>
+                                    <Label>Select Day *</Label>
+                                    <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 mt-2">
+                                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => {
+                                            const hasSlots = doctorAvailability.some(slot => slot.day === day);
+                                            return (
+                                                <Button
+                                                    key={day}
+                                                    type="button"
+                                                    variant={selectedDay === day ? "default" : "outline"}
+                                                    onClick={() => handleDaySelect(day)}
+                                                    disabled={!hasSlots}
+                                                    className={!hasSlots ? "opacity-50" : ""}
+                                                >
+                                                    {day.substring(0, 3)}
+                                                </Button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {selectedDay && (
+                                    <div>
+                                        <Label>Select Time Slot *</Label>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-2">
+                                            {getAvailableTimeSlots().length === 0 ? (
+                                                <div className="col-span-full text-center py-3 text-yellow-600 bg-yellow-50 rounded-md">
+                                                    No available time slots for this day
+                                                </div>
+                                            ) : (
+                                                getAvailableTimeSlots().map(slot => (
+                                                    <Button
+                                                        key={slot}
+                                                        type="button"
+                                                        variant={selectedTimeSlot === slot ? "default" : "outline"}
+                                                        onClick={() => handleTimeSlotSelect(slot)}
+                                                    >
+                                                        {formatTime(slot.split('-')[0])}
+                                                    </Button>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Price (automatically set from doctor selection) */}
+                        <div>
+                            <Label>Appointment Price</Label>
+                            <div className="flex items-center space-x-2">
+                                <div className="text-2xl font-bold">₪{appointmentPrice.toFixed(2)}</div>
+                                {appointmentPrice > 0 && (
+                                    <div className="text-sm text-gray-500">
+                                        Based on selected doctor's rate
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Notes */}
+                        <div>
+                            <Label htmlFor="notes">Additional Notes</Label>
+                            <textarea
+                                id="notes"
+                                className="w-full p-2 border rounded-md min-h-[100px]"
+                                value={appointmentNotes}
+                                onChange={(e) => setAppointmentNotes(e.target.value)}
+                                placeholder="Add any notes or special instructions for this appointment..."
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            onClick={handleAddAppointment}
+                            disabled={!selectedClinicId || !selectedDoctorId || !selectedPatientId || !selectedDay || !selectedTimeSlot}
+                        >
+                            Create Appointment
+                        </Button>
+                        <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div >
     );
 };
+
 export default AppointmentsManagement;
