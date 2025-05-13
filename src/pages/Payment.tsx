@@ -8,8 +8,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
-type PaymentMethod = "paypal" | "creditCard" | "insurance";
+type PaymentMethod = "paypal" | "creditCard" | "insurance" | "cash";
 
 const Payment = () => {
     const location = useLocation();
@@ -32,6 +33,7 @@ const Payment = () => {
 
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("creditCard");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [agreedToCashTerms, setAgreedToCashTerms] = useState(false);
     const [formData, setFormData] = useState({
         // Credit Card
         cardNumber: "",
@@ -128,10 +130,11 @@ const Payment = () => {
                 </CardHeader>
                 <CardContent>
                     <Tabs value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}>
-                        <TabsList className="grid grid-cols-3 mb-6">
+                        <TabsList className="grid grid-cols-4 mb-6">
                             <TabsTrigger value="creditCard">Credit Card</TabsTrigger>
                             <TabsTrigger value="paypal">PayPal</TabsTrigger>
                             <TabsTrigger value="insurance">Insurance</TabsTrigger>
+                            <TabsTrigger value="cash">Cash</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="creditCard">
@@ -260,6 +263,49 @@ const Payment = () => {
                                     </Button>
                                 </div>
                             </form>
+                        </TabsContent>
+
+                        <TabsContent value="cash">
+                            <div className="space-y-6 py-4">
+                                <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
+                                    <h3 className="font-medium text-amber-800 mb-2">Cash Payment Information</h3>
+                                    <p className="text-amber-700 mb-3">
+                                        Please note that by selecting cash payment, you agree to bring the exact amount (₪{price}) to your appointment.
+                                    </p>
+                                    <ul className="text-sm text-amber-700 space-y-2 list-disc pl-5">
+                                        <li>Payment must be made at the clinic reception before your appointment</li>
+                                        <li>Only cash in Israeli Shekels (₪) is accepted</li>
+                                        <li>A receipt will be provided after payment</li>
+                                        <li>Failure to bring payment may result in rescheduling your appointment</li>
+                                    </ul>
+                                </div>
+
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="flex items-start space-x-2">
+                                        <Checkbox
+                                            id="cashTerms"
+                                            checked={agreedToCashTerms}
+                                            onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
+                                        />
+                                        <div className="grid gap-1.5 leading-none">
+                                            <Label
+                                                htmlFor="cashTerms"
+                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                I understand and agree to the cash payment terms
+                                            </Label>
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        type="submit"
+                                        className="w-full"
+                                        disabled={isProcessing || !agreedToCashTerms}
+                                    >
+                                        {isProcessing ? "Processing..." : "Confirm Cash Payment"}
+                                    </Button>
+                                </form>
+                            </div>
                         </TabsContent>
                     </Tabs>
                 </CardContent>
