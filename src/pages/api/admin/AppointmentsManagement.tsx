@@ -603,7 +603,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             // Log the activity
             await logActivity(
                 "Appointment Deleted",
-                userEmail || "admin", 
+                userEmail || "admin",
                 `Appointment ID ${id} was deleted`,
                 "success"
             );
@@ -1542,7 +1542,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 <SelectValue placeholder="Filter by status" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="all">All Status</SelectItem>
                                 <SelectItem value="scheduled">Scheduled</SelectItem>
                                 <SelectItem value="completed">Completed</SelectItem>
                                 <SelectItem value="cancelled">Cancelled</SelectItem>

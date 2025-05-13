@@ -337,6 +337,36 @@ const UsersManagement = () => {
             setIsLoading(true);
             console.log("Starting deletion process for user ID:", userid);
 
+            // FIRST: Check if this user has related appointments
+            // We need to handle patients and doctors differently
+            if (userToDelete.user_roles.toLowerCase() === 'patient') {
+                // If user is a patient, delete any appointments where they are the patient
+                const { error: appointmentsDeleteError } = await supabase
+                    .from('appointments')
+                    .delete()
+                    .eq('patient_id', userid);
+
+                if (appointmentsDeleteError) {
+                    console.warn("Error deleting patient appointments:", appointmentsDeleteError);
+                    // Continue with deletion attempt even if this fails
+                } else {
+                    console.log("Successfully deleted patient appointments");
+                }
+            } else if (userToDelete.user_roles.toLowerCase() === 'doctor') {
+                // If user is a doctor, delete any appointments where they are the doctor
+                const { error: appointmentsDeleteError } = await supabase
+                    .from('appointments')
+                    .delete()
+                    .eq('doctor_id', userToDelete.user_id); // Using user_id (UUID) for doctor_id
+
+                if (appointmentsDeleteError) {
+                    console.warn("Error deleting doctor appointments:", appointmentsDeleteError);
+                    // Continue with deletion attempt even if this fails
+                } else {
+                    console.log("Successfully deleted doctor appointments");
+                }
+            }
+
             // Try to call our database function first - this is the most reliable approach
             const { data: rpcData, error: rpcError } = await supabase.rpc('delete_user_by_admin', {
                 user_id_to_delete: userid
@@ -373,11 +403,20 @@ const UsersManagement = () => {
 
         } catch (error) {
             console.error("Error deleting user:", error);
+
+            // More specific error message based on the error
+            let errorMessage = "Failed to delete user from database.";
+
+            // Check if error contains message about foreign key constraint
+            if (error instanceof Error &&
+                error.message.includes("foreign key constraint") &&
+                error.message.includes("appointments")) {
+                errorMessage = "Cannot delete user with existing appointments. Please delete their appointments first.";
+            }
+
             toast({
                 title: "Error",
-                description: error instanceof Error
-                    ? error.message
-                    : "Failed to delete user from database. Make sure you have admin permissions.",
+                description: errorMessage,
                 variant: "destructive",
             });
 

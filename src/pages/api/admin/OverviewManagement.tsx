@@ -403,7 +403,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
                                 <p className="text-gray-400 text-sm">Total Revenue</p>
-                                <p className="text-3xl font-bold">${reportData?.revenue || 0}</p>
+                                <p className="text-3xl font-bold">₪{reportData?.revenue || 0}</p>
                                 <div className="h-2 bg-gray-700 rounded-full">
                                     <div
                                         className="h-2 bg-green-500 rounded-full"

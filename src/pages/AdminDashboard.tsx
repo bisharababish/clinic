@@ -2,12 +2,6 @@
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClinicManagement from "./api/admin/ClinicManagement";
 import DoctorManagement from "./api/admin/DoctorManagement";
@@ -15,34 +9,10 @@ import UsersManagement from "./api/admin/UsersManagement";
 import AppointmentsManagement from "./api/admin/AppointmentsManagement";
 import SettingsManagement from "./api/admin/SettingsManagement";
 import OverviewManagement from "./api/admin/OverviewManagement";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
-import {
-    Users,
-    Activity,
-    Calendar,
-    Shield,
-    Settings,
-    AlertTriangle,
-    Stethoscope,
-    FileText,
-    BarChart2,
-    Database,
-    Trash2,
-    Edit,
-    Plus,
-    X,
-    Layers,
-    UserPlus,
-    Search,
-    RefreshCw,
-    Download
-} from "lucide-react"; import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
-import { deleteUser } from "../lib/api";
+
 
 // Interfaces
 interface UserInfo {
