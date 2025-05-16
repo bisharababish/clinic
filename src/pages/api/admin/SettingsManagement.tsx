@@ -65,7 +65,7 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
     const [systemSettings, setSystemSettings] = useState<SystemSettings[]>(propSystemSettings || []);
     const [isLoading, setIsLoading] = useState(propIsLoading || false);
     const [settingsChanged, setSettingsChanged] = useState(false);
-    const [activeTab, setActiveTab] = useState("appearance");
+    const [activeTab, setActiveTab] = useState("system");
     const [isBackupDialogOpen, setIsBackupDialogOpen] = useState(false);
     const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -85,20 +85,12 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
 
     // Default settings if none exist
     const defaultSettings: SystemSettings[] = [
-        // Notification Settings
-        { setting_name: "email_notifications", setting_value: "true", setting_type: "boolean", setting_group: "notifications", setting_description: "Send email notifications" },
-        { setting_name: "sms_notifications", setting_value: "true", setting_type: "boolean", setting_group: "notifications", setting_description: "Send SMS notifications" },
-        { setting_name: "notification_email_template", setting_value: "Default email template", setting_type: "textarea", setting_group: "notifications", setting_description: "Template for email notifications" },
-
-        // Appearance Settings
-        { setting_name: "primary_color", setting_value: "#3b82f6", setting_type: "color", setting_group: "appearance", setting_description: "Primary theme color" },
-        { setting_name: "secondary_color", setting_value: "#10b981", setting_type: "color", setting_group: "appearance", setting_description: "Secondary theme color" },
-        { setting_name: "font_size", setting_value: "medium", setting_type: "select", setting_group: "appearance", setting_options: ["small", "medium", "large"], setting_description: "Default font size" },
-        { setting_name: "dark_mode", setting_value: "false", setting_type: "boolean", setting_group: "appearance", setting_description: "Enable dark mode" },
-
         // System Settings
-
         { setting_name: "auto_backup", setting_value: "true", setting_type: "boolean", setting_group: "system", setting_description: "Automatically backup the database daily" },
+        { setting_name: "dark_mode", setting_value: "false", setting_type: "boolean", setting_group: "system", setting_description: "Enable dark mode" },
+        { setting_name: "primary_color", setting_value: "#3b82f6", setting_type: "color", setting_group: "system", setting_description: "Primary theme color" },
+        { setting_name: "secondary_color", setting_value: "#10b981", setting_type: "color", setting_group: "system", setting_description: "Secondary theme color" },
+        { setting_name: "font_size", setting_value: "medium", setting_type: "select", setting_group: "system", setting_options: ["small", "medium", "large"], setting_description: "Default font size" },
     ];
 
     // Initialize with loading activity logs and system stats
@@ -905,66 +897,65 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
             const { data, error } = await query;
 
             if (error) {
-                // Get session
-                const { data: { session } } = await supabase.auth.getSession();
-
-                // Log the error
-                await logActivity(
-                    "Data Export Failed",
-                    session?.user?.email || userEmail || "admin",
-                    `Export from ${exportDataType} failed: ${error.message}`,
-                    "failed"
-                );
-
-                throw error;
+                throw new Error(`Error exporting data: ${error.message}`);
             }
 
             if (!data || data.length === 0) {
                 toast({
-                    title: "No Data",
-                    description: "No data available for export with the selected criteria.",
+                    title: "No Data to Export",
+                    description: `No records found in ${exportDataType} table with the current criteria.`,
                     variant: "default",
                 });
                 updateIsLoading(false);
                 return;
             }
 
-            // Format data based on selected format
-            let outputData;
+            // Format the data based on export format
+            let exportContent;
             let mimeType;
             let fileExtension;
 
-            switch (exportFormat) {
-                case 'csv':
-                    outputData = convertToCSV(data);
-                    mimeType = 'text/csv';
-                    fileExtension = 'csv';
-                    break;
-                case 'excel':
-                    outputData = convertToCSV(data); // Excel can open CSV files
-                    mimeType = 'text/csv';
-                    fileExtension = 'csv';
-                    break;
-                case 'json':
-                default:
-                    outputData = JSON.stringify(data, null, 2);
-                    mimeType = 'application/json';
-                    fileExtension = 'json';
-                    break;
+            if (exportFormat === 'csv') {
+                // Convert to CSV
+                const headers = Object.keys(data[0]).join(',');
+                const rows = data.map(row => Object.values(row).map(value => {
+                    // Handle formatting of different types of values
+                    if (value === null || value === undefined) return '';
+                    if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
+                    if (typeof value === 'object') return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+                    return value;
+                }).join(','));
+
+                exportContent = [headers, ...rows].join('\n');
+                mimeType = 'text/csv';
+                fileExtension = 'csv';
+            } else {
+                // JSON format
+                exportContent = JSON.stringify({ [exportDataType]: data }, null, 2);
+                mimeType = 'application/json';
+                fileExtension = 'json';
             }
 
-            // Create download
-            const blob = new Blob([outputData], { type: mimeType });
+            // Create and trigger download
+            const blob = new Blob([exportContent], { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${exportDataType}_export_${new Date().toISOString().slice(0, 10)}.${fileExtension}`;
+
+            // Create filename with date filter if applicable
+            let filename = `${exportDataType}_export`;
+            if (startDate && endDate) {
+                filename += `_${startDate}_to_${endDate}`;
+            } else {
+                filename += `_${new Date().toISOString().slice(0, 10)}`;
+            }
+            a.download = `${filename}.${fileExtension}`;
+
+            // Trigger download
             document.body.appendChild(a);
             a.click();
-
-            // Clean up
-            URL.revokeObjectURL(url);
             document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
             // Get session
             const { data: { session } } = await supabase.auth.getSession();
@@ -973,15 +964,17 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
             await logActivity(
                 "Data Export",
                 session?.user?.email || userEmail || "admin",
-                `Exported ${data.length} records from ${exportDataType}`,
+                `Exported ${data.length} records from ${exportDataType} table as ${fileExtension.toUpperCase()}`,
                 "success"
             );
 
             toast({
                 title: "Export Complete",
-                description: `${data.length} records exported successfully.`,
+                description: `Successfully exported ${data.length} records from ${exportDataType} table.`,
             });
 
+            // Close dialog if open
+            setIsBackupDialogOpen(false);
         } catch (error) {
             console.error("Error exporting data:", error);
             toast({
@@ -994,610 +987,471 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
         }
     };
 
-    // Helper to convert data to CSV
-    const convertToCSV = (data: Record<string, unknown>[]) => {
-        if (!data || data.length === 0) return '';
-
-        const headers = Object.keys(data[0]);
-        const headerRow = headers.join(',');
-
-        const rows = data.map(row => {
-            return headers.map(header => {
-                const value = row[header] === null ? '' : row[header];
-                // Wrap strings in quotes and escape quotes
-                return typeof value === 'string' ?
-                    `"${value.replace(/"/g, '""')}"` :
-                    value;
-            }).join(',');
-        });
-
-        return [headerRow, ...rows].join('\n');
-    };
-
-    // Activity logging
+    // Activity log implementation
     const logActivity = async (action: string, user: string, details: string, status: 'success' | 'failed' | 'pending') => {
         if (propLogActivity) {
-            await propLogActivity(action, user, details, status);
-            return;
+            return propLogActivity(action, user, details, status);
         }
 
-        // Insert into activity_log
         try {
             const { error } = await supabase
                 .from('activity_log')
                 .insert({
-                    action: action,
+                    action,
                     user_email: user,
-                    details: details,
-                    status: status,
+                    details,
+                    status,
                     created_at: new Date().toISOString()
                 });
 
             if (error) {
-                console.error('Error logging activity:', error);
+                console.error("Error logging activity:", error);
+                return false;
             }
+
+            // Reload logs if we're on the system tab
+            if (activeTab === 'system') {
+                loadActivityLogs();
+            }
+
+            return true;
         } catch (error) {
-            console.error('Error logging activity:', error);
+            console.error("Error logging activity:", error);
+            return false;
         }
     };
 
-    // Toggle dark mode
-    const toggleDarkMode = () => {
-        // Find dark mode setting
-        const darkModeSetting = systemSettings.find(setting => setting.setting_name === "dark_mode");
-
-        if (darkModeSetting) {
-            // Toggle the value in the settings
-            const newValue = darkModeSetting.setting_value === "true" ? "false" : "true";
-            handleSettingChange("dark_mode", newValue);
-
-            // Call the toggle function
-            if (typeof toggleTheme === "function") {
-                toggleTheme();
-            }
-
-            toast({
-                title: newValue === "true" ? "Dark Mode Enabled" : "Light Mode Enabled",
-                description: "Theme preference updated.",
-            });
+    // Group settings by category for display
+    const groupedSettings = systemSettings.reduce((groups, setting) => {
+        if (!groups[setting.setting_group]) {
+            groups[setting.setting_group] = [];
         }
-    };
-
-    // Group settings by category using useMemo
-    const settingsByGroup: Record<string, SystemSettings[]> = React.useMemo(() => {
-        // Start with an empty record
-        const groups: Record<string, SystemSettings[]> = {};
-
-        // Get the settings to use
-        const settings = propSystemSettings || systemSettings || [];
-
-        // Group settings by category
-        settings.forEach(setting => {
-            const group = setting.setting_group || 'general';
-            if (!groups[group]) {
-                groups[group] = [];
-            }
-            groups[group].push(setting);
-        });
-
+        groups[setting.setting_group].push(setting);
         return groups;
-    }, [propSystemSettings, systemSettings]);
+    }, {} as Record<string, SystemSettings[]>);
 
-    // Define setting group icons and titles
-    const groupMeta = {
-        notifications: { icon: <Bell className="h-5 w-5" />, title: "Notification Settings" },
-        appearance: { icon: <Globe className="h-5 w-5" />, title: "Appearance & Localization" },
-        system: { icon: <Settings className="h-5 w-5" />, title: "System Settings" },
-    };
-
-    // Format date for display
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-
-        const date = new Date(dateString);
-        const now = new Date();
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-
-        // Check if date is today
-        if (date.toDateString() === now.toDateString()) {
-            return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    // Render setting input based on type
+    const renderSettingInput = (setting: SystemSettings) => {
+        switch (setting.setting_type) {
+            case 'boolean':
+                return (
+                    <div className="flex items-center space-x-2">
+                        <Switch
+                            id={`setting-${setting.setting_name}`}
+                            checked={setting.setting_value === 'true'}
+                            onCheckedChange={(checked) => handleSettingChange(setting.setting_name, checked ? 'true' : 'false')}
+                        />
+                        <Label htmlFor={`setting-${setting.setting_name}`}>{setting.setting_value === 'true' ? 'Enabled' : 'Disabled'}</Label>
+                    </div>
+                );
+            case 'select':
+                return (
+                    <Select
+                        value={setting.setting_value}
+                        onValueChange={(value) => handleSettingChange(setting.setting_name, value)}
+                    >
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a value" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {setting.setting_options?.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                );
+            case 'textarea':
+                return (
+                    <Textarea
+                        id={`setting-${setting.setting_name}`}
+                        value={setting.setting_value}
+                        onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
+                        rows={4}
+                    />
+                );
+            case 'color':
+                return (
+                    <div className="flex items-center space-x-2">
+                        <Input
+                            type="color"
+                            id={`setting-${setting.setting_name}`}
+                            value={setting.setting_value}
+                            onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
+                            className="w-12 h-10 p-1"
+                        />
+                        <Input
+                            type="text"
+                            value={setting.setting_value}
+                            onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
+                            className="w-full"
+                        />
+                    </div>
+                );
+            case 'number':
+                return (
+                    <Input
+                        type="number"
+                        id={`setting-${setting.setting_name}`}
+                        value={setting.setting_value}
+                        onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
+                    />
+                );
+            case 'text':
+            default:
+                return (
+                    <Input
+                        type="text"
+                        id={`setting-${setting.setting_name}`}
+                        value={setting.setting_value}
+                        onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
+                    />
+                );
         }
-
-        // Check if date is yesterday
-        if (date.toDateString() === yesterday.toDateString()) {
-            return `Yesterday, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-        }
-
-        // Check if date is within the last week
-        const daysAgo = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysAgo < 7) {
-            return `${daysAgo} days ago`;
-        }
-
-        // Otherwise return formatted date
-        return date.toLocaleDateString();
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header with title and save button */}
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">System Settings</h2>
-                    <p className="text-muted-foreground">
-                        Configure global system settings and preferences
-                    </p>
-                </div>
-                <div className="flex items-center gap-2">
+        <div className="container mx-auto p-4 space-y-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-2xl">System Settings</CardTitle>
+                    <CardDescription>
+                        Configure system-wide settings for your clinic management application
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                        <TabsList className="mb-4">
+                            <TabsTrigger value="system">
+                                <Database className="w-4 h-4 mr-2" />
+                                System
+                            </TabsTrigger>
+                            <TabsTrigger value="appearance">
+                                <Sun className="w-4 h-4 mr-2" />
+                                Appearance
+                            </TabsTrigger>
+                            <TabsTrigger value="notifications">
+                                <Bell className="w-4 h-4 mr-2" />
+                                Notifications
+                            </TabsTrigger>
+                            <TabsTrigger value="security">
+                                <Shield className="w-4 h-4 mr-2" />
+                                Security
+                            </TabsTrigger>
+                            <TabsTrigger value="integrations">
+                                <Globe className="w-4 h-4 mr-2" />
+                                Integrations
+                            </TabsTrigger>
+                        </TabsList>
 
-                    <Button
-                        onClick={handleSaveSettings}
-                        disabled={!settingsChanged || isLoading}
-                        className="flex items-center gap-2"
-                    >
+                        <TabsContent value="system" className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* System Stats Card */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>System Statistics</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm">Users</span>
+                                                <span className="font-medium">{systemStats.users}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm">Total Appointments</span>
+                                                <span className="font-medium">{systemStats.appointments.total}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm">Completed Appointments</span>
+                                                <span className="font-medium">{systemStats.appointments.completed}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm">Upcoming Appointments</span>
+                                                <span className="font-medium">{systemStats.appointments.upcoming}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm">Last Backup</span>
+                                                <span className="font-medium">{systemStats.lastBackup}</span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Database Actions Card */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Database Actions</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <Button
+                                                onClick={() => setIsBackupDialogOpen(true)}
+                                                className="w-full mb-2"
+                                                variant="secondary"
+                                            >
+                                                <Download className="w-4 h-4 mr-2" />
+                                                Backup Database
+                                            </Button>
+
+                                            <Button
+                                                onClick={() => setIsImportDialogOpen(true)}
+                                                className="w-full mb-2"
+                                                variant="secondary"
+                                            >
+                                                <Upload className="w-4 h-4 mr-2" />
+                                                Import Data
+                                            </Button>
+
+                                            <Button
+                                                onClick={handleRunMaintenance}
+                                                className="w-full"
+                                                variant="secondary"
+                                                disabled={isLoading}
+                                            >
+                                                <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                                                Run Maintenance
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Recent Activity Card */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Recent Activity</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-2">
+                                            {activityLogs.length > 0 ? (
+                                                activityLogs.map((log: {
+                                                    action: string;
+                                                    status: string;
+                                                    created_at: string;
+                                                    user_email: string;
+                                                    details: string;
+                                                }, index: number) => (
+                                                    <div key={index} className="text-sm">
+                                                        <div className="flex justify-between">
+                                                            <span className="font-medium">{log.action}</span>
+                                                            <span className={`text-xs ${log.status === 'success' ? 'text-green-600' :
+                                                                log.status === 'failed' ? 'text-red-600' : 'text-yellow-600'
+                                                                }`}>
+                                                                {log.status}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {new Date(log.created_at).toLocaleString()} - {log.user_email}
+                                                        </div>
+                                                        <div className="text-xs">{log.details}</div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-sm text-muted-foreground">No recent activity</div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+
+                            {/* System Settings */}
+                            {groupedSettings.system && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>System Configuration</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {groupedSettings.system.map((setting) => (
+                                                <div key={setting.setting_name} className="space-y-2">
+                                                    <Label htmlFor={`setting-${setting.setting_name}`} className="font-medium">
+                                                        {setting.setting_name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                                    </Label>
+                                                    {renderSettingInput(setting)}
+                                                    {setting.setting_description && (
+                                                        <p className="text-xs text-muted-foreground">{setting.setting_description}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="appearance" className="space-y-4">
+                            {groupedSettings.system && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Theme and Appearance</CardTitle>
+                                        <CardDescription>
+                                            Customize how the application looks
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {systemSettings
+                                                .filter(setting => ['dark_mode', 'primary_color', 'secondary_color', 'font_size'].includes(setting.setting_name))
+                                                .map((setting) => (
+                                                    <div key={setting.setting_name} className="space-y-2">
+                                                        <Label htmlFor={`setting-${setting.setting_name}`} className="font-medium">
+                                                            {setting.setting_name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                                        </Label>
+                                                        {renderSettingInput(setting)}
+                                                        {setting.setting_description && (
+                                                            <p className="text-xs text-muted-foreground">{setting.setting_description}</p>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="notifications" className="space-y-4">
+                            {groupedSettings.notifications ? (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Notification Settings</CardTitle>
+                                        <CardDescription>
+                                            Configure email and system notifications
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {groupedSettings.notifications.map((setting) => (
+                                                <div key={setting.setting_name} className="space-y-2">
+                                                    <Label htmlFor={`setting-${setting.setting_name}`} className="font-medium">
+                                                        {setting.setting_name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                                    </Label>
+                                                    {renderSettingInput(setting)}
+                                                    {setting.setting_description && (
+                                                        <p className="text-xs text-muted-foreground">{setting.setting_description}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Notification Settings</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Alert>
+                                            <AlertDescription>
+                                                No notification settings found. Configure notification settings to receive alerts about appointments, system events, and more.
+                                            </AlertDescription>
+                                        </Alert>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="security" className="space-y-4">
+                            {groupedSettings.security ? (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Security Settings</CardTitle>
+                                        <CardDescription>
+                                            Configure security and access control settings
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {groupedSettings.security.map((setting) => (
+                                                <div key={setting.setting_name} className="space-y-2">
+                                                    <Label htmlFor={`setting-${setting.setting_name}`} className="font-medium">
+                                                        {setting.setting_name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                                    </Label>
+                                                    {renderSettingInput(setting)}
+                                                    {setting.setting_description && (
+                                                        <p className="text-xs text-muted-foreground">{setting.setting_description}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Security Settings</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Alert>
+                                            <AlertDescription>
+                                                No security settings found. Configure security settings to protect your data and control access to the system.
+                                            </AlertDescription>
+                                        </Alert>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="integrations" className="space-y-4">
+                            {groupedSettings.integrations ? (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Integration Settings</CardTitle>
+                                        <CardDescription>
+                                            Configure external service integrations
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {groupedSettings.integrations.map((setting) => (
+                                                <div key={setting.setting_name} className="space-y-2">
+                                                    <Label htmlFor={`setting-${setting.setting_name}`} className="font-medium">
+                                                        {setting.setting_name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                                    </Label>
+                                                    {renderSettingInput(setting)}
+                                                    {setting.setting_description && (
+                                                        <p className="text-xs text-muted-foreground">{setting.setting_description}</p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Integration Settings</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Alert>
+                                            <AlertDescription>
+                                                No integration settings found. Configure integrations with external services like payment processors, SMS providers, and calendars.
+                                            </AlertDescription>
+                                        </Alert>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+                    </Tabs>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={loadSystemSettings} disabled={isLoading}>
                         {isLoading ? (
                             <>
-                                <RefreshCw className="h-4 w-4 animate-spin" />
-                                Saving...
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                Loading...
                             </>
                         ) : (
-                            "Save Changes"
+                            <>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Reload Settings
+                            </>
                         )}
                     </Button>
-                </div>
-            </div>
-
-            {/* Unsaved changes alert */}
-            {settingsChanged && (
-                <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-900">
-                    <AlertDescription className="flex items-center gap-2">
-                        <RefreshCw className="h-4 w-4" />
-                        You have unsaved changes. Click "Save Changes" to apply them.
-                    </AlertDescription>
-                </Alert>
-            )}
-
-            {/* Settings tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid grid-cols-3 w-full">
-                    <TabsTrigger value="notifications" className="flex items-center gap-2">
-                        <Bell className="h-4 w-4" />
-                        <span className="hidden md:inline">Notifications</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="appearance" className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" />
-                        <span className="hidden md:inline">Appearance</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="system" className="flex items-center gap-2">
-                        <Settings className="h-4 w-4" />
-                        <span className="hidden md:inline">System</span>
-                    </TabsTrigger>
-                </TabsList>
-
-                {/* Notifications Tab Content */}
-                <TabsContent value="notifications" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                {groupMeta.notifications.icon}
-                                {groupMeta.notifications.title}
-                            </CardTitle>
-                            <CardDescription>
-                                Configure email and SMS notification settings
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {settingsByGroup.notifications?.map((setting) => (
-                                <div key={setting.setting_name} className="grid gap-2">
-                                    <Label htmlFor={setting.setting_name}>
-                                        {setting.setting_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                    </Label>
-                                    {setting.setting_type === 'text' && (
-                                        <Input
-                                            id={setting.setting_name}
-                                            value={setting.setting_value}
-                                            onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
-                                            placeholder={setting.setting_description}
-                                        />
-                                    )}
-                                    {setting.setting_type === 'textarea' && (
-                                        <Textarea
-                                            id={setting.setting_name}
-                                            value={setting.setting_value}
-                                            onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
-                                            placeholder={setting.setting_description}
-                                            rows={4}
-                                        />
-                                    )}
-                                    {setting.setting_type === 'boolean' && (
-                                        <div className="flex items-center space-x-2">
-                                            <Switch
-                                                id={setting.setting_name}
-                                                checked={setting.setting_value === 'true'}
-                                                onCheckedChange={(checked) => handleSettingChange(setting.setting_name, checked ? 'true' : 'false')}
-                                            />
-                                            <Label htmlFor={setting.setting_name} className="cursor-pointer">
-                                                {setting.setting_value === 'true' ? 'Enabled' : 'Disabled'}
-                                            </Label>
-                                        </div>
-                                    )}
-                                    {setting.setting_description && (
-                                        <p className="text-sm text-muted-foreground mt-1">{setting.setting_description}</p>
-                                    )}
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* Appearance Tab Content */}
-                <TabsContent value="appearance" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                {groupMeta.appearance.icon}
-                                {groupMeta.appearance.title}
-                            </CardTitle>
-                            <CardDescription>
-                                Configure visual appearance and localization settings
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {settingsByGroup.appearance?.map((setting) => (
-                                <div key={setting.setting_name} className="grid gap-2">
-                                    <Label htmlFor={setting.setting_name}>
-                                        {setting.setting_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                    </Label>
-                                    {setting.setting_type === 'text' && (
-                                        <Input
-                                            id={setting.setting_name}
-                                            value={setting.setting_value}
-                                            onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
-                                            placeholder={setting.setting_description}
-                                        />
-                                    )}
-                                    {setting.setting_type === 'color' && (
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                id={setting.setting_name}
-                                                type="color"
-                                                value={setting.setting_value}
-                                                onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
-                                                className="w-12 h-10 p-1"
-                                            />
-                                            <Input
-                                                value={setting.setting_value}
-                                                onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
-                                                placeholder={setting.setting_description}
-                                                className="flex-1"
-                                            />
-                                        </div>
-                                    )}
-                                    {setting.setting_type === 'select' && setting.setting_options && (
-                                        <Select
-                                            value={setting.setting_value}
-                                            onValueChange={(value) => handleSettingChange(setting.setting_name, value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select an option" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {setting.setting_options.map((option) => (
-                                                    <SelectItem key={option} value={option}>
-                                                        {option}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                    {setting.setting_type === 'boolean' && (
-                                        <div className="flex items-center space-x-2">
-                                            <Switch
-                                                id={setting.setting_name}
-                                                checked={setting.setting_value === 'true'}
-                                                onCheckedChange={(checked) => handleSettingChange(setting.setting_name, checked ? 'true' : 'false')}
-                                            />
-                                            <Label htmlFor={setting.setting_name} className="cursor-pointer">
-                                                {setting.setting_value === 'true' ? 'Enabled' : 'Disabled'}
-                                            </Label>
-                                        </div>
-                                    )}
-                                    {setting.setting_description && (
-                                        <p className="text-sm text-muted-foreground mt-1">{setting.setting_description}</p>
-                                    )}
-                                </div>
-                            ))}
-
-                            {/* Theme preview */}
-                            <div className="mt-6 pt-6 border-t">
-                                <h3 className="text-lg font-medium mb-4">Theme Preview</h3>
-                                <div className="grid gap-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <h4 className="text-sm font-medium mb-2">Primary Color</h4>
-                                            <div
-                                                className="h-16 rounded-md"
-                                                style={{
-                                                    backgroundColor: settingsByGroup.appearance?.find(s => s.setting_name === 'primary_color')?.setting_value || '#3b82f6'
-                                                }}
-                                            ></div>
-                                        </div>
-                                        <div>
-                                            <h4 className="text-sm font-medium mb-2">Secondary Color</h4>
-                                            <div
-                                                className="h-16 rounded-md"
-                                                style={{
-                                                    backgroundColor: settingsByGroup.appearance?.find(s => s.setting_name === 'secondary_color')?.setting_value || '#10b981'
-                                                }}
-                                            ></div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* System Tab Content */}
-                <TabsContent value="system" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                {groupMeta.system.icon}
-                                {groupMeta.system.title}
-                            </CardTitle>
-                            <CardDescription>
-                                Configure system-level settings and maintenance options
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {settingsByGroup.system?.map((setting) => (
-                                <div key={setting.setting_name} className="grid gap-2">
-                                    <Label htmlFor={setting.setting_name}>
-                                        {setting.setting_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                    </Label>
-                                    {setting.setting_type === 'text' && (
-                                        <Input
-                                            id={setting.setting_name}
-                                            value={setting.setting_value}
-                                            onChange={(e) => handleSettingChange(setting.setting_name, e.target.value)}
-                                            placeholder={setting.setting_description}
-                                        />
-                                    )}
-                                    {setting.setting_type === 'select' && setting.setting_options && (
-                                        <Select
-                                            value={setting.setting_value}
-                                            onValueChange={(value) => handleSettingChange(setting.setting_name, value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select an option" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {setting.setting_options.map((option) => (
-                                                    <SelectItem key={option} value={option}>
-                                                        {option}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                    {setting.setting_type === 'boolean' && (
-                                        <div className="flex items-center space-x-2">
-                                            <Switch
-                                                id={setting.setting_name}
-                                                checked={setting.setting_value === 'true'}
-                                                onCheckedChange={(checked) => handleSettingChange(setting.setting_name, checked ? 'true' : 'false')}
-                                            />
-                                            <Label htmlFor={setting.setting_name} className="cursor-pointer">
-                                                {setting.setting_value === 'true' ? 'Enabled' : 'Disabled'}
-                                            </Label>
-                                        </div>
-                                    )}
-                                    {setting.setting_description && (
-                                        <p className="text-sm text-muted-foreground mt-1">{setting.setting_description}</p>
-                                    )}
-                                </div>
-                            ))}
-
-                            {/* System Maintenance Actions */}
-                            <div className="mt-6 pt-6 border-t">
-                                <h3 className="text-lg font-medium mb-4">System Maintenance</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* Backup and Restore */}
-                                    <Button
-                                        variant="outline"
-                                        className="flex items-center gap-2 h-auto py-3"
-                                        onClick={() => setIsBackupDialogOpen(true)}
-                                    >
-                                        <Download className="h-5 w-5" />
-                                        <div className="text-left">
-                                            <div>Backup Database</div>
-                                            <div className="text-xs text-muted-foreground">Export all data to a JSON file</div>
-                                        </div>
-                                    </Button>
-
-                                    <Button
-                                        variant="outline"
-                                        className="flex items-center gap-2 h-auto py-3"
-                                        onClick={() => setIsImportDialogOpen(true)}
-                                    >
-                                        <Upload className="h-5 w-5" />
-                                        <div className="text-left">
-                                            <div>Import Data</div>
-                                            <div className="text-xs text-muted-foreground">Import data from backup</div>
-                                        </div>
-                                    </Button>
-
-                                    {/* Export Data */}
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                className="flex items-center gap-2 h-auto py-3"
-                                            >
-                                                <FileText className="h-5 w-5" />
-                                                <div className="text-left">
-                                                    <div>Export Data</div>
-                                                    <div className="text-xs text-muted-foreground">Export specific data as CSV/JSON</div>
-                                                </div>
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Export Data</DialogTitle>
-                                                <DialogDescription>
-                                                    Select what data to export and in which format
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <div className="grid gap-4 py-4">
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="exportDataType">Data to Export</Label>
-                                                    <Select value={exportDataType} onValueChange={setExportDataType}>
-                                                        <SelectTrigger id="exportDataType">
-                                                            <SelectValue placeholder="Select data to export" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="appointments">Appointments</SelectItem>
-                                                            <SelectItem value="userinfo">Patients</SelectItem>
-                                                            <SelectItem value="doctors">Doctors</SelectItem>
-                                                            <SelectItem value="clinics">Clinics</SelectItem>
-                                                            <SelectItem value="activity_log">Activity Log</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="grid gap-2">
-                                                    <Label htmlFor="exportFormat">Export Format</Label>
-                                                    <Select value={exportFormat} onValueChange={setExportFormat}>
-                                                        <SelectTrigger id="exportFormat">
-                                                            <SelectValue placeholder="Select format" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="csv">CSV</SelectItem>
-                                                            <SelectItem value="json">JSON</SelectItem>
-                                                            <SelectItem value="excel">Excel (CSV)</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="grid gap-2">
-                                                        <Label htmlFor="startDate">Start Date</Label>
-                                                        <Input
-                                                            id="startDate"
-                                                            type="date"
-                                                            value={startDate}
-                                                            onChange={(e) => setStartDate(e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="grid gap-2">
-                                                        <Label htmlFor="endDate">End Date</Label>
-                                                        <Input
-                                                            id="endDate"
-                                                            type="date"
-                                                            value={endDate}
-                                                            onChange={(e) => setEndDate(e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <DialogFooter>
-                                                <Button onClick={handleExportData} disabled={isLoading}>
-                                                    {isLoading ? (
-                                                        <>
-                                                            <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                                                            Exporting...
-                                                        </>
-                                                    ) : (
-                                                        "Export Data"
-                                                    )}
-                                                </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-
-                                    {/* Maintenance */}
-                                    <Button
-                                        variant="outline"
-                                        className="flex items-center gap-2 h-auto py-3"
-                                        onClick={handleRunMaintenance}
-                                    >
-                                        <RefreshCw className="h-5 w-5" />
-                                        <div className="text-left">
-                                            <div>Run Maintenance</div>
-                                            <div className="text-xs text-muted-foreground">Optimize database & clean up</div>
-                                        </div>
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* System Activity Overview Card - Using real data from the database */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5" />
-                                System Activity Overview
-                            </CardTitle>
-                            <CardDescription>
-                                Recent activity and system health metrics
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
-                                    <div className="text-sm font-medium text-muted-foreground">Total Users</div>
-                                    <div className="text-2xl font-bold mt-1">{systemStats.users}</div>
-                                </div>
-                                <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
-                                    <div className="text-sm font-medium text-muted-foreground">Today's Appointments</div>
-                                    <div className="text-2xl font-bold mt-1">{systemStats.appointments.total}</div>
-                                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                        {systemStats.appointments.completed} completed, {systemStats.appointments.upcoming} upcoming
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-6">
-                                <h3 className="text-sm font-medium mb-3">Recent Activity</h3>
-                                <div className="border rounded-md dark:border-gray-700">
-                                    <div className="grid grid-cols-4 gap-4 p-3 bg-muted text-sm font-medium">
-                                        <div>Action</div>
-                                        <div>User</div>
-                                        <div>Time</div>
-                                        <div>Status</div>
-                                    </div>
-                                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                        {activityLogs.length > 0 ? (
-                                            activityLogs.map((log) => (
-                                                <div key={log.id} className="grid grid-cols-4 gap-4 p-3 text-sm">
-                                                    <div>{log.action}</div>
-                                                    <div>{log.user_email}</div>
-                                                    <div>{formatDate(log.created_at)}</div>
-                                                    <div className="flex items-center">
-                                                        <div className={`h-2 w-2 rounded-full mr-2 ${log.status === 'success' ? 'bg-green-500' :
-                                                            log.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'
-                                                            }`}></div>
-                                                        {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
-                                                    </div>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="p-3 text-sm text-center text-muted-foreground">No recent activity found</div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex justify-end mt-4">
-                                    <Button variant="outline" size="sm" onClick={loadActivityLogs}>
-                                        View Full Logs
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                    <Button onClick={handleSaveSettings} disabled={isLoading || !settingsChanged}>
+                        {isLoading ? "Saving..." : "Save Settings"}
+                    </Button>
+                </CardFooter>
+            </Card>
 
             {/* Backup Database Dialog */}
             <Dialog open={isBackupDialogOpen} onOpenChange={setIsBackupDialogOpen}>
@@ -1605,29 +1459,99 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
                     <DialogHeader>
                         <DialogTitle>Backup Database</DialogTitle>
                         <DialogDescription>
-                            Create a complete backup of all system data. This file can be used to restore the system if needed.
+                            Export data for backup or transfer to another system.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
-                        <Alert className="bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-900">
-                            <AlertDescription className="flex items-center gap-2">
-                                <Shield className="h-4 w-4" />
-                                The backup file will contain all system data including patient information. Store it securely.
-                            </AlertDescription>
-                        </Alert>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="exportDataType" className="text-right">
+                                Table
+                            </Label>
+                            <Select
+                                value={exportDataType}
+                                onValueChange={setExportDataType}
+                            >
+                                <SelectTrigger className="w-full col-span-3">
+                                    <SelectValue placeholder="Select table to export" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="appointments">Appointments</SelectItem>
+                                    <SelectItem value="userinfo">Users</SelectItem>
+                                    <SelectItem value="doctors">Doctors</SelectItem>
+                                    <SelectItem value="clinics">Clinics</SelectItem>
+                                    <SelectItem value="system_settings">System Settings</SelectItem>
+                                    <SelectItem value="activity_log">Activity Logs</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="exportFormat" className="text-right">
+                                Format
+                            </Label>
+                            <Select
+                                value={exportFormat}
+                                onValueChange={setExportFormat}
+                            >
+                                <SelectTrigger className="w-full col-span-3">
+                                    <SelectValue placeholder="Select export format" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="csv">CSV</SelectItem>
+                                    <SelectItem value="json">JSON</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="startDate" className="text-right">
+                                Start Date
+                            </Label>
+                            <Input
+                                id="startDate"
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="col-span-3"
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="endDate" className="text-right">
+                                End Date
+                            </Label>
+                            <Input
+                                id="endDate"
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="col-span-3"
+                            />
+                        </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)}>
-                            Cancel
+                        <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleExportData} disabled={isLoading}>
+                            {isLoading ? (
+                                <>
+                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                    Exporting...
+                                </>
+                            ) : (
+                                <>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Export Data
+                                </>
+                            )}
                         </Button>
                         <Button onClick={handleBackupDatabase} disabled={isLoading}>
                             {isLoading ? (
                                 <>
-                                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                                    Creating Backup...
+                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                    Backing Up...
                                 </>
                             ) : (
-                                "Create Backup"
+                                <>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    Full Backup
+                                </>
                             )}
                         </Button>
                     </DialogFooter>
@@ -1640,30 +1564,32 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
                     <DialogHeader>
                         <DialogTitle>Import Data</DialogTitle>
                         <DialogDescription>
-                            Import data from a backup file or CSV. Choose what type of data to import.
+                            Import data from a backup file.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-4">
-                        <div className="grid gap-2">
-                            <Label htmlFor="importDataType">Data Type to Import</Label>
-                            <Select value={importDataType} onValueChange={setImportDataType}>
-                                <SelectTrigger id="importDataType">
-                                    <SelectValue placeholder="Select data type" />
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="importDataType" className="text-right">
+                                Target Table
+                            </Label>
+                            <Select
+                                value={importDataType}
+                                onValueChange={setImportDataType}
+                            >
+                                <SelectTrigger className="w-full col-span-3">
+                                    <SelectValue placeholder="Select table to import into" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="userinfo">Patients</SelectItem>
                                     <SelectItem value="appointments">Appointments</SelectItem>
+                                    <SelectItem value="userinfo">Users</SelectItem>
                                     <SelectItem value="doctors">Doctors</SelectItem>
                                     <SelectItem value="clinics">Clinics</SelectItem>
-                                    <SelectItem value="clinic_categories">Clinic Categories</SelectItem>
-                                    <SelectItem value="doctor_availability">Doctor Availability</SelectItem>
                                     <SelectItem value="system_settings">System Settings</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
-
                         <div
-                            className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-muted transition-colors"
+                            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-secondary/20 transition-colors"
                             onClick={handleFileClick}
                             onDragOver={handleDragOver}
                             onDrop={handleDrop}
@@ -1673,41 +1599,33 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
                                 ref={fileInputRef}
                                 onChange={handleFileChange}
                                 className="hidden"
-                                accept=".json,.csv"
+                                accept=".json"
                             />
-                            <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-                            {selectedFile ? (
-                                <p>{selectedFile.name}</p>
-                            ) : (
-                                <>
-                                    <p className="text-sm font-medium">
-                                        Click to select a file or drag and drop
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        JSON or CSV files only
-                                    </p>
-                                </>
-                            )}
+                            <FileText className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-sm font-medium">
+                                {selectedFile ? selectedFile.name : "Click or drag & drop to upload JSON backup file"}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Only .json files exported by this system are supported
+                            </p>
                         </div>
-                        <Alert className="bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-900">
-                            <AlertDescription className="flex items-center gap-2 text-red-700 dark:text-red-400">
-                                <Shield className="h-4 w-4" />
-                                Importing data will overwrite existing records. Make sure you have a backup.
-                            </AlertDescription>
-                        </Alert>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleImportData} disabled={isLoading || !selectedFile}>
+                        <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>Cancel</Button>
+                        <Button
+                            onClick={handleImportData}
+                            disabled={isLoading || !selectedFile}
+                        >
                             {isLoading ? (
                                 <>
-                                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                                     Importing...
                                 </>
                             ) : (
-                                "Import Data"
+                                <>
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Import Data
+                                </>
                             )}
                         </Button>
                     </DialogFooter>
@@ -1717,5 +1635,4 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
     );
 };
 
-// Default export
 export default SettingsManagement;
