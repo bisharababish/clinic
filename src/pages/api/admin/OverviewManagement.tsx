@@ -173,7 +173,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     <CardContent>
                         <div className="text-3xl font-bold text-gray-800">{users.length}</div>
                         <p className="text-xs text-gray-500 mt-1">
-                            {users.filter(u => u.created_at && new Date(u.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length} new this week
+                            {users.filter(u => u.created_at && new Date(u.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length} new users
                         </p>
                     </CardContent>
                 </Card>

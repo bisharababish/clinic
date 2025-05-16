@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ThemeContext } from "../../../components/contexts/ThemeContext"; // Import the theme context
+import { ThemeContext, ThemeContextType } from "../../../components/contexts/ThemeContext";
 
 interface SystemSettings {
     id?: number;
@@ -81,10 +81,7 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
         lastBackup: ""
     });
     const fileInputRef = React.useRef<HTMLInputElement>(null);
-    const themeContext = useContext(ThemeContext);
-    const { theme, setTheme } = themeContext && typeof themeContext === 'object' && 'theme' in themeContext && 'setTheme' in themeContext
-        ? themeContext
-        : { theme: "light", setTheme: () => { } };
+    const { theme, setTheme, toggleTheme } = useContext<ThemeContextType>(ThemeContext);
 
     // Default settings if none exist
     const defaultSettings: SystemSettings[] = [
@@ -100,10 +97,7 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
         { setting_name: "dark_mode", setting_value: "false", setting_type: "boolean", setting_group: "appearance", setting_description: "Enable dark mode" },
 
         // System Settings
-        { setting_name: "system_language", setting_value: "en", setting_type: "select", setting_group: "system", setting_options: ["en", "ar", "he"], setting_description: "Default system language" },
-        { setting_name: "timezone", setting_value: "Asia/Jerusalem", setting_type: "text", setting_group: "system", setting_description: "System timezone" },
-        { setting_name: "date_format", setting_value: "DD/MM/YYYY", setting_type: "select", setting_group: "system", setting_options: ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"], setting_description: "Date format" },
-        { setting_name: "time_format", setting_value: "24h", setting_type: "select", setting_group: "system", setting_options: ["12h", "24h"], setting_description: "Time format" },
+
         { setting_name: "auto_backup", setting_value: "true", setting_type: "boolean", setting_group: "system", setting_description: "Automatically backup the database daily" },
     ];
 
@@ -126,34 +120,14 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
             const shouldBeDark = darkModeSetting.setting_value === "true";
 
             // Only call setTheme if the current theme doesn't match the desired theme
-            if ((shouldBeDark && currentTheme !== "dark") || (!shouldBeDark && currentTheme !== "light")) {
-                // Just call setTheme() without arguments since it's a toggle function
-                setTheme();
+            if ((shouldBeDark && currentTheme !== "dark")) {
+                setTheme('dark');
+            } else if ((!shouldBeDark && currentTheme !== "light")) {
+                setTheme('light');
             }
         }
     }, [systemSettings, theme, setTheme]);
 
-    // Update global settings that need to propagate to other components
-    useEffect(() => {
-        if (!updateGlobalSettings || systemSettings.length === 0) return;
-
-        // Create an object of settings to update globally
-        const globalSettings: Record<string, string> = {};
-
-        // Add settings that need to be available throughout the application
-        const globalSettingNames = ["clinic_name", "clinic_address", "clinic_phone", "clinic_email", "clinic_logo", "currency"];
-
-        systemSettings.forEach(setting => {
-            if (globalSettingNames.includes(setting.setting_name)) {
-                globalSettings[setting.setting_name] = setting.setting_value;
-            }
-        });
-
-        // Update global settings if we have values
-        if (Object.keys(globalSettings).length > 0) {
-            updateGlobalSettings(globalSettings);
-        }
-    }, [systemSettings, updateGlobalSettings]);
 
     // Load activity logs
     const loadActivityLogs = async () => {
@@ -477,9 +451,9 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
         if (name === "dark_mode" && setTheme) {
             if (typeof setTheme === "function") {
                 if (value === "true") {
-                    setTheme(); // Call setTheme for "dark" mode
+                    setTheme('dark');
                 } else {
-                    setTheme(); // Call setTheme for "light" mode
+                    setTheme('light');
                 }
             }
         }
@@ -1078,8 +1052,8 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
             handleSettingChange("dark_mode", newValue);
 
             // Call the toggle function
-            if (typeof setTheme === "function") {
-                setTheme();
+            if (typeof toggleTheme === "function") {
+                toggleTheme();
             }
 
             toast({
@@ -1156,14 +1130,7 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={toggleDarkMode}
-                        title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                    >
-                        {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                    </Button>
+
                     <Button
                         onClick={handleSaveSettings}
                         disabled={!settingsChanged || isLoading}
@@ -1367,20 +1334,6 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-4 mt-4">
-                                        <Button
-                                            variant="outline"
-                                            className="flex items-center gap-2"
-                                            onClick={toggleDarkMode}
-                                        >
-                                            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                                            {theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                                        </Button>
-
-                                        <div className="text-sm text-muted-foreground">
-                                            Current theme: <span className="font-medium">{theme === "dark" ? "Dark Mode" : "Light Mode"}</span>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </CardContent>
