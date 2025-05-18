@@ -144,50 +144,12 @@ const Index = () => {
 
           {/* Arabic Name Fields */}
           <div>
-            <Label className="text-base font-medium">Full Name (Arabic) *</Label>
+
+            <Label className="text-base font-medium text-right w-full block">الاسم الكامل (العربية)</Label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+
               <div>
-                <Label htmlFor="arabic_username_a" className="text-xs">الاسم الأول</Label>
-                <div className="relative">
-                  <Input
-                    id="arabic_username_a"
-                    name="arabic_username_a"
-                    value={formData.arabic_username_a}
-                    onChange={handleFormDataChange}
-                    required
-                    dir="rtl"
-                    placeholder="الأول"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="arabic_username_b" className="text-xs">الاسم الثاني</Label>
-                <div className="relative">
-                  <Input
-                    id="arabic_username_b"
-                    name="arabic_username_b"
-                    value={formData.arabic_username_b}
-                    onChange={handleFormDataChange}
-                    dir="rtl"
-                    placeholder="الثاني"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="arabic_username_c" className="text-xs">الاسم الثالث</Label>
-                <div className="relative">
-                  <Input
-                    id="arabic_username_c"
-                    name="arabic_username_c"
-                    value={formData.arabic_username_c}
-                    onChange={handleFormDataChange}
-                    dir="rtl"
-                    placeholder="الثالث"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="arabic_username_d" className="text-xs">الاسم الرابع</Label>
+                <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block mb-1">الاسم الرابع</Label>
                 <div className="relative">
                   <Input
                     id="arabic_username_d"
@@ -200,11 +162,52 @@ const Index = () => {
                   />
                 </div>
               </div>
+              <div>
+                <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block mb-1">الاسم الثالث</Label>
+                <div className="relative">
+                  <Input
+                    id="arabic_username_c"
+                    name="arabic_username_c"
+                    value={formData.arabic_username_c}
+                    onChange={handleFormDataChange}
+                    dir="rtl"
+                    placeholder="الثالث"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block mb-1">الاسم الثاني</Label>
+                <div className="relative">
+                  <Input
+                    id="arabic_username_b"
+                    name="arabic_username_b"
+                    value={formData.arabic_username_b}
+                    onChange={handleFormDataChange}
+                    dir="rtl"
+                    placeholder="الثاني"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block mb-1">الاسم الأول</Label>
+                <div className="relative">
+                  <Input
+                    id="arabic_username_a"
+                    name="arabic_username_a"
+                    value={formData.arabic_username_a}
+                    onChange={handleFormDataChange}
+                    required
+                    dir="rtl"
+                    placeholder="الأول"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
+            <Label htmlFor="email">Email </Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -220,7 +223,7 @@ const Index = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="id_number">ID Number *</Label>
+            <Label htmlFor="id_number">ID Number </Label>
             <div className="relative">
               <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -236,7 +239,7 @@ const Index = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phoneNumber">Phone Number *</Label>
+            <Label htmlFor="phoneNumber">Phone Number </Label>
             <div className="relative">
               <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -253,7 +256,7 @@ const Index = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+            <Label htmlFor="dateOfBirth">Date of Birth </Label>
             <div className="relative">
               <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -287,7 +290,7 @@ const Index = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password *</Label>
+            <Label htmlFor="password">Password </Label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -315,7 +318,7 @@ const Index = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password *</Label>
+            <Label htmlFor="confirmPassword">Confirm Password </Label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input

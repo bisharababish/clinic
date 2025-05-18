@@ -125,7 +125,7 @@ const AboutUs = () => {
                             <div className="space-y-6">
                                 <div>
                                     <h3 className="font-semibold text-lg">Location</h3>
-                                    <p className="text-gray-700">123 Healthcare Avenue, Medical City, MC 12345</p>
+                                    <p className="text-gray-700">Wadi Musalam St. - Najib Nasser Building</p>
                                 </div>
 
                                 <div>

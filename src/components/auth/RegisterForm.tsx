@@ -300,24 +300,38 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
                 {/* Arabic Name Fields */}
                 <div>
-                    <Label className="text-base font-medium">Full Name (Arabic) *</Label>
+                    <Label className="text-base font-medium text-right w-full block">الاسم الكامل (العربية)</Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                         <div>
-                            <Label htmlFor="arabic_username_a" className="text-xs">الاسم الأول</Label>
+                            <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block">الاسم الرابع</Label>
                             <div className="relative">
                                 <Input
-                                    id="arabic_username_a"
-                                    name="arabic_username_a"
-                                    value={formData.arabic_username_a}
+                                    id="arabic_username_d"
+                                    name="arabic_username_d"
+                                    value={formData.arabic_username_d}
                                     onChange={handleInputChange}
                                     required
                                     dir="rtl"
-                                    placeholder="الأول"
+                                    placeholder="الأخير"
                                 />
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="arabic_username_b" className="text-xs">الاسم الثاني</Label>
+                            <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block">الاسم الثالث</Label>
+                            <div className="relative">
+                                <Input
+                                    id="arabic_username_c"
+                                    name="arabic_username_c"
+                                    value={formData.arabic_username_c}
+                                    onChange={handleInputChange}
+                                    dir="rtl"
+                                    placeholder="الثالث"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block">الاسم الثاني</Label>
                             <div className="relative">
                                 <Input
                                     id="arabic_username_b"
@@ -330,29 +344,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="arabic_username_c" className="text-xs">الاسم الثالث</Label>
+                            <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block" >الاسم الأول</Label>
                             <div className="relative">
                                 <Input
-                                    id="arabic_username_c"
-                                    name="arabic_username_c"
-                                    value={formData.arabic_username_c}
-                                    onChange={handleInputChange}
-                                    dir="rtl"
-                                    placeholder="الثالث"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="arabic_username_d" className="text-xs">الاسم الرابع</Label>
-                            <div className="relative">
-                                <Input
-                                    id="arabic_username_d"
-                                    name="arabic_username_d"
-                                    value={formData.arabic_username_d}
+                                    id="arabic_username_a"
+                                    name="arabic_username_a"
+                                    value={formData.arabic_username_a}
                                     onChange={handleInputChange}
                                     required
                                     dir="rtl"
-                                    placeholder="الأخير"
+                                    placeholder="الأول"
                                 />
                             </div>
                         </div>

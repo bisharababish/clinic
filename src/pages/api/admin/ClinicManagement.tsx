@@ -900,7 +900,7 @@ const ClinicManagement = () => {
                                 <CardContent>
                                     <form onSubmit={handleClinicSubmit} id="clinicForm" className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="name">Clinic Name *</Label>
+                                            <Label htmlFor="name">Clinic Name </Label>
                                             <Input
                                                 id="name"
                                                 name="name"
@@ -912,7 +912,7 @@ const ClinicManagement = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="category_id">Category *</Label>
+                                            <Label htmlFor="category_id">Category </Label>
                                             <select
                                                 id="category_id"
                                                 name="category_id"
@@ -1087,7 +1087,7 @@ const ClinicManagement = () => {
                                 <CardContent>
                                     <form onSubmit={handleCategorySubmit} id="categoryForm" className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="categoryName">Category Name *</Label>
+                                            <Label htmlFor="categoryName">Category Name </Label>
                                             <Input
                                                 id="categoryName"
                                                 name="name"

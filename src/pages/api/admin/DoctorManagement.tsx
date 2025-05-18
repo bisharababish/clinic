@@ -663,7 +663,7 @@ const DoctorManagement = () => {
                         <CardContent>
                             <form onSubmit={handleDoctorSubmit} id="doctorForm" className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="name">Doctor Name *</Label>
+                                    <Label htmlFor="name">Doctor Name </Label>
                                     <Input
                                         id="name"
                                         name="name"
@@ -675,7 +675,7 @@ const DoctorManagement = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="specialty">Specialty *</Label>
+                                    <Label htmlFor="specialty">Specialty </Label>
                                     <Input
                                         id="specialty"
                                         name="specialty"
@@ -687,7 +687,7 @@ const DoctorManagement = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="clinic_id">Clinic *</Label>
+                                    <Label htmlFor="clinic_id">Clinic </Label>
                                     <select
                                         id="clinic_id"
                                         name="clinic_id"
@@ -711,7 +711,7 @@ const DoctorManagement = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email *</Label>
+                                    <Label htmlFor="email">Email </Label>
                                     <Input
                                         id="email"
                                         name="email"
@@ -735,7 +735,7 @@ const DoctorManagement = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="price">Appointment Price (₪) *</Label>
+                                    <Label htmlFor="price">Appointment Price (₪) </Label>
                                     <Input
                                         id="price"
                                         name="price"

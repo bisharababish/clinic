@@ -172,9 +172,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-gray-800">{users.length}</div>
-                        <p className="text-xs text-gray-500 mt-1">
-                            {users.filter(u => u.created_at && new Date(u.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length} new users
-                        </p>
+
                     </CardContent>
                 </Card>
 
@@ -189,12 +187,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         <div className="text-3xl font-bold text-gray-800">
                             {appointments.filter(a => a.status === 'scheduled').length}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Next today: {appointments.filter(a =>
-                                a.status === 'scheduled' &&
-                                new Date(a.date).toDateString() === new Date().toDateString()
-                            ).length}
-                        </p>
+
                     </CardContent>
                 </Card>
 
@@ -209,9 +202,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         <div className="text-3xl font-bold text-gray-800">
                             {clinics.filter(c => c.isActive).length}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Out of {clinics.length} total clinics
-                        </p>
+
                     </CardContent>
                 </Card>
 

@@ -769,7 +769,7 @@ const UsersManagement = () => {
                                 <Label className="text-base font-medium">Full Name (English)</Label>
                                 <div className="grid grid-cols-2 gap-2 mt-2">
                                     <div>
-                                        <Label htmlFor="english_username_a" className="text-xs">First Name *</Label>
+                                        <Label htmlFor="english_username_a" className="text-xs">First Name </Label>
                                         <Input
                                             id="english_username_a"
                                             name="english_username_a"
@@ -780,7 +780,7 @@ const UsersManagement = () => {
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="english_username_b" className="text-xs">Second Name</Label>
+                                        <Label htmlFor="english_username_b" className="text-xs">Second Name </Label>
                                         <Input
                                             id="english_username_b"
                                             name="english_username_b"
@@ -790,7 +790,7 @@ const UsersManagement = () => {
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="english_username_c" className="text-xs">Third Name</Label>
+                                        <Label htmlFor="english_username_c" className="text-xs">Third Name </Label>
                                         <Input
                                             id="english_username_c"
                                             name="english_username_c"
@@ -800,7 +800,7 @@ const UsersManagement = () => {
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="english_username_d" className="text-xs">Last Name *</Label>
+                                        <Label htmlFor="english_username_d" className="text-xs">Last Name </Label>
                                         <Input
                                             id="english_username_d"
                                             name="english_username_d"
@@ -814,10 +814,21 @@ const UsersManagement = () => {
                             </div>
 
                             <div>
-                                <Label className="text-base font-medium">Full Name (Arabic)</Label>
+                                <Label className="text-base font-medium text-right w-full block">الاسم الكامل (العربية)</Label>
                                 <div className="grid grid-cols-2 gap-2 mt-2">
                                     <div>
-                                        <Label htmlFor="arabic_username_a" className="text-xs">First Name *</Label>
+                                        <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block mb-1">الإسم الثاني </Label>
+                                        <Input
+                                            id="arabic_username_b"
+                                            name="arabic_username_b"
+                                            value={userFormData.arabic_username_b}
+                                            onChange={handleUserInputChange}
+                                            dir="rtl"
+                                            placeholder="الثاني"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block mb-1">الإسم الاول</Label>
                                         <Input
                                             id="arabic_username_a"
                                             name="arabic_username_a"
@@ -829,29 +840,7 @@ const UsersManagement = () => {
                                         />
                                     </div>
                                     <div>
-                                        <Label htmlFor="arabic_username_b" className="text-xs">Second Name</Label>
-                                        <Input
-                                            id="arabic_username_b"
-                                            name="arabic_username_b"
-                                            value={userFormData.arabic_username_b}
-                                            onChange={handleUserInputChange}
-                                            dir="rtl"
-                                            placeholder="الثاني"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="arabic_username_c" className="text-xs">Third Name</Label>
-                                        <Input
-                                            id="arabic_username_c"
-                                            name="arabic_username_c"
-                                            value={userFormData.arabic_username_c}
-                                            onChange={handleUserInputChange}
-                                            dir="rtl"
-                                            placeholder="الثالث"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="arabic_username_d" className="text-xs">Last Name *</Label>
+                                        <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block mb-1">الإسم الرابع</Label>
                                         <Input
                                             id="arabic_username_d"
                                             name="arabic_username_d"
@@ -862,10 +851,22 @@ const UsersManagement = () => {
                                             required
                                         />
                                     </div>
+                                    <div>
+                                        <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block mb-1">الإسم الثالث</Label>
+                                        <Input
+                                            id="arabic_username_c"
+                                            name="arabic_username_c"
+                                            value={userFormData.arabic_username_c}
+                                            onChange={handleUserInputChange}
+                                            dir="rtl"
+                                            placeholder="الثالث"
+                                        />
+                                    </div>
+
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="user_email">Email *</Label>
+                                <Label htmlFor="user_email">Email</Label>
                                 <Input
                                     id="user_email"
                                     name="user_email"
@@ -877,7 +878,7 @@ const UsersManagement = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="id_number">ID Number *</Label>
+                                <Label htmlFor="id_number">ID Number </Label>
                                 <div className="relative">
                                     <Input
                                         id="id_number"
@@ -934,7 +935,7 @@ const UsersManagement = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="user_roles">Role *</Label>
+                                <Label htmlFor="user_roles">Role </Label>
                                 <Select
                                     value={userFormData.user_roles}
                                     onValueChange={handleUserRoleChange}
@@ -946,14 +947,16 @@ const UsersManagement = () => {
                                         <SelectItem value="Patient">Patient</SelectItem>
                                         <SelectItem value="doctor">Doctor</SelectItem>
                                         <SelectItem value="Secretary">Secretary</SelectItem>
-                                        <SelectItem value="Admin">Administrator</SelectItem>
+                                        <SelectItem value="Nurse">Nurse</SelectItem>
+                                        <SelectItem value="Lab">Lab</SelectItem>                                                                      <SelectItem value="Admin">Administrator</SelectItem>
+                                        <SelectItem value="X Ray">X-Ray</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="user_password">
-                                    {userFormMode === "create" ? "Password *" : "New Password (leave empty to keep current)"}
+                                    {userFormMode === "create" ? "Password " : "New Password (leave empty to keep current)"}
                                 </Label>
                                 <Input
                                     id="user_password"
