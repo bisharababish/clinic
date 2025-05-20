@@ -45,6 +45,7 @@ export function Header() {
                         .single();
 
                     if (!userError && userData) {
+                        // Convert to lowercase for consistency
                         setEffectiveRole(userData.user_roles.toLowerCase());
                     }
                     return;
@@ -75,8 +76,20 @@ export function Header() {
 
     // Define which navigation items are visible based on role
     const isAdmin = effectiveRole === "admin";
-    const canViewLabs = isAuthenticated && (effectiveRole === "admin" || effectiveRole === "doctor" || effectiveRole === "secretary");
-    const canViewXray = isAuthenticated && (effectiveRole === "admin" || effectiveRole === "doctor" || effectiveRole === "secretary");
+    const isDoctor = effectiveRole === "doctor";
+    const isSecretary = effectiveRole === "secretary";
+    const isNurse = effectiveRole === "nurse";
+    const isLab = effectiveRole === "lab";
+    const isXRay = effectiveRole === "x ray";
+    const isPatient = effectiveRole === "patient";
+
+    // Define permissions based on roles
+    const canViewHome = isAuthenticated;
+    const canViewClinics = isAuthenticated;
+    const canViewLabs = isAuthenticated && (isAdmin || isDoctor || isLab);
+    const canViewXray = isAuthenticated && (isAdmin || isDoctor || isXRay);
+    const canViewAboutUs = isAuthenticated && (isAdmin || isPatient);
+    const canViewAdmin = isAuthenticated && isAdmin;
 
     // Handle logout click
     const handleLogout = async () => {
@@ -119,23 +132,32 @@ export function Header() {
             </div>
 
             <nav className="hidden md:flex gap-2">
-                <Button variant="ghost" asChild>
-                    <Link to="/">Home</Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                    <Link to="/clinics">Clinics</Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                    <Link to="/about">About Us</Link>
-                </Button>
+                {canViewHome && (
+                    <Button variant="ghost" asChild>
+                        <Link to="/">Home</Link>
+                    </Button>
+                )}
 
-                {/* Only show Labs and X-Ray to authorized roles */}
+                {canViewClinics && (
+                    <Button variant="ghost" asChild>
+                        <Link to="/clinics">Clinics</Link>
+                    </Button>
+                )}
+
+                {canViewAboutUs && (
+                    <Button variant="ghost" asChild>
+                        <Link to="/about">About Us</Link>
+                    </Button>
+                )}
+
+                {/* Only show Labs to authorized roles */}
                 {canViewLabs && (
                     <Button variant="ghost" asChild>
                         <Link to="/labs">Labs</Link>
                     </Button>
                 )}
 
+                {/* Only show X-Ray to authorized roles */}
                 {canViewXray && (
                     <Button variant="ghost" asChild>
                         <Link to="/xray">X-Ray</Link>
@@ -143,7 +165,7 @@ export function Header() {
                 )}
 
                 {/* Only show Admin Dashboard to admin users */}
-                {isAdmin && (
+                {canViewAdmin && (
                     <Button variant="ghost" asChild>
                         <Link to="/admin">Admin Dashboard</Link>
                     </Button>
@@ -168,12 +190,20 @@ export function Header() {
             {effectiveRole && (
                 <div className="hidden md:block">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize border ${effectiveRole === "admin"
-                            ? "bg-red-100 text-red-800 border-red-200"
-                            : effectiveRole === "doctor"
-                                ? "bg-blue-100 text-blue-800 border-blue-200"
-                                : effectiveRole === "secretary"
-                                    ? "bg-purple-100 text-purple-800 border-purple-200"
-                                    : "bg-green-100 text-green-800 border-green-200"
+                        ? "bg-red-100 text-red-800 border-red-200"
+                        : effectiveRole === "doctor"
+                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                            : effectiveRole === "secretary"
+                                ? "bg-purple-100 text-purple-800 border-purple-200"
+                                : effectiveRole === "nurse"
+                                    ? "bg-teal-100 text-teal-800 border-teal-200"
+                                    : effectiveRole === "lab"
+                                        ? "bg-amber-100 text-amber-800 border-amber-200"
+                                        : effectiveRole === "x ray"
+                                            ? "bg-indigo-100 text-indigo-800 border-indigo-200"
+                                            : effectiveRole === "patient"
+                                                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                                : "bg-green-100 text-green-800 border-green-200"
                         }`}>
                         {effectiveRole}
                     </span>

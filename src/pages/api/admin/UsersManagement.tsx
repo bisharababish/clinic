@@ -15,7 +15,7 @@ import {
     Search
 } from "lucide-react";
 import { UserRole } from "../../../hooks/useAuth";
-
+import UserRoleBadge from '../../../components/UserRoleBadge';
 interface UserInfo {
     user_id: string; // uuid/text primary key
     userid: number;
@@ -293,7 +293,16 @@ const UsersManagement = () => {
             user_password: "", // Password is not loaded for security
         });
     };
+    // Function to properly capitalize role names including multi-word roles
+    const capitalizeRole = (role: string): string => {
+        // Special handling for X Ray to ensure proper capitalization
+        if (role.toLowerCase() === "x ray") {
+            return "X Ray";
+        }
 
+        // Handle normal single-word roles
+        return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+    };
     const handleDeleteUser = async (userid: number) => {
         // Find user to delete
         const userToDelete = users.find(u => u.userid === userid);
@@ -437,8 +446,7 @@ const UsersManagement = () => {
                 console.log("Creating new user with data:", userFormData);
 
                 // Make sure role has proper capitalization to avoid constraint issues
-                const capitalizedRole = userFormData.user_roles.charAt(0).toUpperCase() +
-                    userFormData.user_roles.slice(1).toLowerCase();
+                const capitalizedRole = capitalizeRole(userFormData.user_roles);
 
                 // IMPORTANT: Instead of using API routes, we'll use standard signUp
                 // and focus on getting the database record created correctly
@@ -559,8 +567,7 @@ const UsersManagement = () => {
                 }
 
                 // Make sure role has proper capitalization for edit too
-                const capitalizedRole = userFormData.user_roles.charAt(0).toUpperCase() +
-                    userFormData.user_roles.slice(1).toLowerCase();
+                const capitalizedRole = capitalizeRole(userFormData.user_roles);
 
                 const updateData: UserUpdateData = {
                     english_username_a: userFormData.english_username_a,
@@ -702,16 +709,8 @@ const UsersManagement = () => {
                                                 <div className="text-sm text-gray-500">ID: {u.id_number}</div>
                                             )}
                                             <div className="mt-1 flex items-center space-x-2">
-                                                <span className={`inline-block px-2 py-1 text-xs rounded-full capitalize ${u.user_roles.toLowerCase() === "admin"
-                                                    ? "bg-red-100 text-red-800"
-                                                    : u.user_roles.toLowerCase() === "doctor"
-                                                        ? "bg-blue-100 text-blue-800"
-                                                        : u.user_roles.toLowerCase() === "secretary"
-                                                            ? "bg-purple-100 text-purple-800"
-                                                            : "bg-green-100 text-green-800"
-                                                    }`}>
-                                                    {u.user_roles}
-                                                </span>
+                                                {/* REPLACE THIS SPAN WITH THE USERROLEBADGE COMPONENT */}
+                                                <UserRoleBadge role={u.user_roles} />
                                                 {u.user_phonenumber && (
                                                     <span className="text-xs text-gray-500">
                                                         Phone: {u.user_phonenumber}
