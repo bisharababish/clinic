@@ -12,6 +12,7 @@ import OverviewManagement from "./api/admin/OverviewManagement";
 import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
 
 // Interfaces
@@ -119,6 +120,7 @@ const AdminDashboard = () => {
     const [systemSettings, setSystemSettings] = useState<SystemSettings[]>([]);
     const [reportData, setReportData] = useState<ReportData | null>(null);
 
+    const isMobile = useMediaQuery('(max-width: 768px)');
 
 
     // Check admin status
@@ -975,13 +977,13 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid grid-cols-7 w-full">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="users">Users</TabsTrigger>
-                    <TabsTrigger value="clinics">Clinics</TabsTrigger>
-                    <TabsTrigger value="doctors">Doctors</TabsTrigger>
-                    <TabsTrigger value="appointments">Appointments</TabsTrigger>
-                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                <TabsList className="inline-flex w-max min-w-full">
+                    <TabsTrigger value="overview" className="whitespace-nowrap">Overview</TabsTrigger>
+                    <TabsTrigger value="users" className="whitespace-nowrap">Users</TabsTrigger>
+                    <TabsTrigger value="clinics" className="whitespace-nowrap">Clinics</TabsTrigger>
+                    <TabsTrigger value="doctors" className="whitespace-nowrap">Doctors</TabsTrigger>
+                    <TabsTrigger value="appointments" className="whitespace-nowrap">Appointments</TabsTrigger>
+                    <TabsTrigger value="settings" className="whitespace-nowrap">Settings</TabsTrigger>
                 </TabsList>
 
                 {/* OVERVIEW TAB */}
