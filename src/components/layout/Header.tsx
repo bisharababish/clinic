@@ -4,11 +4,14 @@ import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
+import { Menu, X } from 'lucide-react'; // Import Menu and X icons
+import { AnimatePresence, motion } from 'framer-motion'; // Import motion and AnimatePresence
 
 export function Header() {
     const { user, logout } = useAuth();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [effectiveRole, setEffectiveRole] = useState<string | null>(null);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
 
     // Extra check for authentication state on mount and when user changes
     useEffect(() => {
@@ -122,7 +125,7 @@ export function Header() {
     };
 
     return (
-        <header className="flex items-center justify-between p-4 border-b">
+        <header className="flex items-center justify-between p-4 border-b relative z-50">
             <div className="flex items-center gap-4">
                 <Link to="/" className="flex items-center gap-2">
                     {/* Logo */}
@@ -131,6 +134,7 @@ export function Header() {
                 </Link>
             </div>
 
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex gap-2">
                 {canViewHome && (
                     <Button variant="ghost" asChild>
@@ -186,7 +190,103 @@ export function Header() {
                 )}
             </nav>
 
-            {/* Show role indicator */}
+            {/* Mobile Menu Button */}
+            <div className="md:hidden flex items-center">
+                {/* Show role indicator on mobile if authenticated */}
+                {effectiveRole && isAuthenticated && (
+                    <span className={`mr-2 px-2 py-1 rounded-full text-xs font-medium capitalize border ${effectiveRole === "admin"
+                        ? "bg-red-100 text-red-800 border-red-200"
+                        : effectiveRole === "doctor"
+                            ? "bg-blue-100 text-blue-800 border-blue-200"
+                            : effectiveRole === "secretary"
+                                ? "bg-purple-100 text-purple-800 border-purple-200"
+                                : effectiveRole === "nurse"
+                                    ? "bg-teal-100 text-teal-800 border-teal-200"
+                                    : effectiveRole === "lab"
+                                        ? "bg-amber-100 text-amber-800 border-amber-200"
+                                        : effectiveRole === "x ray"
+                                            ? "bg-indigo-100 text-indigo-800 border-indigo-200"
+                                            : effectiveRole === "patient"
+                                                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                                : "bg-green-100 text-green-800 border-green-200"
+                        }`}>
+                        {effectiveRole}
+                    </span>
+                )}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                    {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                </Button>
+            </div>
+
+            {/* Mobile Menu Overlay with Animation */}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-16 left-0 right-0 bg-white border-b shadow-md md:hidden z-40"
+                    >
+                        <nav className="flex flex-col p-4 space-y-2">
+                            {canViewHome && (
+                                <Button variant="ghost" asChild>
+                                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+                                </Button>
+                            )}
+
+                            {canViewClinics && (
+                                <Button variant="ghost" asChild>
+                                    <Link to="/clinics" onClick={() => setIsMobileMenuOpen(false)}>Clinics</Link>
+                                </Button>
+                            )}
+
+                            {canViewAboutUs && (
+                                <Button variant="ghost" asChild>
+                                    <Link to="/about" onClick={() => setIsMobileMenuOpen(false)}>About Us</Link>
+                                </Button>
+                            )}
+
+                            {canViewLabs && (
+                                <Button variant="ghost" asChild>
+                                    <Link to="/labs" onClick={() => setIsMobileMenuOpen(false)}>Labs</Link>
+                                </Button>
+                            )}
+
+                            {canViewXray && (
+                                <Button variant="ghost" asChild>
+                                    <Link to="/xray" onClick={() => setIsMobileMenuOpen(false)}>X-Ray</Link>
+                                </Button>
+                            )}
+
+                            {canViewAdmin && (
+                                <Button variant="ghost" asChild>
+                                    <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}>Admin Dashboard</Link>
+                                </Button>
+                            )}
+
+                            {isAuthenticated ? (
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                                >
+                                    Logout
+                                </Button>
+                            ) : (
+                                <Button variant="ghost" asChild>
+                                    <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+                                </Button>
+                            )}
+                        </nav>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Show role indicator (Desktop) */}
             {effectiveRole && (
                 <div className="hidden md:block">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize border ${effectiveRole === "admin"

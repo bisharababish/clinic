@@ -9,6 +9,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    // Authenticate the user making the request
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // Create a Supabase client with the service role key (for fetching user roles)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+        return res.status(500).json({ error: 'Missing Supabase configuration' });
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: user, error: authError } = await supabaseAdmin.auth.api.getUser(token);
+
+    if (authError || !user) {
+        return res.status(401).json({ error: authError?.message || 'Not authenticated' });
+    }
+
+    // Check if the user has the 'admin' role
+    const userRoles = user.user_metadata?.user_roles || [];
+    if (!userRoles.includes('admin')) {
+        return res.status(403).json({ error: 'Not authorized' });
+    }
+
     // Get userid from request body
     const { userid } = req.body;
 
@@ -17,18 +46,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-        // Create a Supabase client with the service role key
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-        if (!supabaseUrl || !supabaseServiceKey) {
-            return res.status(500).json({ error: 'Missing Supabase configuration' });
-        }
-
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
         // First check if the user exists
-        const { data: user, error: fetchError } = await supabaseAdmin
+        const { data: userToDelete, error: fetchError } = await supabaseAdmin
             .from('userinfo')
             .select('userid, user_email, english_username_a, english_username_d')
             .eq('userid', userid)
@@ -39,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return res.status(404).json({ error: 'User not found in database' });
         }
 
-        console.log("Found user to delete:", user);
+        console.log("Found user to delete:", userToDelete);
 
         // Delete from userinfo table
         const { error: deleteError } = await supabaseAdmin
@@ -56,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // If user has Supabase Auth account, delete that too
-        if (user && user.user_email) {
+        if (userToDelete && userToDelete.user_email) {
             try {
                 // Get auth users
                 const { data: authData } = await supabaseAdmin.auth.admin.listUsers();
@@ -68,7 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     // Find user by email (case insensitive)
                     const matchedUser = authUsers.find(authUser => {
                         const authEmail = authUser.email || '';
-                        const userEmail = user.user_email || '';
+                        const userEmail = userToDelete.user_email || '';
                         return authEmail.toLowerCase() === userEmail.toLowerCase();
                     });
 
@@ -87,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json({
             success: true,
             message: 'User deleted successfully',
-            deleted_user: user
+            deleted_user: userToDelete
         });
 
     } catch (error) {

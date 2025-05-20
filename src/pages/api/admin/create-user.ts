@@ -14,6 +14,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         process.env.SUPABASE_SERVICE_ROLE_KEY || ''
     );
 
+    // Authenticate the user making the request
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const { data: user, error: authError } = await supabaseAdmin.auth.api.getUser(token);
+
+    if (authError || !user) {
+        return res.status(401).json({ error: authError?.message || 'Not authenticated' });
+    }
+
+    // Check if the user has the 'admin' role
+    // Assuming user_metadata contains user_roles
+    const userRoles = user.user_metadata?.user_roles || [];
+    if (!userRoles.includes('admin')) {
+        return res.status(403).json({ error: 'Not authorized' });
+    }
+
     try {
         const { email, password, metadata } = req.body;
 

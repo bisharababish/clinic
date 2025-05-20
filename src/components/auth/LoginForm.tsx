@@ -113,45 +113,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
       // Set a flag to indicate we're mid-login to prevent redirects
       sessionStorage.setItem('login_in_progress', 'true');
 
-      // Special case for admin login
-      if (email.toLowerCase() === 'admin@clinic.com' && password === 'password123') {
-        console.log('Admin login detected');
-
-        // Try direct authentication first
-        const bypassSuccess = await bypassLogin(email, password);
-
-        if (bypassSuccess) {
-          // Set admin session flag
-          sessionStorage.setItem('admin_login_success', 'true');
-
-          toast({
-            title: "Admin Login Successful",
-            description: "Welcome, Administrator!"
-          });
-
-          // Wait for the toast to appear before redirect
-          setTimeout(() => {
-            // Clear the login progress flag
-            sessionStorage.removeItem('login_in_progress');
-
-            // Force a hard redirect to the admin dashboard
-            window.location.href = "/admin";
-          }, 500);
-
-          return;
-        }
-      }
-
-      // Regular bypass login for non-admin users
+      // Use regular bypass login for all users (including admins)
       const bypassSuccess = await bypassLogin(email, password);
 
       if (bypassSuccess) {
-        // Check if user is admin from the cached profile
+        // Check if user is admin from the cached profile and redirect accordingly
         const cachedUserProfile = localStorage.getItem('clinic_user_profile');
         if (cachedUserProfile) {
           const userObj = JSON.parse(cachedUserProfile);
           if (userObj.role === 'admin') {
-            // Set admin login success flag
+            // Set admin login success flag (still needed for some parts of the app)
             sessionStorage.setItem('admin_login_success', 'true');
 
             toast({
@@ -169,6 +140,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           }
         }
 
+        // Default redirect for non-admin users
         toast({
           title: "Login Successful",
           description: "Welcome back!"
@@ -186,10 +158,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
         return;
       }
 
-      // If bypass didn't work, try the hook method
+      // If bypass didn't work, try the hook method (fallback)
       const userData = await login(email, password);
 
-      // Check if user is admin
+      // Check if user is admin and redirect accordingly
       if (userData.role === 'admin') {
         // Set admin login success flag
         sessionStorage.setItem('admin_login_success', 'true');
@@ -208,6 +180,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         return;
       }
 
+      // Default redirect for non-admin users
       toast({
         title: "Login Successful",
         description: `Welcome back, ${userData.name}!`
@@ -239,32 +212,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleEmergencyRedirect = (e) => {
-    e.preventDefault();
-    // Simulate login with default admin
-    bypassLogin('admin@clinic.com', 'password123').then(success => {
-      if (success) {
-        // Set admin flag
-        sessionStorage.setItem('admin_login_success', 'true');
-
-        toast({
-          title: "Emergency Access",
-          description: "Redirecting to home page..."
-        });
-
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 500);
-      } else {
-        toast({
-          title: "Error",
-          description: "Emergency access failed",
-          variant: "destructive"
-        });
-      }
-    });
   };
 
   return (
