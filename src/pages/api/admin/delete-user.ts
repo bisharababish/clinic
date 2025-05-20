@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: user, error: authError } = await supabaseAdmin.auth.api.getUser(token);
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
         return res.status(401).json({ error: authError?.message || 'Not authenticated' });

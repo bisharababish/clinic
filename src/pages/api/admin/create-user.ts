@@ -21,15 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const { data: user, error: authError } = await supabaseAdmin.auth.api.getUser(token);
+    const { data: user, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
         return res.status(401).json({ error: authError?.message || 'Not authenticated' });
     }
 
     // Check if the user has the 'admin' role
-    // Assuming user_metadata contains user_roles
-    const userRoles = user.user_metadata?.user_roles || [];
+    const userRoles = user.user?.user_metadata?.user_roles || [];
     if (!userRoles.includes('admin')) {
         return res.status(403).json({ error: 'Not authorized' });
     }
