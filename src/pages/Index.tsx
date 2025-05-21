@@ -108,7 +108,7 @@ const Index = () => {
           <h2 className="text-2xl font-bold mb-6 text-gray-800">User Creation</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label className="text-base font-medium">Full Name (English) *</Label>
+              <Label className="text-base font-medium">Full Name (English) </Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                 <div>
                   <Label htmlFor="english_username_a" className="text-xs">First Name</Label>
@@ -290,7 +290,7 @@ const Index = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Gender *</Label>
+              <Label>Gender </Label>
               <RadioGroup
                 value={formData.gender}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}

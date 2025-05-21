@@ -87,10 +87,8 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
     const defaultSettings: SystemSettings[] = [
         // System Settings
         { setting_name: "auto_backup", setting_value: "true", setting_type: "boolean", setting_group: "system", setting_description: "Automatically backup the database daily" },
-        { setting_name: "dark_mode", setting_value: "false", setting_type: "boolean", setting_group: "system", setting_description: "Enable dark mode" },
         { setting_name: "primary_color", setting_value: "#3b82f6", setting_type: "color", setting_group: "system", setting_description: "Primary theme color" },
         { setting_name: "secondary_color", setting_value: "#10b981", setting_type: "color", setting_group: "system", setting_description: "Secondary theme color" },
-        { setting_name: "font_size", setting_value: "medium", setting_type: "select", setting_group: "system", setting_options: ["small", "medium", "large"], setting_description: "Default font size" },
     ];
 
     // Initialize with loading activity logs and system stats
@@ -100,26 +98,6 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
             loadSystemStats();
         }
     }, [activeTab]);
-
-    // Apply dark mode setting
-    useEffect(() => {
-        // Find dark mode setting
-        const darkModeSetting = systemSettings.find(setting => setting.setting_name === "dark_mode");
-
-        if (darkModeSetting && typeof setTheme === "function") {
-            // Get the current theme from context
-            const currentTheme = theme || "light";
-            const shouldBeDark = darkModeSetting.setting_value === "true";
-
-            // Only call setTheme if the current theme doesn't match the desired theme
-            if ((shouldBeDark && currentTheme !== "dark")) {
-                setTheme('dark');
-            } else if ((!shouldBeDark && currentTheme !== "light")) {
-                setTheme('light');
-            }
-        }
-    }, [systemSettings, theme, setTheme]);
-
 
     // Load activity logs
     const loadActivityLogs = async () => {
@@ -364,18 +342,21 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
 
             if (data && data.length > 0) {
                 // Process settings - convert setting_options string to array if needed
-                const processedSettings = data.map(setting => ({
-                    ...setting,
-                    setting_options: setting.setting_options ?
-                        setting.setting_options.split(',') :
-                        undefined
-                }));
+                // Filter out 'system_language' setting
+                const processedSettings = data
+                    .filter(setting => setting.setting_name !== 'system_language') // Filter out system_language
+                    .map(setting => ({
+                        ...setting,
+                        setting_options: setting.setting_options ?
+                            setting.setting_options.split(',') :
+                            undefined
+                    }));
 
                 updateSystemSettings(processedSettings);
 
                 toast({
                     title: "Settings Loaded",
-                    description: `${processedSettings.length} settings loaded successfully.`,
+                    description: `${processedSettings.length} settings loaded successfully.`, // Adjusted count
                 });
             } else {
                 // No settings found, insert and use defaults
@@ -392,12 +373,15 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
                     updateSystemSettings(defaultSettings);
                 } else if (newData && newData.length > 0) {
                     // Process settings - convert setting_options string to array if needed
-                    const processedSettings = newData.map(setting => ({
-                        ...setting,
-                        setting_options: setting.setting_options ?
-                            setting.setting_options.split(',') :
-                            undefined
-                    }));
+                    // Filter out 'system_language' setting
+                    const processedSettings = newData
+                        .filter(setting => setting.setting_name !== 'system_language') // Filter out system_language
+                        .map(setting => ({
+                            ...setting,
+                            setting_options: setting.setting_options ?
+                                setting.setting_options.split(',') :
+                                undefined
+                        }));
 
                     updateSystemSettings(processedSettings);
 
@@ -438,17 +422,6 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
             return setting;
         }));
         setSettingsChanged(true);
-
-        // Special handling for dark mode
-        if (name === "dark_mode" && setTheme) {
-            if (typeof setTheme === "function") {
-                if (value === "true") {
-                    setTheme('dark');
-                } else {
-                    setTheme('light');
-                }
-            }
-        }
     };
 
     // Save settings to database
@@ -1174,20 +1147,8 @@ const SettingsManagement: React.FC<SettingsManagementProps> = ({
                                 <CardDescription>Basic system configuration for your application</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {/* Added Dark Mode to the System tab */}
-                                <div className="flex items-center justify-between space-x-2">
-                                    <div className="flex flex-col">
-                                        <Label htmlFor="dark_mode">Dark Mode</Label>
-                                        <p className="text-sm text-gray-500">Enable dark mode for the application</p>
-                                    </div>
-                                    <Switch
-                                        id="dark_mode"
-                                        checked={systemSettings.find(s => s.setting_name === "dark_mode")?.setting_value === "true"}
-                                        onCheckedChange={(checked) => handleSettingChange("dark_mode", String(checked))}
-                                    />
-                                </div>
                                 {/* Other System Settings */}
-                                {groupedSettings.system?.filter(s => s.setting_name !== "dark_mode").map(renderSetting)}
+                                {groupedSettings.system?.map(renderSetting)}
                             </CardContent>
                         </Card>
 

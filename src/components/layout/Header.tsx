@@ -1,17 +1,19 @@
 // components/layout/Header.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { Menu, X } from 'lucide-react'; // Import Menu and X icons
 import { AnimatePresence, motion } from 'framer-motion'; // Import motion and AnimatePresence
+import { ThemeContext, ThemeContextType } from '../../components/contexts/ThemeContext'; // Import ThemeContext
 
 export function Header() {
     const { user, logout } = useAuth();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [effectiveRole, setEffectiveRole] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
+    const { theme, toggleTheme } = useContext<ThemeContextType>(ThemeContext); // Use theme context
 
     // Extra check for authentication state on mount and when user changes
     useEffect(() => {

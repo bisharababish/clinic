@@ -701,8 +701,8 @@ const UsersManagement = () => {
                         ) : (
                             <div className="space-y-4">
                                 {filteredUsers.map((u) => (
-                                    <div key={u.userid} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                        <div>
+                                    <div key={u.userid} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50">
+                                        <div className="mb-2 sm:mb-0">
                                             <h3 className="font-medium">{u.english_username_a} {u.english_username_d}</h3>
                                             <div className="text-sm text-gray-500">{u.user_email}</div>
                                             {u.id_number && (
@@ -718,7 +718,7 @@ const UsersManagement = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex space-x-2">
+                                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                                             <Button variant="outline" size="sm" onClick={() => handleEditUser(u.userid)}>
                                                 <Edit className="h-4 w-4 mr-1" />
                                                 Edit

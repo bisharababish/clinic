@@ -975,7 +975,7 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid grid-cols-7 w-full">
+                <TabsList className="flex flex-wrap justify-center w-full">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="users">Users</TabsTrigger>
                     <TabsTrigger value="clinics">Clinics</TabsTrigger>

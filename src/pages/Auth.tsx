@@ -69,7 +69,6 @@ const Auth: React.FC = () => {
               <h1 className="text-4xl font-bold text-primary mb-2">
                 Bethlehem Med Center
               </h1>
-           
             </motion.div>
           </div>
 
@@ -105,7 +104,7 @@ const Auth: React.FC = () => {
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <LoginForm 
+                        <LoginForm
                           onSwitchToRegister={handleSwitchToRegister}
                           onSwitchToForgotPassword={handleSwitchToForgotPassword}
                         />

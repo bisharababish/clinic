@@ -1,5 +1,5 @@
 // pages/api/admin/OverviewManagement.tsx
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -25,6 +25,7 @@ import {
     RefreshCw,
     Download
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface UserInfo {
     user_id: string;
@@ -125,6 +126,9 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
     setActiveTab,
     checkSystemStatus
 }) => {
+    // State to manage chart type: 'pie' or 'bar'
+    const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
+
     // Chart colors
     const CHART_COLORS = [
         '#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c',
@@ -246,45 +250,65 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
                         <div className="flex justify-between items-center">
                             <CardTitle className="text-blue-800">User Distribution by Role</CardTitle>
-                            <RefreshCw
-                                className="h-4 w-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors"
-                                onClick={refreshReportData}
-                            />
+                            <div className="flex items-center space-x-2">
+                                <span className="text-sm text-gray-600">Pie</span>
+                                <Switch
+                                    checked={chartType === 'bar'}
+                                    onCheckedChange={(checked) => setChartType(checked ? 'bar' : 'pie')}
+                                />
+                                <span className="text-sm text-gray-600">Bar</span>
+                                <RefreshCw
+                                    className="h-4 w-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors"
+                                    onClick={refreshReportData}
+                                />
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="pt-4">
                         <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={getRoleChartData()}
-                                        cx="50%"
-                                        cy="50%"
-                                        labelLine={false}
-                                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                        outerRadius={80}
-                                        innerRadius={40}
-                                        paddingAngle={5}
-                                        dataKey="count"
-                                    >
-                                        {getRoleChartData().map((entry, index) => (
-                                            <Cell
-                                                key={`cell-${index}`}
-                                                fill={entry.fill}
-                                                stroke="#ffffff"
-                                                strokeWidth={2}
-                                            />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip formatter={(value, name) => [value, name]} />
-                                    <Legend
-                                        layout="vertical"
-                                        align="right"
-                                        verticalAlign="middle"
-                                        iconType="circle"
-                                        iconSize={10}
-                                    />
-                                </PieChart>
+                                {chartType === 'pie' ? (
+                                    <PieChart>
+                                        <Pie
+                                            data={getRoleChartData()}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                            outerRadius={80}
+                                            innerRadius={40}
+                                            paddingAngle={5}
+                                            dataKey="count"
+                                            isAnimationActive={true}
+                                        >
+                                            {getRoleChartData().map((entry, index) => (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={entry.fill}
+                                                    stroke="#ffffff"
+                                                    strokeWidth={2}
+                                                />
+                                            ))}
+                                        </Pie>
+                                    </PieChart>
+                                ) : (
+                                    <BarChart data={getRoleChartData()}>
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="role" label={{ value: 'User Role', position: 'insideBottom', offset: -5 }} />
+                                        <YAxis label={{ value: 'Number of Users', angle: -90, position: 'insideLeft' }} />
+                                        <Legend />
+                                        <Bar dataKey="count" isAnimationActive={true}>
+                                            {getRoleChartData().map((entry, index) => (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={entry.fill}
+                                                    stroke="#ffffff"
+                                                    strokeWidth={1}
+                                                />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
+                                )}
                             </ResponsiveContainer>
                         </div>
 
@@ -365,17 +389,34 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                 </div>
                             </div>
 
-                            <div className="flex items-center p-2 rounded-lg border bg-gray-50">
-                                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mr-3">
-                                    <Users className="h-5 w-5 text-gray-600" />
+                            {/* Added Lab Role */}
+                            <div className="flex items-center p-2 rounded-lg border bg-yellow-50">
+                                <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                                    <Database className="h-5 w-5 text-yellow-600" /> {/* Using Database icon for Lab */}
                                 </div>
                                 <div>
-                                    <p className="font-medium text-gray-800">Other Roles</p>
-                                    <p className="text-sm text-gray-600">
-                                        {users.filter(u => !['patient', 'doctor', 'secretary', 'nurse', 'admin', 'administrator'].includes(u.user_roles?.toLowerCase())).length} users
+                                    <p className="font-medium text-yellow-800">Lab</p>
+                                    <p className="text-sm text-yellow-600">
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'lab').length} users
                                         {' '}
                                         ({users.length > 0 ?
-                                            Math.round((users.filter(u => !['patient', 'doctor', 'secretary', 'nurse', 'admin', 'administrator'].includes(u.user_roles?.toLowerCase())).length / users.length) * 100) : 0}%)
+                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'lab').length / users.length) * 100) : 0}%)
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Added X Ray Role */}
+                            <div className="flex items-center p-2 rounded-lg border bg-teal-50">
+                                <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+                                    <Layers className="h-5 w-5 text-teal-600" /> {/* Using Layers icon for X Ray */}
+                                </div>
+                                <div>
+                                    <p className="font-medium text-teal-800">X Ray</p>
+                                    <p className="text-sm text-teal-600">
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length} users
+                                        {' '}
+                                        ({users.length > 0 ?
+                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length / users.length) * 100) : 0}%)
                                     </p>
                                 </div>
                             </div>

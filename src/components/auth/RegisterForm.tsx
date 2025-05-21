@@ -243,7 +243,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* English Name Fields */}
                 <div>
-                    <Label className="text-base font-medium">Full Name (English) *</Label>
+                    <Label className="text-base font-medium">Full Name (English) </Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                         <div>
                             <Label htmlFor="english_username_a" className="text-xs">First Name</Label>
@@ -361,7 +361,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
+                    <Label htmlFor="email">Email </Label>
                     <div className="relative">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -377,7 +377,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="id_number">ID Number *</Label>
+                    <Label htmlFor="id_number">ID Number </Label>
                     <div className="relative">
                         <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -393,7 +393,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Phone Number *</Label>
+                    <Label htmlFor="phoneNumber">Phone Number </Label>
                     <div className="relative">
                         <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -410,7 +410,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth *</Label>
+                    <Label htmlFor="dateOfBirth">Date of Birth </Label>
                     <div className="relative">
                         <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -426,7 +426,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label>Gender *</Label>
+                    <Label>Gender </Label>
                     <RadioGroup
                         value={formData.gender}
                         onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
@@ -444,7 +444,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="password">Password *</Label>
+                    <Label htmlFor="password">Password </Label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -472,7 +472,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <Label htmlFor="confirmPassword">Confirm Password </Label>
                     <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input

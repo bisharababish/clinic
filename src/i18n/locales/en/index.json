@@ -1,0 +1,22 @@
+{
+  "index": {
+    "notification_reminder": "Reminder: Reservations are required for clinic visits.",
+    "book_now": "Book now",
+    "user_creation_title": "User Creation",
+    "full_name_english": "Full Name (English)",
+    "first_name": "First Name",
+    "second_name": "Second Name",
+    "third_name": "Third Name",
+    "last_name": "Last Name",
+    "full_name_arabic": "الاسم الكامل (العربية)",
+    "email": "Email",
+    "id_number": "ID Number",
+    "phone_number": "Phone Number",
+    "date_of_birth": "Date of Birth",
+    "gender": "Gender",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "create_account": "Create Account",
+    "register_patient_message": "Register as a patient to access our services."
+  }
+} 
