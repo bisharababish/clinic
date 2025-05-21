@@ -1,6 +1,6 @@
 // src/components/auth/LoginForm.tsx
 import * as React from "react";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { useTranslation } from "react-i18next";
+import { LanguageContext } from "../contexts/LanguageContext";
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -25,14 +27,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
+  const { t } = useTranslation();
+  const { isRTL } = useContext(LanguageContext);
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!email || !password) {
       toast({
-        title: "Missing Credentials",
-        description: "Please enter both email and password",
+        title: t("auth.missingCredentials"),
+        description: t("auth.enterCredentials"),
         variant: "destructive",
       });
       return false;
@@ -40,8 +44,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
     if (!emailRegex.test(email)) {
       toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address",
+        title: t("auth.invalidEmail"),
+        description: t("auth.invalidEmail"),
         variant: "destructive",
       });
       return false;
@@ -126,8 +130,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
             sessionStorage.setItem('admin_login_success', 'true');
 
             toast({
-              title: "Admin Login Successful",
-              description: "Welcome, Administrator!"
+              title: t("auth.adminLogin"),
+              description: t("auth.secureAdminAccess")
             });
 
             // Redirect admin to admin dashboard
@@ -142,8 +146,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
         // Default redirect for non-admin users
         toast({
-          title: "Login Successful",
-          description: "Welcome back!"
+          title: t("common.login"),
+          description: t("auth.welcomeBack")
         });
 
         // Wait for the toast to appear before redirect
@@ -167,8 +171,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         sessionStorage.setItem('admin_login_success', 'true');
 
         toast({
-          title: "Admin Login Successful",
-          description: `Welcome, ${userData.name}!`
+          title: t("auth.adminLogin"),
+          description: `${t("common.welcome")}, ${userData.name}!`
         });
 
         // Redirect admin to admin dashboard
@@ -182,8 +186,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       // Default redirect for non-admin users
       toast({
-        title: "Login Successful",
-        description: `Welcome back, ${userData.name}!`
+        title: t("common.login"),
+        description: `${t("auth.welcomeBack")}, ${userData.name}!`
       });
 
       // Wait for the toast to be seen before redirect
@@ -199,13 +203,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
       console.error("Login error:", error);
       sessionStorage.removeItem('login_in_progress');
 
-      let errorMessage = "Invalid email or password";
+      let errorMessage = t("auth.missingCredentials");
       if (error instanceof Error) {
         errorMessage = error.message;
       }
 
       toast({
-        title: "Login Failed",
+        title: t("common.login"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -215,26 +219,26 @@ const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <div className="w-full space-y-6 animate-fade-in">
+    <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="space-y-2 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Welcome Back</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t("auth.welcomeBack")}</h2>
         <p className="text-sm text-muted-foreground">
-          Enter your credentials to access your account
+          {t("auth.enterCredentials")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("common.email")}</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
             <Input
               id="email"
               type="email"
-              placeholder="name@example.com"
+              placeholder={t("auth.enterCredentials")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
+              className={isRTL ? 'pr-10' : 'pl-10'}
               required
             />
           </div>
@@ -242,30 +246,30 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("common.password")}</Label>
             <button
               type="button"
               onClick={onSwitchToForgotPassword}
               className="text-xs text-primary hover:underline"
             >
-              Forgot password?
+              {t("common.forgotPassword")}
             </button>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10"
+              className={isRTL ? 'pr-10' : 'pl-10'}
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+              className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 text-muted-foreground hover:text-foreground`}
             >
               {showPassword ? (
                 <EyeOffIcon className="h-4 w-4" />
@@ -277,18 +281,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign In"}
+          {isLoading ? t("common.loading") : t("common.login")}
         </Button>
       </form>
 
       <div className="text-center text-sm">
-        Don't have an account?{" "}
+        {t("auth.dontHaveAccount")}{" "}
         <button
           type="button"
           onClick={onSwitchToRegister}
           className="text-primary font-medium hover:underline"
         >
-          Sign Up
+          {t("common.signup")}
         </button>
       </div>
     </div>

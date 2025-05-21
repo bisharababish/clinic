@@ -765,7 +765,6 @@ const UsersManagement = () => {
                     <CardContent>
                         <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4">
                             <div>
-                                <Label className="text-base font-medium">Full Name (English)</Label>
                                 <div className="grid grid-cols-2 gap-2 mt-2">
                                     <div>
                                         <Label htmlFor="english_username_a" className="text-xs">First Name </Label>
@@ -813,7 +812,6 @@ const UsersManagement = () => {
                             </div>
 
                             <div>
-                                <Label className="text-base font-medium text-right w-full block">الاسم الكامل (العربية)</Label>
                                 <div className="grid grid-cols-2 gap-2 mt-2">
                                     <div>
                                         <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block mb-1">الإسم الثاني </Label>

@@ -1,21 +1,231 @@
+// src/i18n.ts
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import Backend from 'i18next-localstorage-backend';
 
+// English translations
+const enTranslations = {
+    common: {
+        welcome: 'Welcome to Bethlehem Med Center',
+        login: 'Login',
+        signup: 'Sign Up',
+        logout: 'Logout',
+        email: 'Email',
+        password: 'Password',
+        confirmPassword: 'Confirm Password',
+        forgotPassword: 'Forgot password?',
+        backToLogin: 'Back to Login',
+        submit: 'Submit',
+        cancel: 'Cancel',
+        save: 'Save',
+        delete: 'Delete',
+        edit: 'Edit',
+        create: 'Create',
+        search: 'Search',
+        filter: 'Filter',
+        name: 'Name',
+        phone: 'Phone',
+        address: 'Address',
+        language: 'Language',
+        english: 'English',
+        arabic: 'Arabic',
+        darkMode: 'Dark Mode',
+        lightMode: 'Light Mode',
+        loading: 'Loading...',
+        clinicName: 'Bethlehem Med Center',
+    },
+    auth: {
+        welcomeBack: 'Welcome Back',
+        enterCredentials: 'Enter your credentials to access your account',
+        dontHaveAccount: 'Don\'t have an account?',
+        alreadyHaveAccount: 'Already have an account?',
+        createAccount: 'Create Account',
+        registerAsPatient: 'Register as a patient to access our services',
+        resetPasswordTitle: 'Forgot Password',
+        resetPasswordDesc: 'Enter your email address and we\'ll send you a link to reset your password',
+        sendResetLink: 'Send Reset Link',
+        checkEmail: 'Check Your Email',
+        resetEmailSent: 'We\'ve sent a password reset link to',
+        didntReceiveEmail: 'Didn\'t receive an email? Check your spam folder or try again.',
+        tryAgain: 'Try Again',
+        createNewPassword: 'Create New Password',
+        missingCredentials: 'Please enter both email and password',
+        invalidEmail: 'Please enter a valid email address',
+        adminLogin: 'Admin Login',
+        secureAdminAccess: 'Secure access for clinic administrators only',
+        signInAsAdmin: 'Sign In as Admin',
+        // Additional translations for RegisterForm
+        firstNameEn: 'First Name (English)',
+        secondNameEn: 'Second Name (English)',
+        thirdNameEn: 'Third Name (English)',
+        lastNameEn: 'Last Name (English)',
+        firstNameAr: 'First Name (Arabic)',
+        secondNameAr: 'Second Name (Arabic)',
+        thirdNameAr: 'Third Name (Arabic)',
+        lastNameAr: 'Last Name (Arabic)',
+        idNumber: 'ID Number',
+        yourIDNumber: 'Your ID Number',
+        dateOfBirth: 'Date of Birth',
+        gender: 'Gender',
+        male: 'Male',
+        female: 'Female',
+        invalidPhone: 'Invalid Phone Number',
+        phoneNumbersOnly: 'Please enter numbers only',
+        weakPassword: 'Weak Password',
+        passwordLength: 'Password must be at least 6 characters',
+        missingNameInfo: 'Missing Name Information',
+        fillRequiredNames: 'Please fill in at least first and last name in both languages',
+        missingInfo: 'Missing Information',
+        fillRequiredFields: 'Please fill in all required fields',
+        invalidID: 'Invalid ID Number',
+        validIDRequired: 'Please enter a valid 9-digit Palestinian ID number',
+        passwordMismatch: 'Password Mismatch',
+        passwordsDoNotMatch: 'Passwords do not match',
+        registrationNote: 'Registration Note',
+        profileSetupAdmin: 'User created, but profile setup requires admin action.',
+        registrationSuccess: 'Registration Successful',
+        welcomeToClinic: 'Welcome to our clinic portal!',
+        registrationFailed: 'Registration Failed',
+    },
+    navbar: {
+        home: 'Home',
+        clinics: 'Clinics',
+        aboutUs: 'About Us',
+        labs: 'Labs',
+        xray: 'X-Ray',
+        adminDashboard: 'Admin Dashboard',
+    },
+    footer: {
+        rights: 'All rights reserved',
+        privacyPolicy: 'Privacy Policy',
+        termsOfUse: 'Terms of Use',
+        contactUs: 'Contact Us',
+        quickLinks: 'Quick Links',
+    }
+};
+
+// Arabic translations
+const arTranslations = {
+    common: {
+        welcome: 'مرحبًا بكم في مركز بيت لحم الطبي',
+        login: 'تسجيل الدخول',
+        signup: 'إنشاء حساب',
+        logout: 'تسجيل الخروج',
+        email: 'البريد الإلكتروني',
+        password: 'كلمة المرور',
+        confirmPassword: 'تأكيد كلمة المرور',
+        forgotPassword: 'نسيت كلمة المرور؟',
+        backToLogin: 'العودة لتسجيل الدخول',
+        submit: 'إرسال',
+        cancel: 'إلغاء',
+        save: 'حفظ',
+        delete: 'حذف',
+        edit: 'تعديل',
+        create: 'إنشاء',
+        search: 'بحث',
+        filter: 'تصفية',
+        name: 'الاسم',
+        phone: 'الهاتف',
+        address: 'العنوان',
+        language: 'اللغة',
+        english: 'الإنجليزية',
+        arabic: 'العربية',
+        darkMode: 'الوضع الداكن',
+        lightMode: 'الوضع الفاتح',
+        loading: 'جارٍ التحميل...',
+        clinicName: 'مركز بيت لحم الطبي',
+    },
+    auth: {
+        welcomeBack: 'مرحبًا بعودتك',
+        enterCredentials: 'أدخل بيانات الاعتماد الخاصة بك للوصول إلى حسابك',
+        dontHaveAccount: 'ليس لديك حساب؟',
+        alreadyHaveAccount: 'هل لديك حساب بالفعل؟',
+        createAccount: 'إنشاء حساب',
+        registerAsPatient: 'سجل كمريض للوصول إلى خدماتنا',
+        resetPasswordTitle: 'نسيت كلمة المرور',
+        resetPasswordDesc: 'أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور',
+        sendResetLink: 'إرسال رابط إعادة التعيين',
+        checkEmail: 'تحقق من بريدك الإلكتروني',
+        resetEmailSent: 'لقد أرسلنا رابط إعادة تعيين كلمة المرور إلى',
+        didntReceiveEmail: 'لم تستلم بريدًا إلكترونيًا؟ تحقق من مجلد البريد العشوائي أو حاول مرة أخرى.',
+        tryAgain: 'حاول مرة أخرى',
+        createNewPassword: 'إنشاء كلمة مرور جديدة',
+        missingCredentials: 'الرجاء إدخال البريد الإلكتروني وكلمة المرور',
+        invalidEmail: 'الرجاء إدخال بريد إلكتروني صالح',
+        adminLogin: 'تسجيل دخول المسؤول',
+        secureAdminAccess: 'وصول آمن لمسؤولي العيادة فقط',
+        signInAsAdmin: 'تسجيل الدخول كمسؤول',
+        // Additional translations for RegisterForm
+        firstNameEn: 'الاسم الأول (بالإنجليزية)',
+        secondNameEn: 'الاسم الثاني (بالإنجليزية)',
+        thirdNameEn: 'الاسم الثالث (بالإنجليزية)',
+        lastNameEn: 'الاسم الأخير (بالإنجليزية)',
+        firstNameAr: 'الاسم الأول',
+        secondNameAr: 'الاسم الثاني',
+        thirdNameAr: 'الاسم الثالث',
+        lastNameAr: 'الاسم الأخير',
+        idNumber: 'رقم الهوية',
+        yourIDNumber: 'رقم الهوية الخاص بك',
+        dateOfBirth: 'تاريخ الميلاد',
+        gender: 'الجنس',
+        male: 'ذكر',
+        female: 'أنثى',
+        invalidPhone: 'رقم هاتف غير صالح',
+        phoneNumbersOnly: 'الرجاء إدخال أرقام فقط',
+        weakPassword: 'كلمة مرور ضعيفة',
+        passwordLength: 'يجب أن تكون كلمة المرور على الأقل 6 أحرف',
+        missingNameInfo: 'معلومات الاسم ناقصة',
+        fillRequiredNames: 'يرجى ملء الاسم الأول والأخير على الأقل باللغتين',
+        missingInfo: 'معلومات ناقصة',
+        fillRequiredFields: 'يرجى ملء جميع الحقول المطلوبة',
+        invalidID: 'رقم هوية غير صالح',
+        validIDRequired: 'الرجاء إدخال رقم هوية فلسطينية صالح مكون من 9 أرقام',
+        passwordMismatch: 'كلمات المرور غير متطابقة',
+        passwordsDoNotMatch: 'كلمات المرور غير متطابقة',
+        registrationNote: 'ملاحظة التسجيل',
+        profileSetupAdmin: 'تم إنشاء المستخدم، ولكن إعداد الملف الشخصي يتطلب إجراء المسؤول.',
+        registrationSuccess: 'تم التسجيل بنجاح',
+        welcomeToClinic: 'مرحبًا بك في بوابة العيادة!',
+        registrationFailed: 'فشل التسجيل',
+    },
+    navbar: {
+        home: 'الرئيسية',
+        clinics: 'العيادات',
+        aboutUs: 'من نحن',
+        labs: 'المختبرات',
+        xray: 'الأشعة',
+        adminDashboard: 'لوحة تحكم المسؤول',
+    },
+    footer: {
+        rights: 'جميع الحقوق محفوظة',
+        privacyPolicy: 'سياسة الخصوصية',
+        termsOfUse: 'شروط الاستخدام',
+        contactUs: 'اتصل بنا',
+        quickLinks: 'روابط سريعة',
+    }
+};
+
+// Initialize i18next
 i18n
-    .use(Backend)
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
+        resources: {
+            en: {
+                translation: enTranslations
+            },
+            ar: {
+                translation: arTranslations
+            }
+        },
         fallbackLng: 'en',
-        debug: true,
+        debug: false,
         interpolation: {
-            escapeValue: false, // react already safes from xss
+            escapeValue: false, // not needed for React
         },
-        backend: {
-            loadPath: '/src/i18n/locales/{{lng}}/{{ns}}.json',
-        },
+        react: {
+            useSuspense: false,
+        }
     });
 
-export default i18n; 
+export default i18n;

@@ -1,6 +1,6 @@
-// src/components/auth/RegisterForm.tsx - Final version with direct database mapping
+// src/components/auth/RegisterForm.tsx
 import * as React from "react";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,9 @@ import { EyeIcon, EyeOffIcon, Mail, Lock, User, Phone, Calendar, CreditCard } fr
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase"; // Make sure this import path is correct
+import { supabase } from "@/lib/supabase";
+import { useTranslation } from "react-i18next";
+import { LanguageContext } from "../contexts/LanguageContext";
 
 interface RegisterFormProps {
     onSwitchToLogin: () => void;
@@ -41,8 +43,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
-    const { login } = useAuth(); // We'll bypass the signup function from useAuth
+    const { login } = useAuth();
     const navigate = useNavigate();
+    const { t } = useTranslation();
+    const { isRTL } = useContext(LanguageContext);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -54,8 +58,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.email)) {
             toast({
-                title: "Invalid Email",
-                description: "Please enter a valid email address",
+                title: t("auth.invalidEmail"),
+                description: t("auth.invalidEmail"),
                 variant: "destructive",
             });
             return false;
@@ -65,8 +69,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         const phoneRegex = /^[0-9]+$/;
         if (!phoneRegex.test(formData.phoneNumber)) {
             toast({
-                title: "Invalid Phone Number",
-                description: "Please enter numbers only",
+                title: t("auth.invalidPhone"),
+                description: t("auth.phoneNumbersOnly"),
                 variant: "destructive",
             });
             return false;
@@ -75,8 +79,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         // Password strength
         if (formData.password.length < 6) {
             toast({
-                title: "Weak Password",
-                description: "Password must be at least 6 characters",
+                title: t("auth.weakPassword"),
+                description: t("auth.passwordLength"),
                 variant: "destructive",
             });
             return false;
@@ -86,8 +90,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         if (!formData.english_username_a || !formData.english_username_d ||
             !formData.arabic_username_a || !formData.arabic_username_d) {
             toast({
-                title: "Missing Name Information",
-                description: "Please fill in at least first and last name in both languages",
+                title: t("auth.missingNameInfo"),
+                description: t("auth.fillRequiredNames"),
                 variant: "destructive",
             });
             return false;
@@ -96,8 +100,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         // Check if other required fields are filled
         if (!formData.email || !formData.phoneNumber || !formData.dateOfBirth || !formData.password) {
             toast({
-                title: "Missing Information",
-                description: "Please fill in all required fields",
+                title: t("auth.missingInfo"),
+                description: t("auth.fillRequiredFields"),
                 variant: "destructive",
             });
             return false;
@@ -105,8 +109,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
         if (!/^\d{9}$/.test(formData.id_number)) {
             toast({
-                title: "Invalid ID Number",
-                description: "Please enter a valid 9-digit Palestinian ID number",
+                title: t("auth.invalidID"),
+                description: t("auth.validIDRequired"),
                 variant: "destructive",
             });
             return false;
@@ -115,8 +119,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         // Password match
         if (formData.password !== formData.confirmPassword) {
             toast({
-                title: "Password Mismatch",
-                description: "Passwords do not match",
+                title: t("auth.passwordMismatch"),
+                description: t("auth.passwordsDoNotMatch"),
                 variant: "destructive",
             });
             return false;
@@ -153,10 +157,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
             console.log("Auth user created successfully");
 
-            // Step 2: Create user profile in database with RLS temporarily disabled
-            // This is done via a special endpoint or server function that bypasses RLS
-            // For now, we'll try direct insertion and handle failures
-
+            // Step 2: Create user profile in database
             const timestamp = new Date().toISOString();
 
             const { error: insertError } = await supabase
@@ -176,7 +177,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     user_phonenumber: formData.phoneNumber,
                     date_of_birth: formData.dateOfBirth,
                     gender_user: formData.gender,
-                    user_password: formData.password, // Note: Auth already stores password securely
+                    user_password: formData.password,
                     created_at: timestamp,
                     updated_at: timestamp
                 });
@@ -184,30 +185,27 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             if (insertError) {
                 console.error('Profile creation error:', insertError);
 
-                // If RLS is causing problems, you might need server-side function
-                // This is a fallback attempt
                 if (insertError.message.includes('infinite recursion')) {
                     toast({
-                        title: "Registration Note",
-                        description: "User created, but profile setup requires admin action.",
+                        title: t("auth.registrationNote"),
+                        description: t("auth.profileSetupAdmin"),
                         variant: "default",
                     });
                 } else {
-                    // Some other error occurred
                     throw insertError;
                 }
             }
 
             toast({
-                title: "Registration Successful",
-                description: "Welcome to our clinic portal!",
+                title: t("auth.registrationSuccess"),
+                description: t("auth.welcomeToClinic"),
             });
 
             // Auto-login after successful registration
             setTimeout(async () => {
                 try {
                     await login(formData.email, formData.password);
-                    window.location.href = "/"; // Use direct navigation for better reliability
+                    window.location.href = "/";
                 } catch (error) {
                     console.error("Auto-login failed:", error);
                     onSwitchToLogin();
@@ -215,14 +213,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             }, 1500);
 
         } catch (error) {
-            let errorMessage = "Registration failed. Please try again.";
+            let errorMessage = t("auth.registrationFailed");
 
             if (error instanceof Error) {
                 errorMessage = error.message;
             }
 
             toast({
-                title: "Registration Failed",
+                title: t("auth.registrationFailed"),
                 description: errorMessage,
                 variant: "destructive",
             });
@@ -232,21 +230,22 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     };
 
     return (
-        <div className="w-full space-y-6 animate-fade-in">
+        <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="space-y-2 text-center">
-                <h2 className="text-3xl font-bold tracking-tight">Create Account</h2>
+                <h2 className="text-3xl font-bold tracking-tight">{t("auth.createAccount")}</h2>
                 <p className="text-sm text-muted-foreground">
-                    Register as a patient to access our services.
+                    {t("auth.registerAsPatient")}
                 </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* English Name Fields */}
                 <div>
-                    <Label className="text-base font-medium">Full Name (English) </Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                         <div>
-                            <Label htmlFor="english_username_a" className="text-xs">First Name</Label>
+                            <Label htmlFor="english_username_a" className="text-xs">
+                                {isRTL ? t("auth.firstNameEn") : "First Name"}
+                            </Label>
                             <div className="relative">
                                 <Input
                                     id="english_username_a"
@@ -259,7 +258,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="english_username_b" className="text-xs">Second Name</Label>
+                            <Label htmlFor="english_username_b" className="text-xs">
+                                {isRTL ? t("auth.secondNameEn") : "Second Name"}
+                            </Label>
                             <div className="relative">
                                 <Input
                                     id="english_username_b"
@@ -271,7 +272,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="english_username_c" className="text-xs">Third Name</Label>
+                            <Label htmlFor="english_username_c" className="text-xs">
+                                {isRTL ? t("auth.thirdNameEn") : "Third Name"}
+                            </Label>
                             <div className="relative">
                                 <Input
                                     id="english_username_c"
@@ -283,7 +286,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             </div>
                         </div>
                         <div>
-                            <Label htmlFor="english_username_d" className="text-xs">Last Name</Label>
+                            <Label htmlFor="english_username_d" className="text-xs">
+                                {isRTL ? t("auth.lastNameEn") : "Last Name"}
+                            </Label>
                             <div className="relative">
                                 <Input
                                     id="english_username_d"
@@ -300,109 +305,187 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
                 {/* Arabic Name Fields */}
                 <div>
-                    <Label className="text-base font-medium text-right w-full block">الاسم الكامل (العربية)</Label>
+                    
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                        <div>
-                            <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block">الاسم الرابع</Label>
-                            <div className="relative">
-                                <Input
-                                    id="arabic_username_d"
-                                    name="arabic_username_d"
-                                    value={formData.arabic_username_d}
-                                    onChange={handleInputChange}
-                                    required
-                                    dir="rtl"
-                                    placeholder="الأخير"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block">الاسم الثالث</Label>
-                            <div className="relative">
-                                <Input
-                                    id="arabic_username_c"
-                                    name="arabic_username_c"
-                                    value={formData.arabic_username_c}
-                                    onChange={handleInputChange}
-                                    dir="rtl"
-                                    placeholder="الثالث"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block">الاسم الثاني</Label>
-                            <div className="relative">
-                                <Input
-                                    id="arabic_username_b"
-                                    name="arabic_username_b"
-                                    value={formData.arabic_username_b}
-                                    onChange={handleInputChange}
-                                    dir="rtl"
-                                    placeholder="الثاني"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block" >الاسم الأول</Label>
-                            <div className="relative">
-                                <Input
-                                    id="arabic_username_a"
-                                    name="arabic_username_a"
-                                    value={formData.arabic_username_a}
-                                    onChange={handleInputChange}
-                                    required
-                                    dir="rtl"
-                                    placeholder="الأول"
-                                />
-                            </div>
-                        </div>
+                        {isRTL ? (
+                            // RTL Layout (Arabic first)
+                            <>
+                                <div>
+                                    <Label htmlFor="arabic_username_a" className="text-xs">
+                                        {t("auth.firstNameAr")}
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="arabic_username_a"
+                                            name="arabic_username_a"
+                                            value={formData.arabic_username_a}
+                                            onChange={handleInputChange}
+                                            required
+                                            dir="rtl"
+                                            placeholder="الأول"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="arabic_username_b" className="text-xs">
+                                        {t("auth.secondNameAr")}
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="arabic_username_b"
+                                            name="arabic_username_b"
+                                            value={formData.arabic_username_b}
+                                            onChange={handleInputChange}
+                                            dir="rtl"
+                                            placeholder="الثاني"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="arabic_username_c" className="text-xs">
+                                        {t("auth.thirdNameAr")}
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="arabic_username_c"
+                                            name="arabic_username_c"
+                                            value={formData.arabic_username_c}
+                                            onChange={handleInputChange}
+                                            dir="rtl"
+                                            placeholder="الثالث"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="arabic_username_d" className="text-xs">
+                                        {t("auth.lastNameAr")}
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="arabic_username_d"
+                                            name="arabic_username_d"
+                                            value={formData.arabic_username_d}
+                                            onChange={handleInputChange}
+                                            required
+                                            dir="rtl"
+                                            placeholder="الأخير"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            // LTR Layout (Original)
+                            <>
+                                <div>
+                                    <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block">
+                                        الاسم الرابع
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="arabic_username_d"
+                                            name="arabic_username_d"
+                                            value={formData.arabic_username_d}
+                                            onChange={handleInputChange}
+                                            required
+                                            dir="rtl"
+                                            placeholder="الأخير"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block">
+                                        الاسم الثالث
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="arabic_username_c"
+                                            name="arabic_username_c"
+                                            value={formData.arabic_username_c}
+                                            onChange={handleInputChange}
+                                            dir="rtl"
+                                            placeholder="الثالث"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block">
+                                        الاسم الثاني
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="arabic_username_b"
+                                            name="arabic_username_b"
+                                            value={formData.arabic_username_b}
+                                            onChange={handleInputChange}
+                                            dir="rtl"
+                                            placeholder="الثاني"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block">
+                                        الاسم الأول
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="arabic_username_a"
+                                            name="arabic_username_a"
+                                            value={formData.arabic_username_a}
+                                            onChange={handleInputChange}
+                                            required
+                                            dir="rtl"
+                                            placeholder="الأول"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="email">Email </Label>
+                    <Label htmlFor="email">{t("common.email")}</Label>
                     <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                         <Input
                             id="email"
                             name="email"
                             type="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            className="pl-10"
+                            className={isRTL ? 'pr-10' : 'pl-10'}
                             required
                             placeholder="name@example.com"
                         />
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="id_number">ID Number </Label>
+                    <Label htmlFor="id_number">{t("auth.idNumber")}</Label>
                     <div className="relative">
-                        <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                         <Input
                             id="id_number"
                             name="id_number"
                             type="text"
                             value={formData.id_number}
                             onChange={handleInputChange}
-                            className="pl-10"
+                            className={isRTL ? 'pr-10' : 'pl-10'}
                             required
-                            placeholder="Your ID Number"
+                            placeholder={t("auth.yourIDNumber")}
                         />
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Phone Number </Label>
+                    <Label htmlFor="phoneNumber">{t("common.phone")}</Label>
                     <div className="relative">
-                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Phone className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                         <Input
                             id="phoneNumber"
                             name="phoneNumber"
                             type="tel"
                             value={formData.phoneNumber}
                             onChange={handleInputChange}
-                            className="pl-10"
+                            className={isRTL ? 'pr-10' : 'pl-10'}
                             required
                             placeholder="123456789"
                         />
@@ -410,57 +493,58 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth </Label>
+                    <Label htmlFor="dateOfBirth">{t("auth.dateOfBirth")}</Label>
                     <div className="relative">
-                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Calendar className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                         <Input
                             id="dateOfBirth"
                             name="dateOfBirth"
                             type="date"
                             value={formData.dateOfBirth}
                             onChange={handleInputChange}
-                            className="pl-10"
+                            className={isRTL ? 'pr-10' : 'pl-10'}
                             required
                         />
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <Label>Gender </Label>
+                    <Label>{t("auth.gender")}</Label>
                     <RadioGroup
                         value={formData.gender}
                         onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
                         className="flex gap-4 mt-2"
                     >
                         <div className="flex items-center space-x-2">
+
                             <RadioGroupItem value="male" id="male" />
-                            <Label htmlFor="male">Male</Label>
+                            <Label htmlFor="male">{t("auth.male")}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                             <RadioGroupItem value="female" id="female" />
-                            <Label htmlFor="female">Female</Label>
+                            <Label htmlFor="female">{t("auth.female")}</Label>
                         </div>
                     </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="password">Password </Label>
+                    <Label htmlFor="password">{t("common.password")}</Label>
                     <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                         <Input
                             id="password"
                             name="password"
                             type={showPassword ? "text" : "password"}
                             value={formData.password}
                             onChange={handleInputChange}
-                            className="pl-10"
+                            className={isRTL ? 'pr-10' : 'pl-10'}
                             required
                             placeholder="••••••••"
                         />
                         <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                            className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 text-muted-foreground hover:text-foreground`}
                         >
                             {showPassword ? (
                                 <EyeOffIcon className="h-4 w-4" />
@@ -472,16 +556,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password </Label>
+                    <Label htmlFor="confirmPassword">{t("common.confirmPassword")}</Label>
                     <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                         <Input
                             id="confirmPassword"
                             name="confirmPassword"
                             type={showPassword ? "text" : "password"}
                             value={formData.confirmPassword}
                             onChange={handleInputChange}
-                            className="pl-10"
+                            className={isRTL ? 'pr-10' : 'pl-10'}
                             required
                             placeholder="••••••••"
                         />
@@ -489,18 +573,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {isLoading ? t("common.loading") : t("auth.createAccount")}
                 </Button>
             </form>
 
             <div className="text-center text-sm">
-                Already have an account?{" "}
+                {t("auth.alreadyHaveAccount")}{" "}
                 <button
                     type="button"
                     onClick={onSwitchToLogin}
                     className="text-primary font-medium hover:underline"
                 >
-                    Sign In
+                    {t("common.login")}
                 </button>
             </div>
         </div>

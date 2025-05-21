@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { Menu, X } from 'lucide-react'; // Import Menu and X icons
 import { AnimatePresence, motion } from 'framer-motion'; // Import motion and AnimatePresence
 import { ThemeContext, ThemeContextType } from '../../components/contexts/ThemeContext'; // Import ThemeContext
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export function Header() {
     const { user, logout } = useAuth();
@@ -128,6 +129,10 @@ export function Header() {
 
     return (
         <header className="flex items-center justify-between p-4 border-b relative z-50">
+            <div className="flex items-center space-x-2">
+                <LanguageSwitcher />
+                {}
+            </div>
             <div className="flex items-center gap-4">
                 <Link to="/" className="flex items-center gap-2">
                     {/* Logo */}
