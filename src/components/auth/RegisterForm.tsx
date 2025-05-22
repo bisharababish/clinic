@@ -229,6 +229,22 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         }
     };
 
+    // Define placeholders based on current language
+    const placeholders = {
+        english: {
+            first: isRTL ? "الأول " : "First",
+            second: isRTL ? "الثاني " : "Second",
+            third: isRTL ? "الثالث " : "Third",
+            last: isRTL ? "الأخير " : "Last"
+        },
+        arabic: {
+            first: isRTL ? "الأول" : "الأول",
+            second: isRTL ? "الثاني" : "الثاني",
+            third: isRTL ? "الثالث" : "الثالث",
+            last: isRTL ? "الأخير" : "الأخير"
+        }
+    };
+
     return (
         <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="space-y-2 text-center">
@@ -253,7 +269,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                     value={formData.english_username_a}
                                     onChange={handleInputChange}
                                     required
-                                    placeholder="First"
+                                    placeholder={placeholders.english.first}
                                 />
                             </div>
                         </div>
@@ -267,7 +283,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                     name="english_username_b"
                                     value={formData.english_username_b}
                                     onChange={handleInputChange}
-                                    placeholder="Second"
+                                    placeholder={placeholders.english.second}
                                 />
                             </div>
                         </div>
@@ -281,7 +297,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                     name="english_username_c"
                                     value={formData.english_username_c}
                                     onChange={handleInputChange}
-                                    placeholder="Third"
+                                    placeholder={placeholders.english.third}
                                 />
                             </div>
                         </div>
@@ -296,7 +312,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                     value={formData.english_username_d}
                                     onChange={handleInputChange}
                                     required
-                                    placeholder="Last"
+                                    placeholder={placeholders.english.last}
                                 />
                             </div>
                         </div>
@@ -305,7 +321,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
                 {/* Arabic Name Fields */}
                 <div>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                         {isRTL ? (
                             // RTL Layout (Arabic first)
@@ -322,7 +338,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                             onChange={handleInputChange}
                                             required
                                             dir="rtl"
-                                            placeholder="الأول"
+                                            placeholder={placeholders.arabic.first}
                                         />
                                     </div>
                                 </div>
@@ -337,7 +353,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                             value={formData.arabic_username_b}
                                             onChange={handleInputChange}
                                             dir="rtl"
-                                            placeholder="الثاني"
+                                            placeholder={placeholders.arabic.second}
                                         />
                                     </div>
                                 </div>
@@ -352,7 +368,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                             value={formData.arabic_username_c}
                                             onChange={handleInputChange}
                                             dir="rtl"
-                                            placeholder="الثالث"
+                                            placeholder={placeholders.arabic.third}
                                         />
                                     </div>
                                 </div>
@@ -368,7 +384,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                             onChange={handleInputChange}
                                             required
                                             dir="rtl"
-                                            placeholder="الأخير"
+                                            placeholder={placeholders.arabic.last}
                                         />
                                     </div>
                                 </div>
@@ -388,7 +404,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                             onChange={handleInputChange}
                                             required
                                             dir="rtl"
-                                            placeholder="الأخير"
+                                            placeholder={placeholders.arabic.last}
                                         />
                                     </div>
                                 </div>
@@ -403,7 +419,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                             value={formData.arabic_username_c}
                                             onChange={handleInputChange}
                                             dir="rtl"
-                                            placeholder="الثالث"
+                                            placeholder={placeholders.arabic.third}
                                         />
                                     </div>
                                 </div>
@@ -418,7 +434,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                             value={formData.arabic_username_b}
                                             onChange={handleInputChange}
                                             dir="rtl"
-                                            placeholder="الثاني"
+                                            placeholder={placeholders.arabic.second}
                                         />
                                     </div>
                                 </div>
@@ -434,7 +450,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                             onChange={handleInputChange}
                                             required
                                             dir="rtl"
-                                            placeholder="الأول"
+                                            placeholder={placeholders.arabic.first}
                                         />
                                     </div>
                                 </div>
@@ -516,7 +532,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                         className="flex gap-4 mt-2"
                     >
                         <div className="flex items-center space-x-2">
-
                             <RadioGroupItem value="male" id="male" />
                             <Label htmlFor="male">{t("auth.male")}</Label>
                         </div>

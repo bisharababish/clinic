@@ -1,4 +1,4 @@
-// src/i18n.ts
+// Complete fixed i18n.ts file
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -54,7 +54,6 @@ const enTranslations = {
         adminLogin: 'Admin Login',
         secureAdminAccess: 'Secure access for clinic administrators only',
         signInAsAdmin: 'Sign In as Admin',
-        // Additional translations for RegisterForm
         firstNameEn: 'First Name (English)',
         secondNameEn: 'Second Name (English)',
         thirdNameEn: 'Third Name (English)',
@@ -101,6 +100,109 @@ const enTranslations = {
         termsOfUse: 'Terms of Use',
         contactUs: 'Contact Us',
         quickLinks: 'Quick Links',
+        clinicDescription: 'Providing quality healthcare services since 2025',
+        address: 'Wadi Musalam St. - Najib Nasser Building',
+        city: 'Bethlehem, Palestine',
+    },
+    home: {
+        reminder: 'Reminder',
+        reservationRequired: 'Please make a reservation before visiting our clinic',
+        bookNow: 'Book Now',
+        userCreation: 'User Creation',
+        patientInformation: 'Patient Information',
+        weight: 'Weight',
+        height: 'Height',
+        bloodType: 'Blood Type',
+        commonDiseases: 'Common Diseases',
+        medicinesTitle: 'Medicines',
+        patientLogs: 'Patient Activity Logs',
+        information: 'Information',
+        patientInfoUpdated: 'Patient information updated at',
+        noActivityLogs: 'No activity logs yet',
+        diseases: {
+            highBloodPressure: 'High Blood Pressure',
+            diabetes: 'Diabetes',
+            cholesterolHDL: 'Cholesterol HDL',
+            cholesterolLDL: 'Cholesterol LDL',
+            kidney: 'Kidney Disease',
+            cancer: 'Cancer',
+            heartDisease: 'Heart Disease',
+            asthma: 'Asthma',
+            alzheimer: 'Alzheimer/Dementia',
+            arthritis: 'Arthritis'
+        },
+        medicineCategories: {
+            painRelief: 'Pain Relief',
+            flu: 'Flu Treatment',
+            allergy: 'Allergy Treatment',
+            antibiotics: 'Antibiotics'
+        },
+        medicinesList: {
+            paracetamol: 'Paracetamol',
+            ibuprofen: 'Ibuprofen',
+            oseltamivir: 'Oseltamivir',
+            zanamivir: 'Zanamivir',
+            loratadine: 'Loratadine',
+            cetirizine: 'Cetirizine',
+            amoxicillin: 'Amoxicillin',
+            azithromycin: 'Azithromycin'
+        }
+    },
+    header: {
+        bethlehem: 'Bethlehem',
+        medCenter: 'Med Center',
+        toggleMenu: 'Toggle Menu',
+        closeMenu: 'Close Menu'
+    },
+    roles: {
+        admin: 'Administrator',
+        doctor: 'Doctor',
+        secretary: 'Secretary',
+        nurse: 'Nurse',
+        lab: 'Laboratory',
+        xray: 'X-Ray Technician',
+        patient: 'Patient'
+    },
+    aboutUs: {
+        title: 'About Our Clinic',
+        subtitle: 'Dedicated to providing exceptional healthcare services with compassion and expertise.',
+        ourStory: 'Our Story',
+        ourStoryContent1: 'Founded in 2010, our clinic has been serving the community with top-quality healthcare services. We started with a small team of dedicated professionals and have grown into a comprehensive healthcare facility with multiple specialties.',
+        ourStoryContent2: 'Our mission is to provide personalized, compassionate care to every patient who walks through our doors.',
+        ourTeam: 'Our Team',
+        email: 'Email',
+        phone: 'Phone',
+        chiefMedicalOfficer: 'Chief Medical Officer',
+        seniorPhysician: 'Senior Physician',
+        headNurse: 'Head Nurse',
+        drSarahJohnson: 'Dr. Sarah Johnson',
+        drSarahDesc: 'With over 15 years of experience, Dr. Johnson leads our team with expertise and compassion.',
+        drMichaelChen: 'Dr. Michael Chen',
+        drMichaelDesc: 'Specializing in internal medicine, Dr. Chen is known for his thorough approach to patient care.',
+        nurseEmily: 'Nurse Emily Rodriguez',
+        nurseEmilyDesc: 'Our nursing team lead with a focus on patient comfort and wellbeing.',
+        ourFacility: 'Our Facility',
+        facilityIntro: 'Our state-of-the-art facility includes:',
+        facilityFeatures: {
+            examRooms: 'Modern examination rooms',
+            labServices: 'On-site laboratory services',
+            imagingCenter: 'Digital imaging center',
+            waitingAreas: 'Comfortable waiting areas',
+            accessibility: 'Wheelchair accessible facilities'
+        },
+        getInTouch: 'Get In Touch',
+        location: 'Location',
+        hoursOfOperation: 'Hours of Operation',
+        mondayFriday: 'Monday - Friday: 8:00 AM - 6:00 PM',
+        saturday: 'Saturday: 9:00 AM - 2:00 PM',
+        sunday: 'Sunday: Closed',
+        sendMessage: 'Send Us a Message',
+        subject: 'Subject',
+        message: 'Message',
+        sendMessageBtn: 'Send Message',
+        thankYouMessage: 'Thank you for your message! We\'ll get back to you soon.',
+        contactEmail: 'contact@bethlehemmedcenter.com',
+        contactPhone: '(02) 274-2345'
     }
 };
 
@@ -112,6 +214,7 @@ const arTranslations = {
         signup: 'إنشاء حساب',
         logout: 'تسجيل الخروج',
         email: 'البريد الإلكتروني',
+        phone: 'الهاتف',
         password: 'كلمة المرور',
         confirmPassword: 'تأكيد كلمة المرور',
         forgotPassword: 'نسيت كلمة المرور؟',
@@ -125,7 +228,6 @@ const arTranslations = {
         search: 'بحث',
         filter: 'تصفية',
         name: 'الاسم',
-        phone: 'الهاتف',
         address: 'العنوان',
         language: 'اللغة',
         english: 'الإنجليزية',
@@ -155,7 +257,6 @@ const arTranslations = {
         adminLogin: 'تسجيل دخول المسؤول',
         secureAdminAccess: 'وصول آمن لمسؤولي العيادة فقط',
         signInAsAdmin: 'تسجيل الدخول كمسؤول',
-        // Additional translations for RegisterForm
         firstNameEn: 'الاسم الأول (بالإنجليزية)',
         secondNameEn: 'الاسم الثاني (بالإنجليزية)',
         thirdNameEn: 'الاسم الثالث (بالإنجليزية)',
@@ -202,6 +303,109 @@ const arTranslations = {
         termsOfUse: 'شروط الاستخدام',
         contactUs: 'اتصل بنا',
         quickLinks: 'روابط سريعة',
+        clinicDescription: 'نقدم خدمات الرعاية الصحية عالية الجودة منذ عام 2025',
+        address: 'شارع وادي مسلم - مبنى نجيب ناصر',
+        city: 'بيت لحم، فلسطين',
+    },
+    home: {
+        reminder: 'تذكير',
+        reservationRequired: 'يرجى حجز موعد قبل زيارة عيادتنا',
+        bookNow: 'احجز الآن',
+        userCreation: 'إنشاء مستخدم',
+        patientInformation: 'معلومات المريض',
+        weight: 'الوزن',
+        height: 'الطول',
+        bloodType: 'فصيلة الدم',
+        commonDiseases: 'الأمراض الشائعة',
+        medicinesTitle: 'الأدوية',
+        patientLogs: 'سجل نشاط المريض',
+        information: 'المعلومات',
+        patientInfoUpdated: 'تم تحديث معلومات المريض في',
+        noActivityLogs: 'لا توجد سجلات نشاط حتى الآن',
+        diseases: {
+            highBloodPressure: 'ضغط الدم المرتفع',
+            diabetes: 'السكري',
+            cholesterolHDL: 'الكوليسترول HDL',
+            cholesterolLDL: 'الكوليسترول LDL',
+            kidney: 'أمراض الكلى',
+            cancer: 'السرطان',
+            heartDisease: 'أمراض القلب',
+            asthma: 'الربو',
+            alzheimer: 'الزهايمر/الخرف',
+            arthritis: 'التهاب المفاصل'
+        },
+        medicineCategories: {
+            painRelief: 'مسكنات الألم',
+            flu: 'علاج الإنفلونزا',
+            allergy: 'علاج الحساسية',
+            antibiotics: 'المضادات الحيوية'
+        },
+        medicinesList: {
+            paracetamol: 'باراسيتامول',
+            ibuprofen: 'إيبوبروفين',
+            oseltamivir: 'أوسيلتاميفير',
+            zanamivir: 'زاناميفير',
+            loratadine: 'لوراتادين',
+            cetirizine: 'سيتيريزين',
+            amoxicillin: 'أموكسيسيلين',
+            azithromycin: 'أزيثروميسين'
+        }
+    },
+    header: {
+        bethlehem: 'بيت لحم',
+        medCenter: 'المركز الطبي',
+        toggleMenu: 'فتح القائمة',
+        closeMenu: 'إغلاق القائمة'
+    },
+    roles: {
+        admin: 'مدير',
+        doctor: 'طبيب',
+        secretary: 'سكرتير',
+        nurse: 'ممرض',
+        lab: 'مختبر',
+        xray: 'فني أشعة',
+        patient: 'مريض'
+    },
+    aboutUs: {
+        title: 'عن عيادتنا',
+        subtitle: 'ملتزمون بتقديم خدمات رعاية صحية استثنائية بالرحمة والخبرة.',
+        ourStory: 'قصتنا',
+        ourStoryContent1: 'تأسست عيادتنا في عام 2010، وقد خدمت المجتمع بخدمات رعاية صحية عالية الجودة. بدأنا بفريق صغير من المحترفين المتفانين ونمونا لنصبح مرفقًا شاملاً للرعاية الصحية مع تخصصات متعددة.',
+        ourStoryContent2: 'مهمتنا هي تقديم رعاية شخصية ورحيمة لكل مريض يدخل من أبوابنا.',
+        ourTeam: 'فريقنا',
+        email: 'البريد الإلكتروني',
+        phone: 'الهاتف',
+        chiefMedicalOfficer: 'كبير الأطباء',
+        seniorPhysician: 'طبيب أول',
+        headNurse: 'رئيس التمريض',
+        drSarahJohnson: 'د. سارة جونسون',
+        drSarahDesc: 'بخبرة تزيد عن 15 عامًا، تقود د. جونسون فريقنا بالخبرة والرحمة.',
+        drMichaelChen: 'د. مايكل تشين',
+        drMichaelDesc: 'متخصص في الطب الباطني، د. تشين معروف بنهجه الشامل في رعاية المرضى.',
+        nurseEmily: 'الممرضة إيميلي رودريغيز',
+        nurseEmilyDesc: 'قائدة فريق التمريض مع التركيز على راحة المرضى ورفاهيتهم.',
+        ourFacility: 'مرافقنا',
+        facilityIntro: 'تشمل مرافقنا الحديثة:',
+        facilityFeatures: {
+            examRooms: 'غرف فحص حديثة',
+            labServices: 'خدمات مختبرية داخلية',
+            imagingCenter: 'مركز تصوير رقمي',
+            waitingAreas: 'مناطق انتظار مريحة',
+            accessibility: 'مرافق يمكن الوصول إليها بالكرسي المتحرك'
+        },
+        getInTouch: 'تواصل معنا',
+        location: 'الموقع',
+        hoursOfOperation: 'ساعات العمل',
+        mondayFriday: 'الاثنين - الجمعة: 8:00 صباحًا - 6:00 مساءً',
+        saturday: 'السبت: 9:00 صباحًا - 2:00 مساءً',
+        sunday: 'الأحد: مغلق',
+        sendMessage: 'أرسل لنا رسالة',
+        subject: 'الموضوع',
+        message: 'الرسالة',
+        sendMessageBtn: 'إرسال الرسالة',
+        thankYouMessage: 'شكرًا لك على رسالتك! سنعاود الاتصال بك قريبًا.',
+        contactEmail: 'contact@bethlehemmedcenter.com',
+        contactPhone: '(02) 274-2345'
     }
 };
 

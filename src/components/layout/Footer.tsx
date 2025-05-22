@@ -1,50 +1,77 @@
 // components/layout/Footer.tsx
 import * as React from "react";
+import { useContext } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { LanguageContext } from "../contexts/LanguageContext";
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const { t } = useTranslation();
+  const { isRTL } = useContext(LanguageContext);
 
   return (
-    <footer className="w-full bg-background border-t">
+    <footer className="w-full bg-background border-t" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-          {/* Clinic Info (Right) */}
+          {/* Clinic Info */}
           <div className="space-y-2">
-            <h3 className="font-semibold text-lg">Bethlehem Med Center</h3>
+            <h3 className="font-semibold text-lg">{t("common.clinicName")}</h3>
             <p className="text-sm text-muted-foreground">
-              Providing quality healthcare services since 2025
+              {isRTL
+                ? "نقدم خدمات الرعاية الصحية عالية الجودة منذ عام 2025"
+                : "Providing quality healthcare services since 2025"
+              }
             </p>
           </div>
 
-
-          {/* Quick Links (Middle) */}
+          {/* Quick Links */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg">Quick Links</h3>
+            <h3 className="font-semibold text-lg">{t("footer.quickLinks")}</h3>
             <div className="grid grid-cols-2 gap-2">
-              <a href="#" className="text-sm text-primary hover:underline">About Us</a>
-              <a href="#" className="text-sm text-primary hover:underline">Privacy Policy</a>
-              <a href="#" className="text-sm text-primary hover:underline">Terms of Use</a>
+              <a href="#" className="text-sm text-primary hover:underline">
+                {t("navbar.aboutUs")}
+              </a>
+              <a href="#" className="text-sm text-primary hover:underline">
+                {t("footer.privacyPolicy")}
+              </a>
+              <a href="#" className="text-sm text-primary hover:underline">
+                {t("footer.termsOfUse")}
+              </a>
+
             </div>
           </div>
 
-
-          {/* Contact Info (Left) */}
+          {/* Contact Info */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg">Contact Us</h3>
+            <h3 className="font-semibold text-lg">{t("footer.contactUs")}</h3>
             <div className="space-y-2">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Phone className="h-4 w-4 mr-2" />
-                <span>+123 456 7890</span>
+              <div className={`flex items-center text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Phone className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                <span>+970 2 274 4444</span>
               </div>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Mail className="h-4 w-4 mr-2" />
-                <span>info@clinic.com</span>
+              <div className={`flex items-center text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Mail className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                <span>info@bethlehemmedcenter.com</span>
               </div>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 mr-2" />
-                <span>Wadi Musalam St. - Najib Nasser Building</span>
+              <div className={`flex items-start text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <MapPin className={`h-4 w-4 ${isRTL ? 'ml-2 mt-0.5' : 'mr-2 mt-0.5'}`} />
+                <span className={isRTL ? 'text-right' : 'text-left'}>
+                  {isRTL
+                    ? "شارع وادي مسلم - مبنى نجيب ناصر"
+                    : "Wadi Musalam St. - Najib Nasser Building"
+                  }
+                </span>
+              </div>
+              <div className={`flex items-start text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <MapPin className={`h-4 w-4 ${isRTL ? 'ml-2 mt-0.5' : 'mr-2 mt-0.5'} opacity-0`} />
+                <span className={isRTL ? 'text-right' : 'text-left'}>
+                  {isRTL
+                    ? "بيت لحم "
+                    : "Bethlehem, Palestine"
+                  }
+                </span>
               </div>
             </div>
           </div>
@@ -53,7 +80,7 @@ const Footer: React.FC = () => {
         <div className="mt-8 pt-4 border-t flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="w-full flex justify-center">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} Clinic. All rights reserved.
+              © {currentYear} {t("common.clinicName")}. {t("footer.rights")}.
             </p>
           </div>
         </div>

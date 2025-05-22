@@ -1,6 +1,6 @@
 // pages/Index.tsx
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth"; // Import useAuth hook to check user role
+import { useState, useContext } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,10 +10,14 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { EyeIcon, EyeOffIcon, Mail, Lock, User, Phone, Calendar, CreditCard } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { LanguageContext } from "@/components/contexts/LanguageContext";
 
 const Index = () => {
-  const { user } = useAuth(); // Get the current user with role
-  const userRole = user?.role?.toLowerCase() || ""; // Get role and convert to lowercase
+  const { user } = useAuth();
+  const userRole = user?.role?.toLowerCase() || "";
+  const { t } = useTranslation();
+  const { isRTL } = useContext(LanguageContext);
 
   const [formData, setFormData] = useState({
     // English name fields
@@ -50,16 +54,66 @@ const Index = () => {
   const [selectedMedicines, setSelectedMedicines] = useState<string[]>([]);
   const [patientLogs, setPatientLogs] = useState<string[]>([]);
 
+  // Define diseases and medicines with translations
   const commonDiseases = [
-    "High blood pressure", "Diabetes", `Cholesterol HDL`, `Cholesterol LDL`, "Kidney", "Cancer", `Heart Disease`, "Asthma", "Alzheimer/Dementia", "Arthritis"
+    { key: "highBloodPressure", en: "High blood pressure", ar: "ضغط الدم المرتفع" },
+    { key: "diabetes", en: "Diabetes", ar: "السكري" },
+    { key: "cholesterolHDL", en: "Cholesterol HDL", ar: "الكوليسترول HDL" },
+    { key: "cholesterolLDL", en: "Cholesterol LDL", ar: "الكوليسترول LDL" },
+    { key: "kidney", en: "Kidney", ar: "الكلى" },
+    { key: "cancer", en: "Cancer", ar: "السرطان" },
+    { key: "heartDisease", en: "Heart Disease", ar: "أمراض القلب" },
+    { key: "asthma", en: "Asthma", ar: "الربو" },
+    { key: "alzheimer", en: "Alzheimer/Dementia", ar: "الزهايمر/الخرف" },
+    { key: "arthritis", en: "Arthritis", ar: "التهاب المفاصل" }
   ];
 
   const medicineCategories = [
-    { category: "Pain Relief", medicines: ["Paracetamol", "Ibuprofen"] },
-    { category: "Flu", medicines: ["Oseltamivir", "Zanamivir"] },
-    { category: "Allergy", medicines: ["Loratadine", "Cetirizine"] },
-    { category: "Antibiotics", medicines: ["Amoxicillin", "Azithromycin"] },
+    {
+      category: { en: "Pain Relief", ar: "مسكنات الألم" },
+      medicines: [
+        { en: "Paracetamol", ar: "باراسيتامول" },
+        { en: "Ibuprofen", ar: "إيبوبروفين" }
+      ]
+    },
+    {
+      category: { en: "Flu", ar: "الإنفلونزا" },
+      medicines: [
+        { en: "Oseltamivir", ar: "أوسيلتاميفير" },
+        { en: "Zanamivir", ar: "زاناميفير" }
+      ]
+    },
+    {
+      category: { en: "Allergy", ar: "الحساسية" },
+      medicines: [
+        { en: "Loratadine", ar: "لوراتادين" },
+        { en: "Cetirizine", ar: "سيتيريزين" }
+      ]
+    },
+    {
+      category: { en: "Antibiotics", ar: "المضادات الحيوية" },
+      medicines: [
+        { en: "Amoxicillin", ar: "أموكسيسيلين" },
+        { en: "Azithromycin", ar: "أزيثروميسين" }
+      ]
+    }
   ];
+
+  // Define placeholders based on current language
+  const placeholders = {
+    english: {
+      first: isRTL ? "الأول (بالإنجليزية)" : "First",
+      second: isRTL ? "الثاني (بالإنجليزية)" : "Second",
+      third: isRTL ? "الثالث (بالإنجليزية)" : "Third",
+      last: isRTL ? "الأخير (بالإنجليزية)" : "Last"
+    },
+    arabic: {
+      first: isRTL ? "الأول" : "First (Arabic)",
+      second: isRTL ? "الثاني" : "Second (Arabic)",
+      third: isRTL ? "الثالث" : "Third (Arabic)",
+      last: isRTL ? "الأخير" : "Last (Arabic)"
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -72,7 +126,7 @@ const Index = () => {
   };
 
   const handleSaveInfo = () => {
-    const logEntry = `Patient info updated at ${new Date().toLocaleString()}`;
+    const logEntry = `${t("home.patientInfoUpdated")} ${new Date().toLocaleString()}`;
     setPatientLogs(prev => [...prev, logEntry]);
   };
 
@@ -86,18 +140,17 @@ const Index = () => {
 
   // Function to check if the current user role can see the user creation section
   const canSeeUserCreation = (): boolean => {
-    // Allow admin, doctor, nurse, and secretary to see user creation
     return ["admin", "doctor", "nurse", "secretary"].includes(userRole);
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 space-y-8">
+    <div className="max-w-7xl mx-auto py-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Notification Alert - visible to all */}
       <Alert variant="default" className="bg-blue-50 border-blue-200">
         <AlertDescription>
-          <span className="font-medium">Reminder:</span> Reservations are required for clinic visits.
-          <Button variant="link" className="h-auto p-0 ml-2" asChild>
-            <Link to="/clinics">Book now</Link>
+          <span className="font-medium">{t("home.reminder")}:</span> {t("home.reservationRequired")}
+          <Button variant="link" className={`h-auto p-0 ${isRTL ? 'mr-2' : 'ml-2'}`} asChild>
+            <Link to="/clinics">{t("home.bookNow")}</Link>
           </Button>
         </AlertDescription>
       </Alert>
@@ -105,13 +158,16 @@ const Index = () => {
       {/* User Creation Section - Only visible to admin, doctor, nurse, secretary */}
       {canSeeUserCreation() && (
         <section className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">User Creation</h2>
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.userCreation")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* English Name Fields */}
             <div>
-              <Label className="text-base font-medium">Full Name (English) </Label>
+              <Label className="text-base font-medium">{t("common.name")} ({t("common.english")})</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                 <div>
-                  <Label htmlFor="english_username_a" className="text-xs">First Name</Label>
+                  <Label htmlFor="english_username_a" className="text-xs">
+                    {isRTL ? t("auth.firstNameEn") : "First Name"}
+                  </Label>
                   <div className="relative">
                     <Input
                       id="english_username_a"
@@ -119,36 +175,42 @@ const Index = () => {
                       value={formData.english_username_a}
                       onChange={handleFormDataChange}
                       required
-                      placeholder="First"
+                      placeholder={placeholders.english.first}
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="english_username_b" className="text-xs">Second Name</Label>
+                  <Label htmlFor="english_username_b" className="text-xs">
+                    {isRTL ? t("auth.secondNameEn") : "Second Name"}
+                  </Label>
                   <div className="relative">
                     <Input
                       id="english_username_b"
                       name="english_username_b"
                       value={formData.english_username_b}
                       onChange={handleFormDataChange}
-                      placeholder="Second"
+                      placeholder={placeholders.english.second}
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="english_username_c" className="text-xs">Third Name</Label>
+                  <Label htmlFor="english_username_c" className="text-xs">
+                    {isRTL ? t("auth.thirdNameEn") : "Third Name"}
+                  </Label>
                   <div className="relative">
                     <Input
                       id="english_username_c"
                       name="english_username_c"
                       value={formData.english_username_c}
                       onChange={handleFormDataChange}
-                      placeholder="Third"
+                      placeholder={placeholders.english.third}
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="english_username_d" className="text-xs">Last Name</Label>
+                  <Label htmlFor="english_username_d" className="text-xs">
+                    {isRTL ? t("auth.lastNameEn") : "Last Name"}
+                  </Label>
                   <div className="relative">
                     <Input
                       id="english_username_d"
@@ -156,7 +218,7 @@ const Index = () => {
                       value={formData.english_username_d}
                       onChange={handleFormDataChange}
                       required
-                      placeholder="Last"
+                      placeholder={placeholders.english.last}
                     />
                   </div>
                 </div>
@@ -165,108 +227,157 @@ const Index = () => {
 
             {/* Arabic Name Fields */}
             <div>
-              <Label className="text-base font-medium text-right w-full block">الاسم الكامل (العربية)</Label>
+              <Label className={`text-base font-medium ${isRTL ? '' : 'text-right w-full block'}`}>
+                {isRTL ? t("common.name") : "الاسم الكامل"} ({isRTL ? t("common.arabic") : "العربية"})
+              </Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                <div>
-                  <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block mb-1">الاسم الرابع</Label>
-                  <div className="relative">
-                    <Input
-                      id="arabic_username_d"
-                      name="arabic_username_d"
-                      value={formData.arabic_username_d}
-                      onChange={handleFormDataChange}
-                      required
-                      dir="rtl"
-                      placeholder="الأخير"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block mb-1">الاسم الثالث</Label>
-                  <div className="relative">
-                    <Input
-                      id="arabic_username_c"
-                      name="arabic_username_c"
-                      value={formData.arabic_username_c}
-                      onChange={handleFormDataChange}
-                      dir="rtl"
-                      placeholder="الثالث"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block mb-1">الاسم الثاني</Label>
-                  <div className="relative">
-                    <Input
-                      id="arabic_username_b"
-                      name="arabic_username_b"
-                      value={formData.arabic_username_b}
-                      onChange={handleFormDataChange}
-                      dir="rtl"
-                      placeholder="الثاني"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block mb-1">الاسم الأول</Label>
-                  <div className="relative">
-                    <Input
-                      id="arabic_username_a"
-                      name="arabic_username_a"
-                      value={formData.arabic_username_a}
-                      onChange={handleFormDataChange}
-                      required
-                      dir="rtl"
-                      placeholder="الأول"
-                    />
-                  </div>
-                </div>
+                {isRTL ? (
+                  // RTL Layout
+                  <>
+                    <div>
+                      <Label htmlFor="arabic_username_a" className="text-xs">{t("auth.firstNameAr")}</Label>
+                      <Input
+                        id="arabic_username_a"
+                        name="arabic_username_a"
+                        value={formData.arabic_username_a}
+                        onChange={handleFormDataChange}
+                        required
+                        dir="rtl"
+                        placeholder={placeholders.arabic.first}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="arabic_username_b" className="text-xs">{t("auth.secondNameAr")}</Label>
+                      <Input
+                        id="arabic_username_b"
+                        name="arabic_username_b"
+                        value={formData.arabic_username_b}
+                        onChange={handleFormDataChange}
+                        dir="rtl"
+                        placeholder={placeholders.arabic.second}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="arabic_username_c" className="text-xs">{t("auth.thirdNameAr")}</Label>
+                      <Input
+                        id="arabic_username_c"
+                        name="arabic_username_c"
+                        value={formData.arabic_username_c}
+                        onChange={handleFormDataChange}
+                        dir="rtl"
+                        placeholder={placeholders.arabic.third}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="arabic_username_d" className="text-xs">{t("auth.lastNameAr")}</Label>
+                      <Input
+                        id="arabic_username_d"
+                        name="arabic_username_d"
+                        value={formData.arabic_username_d}
+                        onChange={handleFormDataChange}
+                        required
+                        dir="rtl"
+                        placeholder={placeholders.arabic.last}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  // LTR Layout
+                  <>
+                    <div>
+                      <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block mb-1">الاسم الرابع</Label>
+                      <Input
+                        id="arabic_username_d"
+                        name="arabic_username_d"
+                        value={formData.arabic_username_d}
+                        onChange={handleFormDataChange}
+                        required
+                        dir="rtl"
+                        placeholder={placeholders.arabic.last}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block mb-1">الاسم الثالث</Label>
+                      <Input
+                        id="arabic_username_c"
+                        name="arabic_username_c"
+                        value={formData.arabic_username_c}
+                        onChange={handleFormDataChange}
+                        dir="rtl"
+                        placeholder={placeholders.arabic.third}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block mb-1">الاسم الثاني</Label>
+                      <Input
+                        id="arabic_username_b"
+                        name="arabic_username_b"
+                        value={formData.arabic_username_b}
+                        onChange={handleFormDataChange}
+                        dir="rtl"
+                        placeholder={placeholders.arabic.second}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block mb-1">الاسم الأول</Label>
+                      <Input
+                        id="arabic_username_a"
+                        name="arabic_username_a"
+                        value={formData.arabic_username_a}
+                        onChange={handleFormDataChange}
+                        required
+                        dir="rtl"
+                        placeholder={placeholders.arabic.first}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email </Label>
+              <Label htmlFor="email">{t("common.email")}</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                 <Input
                   id="email"
                   name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleFormDataChange}
-                  className="pl-10"
+                  className={isRTL ? 'pr-10' : 'pl-10'}
                   required
                   placeholder="name@example.com"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="id_number">ID Number </Label>
+              <Label htmlFor="id_number">{t("auth.idNumber")}</Label>
               <div className="relative">
-                <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                 <Input
                   id="id_number"
                   name="id_number"
                   type="text"
                   value={formData.id_number}
                   onChange={handleFormDataChange}
-                  className="pl-10"
+                  className={isRTL ? 'pr-10' : 'pl-10'}
                   required
-                  placeholder="Your ID Number"
+                  placeholder={t("auth.yourIDNumber")}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number </Label>
+              <Label htmlFor="phoneNumber">{t("common.phone")}</Label>
               <div className="relative">
-                <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Phone className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                 <Input
                   id="phoneNumber"
                   name="phoneNumber"
                   type="tel"
                   value={formData.phoneNumber}
                   onChange={handleFormDataChange}
-                  className="pl-10"
+                  className={isRTL ? 'pr-10' : 'pl-10'}
                   required
                   placeholder="123456789"
                 />
@@ -274,23 +385,23 @@ const Index = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Date of Birth </Label>
+              <Label htmlFor="dateOfBirth">{t("auth.dateOfBirth")}</Label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Calendar className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                 <Input
                   id="dateOfBirth"
                   name="dateOfBirth"
                   type="date"
                   value={formData.dateOfBirth}
                   onChange={handleFormDataChange}
-                  className="pl-10"
+                  className={isRTL ? 'pr-10' : 'pl-10'}
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Gender </Label>
+              <Label>{t("auth.gender")}</Label>
               <RadioGroup
                 value={formData.gender}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
@@ -298,33 +409,33 @@ const Index = () => {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="male" id="male" />
-                  <Label htmlFor="male">Male</Label>
+                  <Label htmlFor="male">{t("auth.male")}</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="female" id="female" />
-                  <Label htmlFor="female">Female</Label>
+                  <Label htmlFor="female">{t("auth.female")}</Label>
                 </div>
               </RadioGroup>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password </Label>
+              <Label htmlFor="password">{t("common.password")}</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                 <Input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleFormDataChange}
-                  className="pl-10"
+                  className={isRTL ? 'pr-10' : 'pl-10'}
                   required
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                  className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 text-muted-foreground hover:text-foreground`}
                 >
                   {showPassword ? (
                     <EyeOffIcon className="h-4 w-4" />
@@ -336,16 +447,16 @@ const Index = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password </Label>
+              <Label htmlFor="confirmPassword">{t("common.confirmPassword")}</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
                   value={formData.confirmPassword}
                   onChange={handleFormDataChange}
-                  className="pl-10"
+                  className={isRTL ? 'pr-10' : 'pl-10'}
                   required
                   placeholder="••••••••"
                 />
@@ -357,10 +468,10 @@ const Index = () => {
 
       {/* Patient Information Section - visible to ALL users */}
       <section className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Patient Information</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.patientInformation")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="weight">Weight (kg)</Label>
+            <Label htmlFor="weight">{t("home.weight")} (kg)</Label>
             <Input
               id="weight"
               name="weight"
@@ -371,7 +482,7 @@ const Index = () => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="height">Height (cm)</Label>
+            <Label htmlFor="height">{t("home.height")} (cm)</Label>
             <Input
               id="height"
               name="height"
@@ -382,7 +493,7 @@ const Index = () => {
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label>Blood Type</Label>
+            <Label>{t("home.bloodType")}</Label>
             <RadioGroup
               value={patientInfo.bloodType}
               onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
@@ -401,18 +512,28 @@ const Index = () => {
 
       {/* Common Diseases - visible to ALL users */}
       <section className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Common Diseases</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.commonDiseases")}</h2>
         <RadioGroup
           value={selectedDisease}
           onValueChange={setSelectedDisease}
           className="grid grid-cols-1 gap-3"
         >
           {commonDiseases.map(disease => (
-            <div key={disease} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-              <RadioGroupItem value={disease} id={`disease-${disease}`} />
-              <Label htmlFor={`disease-${disease}`} className="text-lg cursor-pointer w-full">
-                {disease}
-              </Label>
+            <div key={disease.key} className="border rounded-lg hover:bg-gray-50">
+              <label
+                htmlFor={`disease-${disease.key}`}
+                className={`flex items-center p-4 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''
+                  }`}
+              >
+                <RadioGroupItem value={disease.key} id={`disease-${disease.key}`} />
+                <span
+                  className={`text-lg flex-1 ${isRTL ? 'text-right' : 'text-left'
+                    }`}
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                  {isRTL ? disease.ar : disease.en}
+                </span>
+              </label>
             </div>
           ))}
         </RadioGroup>
@@ -420,22 +541,26 @@ const Index = () => {
 
       {/* Medicine Categories - visible to ALL users */}
       <section className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Medicines</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.medicinesTitle")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {medicineCategories.map(({ category, medicines }) => (
-            <div key={category} className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-700">{category}</h3>
+            <div key={category.en} className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-700">
+                {isRTL ? category.ar : category.en}
+              </h3>
               <div className="space-y-3">
                 {medicines.map(medicine => (
-                  <div key={medicine} className="flex items-center space-x-3">
+                  <div key={medicine.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
                     <input
                       type="checkbox"
-                      id={medicine}
-                      checked={selectedMedicines.includes(medicine)}
-                      onChange={() => handleMedicineSelect(medicine)}
+                      id={medicine.en}
+                      checked={selectedMedicines.includes(medicine.en)}
+                      onChange={() => handleMedicineSelect(medicine.en)}
                       className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <Label htmlFor={medicine} className="text-base">{medicine}</Label>
+                    <Label htmlFor={medicine.en} className="text-base">
+                      {isRTL ? medicine.ar : medicine.en}
+                    </Label>
                   </div>
                 ))}
               </div>
@@ -446,7 +571,7 @@ const Index = () => {
 
       {/* Patient Logs - visible to ALL users */}
       <section className="bg-white p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Patient Logs</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.patientLogs")}</h2>
         <ScrollArea className="h-64 rounded-md border">
           <div className="p-4">
             {patientLogs.length > 0 ? (
@@ -459,7 +584,7 @@ const Index = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">No activity logs yet</p>
+              <p className="text-gray-500 text-center py-8">{t("home.noActivityLogs")}</p>
             )}
           </div>
         </ScrollArea>
@@ -467,7 +592,7 @@ const Index = () => {
 
       {/* Save Button - visible to ALL users */}
       <Button className="mt-6 w-full md:w-auto" onClick={handleSaveInfo}>
-        Save Information
+        {t("common.save")} {t("home.information")}
       </Button>
     </div>
   );
