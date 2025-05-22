@@ -1,4 +1,4 @@
-// Complete fixed i18n.ts file
+// Complete fixed i18n.ts file with Admin Dashboard translations
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -33,6 +33,27 @@ const enTranslations = {
         lightMode: 'Light Mode',
         loading: 'Loading...',
         clinicName: 'Bethlehem Med Center',
+        error: 'Error',
+        success: 'Success',
+        warning: 'Warning',
+        refresh: 'Refresh',
+        status: 'Status',
+        active: 'Active',
+        inactive: 'Inactive',
+        available: 'Available',
+        unavailable: 'Unavailable',
+        price: 'Price',
+        description: 'Description',
+        category: 'Category',
+        specialty: 'Specialty',
+        date: 'Date',
+        time: 'Time',
+        actions: 'Actions',
+        view: 'View',
+        details: 'Details',
+        total: 'Total',
+        count: 'Count',
+        revenue: 'Revenue',
     },
     auth: {
         welcomeBack: 'Welcome Back',
@@ -103,6 +124,100 @@ const enTranslations = {
         clinicDescription: 'Providing quality healthcare services since 2025',
         address: 'Wadi Musalam St. - Najib Nasser Building',
         city: 'Bethlehem, Palestine',
+    },
+    admin: {
+        // Main Dashboard
+        title: 'Admin Dashboard',
+        authenticating: 'Authenticating...',
+        loadingDashboard: 'Loading Admin Dashboard...',
+        reloadPage: 'Reload Page',
+        returnToHome: 'Return to Home',
+
+        // Tabs
+        overview: 'Overview',
+        users: 'Users',
+        clinics: 'Clinics',
+        doctors: 'Doctors',
+        appointments: 'Appointments',
+        settings: 'Settings',
+
+        // Overview Tab
+        systemStatus: 'System Status',
+        allSystemsOperational: 'All systems are operational.',
+        systemIssues: 'Some systems are experiencing issues.',
+        checkSystemStatus: 'Check System Status',
+        refreshReportData: 'Refresh Report Data',
+        reportDataRefreshed: 'Report data refreshed.',
+        failedToRefreshReportData: 'Failed to refresh report data.',
+
+        // Statistics
+        totalUsers: 'Total Users',
+        totalClinics: 'Total Clinics',
+        totalDoctors: 'Total Doctors',
+        totalAppointments: 'Total Appointments',
+        totalRevenue: 'Total Revenue',
+        appointmentsByClinic: 'Appointments by Clinic',
+        appointmentsByDoctor: 'Appointments by Doctor',
+        revenueByClinic: 'Revenue by Clinic',
+        usersByRole: 'Users by Role',
+        recentActivity: 'Recent Activity',
+
+        // Activity Log
+        activityLog: 'Activity Log',
+        action: 'Action',
+        user: 'User',
+        timestamp: 'Timestamp',
+        noRecentActivity: 'No recent activity',
+
+        // Error Messages
+        errorLoadingUsers: 'Failed to load users from database.',
+        errorLoadingClinics: 'Error loading clinics. Some dashboard features may be limited.',
+        errorLoadingDashboard: 'There was an error loading the dashboard. Please try again.',
+        failedToLoadUsers: 'Failed to load users list.',
+        someReportDataUnavailable: 'Some report data could not be loaded. Showing partial data.',
+        errorCheckingSystemStatus: 'Failed to check system status.',
+
+        // Loading States
+        loadingUsers: 'Loading users with forced refresh...',
+        loadingClinics: 'Loading clinics...',
+        loadingDoctors: 'Loading doctors...',
+        loadingAppointments: 'Loading appointments...',
+        loadingActivityLog: 'Loading activity log...',
+        loadingSystemSettings: 'Loading system settings...',
+        generatingReportData: 'Generating report data...',
+
+        // Success Messages
+        usersLoaded: 'Users loaded',
+        clinicsLoaded: 'Clinics loaded',
+        doctorsLoaded: 'Doctors loaded',
+        appointmentsLoaded: 'Appointments loaded',
+        activityLogsLoaded: 'Activity logs loaded',
+        systemSettingsLoaded: 'System settings loaded',
+        reportDataGenerated: 'Report data generated',
+        dashboardInitializationComplete: 'Dashboard initialization complete',
+
+        // Statuses
+        scheduled: 'Scheduled',
+        completed: 'Completed',
+        cancelled: 'Cancelled',
+        pending: 'Pending',
+        paid: 'Paid',
+        refunded: 'Refunded',
+        failed: 'Failed',
+
+        // Search and Filter
+        searchUsers: 'Search users...',
+        searchByEmail: 'Search by email, name, or role',
+        filterUsers: 'Filter Users',
+        noUsersFound: 'No users found matching your search.',
+
+        // Quick Actions
+        quickActions: 'Quick Actions',
+        viewUsers: 'View Users',
+        manageClinics: 'Manage Clinics',
+        manageDoctors: 'Manage Doctors',
+        viewAppointments: 'View Appointments',
+        systemSettings: 'System Settings',
     },
     home: {
         reminder: 'Reminder',
@@ -236,6 +351,27 @@ const arTranslations = {
         lightMode: 'الوضع الفاتح',
         loading: 'جارٍ التحميل...',
         clinicName: 'مركز بيت لحم الطبي',
+        error: 'خطأ',
+        success: 'نجح',
+        warning: 'تحذير',
+        refresh: 'تحديث',
+        status: 'الحالة',
+        active: 'نشط',
+        inactive: 'غير نشط',
+        available: 'متاح',
+        unavailable: 'غير متاح',
+        price: 'السعر',
+        description: 'الوصف',
+        category: 'الفئة',
+        specialty: 'التخصص',
+        date: 'التاريخ',
+        time: 'الوقت',
+        actions: 'الإجراءات',
+        view: 'عرض',
+        details: 'التفاصيل',
+        total: 'المجموع',
+        count: 'العدد',
+        revenue: 'الإيرادات',
     },
     auth: {
         welcomeBack: 'مرحبًا بعودتك',
@@ -306,6 +442,100 @@ const arTranslations = {
         clinicDescription: 'نقدم خدمات الرعاية الصحية عالية الجودة منذ عام 2025',
         address: 'شارع وادي مسلم - مبنى نجيب ناصر',
         city: 'بيت لحم، فلسطين',
+    },
+    admin: {
+        // Main Dashboard
+        title: 'لوحة تحكم المسؤول',
+        authenticating: 'جارٍ المصادقة...',
+        loadingDashboard: 'جارٍ تحميل لوحة تحكم المسؤول...',
+        reloadPage: 'إعادة تحميل الصفحة',
+        returnToHome: 'العودة للرئيسية',
+
+        // Tabs
+        overview: 'نظرة عامة',
+        users: 'المستخدمون',
+        clinics: 'العيادات',
+        doctors: 'الأطباء',
+        appointments: 'المواعيد',
+        settings: 'الإعدادات',
+
+        // Overview Tab
+        systemStatus: 'حالة النظام',
+        allSystemsOperational: 'جميع الأنظمة تعمل بشكل طبيعي.',
+        systemIssues: 'تواجه بعض الأنظمة مشاكل.',
+        checkSystemStatus: 'فحص حالة النظام',
+        refreshReportData: 'تحديث بيانات التقرير',
+        reportDataRefreshed: 'تم تحديث بيانات التقرير.',
+        failedToRefreshReportData: 'فشل في تحديث بيانات التقرير.',
+
+        // Statistics
+        totalUsers: 'إجمالي المستخدمين',
+        totalClinics: 'إجمالي العيادات',
+        totalDoctors: 'إجمالي الأطباء',
+        totalAppointments: 'إجمالي المواعيد',
+        totalRevenue: 'إجمالي الإيرادات',
+        appointmentsByClinic: 'المواعيد حسب العيادة',
+        appointmentsByDoctor: 'المواعيد حسب الطبيب',
+        revenueByClinic: 'الإيرادات حسب العيادة',
+        usersByRole: 'المستخدمون حسب الدور',
+        recentActivity: 'النشاط الأخير',
+
+        // Activity Log
+        activityLog: 'سجل النشاط',
+        action: 'الإجراء',
+        user: 'المستخدم',
+        timestamp: 'الوقت',
+        noRecentActivity: 'لا يوجد نشاط حديث',
+
+        // Error Messages
+        errorLoadingUsers: 'فشل في تحميل المستخدمين من قاعدة البيانات.',
+        errorLoadingClinics: 'خطأ في تحميل العيادات. قد تكون بعض ميزات لوحة التحكم محدودة.',
+        errorLoadingDashboard: 'حدث خطأ في تحميل لوحة التحكم. يرجى المحاولة مرة أخرى.',
+        failedToLoadUsers: 'فشل في تحميل قائمة المستخدمين.',
+        someReportDataUnavailable: 'لا يمكن تحميل بعض بيانات التقرير. عرض البيانات الجزئية.',
+        errorCheckingSystemStatus: 'فشل في فحص حالة النظام.',
+
+        // Loading States
+        loadingUsers: 'جارٍ تحميل المستخدمين مع التحديث القسري...',
+        loadingClinics: 'جارٍ تحميل العيادات...',
+        loadingDoctors: 'جارٍ تحميل الأطباء...',
+        loadingAppointments: 'جارٍ تحميل المواعيد...',
+        loadingActivityLog: 'جارٍ تحميل سجل النشاط...',
+        loadingSystemSettings: 'جارٍ تحميل إعدادات النظام...',
+        generatingReportData: 'جارٍ إنشاء بيانات التقرير...',
+
+        // Success Messages
+        usersLoaded: 'تم تحميل المستخدمين',
+        clinicsLoaded: 'تم تحميل العيادات',
+        doctorsLoaded: 'تم تحميل الأطباء',
+        appointmentsLoaded: 'تم تحميل المواعيد',
+        activityLogsLoaded: 'تم تحميل سجلات النشاط',
+        systemSettingsLoaded: 'تم تحميل إعدادات النظام',
+        reportDataGenerated: 'تم إنشاء بيانات التقرير',
+        dashboardInitializationComplete: 'اكتمل تهيئة لوحة التحكم',
+
+        // Statuses
+        scheduled: 'مجدول',
+        completed: 'مكتمل',
+        cancelled: 'ملغى',
+        pending: 'في الانتظار',
+        paid: 'مدفوع',
+        refunded: 'مسترد',
+        failed: 'فشل',
+
+        // Search and Filter
+        searchUsers: 'البحث في المستخدمين...',
+        searchByEmail: 'البحث بالبريد الإلكتروني أو الاسم أو الدور',
+        filterUsers: 'تصفية المستخدمين',
+        noUsersFound: 'لم يتم العثور على مستخدمين يطابقون بحثك.',
+
+        // Quick Actions
+        quickActions: 'الإجراءات السريعة',
+        viewUsers: 'عرض المستخدمين',
+        manageClinics: 'إدارة العيادات',
+        manageDoctors: 'إدارة الأطباء',
+        viewAppointments: 'عرض المواعيد',
+        systemSettings: 'إعدادات النظام',
     },
     home: {
         reminder: 'تذكير',

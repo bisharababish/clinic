@@ -1,4 +1,4 @@
-// pages/AdminDashboard.tsx
+// pages/AdminDashboard.tsx with i18n support
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -12,11 +12,11 @@ import OverviewManagement from "./api/admin/OverviewManagement";
 import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
+import { useTranslation } from 'react-i18next';
 
-
-// Interfaces
+// Interfaces (same as before)
 interface UserInfo {
-    user_id: string; // uuid/text primary key
+    user_id: string;
     userid: number;
     user_email: string;
     english_username_a: string;
@@ -82,7 +82,7 @@ interface SystemSettings {
     setting_name: string;
     setting_value: string;
     setting_type: 'text' | 'number' | 'boolean' | 'select';
-    setting_options?: string[]; // For select type settings
+    setting_options?: string[];
     setting_description?: string;
 }
 
@@ -101,6 +101,7 @@ interface ReportData {
 const AdminDashboard = () => {
     const { user, isLoading: authLoading } = useAuth();
     const { toast } = useToast();
+    const { t } = useTranslation();
 
     // State variables
     const [isAdmin, setIsAdmin] = useState(false);
@@ -119,8 +120,6 @@ const AdminDashboard = () => {
     const [systemSettings, setSystemSettings] = useState<SystemSettings[]>([]);
     const [reportData, setReportData] = useState<ReportData | null>(null);
 
-
-
     // Check admin status
     useEffect(() => {
         const initializeAdminDashboard = async () => {
@@ -136,69 +135,69 @@ const AdminDashboard = () => {
                 setIsAdmin(true);
 
                 // Load all data in sequence to ensure consistent loading
-                console.log('Loading dashboard data...');
+                console.log(t('admin.loadingUsers'));
 
                 try {
                     await loadUsers();
-                    console.log('Users loaded');
+                    console.log(t('admin.usersLoaded'));
                 } catch (e) {
                     console.error('Error loading users:', e);
                 }
 
                 try {
                     await loadClinics();
-                    console.log('Clinics loaded');
+                    console.log(t('admin.clinicsLoaded'));
                 } catch (e) {
                     console.error('Error loading clinics:', e);
                 }
 
                 try {
                     await loadDoctors();
-                    console.log('Doctors loaded');
+                    console.log(t('admin.doctorsLoaded'));
                 } catch (e) {
                     console.error('Error loading doctors:', e);
                 }
 
                 try {
                     await loadAppointments();
-                    console.log('Appointments loaded');
+                    console.log(t('admin.appointmentsLoaded'));
                 } catch (e) {
                     console.error('Error loading appointments:', e);
                 }
 
                 try {
                     await loadActivityLog();
-                    console.log('Activity logs loaded');
+                    console.log(t('admin.activityLogsLoaded'));
                 } catch (e) {
                     console.error('Error loading activity logs:', e);
                 }
 
                 try {
                     await loadSystemSettings();
-                    console.log('System settings loaded');
+                    console.log(t('admin.systemSettingsLoaded'));
                 } catch (e) {
                     console.error('Error loading system settings:', e);
                 }
 
                 try {
                     await generateReportData();
-                    console.log('Report data generated');
+                    console.log(t('admin.reportDataGenerated'));
                 } catch (e) {
                     console.error('Error generating report data:', e);
                 }
 
-                console.log('Dashboard initialization complete');
+                console.log(t('admin.dashboardInitializationComplete'));
 
             } catch (error) {
                 console.error('Error in dashboard initialization:', error);
-                setError('There was an error loading the dashboard. Please try again.');
+                setError(t('admin.errorLoadingDashboard'));
             } finally {
                 setIsLoading(false);
             }
         };
 
         initializeAdminDashboard();
-    }, [authLoading]);
+    }, [authLoading, t]);
 
     // Handle search filtering
     useEffect(() => {
@@ -216,16 +215,13 @@ const AdminDashboard = () => {
         }
     }, [searchQuery, users]);
 
-    // Data loading functions
+    // Data loading functions (keeping most of the original logic but updating error messages)
     const loadUsers = async () => {
-        console.log('Loading users with forced refresh...');
+        console.log(t('admin.loadingUsers'));
         try {
             setIsLoading(true);
 
-            // Add cache-busting parameter to avoid any caching issues
             const timestamp = new Date().getTime();
-
-            // Fetch users with retry mechanism
             let data = [];
             let error = null;
 
@@ -244,7 +240,6 @@ const AdminDashboard = () => {
                 } else {
                     error = result.error;
                     console.warn(`Fetch attempt ${attempt} failed:`, error);
-                    // Wait a bit before retrying
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
             }
@@ -252,8 +247,8 @@ const AdminDashboard = () => {
             if (error) {
                 console.error('Supabase error loading users after multiple attempts:', error);
                 toast({
-                    title: "Error",
-                    description: "Failed to load users from database.",
+                    title: t('common.error'),
+                    description: t('admin.errorLoadingUsers'),
                     variant: "destructive",
                 });
                 return null;
@@ -264,10 +259,8 @@ const AdminDashboard = () => {
                 console.log('First few user IDs:', data.slice(0, 3).map(u => u.userid));
             }
 
-            // Replace entire state with fresh data
             setUsers(data);
 
-            // Apply search filter if exists
             if (searchQuery.trim() === '') {
                 setFilteredUsers(data);
             } else {
@@ -281,7 +274,7 @@ const AdminDashboard = () => {
                 setFilteredUsers(filtered);
             }
 
-            // Set up real-time subscription
+            // Set up real-time subscription (keeping original logic)
             const subscription = supabase
                 .channel('userinfo-changes')
                 .on('postgres_changes',
@@ -295,7 +288,6 @@ const AdminDashboard = () => {
                         const newUser = payload.new as UserInfo;
                         setUsers(prev => [newUser, ...prev]);
 
-                        // Apply search filter for filtered users
                         if (searchQuery.trim() === '' ||
                             (newUser.user_email && newUser.user_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
                             (newUser.english_username_a && newUser.english_username_a.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -339,7 +331,6 @@ const AdminDashboard = () => {
                     console.log('Subscription status:', status);
                 });
 
-            // Return cleanup function
             return () => {
                 console.log('Cleaning up subscription');
                 supabase.removeChannel(subscription);
@@ -347,8 +338,8 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error loading users:', error);
             toast({
-                title: "Error",
-                description: "Failed to load users list.",
+                title: t('common.error'),
+                description: t('admin.failedToLoadUsers'),
                 variant: "destructive",
             });
             setUsers([]);
@@ -363,27 +354,22 @@ const AdminDashboard = () => {
     useEffect(() => {
         const setupSubscription = loadUsers();
 
-        // Also set up a refresh interval to ensure data stays fresh
         const refreshInterval = setInterval(() => {
             console.log('Running scheduled refresh...');
             loadUsers();
-        }, 30000); // Refresh every 30 seconds
+        }, 30000);
 
-        // Cleanup function
         return () => {
-            // Clean up subscription
             setupSubscription.then(cleanup => {
                 if (cleanup) cleanup();
             });
-
-            // Clear interval
             clearInterval(refreshInterval);
         };
     }, []);
+
     const loadClinics = async () => {
-        console.log('Loading clinics...');
+        console.log(t('admin.loadingClinics'));
         try {
-            // Query the actual clinics table
             const { data, error } = await supabase
                 .from('clinics')
                 .select('*')
@@ -391,7 +377,6 @@ const AdminDashboard = () => {
 
             if (error) {
                 console.error('Supabase error loading clinics:', error);
-                // Don't throw the error, just log it and return
                 if (error.code === 'PGRST301') {
                     console.log('Clinics table may not exist yet');
                 }
@@ -404,7 +389,6 @@ const AdminDashboard = () => {
                 return;
             }
 
-            // Transform to match our interface
             const mappedClinics: ClinicInfo[] = data.map(clinic => ({
                 id: clinic.id,
                 name: clinic.name,
@@ -417,19 +401,17 @@ const AdminDashboard = () => {
             console.log('Clinics loaded:', mappedClinics.length);
         } catch (error) {
             console.error('Error loading clinics:', error);
-            // Don't throw the error up the chain, handle it here
             toast({
-                title: "Warning",
-                description: "Error loading clinics. Some dashboard features may be limited.",
+                title: t('common.warning'),
+                description: t('admin.errorLoadingClinics'),
                 variant: "default",
             });
         }
     };
 
     const loadDoctors = async () => {
-        console.log('Loading doctors...');
+        console.log(t('admin.loadingDoctors'));
         try {
-            // Query doctors with their related clinic
             const { data, error } = await supabase
                 .from('doctors')
                 .select(`
@@ -443,7 +425,6 @@ const AdminDashboard = () => {
                 throw error;
             }
 
-            // Transform to match our interface
             const mappedDoctors: DoctorInfo[] = data.map(doctor => ({
                 id: doctor.id,
                 name: doctor.name,
@@ -464,9 +445,8 @@ const AdminDashboard = () => {
     };
 
     const loadAppointments = async () => {
-        console.log('Loading appointments...');
+        console.log(t('admin.loadingAppointments'));
         try {
-            // Query appointments with related tables
             const { data, error } = await supabase
                 .from('appointments')
                 .select(`
@@ -482,7 +462,6 @@ const AdminDashboard = () => {
                 throw error;
             }
 
-            // Transform to match our interface
             const mappedAppointments: AppointmentInfo[] = data.map(apt => ({
                 id: apt.id,
                 patient_id: apt.patient_id,
@@ -507,9 +486,8 @@ const AdminDashboard = () => {
     };
 
     const loadActivityLog = async () => {
-        console.log('Loading activity log...');
+        console.log(t('admin.loadingActivityLog'));
         try {
-            // Query the actual activity_log table
             const { data, error } = await supabase
                 .from('activity_log')
                 .select('*')
@@ -521,7 +499,6 @@ const AdminDashboard = () => {
                 throw error;
             }
 
-            // Transform to match our interface
             const mappedActivityLog: ActivityLog[] = data.map(log => ({
                 id: log.id,
                 action: log.action,
@@ -540,9 +517,8 @@ const AdminDashboard = () => {
     };
 
     const loadSystemSettings = async () => {
-        console.log('Loading system settings...');
+        console.log(t('admin.loadingSystemSettings'));
         try {
-            // Query the actual system_settings table
             const { data, error } = await supabase
                 .from('system_settings')
                 .select('*')
@@ -562,10 +538,8 @@ const AdminDashboard = () => {
     };
 
     const generateReportData = async () => {
-        console.log('Generating report data...');
+        console.log(t('admin.generatingReportData'));
         try {
-            // Create a skeleton report structure with default values
-            // This ensures we always have a valid report structure even if some data fails to load
             const defaultReport = {
                 appointments_count: 0,
                 appointments_by_clinic: {},
@@ -576,48 +550,36 @@ const AdminDashboard = () => {
                 total_users: 0,
                 recent_activity: []
             };
+
             const getClinicName = (apt) => {
                 try {
-                    // If clinics is an object with a name property
                     if (typeof apt.clinics === 'object' && apt.clinics !== null && apt.clinics.name) {
                         return apt.clinics.name;
                     }
-
-                    // If clinics is an array with at least one object with a name
                     if (Array.isArray(apt.clinics) && apt.clinics.length > 0 && apt.clinics[0].name) {
                         return apt.clinics[0].name;
                     }
-
-                    // If the API returns clinic_name directly
                     if (apt.clinic_name) {
                         return apt.clinic_name;
                     }
-
-                    // Fallback
                     return 'Unknown Clinic';
                 } catch (e) {
                     console.error('Error in getClinicName:', e);
                     return 'Unknown Clinic';
                 }
             };
+
             const getDoctorName = (apt) => {
                 try {
-                    // If doctors is an object with a name property
                     if (typeof apt.doctors === 'object' && apt.doctors !== null && apt.doctors.name) {
                         return apt.doctors.name;
                     }
-
-                    // If doctors is an array with at least one object with a name
                     if (Array.isArray(apt.doctors) && apt.doctors.length > 0 && apt.doctors[0].name) {
                         return apt.doctors[0].name;
                     }
-
-                    // If the API returns doctor_name directly
                     if (apt.doctor_name) {
                         return apt.doctor_name;
                     }
-
-                    // Fallback
                     return 'Unknown Doctor';
                 } catch (e) {
                     console.error('Error in getDoctorName:', e);
@@ -629,7 +591,6 @@ const AdminDashboard = () => {
             let userData = [];
             let activityData = [];
 
-            // Get appointments count and revenue - with error handling
             try {
                 const { data, error } = await supabase
                     .from('appointments')
@@ -648,7 +609,6 @@ const AdminDashboard = () => {
                 console.error('Exception fetching appointments data:', error);
             }
 
-            // Get user counts by role - with error handling
             try {
                 const { data, error } = await supabase
                     .from('userinfo')
@@ -663,7 +623,6 @@ const AdminDashboard = () => {
                 console.error('Exception fetching user data:', error);
             }
 
-            // Get recent activity - with error handling
             try {
                 const { data, error } = await supabase
                     .from('activity_log')
@@ -680,19 +639,15 @@ const AdminDashboard = () => {
                 console.error('Exception fetching activity data:', error);
             }
 
-            // Calculate data with error handling for each calculation step
             const reportData = { ...defaultReport };
 
             try {
-                // Calculate total appointments
                 reportData.appointments_count = appointmentsData.length;
 
-                // Calculate revenue
                 reportData.revenue = appointmentsData
                     .filter(apt => apt.payment_status === 'paid')
                     .reduce((sum, apt) => sum + (parseFloat(apt.price) || 0), 0);
 
-                // Group by clinic
                 const appointments_by_clinic = {};
                 const revenue_by_clinic = {};
 
@@ -700,11 +655,8 @@ const AdminDashboard = () => {
                     appointmentsData.forEach(apt => {
                         try {
                             const clinicName = getClinicName(apt);
-
-                            // Count appointments
                             appointments_by_clinic[clinicName] = (appointments_by_clinic[clinicName] || 0) + 1;
 
-                            // Sum revenue for paid appointments
                             if (apt.payment_status === 'paid') {
                                 revenue_by_clinic[clinicName] = (revenue_by_clinic[clinicName] || 0) + (parseFloat(apt.price) || 0);
                             }
@@ -716,7 +668,6 @@ const AdminDashboard = () => {
                 reportData.appointments_by_clinic = appointments_by_clinic;
                 reportData.revenue_by_clinic = revenue_by_clinic;
 
-                // Group appointments by doctor
                 const appointments_by_doctor = {};
                 if (appointmentsData.length > 0) {
                     appointmentsData.forEach(apt => {
@@ -730,13 +681,11 @@ const AdminDashboard = () => {
                 }
                 reportData.appointments_by_doctor = appointments_by_doctor;
 
-                // Process user roles
                 const users_by_role = {};
                 if (userData.length > 0) {
                     userData.forEach(user => {
                         try {
                             if (user && user.user_roles) {
-                                // Capitalize first letter of role
                                 const role = user.user_roles.charAt(0).toUpperCase() + user.user_roles.slice(1).toLowerCase();
                                 users_by_role[role] = (users_by_role[role] || 0) + 1;
                             }
@@ -748,7 +697,6 @@ const AdminDashboard = () => {
                 reportData.users_by_role = users_by_role;
                 reportData.total_users = userData.length;
 
-                // Process activity data
                 const recent_activity = [];
                 if (activityData.length > 0) {
                     activityData.forEach(log => {
@@ -769,16 +717,13 @@ const AdminDashboard = () => {
                 reportData.recent_activity = recent_activity;
             } catch (e) {
                 console.error('Error calculating report data:', e);
-                // We'll still return the partial reportData with whatever was calculated successfully
             }
 
-            // Set state and return even if some parts failed
             setReportData(reportData);
             console.log('Report data generated successfully');
             return reportData;
         } catch (error) {
             console.error('Error in generateReportData:', error);
-            // Create a minimal valid report rather than throwing an error
             const fallbackReport = {
                 appointments_count: 0,
                 appointments_by_clinic: {},
@@ -791,10 +736,9 @@ const AdminDashboard = () => {
             };
             setReportData(fallbackReport);
 
-            // Show a toast but don't throw - this allows the dashboard to still load
             toast({
-                title: "Warning",
-                description: "Some report data could not be loaded. Showing partial data.",
+                title: t('common.warning'),
+                description: t('admin.someReportDataUnavailable'),
                 variant: "default",
             });
 
@@ -802,10 +746,8 @@ const AdminDashboard = () => {
         }
     };
 
-
     // Activity logging
     const logActivity = async (action: string, user: string, details: string, status: 'success' | 'failed' | 'pending') => {
-        // Create a new activity log entry in memory
         const newActivity: ActivityLog = {
             id: `a${Date.now()}`,
             action,
@@ -815,7 +757,6 @@ const AdminDashboard = () => {
             status
         };
 
-        // Insert into the database
         try {
             const { error } = await supabase
                 .from('activity_log')
@@ -833,10 +774,8 @@ const AdminDashboard = () => {
             console.error('Error logging activity:', error);
         }
 
-        // Update state
         setActivityLog(prev => [newActivity, ...prev]);
     };
-    // Add this function to the AdminDashboard component
 
     // Report generation
     const refreshReportData = async () => {
@@ -844,24 +783,20 @@ const AdminDashboard = () => {
             setIsLoading(true);
             await generateReportData();
             toast({
-                title: "Success",
-                description: "Report data refreshed.",
+                title: t('common.success'),
+                description: t('admin.reportDataRefreshed'),
             });
         } catch (error) {
             console.error("Error refreshing report data:", error);
             toast({
-                title: "Error",
-                description: "Failed to refresh report data.",
+                title: t('common.error'),
+                description: t('admin.failedToRefreshReportData'),
                 variant: "destructive",
             });
         } finally {
             setIsLoading(false);
         }
     };
-
-
-    // Chart data transformations
-
 
     // UI helpers
     const getStatusBadgeClass = (status: string) => {
@@ -893,7 +828,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Authenticating...</p>
+                    <p className="mt-4 text-gray-600">{t('admin.authenticating')}</p>
                 </div>
             </div>
         );
@@ -904,7 +839,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading Admin Dashboard...</p>
+                    <p className="mt-4 text-gray-600">{t('admin.loadingDashboard')}</p>
                 </div>
             </div>
         );
@@ -913,7 +848,7 @@ const AdminDashboard = () => {
     if (error) {
         return (
             <div className="text-center py-12 max-w-2xl mx-auto px-4">
-                <h1 className="text-2xl font-bold text-red-600">Error</h1>
+                <h1 className="text-2xl font-bold text-red-600">{t('common.error')}</h1>
                 <p className="mt-2">{error}</p>
 
                 <div className="space-y-4 mt-6">
@@ -921,47 +856,47 @@ const AdminDashboard = () => {
                         onClick={() => window.location.reload()}
                         className="w-full"
                     >
-                        Reload Page
+                        {t('admin.reloadPage')}
                     </Button>
                     <Button
                         variant="outline"
                         onClick={() => window.location.href = "/"}
                         className="w-full"
                     >
-                        Return to Home
+                        {t('admin.returnToHome')}
                     </Button>
                 </div>
             </div>
         );
     }
+
     async function checkSystemStatus(): Promise<void> {
         try {
             setIsLoading(true);
             setError(null);
 
-            // Simulate a system status check (replace with actual API call if available)
             const response = await new Promise<{ status: string }>((resolve) =>
                 setTimeout(() => resolve({ status: "operational" }), 1000)
             );
 
             if (response.status === "operational") {
                 toast({
-                    title: "System Status",
-                    description: "All systems are operational.",
+                    title: t('admin.systemStatus'),
+                    description: t('admin.allSystemsOperational'),
                     variant: "default",
                 });
             } else {
                 toast({
-                    title: "System Status",
-                    description: "Some systems are experiencing issues.",
+                    title: t('admin.systemStatus'),
+                    description: t('admin.systemIssues'),
                     variant: "destructive",
                 });
             }
         } catch (error) {
             console.error("Error checking system status:", error);
             toast({
-                title: "Error",
-                description: "Failed to check system status.",
+                title: t('common.error'),
+                description: t('admin.errorCheckingSystemStatus'),
                 variant: "destructive",
             });
         } finally {
@@ -972,16 +907,16 @@ const AdminDashboard = () => {
     // Main render
     return (
         <div className="max-w-7xl mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-6">{t('admin.title')}</h1>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="flex flex-wrap justify-center w-full">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="users">Users</TabsTrigger>
-                    <TabsTrigger value="clinics">Clinics</TabsTrigger>
-                    <TabsTrigger value="doctors">Doctors</TabsTrigger>
-                    <TabsTrigger value="appointments">Appointments</TabsTrigger>
-                    <TabsTrigger value="settings">Settings</TabsTrigger>
+                    <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
+                    <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
+                    <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
+                    <TabsTrigger value="doctors">{t('admin.doctors')}</TabsTrigger>
+                    <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
+                    <TabsTrigger value="settings">{t('admin.settings')}</TabsTrigger>
                 </TabsList>
 
                 {/* OVERVIEW TAB */}
@@ -1013,7 +948,6 @@ const AdminDashboard = () => {
                 {/* DOCTORS TAB */}
                 <TabsContent value="doctors" className="pt-6">
                     <DoctorManagement />
-
                 </TabsContent>
 
                 {/* APPOINTMENTS TAB */}
