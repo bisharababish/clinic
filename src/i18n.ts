@@ -107,6 +107,48 @@ const enTranslations = {
         welcomeToClinic: 'Welcome to our clinic portal!',
         registrationFailed: 'Registration Failed',
     },
+    clinics: {
+        // Page title and alerts
+        title: 'Clinics',
+        importantNotice: 'Important:',
+        reservationRequired: 'Reservations are required for all clinic visits. Please book your appointment in advance.',
+
+        // Category selection
+        allClinics: 'All Clinics',
+
+        // Clinic cards
+        availableDoctor: 'available doctor',
+        availableDoctors: 'available doctors',
+        noClinicsFound: 'No clinics found for this category.',
+
+        // Clinic details modal
+        clinicDetails: 'Clinic Details',
+        close: '✕',
+        noDoctorsAvailable: 'No doctors available at this clinic.',
+
+        // Doctor information
+        fee: 'Fee',
+        availableHours: 'Available Hours:',
+        noAvailabilitySet: 'No availability set for this doctor.',
+
+        // Booking actions
+        cancel: 'Cancel',
+        bookAppointmentNow: 'Book Appointment Now',
+
+        // Loading and errors
+        loading: 'Loading clinics...',
+        errorTitle: 'Error',
+        errorDescription: 'Failed to load clinics. Please try again later.',
+
+        // Days of the week
+        monday: 'Monday',
+        tuesday: 'Tuesday',
+        wednesday: 'Wednesday',
+        thursday: 'Thursday',
+        friday: 'Friday',
+        saturday: 'Saturday',
+        sunday: 'Sunday'
+    },
     navbar: {
         home: 'Home',
         clinics: 'Clinics',
@@ -956,6 +998,48 @@ const arTranslations = {
         registrationSuccess: 'تم التسجيل بنجاح',
         welcomeToClinic: 'مرحبًا بك في بوابة العيادة!',
         registrationFailed: 'فشل التسجيل',
+    },
+    clinics: {
+        // Page title and alerts
+        title: 'العيادات',
+        importantNotice: 'مهم:',
+        reservationRequired: 'الحجز مطلوب لجميع زيارات العيادة. يرجى حجز موعدك مسبقاً.',
+
+        // Category selection
+        allClinics: 'جميع العيادات',
+
+        // Clinic cards
+        availableDoctor: 'طبيب متاح',
+        availableDoctors: 'أطباء متاحون',
+        noClinicsFound: 'لم يتم العثور على عيادات لهذه الفئة.',
+
+        // Clinic details modal
+        clinicDetails: 'تفاصيل العيادة',
+        close: '✕',
+        noDoctorsAvailable: 'لا يوجد أطباء متاحون في هذه العيادة.',
+
+        // Doctor information
+        fee: 'الرسوم',
+        availableHours: 'الساعات المتاحة:',
+        noAvailabilitySet: 'لم يتم تحديد أوقات متاحة لهذا الطبيب.',
+
+        // Booking actions
+        cancel: 'إلغاء',
+        bookAppointmentNow: 'احجز موعد الآن',
+
+        // Loading and errors
+        loading: 'جارٍ تحميل العيادات...',
+        errorTitle: 'خطأ',
+        errorDescription: 'فشل في تحميل العيادات. يرجى المحاولة مرة أخرى لاحقاً.',
+
+        // Days of the week
+        monday: 'الاثنين',
+        tuesday: 'الثلاثاء',
+        wednesday: 'الأربعاء',
+        thursday: 'الخميس',
+        friday: 'الجمعة',
+        saturday: 'السبت',
+        sunday: 'الأحد'
     },
     navbar: {
         home: 'الرئيسية',

@@ -1,6 +1,7 @@
 // pages/Clinics.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "../lib/supabase";
@@ -37,6 +38,9 @@ type Category = {
 const Clinics = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
@@ -121,8 +125,8 @@ const Clinics = () => {
         } catch (error) {
             console.error('Error loading clinic data:', error);
             toast({
-                title: "Error",
-                description: "Failed to load clinics. Please try again later.",
+                title: t('clinics.errorTitle'),
+                description: t('clinics.errorDescription'),
                 variant: "destructive",
             });
         } finally {
@@ -181,32 +185,49 @@ const Clinics = () => {
         }
     };
 
+    // Translate day names
+    const translateDay = (day: string) => {
+        const dayMap: { [key: string]: string } = {
+            'Monday': t('clinics.monday'),
+            'Tuesday': t('clinics.tuesday'),
+            'Wednesday': t('clinics.wednesday'),
+            'Thursday': t('clinics.thursday'),
+            'Friday': t('clinics.friday'),
+            'Saturday': t('clinics.saturday'),
+            'Sunday': t('clinics.sunday')
+        };
+        return dayMap[day] || day;
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[300px]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className={`${isRTL ? 'mr-3' : 'ml-3'} text-gray-600`}>
+                    {t('clinics.loading')}
+                </span>
             </div>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto py-8 space-y-6">
+        <div className={`max-w-7xl mx-auto py-8 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
             {/* Notification Alert */}
             <Alert variant="default" className="bg-blue-50 border-blue-200">
                 <AlertDescription>
-                    <span className="font-medium">Important:</span> Reservations are required for all clinic visits. Please book your appointment in advance.
+                    <span className="font-medium">{t('clinics.importantNotice')}</span> {t('clinics.reservationRequired')}
                 </AlertDescription>
             </Alert>
 
             {/* Category Selection */}
-            <div className="flex flex-wrap gap-2">
+            <div className={`flex flex-wrap gap-2 ${isRTL ? 'justify-end' : 'justify-start'}`}>
                 <Button
                     key="all"
                     variant={selectedCategory === "all" ? "default" : "outline"}
                     onClick={() => setSelectedCategory("all")}
                     className="min-w-fit"
                 >
-                    All Clinics
+                    {t('clinics.allClinics')}
                 </Button>
 
                 {categories.map(category => (
@@ -229,15 +250,21 @@ const Clinics = () => {
                         className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                         onClick={() => handleViewClinic(clinic)}
                     >
-                        <h3 className="text-xl font-bold">{clinic.name}</h3>
-                        <p className="text-sm text-gray-500 capitalize mt-1">{clinic.category}</p>
-                        <p className="mt-2">{clinic.doctors.length} available doctor{clinic.doctors.length !== 1 ? 's' : ''}</p>
+                        <h3 className={`text-xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                            {clinic.name}
+                        </h3>
+                        <p className={`text-sm text-gray-500 capitalize mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                            {clinic.category}
+                        </p>
+                        <p className={`mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                            {clinic.doctors.length} {clinic.doctors.length === 1 ? t('clinics.availableDoctor') : t('clinics.availableDoctors')}
+                        </p>
                     </div>
                 ))}
 
                 {filteredClinics.length === 0 && (
                     <div className="col-span-full text-center py-10 text-gray-500">
-                        No clinics found for this category.
+                        {t('clinics.noClinicsFound')}
                     </div>
                 )}
             </div>
@@ -245,47 +272,65 @@ const Clinics = () => {
             {/* Clinic Details Modal */}
             {selectedClinic && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-start">
-                            <h2 className="text-2xl font-bold">{selectedClinic.name}</h2>
+                    <div className={`bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
+                        <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <h2 className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                                {selectedClinic.name}
+                            </h2>
                             <button
                                 onClick={() => setSelectedClinic(null)}
                                 className="text-gray-500 hover:text-gray-700"
                             >
-                                ✕
+                                {t('clinics.close')}
                             </button>
                         </div>
 
                         {selectedClinic.description && (
-                            <p className="text-gray-600 mt-2">{selectedClinic.description}</p>
+                            <p className={`text-gray-600 mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                {selectedClinic.description}
+                            </p>
                         )}
 
                         <div className="mt-6 space-y-6">
                             {selectedClinic.doctors.length === 0 ? (
-                                <p className="text-center py-4 text-gray-500">No doctors available at this clinic.</p>
+                                <p className="text-center py-4 text-gray-500">
+                                    {t('clinics.noDoctorsAvailable')}
+                                </p>
                             ) : (
                                 selectedClinic.doctors.map(doctor => (
                                     <div
                                         key={doctor.id}
-                                        className={`border-b pb-4 ${selectedDoctor?.id === doctor.id ? 'bg-blue-50 border rounded-lg p-4' : ''}`}
+                                        className={`border-b pb-4 cursor-pointer ${selectedDoctor?.id === doctor.id ? 'bg-blue-50 border rounded-lg p-4' : ''}`}
                                         onClick={() => handleSelectDoctor(doctor)}
                                     >
-                                        <h3 className="text-lg font-semibold">{doctor.name}</h3>
-                                        <p className="text-gray-600">{doctor.specialty}</p>
-                                        <p className="font-medium mt-2">Fee: ₪{doctor.price}</p>
+                                        <h3 className={`text-lg font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>
+                                            {doctor.name}
+                                        </h3>
+                                        <p className={`text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                            {doctor.specialty}
+                                        </p>
+                                        <p className={`font-medium mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                            {t('clinics.fee')}: ₪{doctor.price}
+                                        </p>
 
                                         {selectedDoctor?.id === doctor.id && (
                                             <div className="mt-3">
-                                                <h4 className="font-medium mb-2">Available Hours:</h4>
+                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                    {t('clinics.availableHours')}
+                                                </h4>
                                                 {doctor.availability.length === 0 ? (
-                                                    <p className="text-gray-500">No availability set for this doctor.</p>
+                                                    <p className={`text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                        {t('clinics.noAvailabilitySet')}
+                                                    </p>
                                                 ) : (
                                                     <div className="space-y-2">
                                                         {/* Group availability by day */}
                                                         {Array.from(new Set(doctor.availability.map(slot => slot.day))).map(day => (
-                                                            <div key={day} className="flex flex-wrap gap-2">
-                                                                <span className="font-medium">{day}:</span>
-                                                                <div className="flex flex-wrap gap-2">
+                                                            <div key={day} className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                                                                <span className="font-medium">
+                                                                    {translateDay(day)}:
+                                                                </span>
+                                                                <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                                     {doctor.availability
                                                                         .filter(slot => slot.day === day)
                                                                         .map(slot => {
@@ -318,18 +363,18 @@ const Clinics = () => {
                             )}
                         </div>
 
-                        <div className="mt-6 flex justify-end gap-3">
+                        <div className={`mt-6 flex gap-3 ${isRTL ? 'justify-start flex-row-reverse' : 'justify-end'}`}>
                             <Button
                                 variant="outline"
                                 onClick={() => setSelectedClinic(null)}
                             >
-                                Cancel
+                                {t('clinics.cancel')}
                             </Button>
                             <Button
                                 disabled={!selectedDoctor || !selectedTime}
                                 onClick={handleBookAppointment}
                             >
-                                Book Appointment Now
+                                {t('clinics.bookAppointmentNow')}
                             </Button>
                         </div>
                     </div>
