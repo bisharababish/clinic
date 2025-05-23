@@ -7,7 +7,6 @@ import ClinicManagement from "./api/admin/ClinicManagement";
 import DoctorManagement from "./api/admin/DoctorManagement";
 import UsersManagement from "./api/admin/UsersManagement";
 import AppointmentsManagement from "./api/admin/AppointmentsManagement";
-import SettingsManagement from "./api/admin/SettingsManagement";
 import OverviewManagement from "./api/admin/OverviewManagement";
 import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "../hooks/useAuth";
@@ -917,7 +916,6 @@ const AdminDashboard = () => {
                     <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
                     <TabsTrigger value="doctors">{t('admin.doctors')}</TabsTrigger>
                     <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
-                    <TabsTrigger value="settings">{t('admin.settings')}</TabsTrigger>
                 </TabsList>
 
                 {/* OVERVIEW TAB */}
@@ -956,10 +954,7 @@ const AdminDashboard = () => {
                     <AppointmentsManagement />
                 </TabsContent>
 
-                {/* SETTINGS TAB */}
-                <TabsContent value="settings" className="pt-6">
-                    <SettingsManagement />
-                </TabsContent>
+
             </Tabs>
         </div>
     );

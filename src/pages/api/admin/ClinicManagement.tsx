@@ -1,5 +1,6 @@
 // pages/admin/ClinicManagement.tsx
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +57,9 @@ interface DoctorInfo {
 }
 
 const ClinicManagement = () => {
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+
     // State for clinics
     const [clinics, setClinics] = useState<ClinicInfo[]>([]);
     const [categories, setCategories] = useState<CategoryInfo[]>([]);
@@ -148,8 +152,8 @@ const ClinicManagement = () => {
         } catch (error) {
             console.error("Error loading categories:", error);
             toast({
-                title: "Error",
-                description: "Failed to load clinic categories.",
+                title: t('common.error'),
+                description: t('clinicManagement.loadingCategories'),
                 variant: "destructive",
             });
         } finally {
@@ -185,8 +189,8 @@ const ClinicManagement = () => {
         } catch (error) {
             console.error("Error loading clinics:", error);
             toast({
-                title: "Error",
-                description: "Failed to load clinics.",
+                title: t('common.error'),
+                description: t('clinicManagement.loadingClinics'),
                 variant: "destructive",
             });
         } finally {
@@ -239,8 +243,8 @@ const ClinicManagement = () => {
         } catch (error) {
             console.error("Error loading doctors:", error);
             toast({
-                title: "Error",
-                description: "Failed to load doctors.",
+                title: t('common.error'),
+                description: t('clinicManagement.loadingDoctors'),
                 variant: "destructive",
             });
         } finally {
@@ -290,8 +294,8 @@ const ClinicManagement = () => {
         const clinicToEdit = clinics.find((c) => c.id === id);
         if (!clinicToEdit) {
             toast({
-                title: "Error",
-                description: "Clinic not found.",
+                title: t('common.error'),
+                description: t('clinicManagement.clinicNotFound'),
                 variant: "destructive",
             });
             return;
@@ -323,8 +327,8 @@ const ClinicManagement = () => {
 
             if (doctorsInClinic.length > 0) {
                 toast({
-                    title: "Cannot Delete",
-                    description: `This clinic has ${doctorsInClinic.length} doctor(s) assigned to it. Please remove the doctors first.`,
+                    title: t('clinicManagement.cannotDelete'),
+                    description: t('clinicManagement.cannotDeleteClinicWithDoctors', { count: doctorsInClinic.length }),
                     variant: "destructive",
                 });
                 setShowDeleteClinicDialog(false);
@@ -344,13 +348,13 @@ const ClinicManagement = () => {
             setFilteredClinics(prev => prev.filter(clinic => clinic.id !== clinicToDelete));
 
             toast({
-                title: "Success",
-                description: "Clinic deleted successfully.",
+                title: t('common.success'),
+                description: t('clinicManagement.clinicDeletedSuccessfully'),
             });
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to delete clinic. Please try again.",
+                title: t('common.error'),
+                description: t('clinicManagement.failedToDeleteClinic'),
                 variant: "destructive",
             });
         } finally {
@@ -369,8 +373,8 @@ const ClinicManagement = () => {
             // Basic validation
             if (!clinicFormData.name || !clinicFormData.name.trim()) {
                 toast({
-                    title: "Error",
-                    description: "Clinic name is required.",
+                    title: t('common.error'),
+                    description: t('clinicManagement.clinicNameRequired'),
                     variant: "destructive",
                 });
                 setIsLoading(false);
@@ -380,8 +384,8 @@ const ClinicManagement = () => {
             // Get category - this is the critical part
             if (!clinicFormData.category_id) {
                 toast({
-                    title: "Error",
-                    description: "Please select a category.",
+                    title: t('common.error'),
+                    description: t('clinicManagement.categoryRequired'),
                     variant: "destructive",
                 });
                 setIsLoading(false);
@@ -399,8 +403,8 @@ const ClinicManagement = () => {
             if (!selectedCategory) {
                 console.error("Category not found with ID:", clinicFormData.category_id);
                 toast({
-                    title: "Error",
-                    description: "Selected category not found. Please select a valid category.",
+                    title: t('common.error'),
+                    description: t('clinicManagement.categoryNotFound'),
                     variant: "destructive",
                 });
                 setIsLoading(false);
@@ -448,8 +452,8 @@ const ClinicManagement = () => {
                 if (error) {
                     console.error("Error creating clinic:", error);
                     toast({
-                        title: "Error",
-                        description: error.message || "Failed to save clinic. Please try again.",
+                        title: t('common.error'),
+                        description: error.message || t('clinicManagement.failedToSaveClinic'),
                         variant: "destructive",
                     });
                     setIsLoading(false);
@@ -462,8 +466,8 @@ const ClinicManagement = () => {
                     setFilteredClinics(prev => [...prev, data[0]]);
 
                     toast({
-                        title: "Success",
-                        description: "Clinic created successfully.",
+                        title: t('common.success'),
+                        description: t('clinicManagement.clinicCreatedSuccessfully'),
                     });
 
                     // Reset form
@@ -489,8 +493,8 @@ const ClinicManagement = () => {
                 if (error) {
                     console.error("Error updating clinic:", error);
                     toast({
-                        title: "Error",
-                        description: error.message || "Failed to update clinic. Please try again.",
+                        title: t('common.error'),
+                        description: error.message || t('clinicManagement.failedToUpdateClinic'),
                         variant: "destructive",
                     });
                     setIsLoading(false);
@@ -503,8 +507,8 @@ const ClinicManagement = () => {
                     setFilteredClinics(prev => prev.map(c => c.id === selectedClinic ? data[0] : c));
 
                     toast({
-                        title: "Success",
-                        description: "Clinic updated successfully.",
+                        title: t('common.success'),
+                        description: t('clinicManagement.clinicUpdatedSuccessfully'),
                     });
 
                     // Reset form
@@ -514,14 +518,15 @@ const ClinicManagement = () => {
         } catch (error) {
             console.error("Unexpected error:", error);
             toast({
-                title: "Error",
-                description: "An unexpected error occurred. Please try again.",
+                title: t('common.error'),
+                description: t('clinicManagement.unexpectedError'),
                 variant: "destructive",
             });
         } finally {
             setIsLoading(false);
         }
     };
+
     // Category form handlers
     const handleCategoryInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -545,8 +550,8 @@ const ClinicManagement = () => {
         const categoryToEdit = categories.find((c) => c.id === id);
         if (!categoryToEdit) {
             toast({
-                title: "Error",
-                description: "Category not found.",
+                title: t('common.error'),
+                description: t('clinicManagement.categoryNotFound'),
                 variant: "destructive",
             });
             return;
@@ -576,8 +581,8 @@ const ClinicManagement = () => {
             const categoryToDeleteObj = categories.find(c => c.id === categoryToDelete);
             if (!categoryToDeleteObj) {
                 toast({
-                    title: "Error",
-                    description: "Category not found.",
+                    title: t('common.error'),
+                    description: t('clinicManagement.categoryNotFound'),
                     variant: "destructive",
                 });
                 setShowDeleteCategoryDialog(false);
@@ -593,8 +598,8 @@ const ClinicManagement = () => {
             if (clinicsUsingCategory.length > 0) {
                 const clinicNames = clinicsUsingCategory.map(c => c.name).join(", ");
                 toast({
-                    title: "Cannot Delete",
-                    description: `This category is used by the following clinic(s): ${clinicNames}. Please reassign those clinics first.`,
+                    title: t('clinicManagement.cannotDelete'),
+                    description: t('clinicManagement.cannotDeleteCategoryWithClinics', { clinics: clinicNames }),
                     variant: "destructive",
                 });
                 setShowDeleteCategoryDialog(false);
@@ -609,8 +614,8 @@ const ClinicManagement = () => {
 
             if (error) {
                 toast({
-                    title: "Error",
-                    description: "Database error: " + error.message,
+                    title: t('common.error'),
+                    description: t('clinicManagement.databaseError') + error.message,
                     variant: "destructive",
                 });
                 return;
@@ -620,13 +625,13 @@ const ClinicManagement = () => {
             setCategories(prev => prev.filter(category => category.id !== categoryToDelete));
 
             toast({
-                title: "Success",
-                description: "Category deleted successfully.",
+                title: t('common.success'),
+                description: t('clinicManagement.categoryDeletedSuccessfully'),
             });
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to delete category. Please try again.",
+                title: t('common.error'),
+                description: t('clinicManagement.failedToDeleteCategory'),
                 variant: "destructive",
             });
         } finally {
@@ -655,8 +660,8 @@ const ClinicManagement = () => {
 
             if (error) {
                 toast({
-                    title: "Error",
-                    description: "Database error: " + error.message,
+                    title: t('common.error'),
+                    description: t('clinicManagement.databaseError') + error.message,
                     variant: "destructive",
                 });
                 return;
@@ -666,13 +671,13 @@ const ClinicManagement = () => {
             setDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete));
 
             toast({
-                title: "Success",
-                description: "Doctor deleted successfully.",
+                title: t('common.success'),
+                description: t('clinicManagement.doctorDeletedSuccessfully'),
             });
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to delete doctor. Please try again.",
+                title: t('common.error'),
+                description: t('clinicManagement.failedToDeleteDoctor'),
                 variant: "destructive",
             });
         } finally {
@@ -691,8 +696,8 @@ const ClinicManagement = () => {
 
         if (!categoryFormData.name.trim()) {
             toast({
-                title: "Error",
-                description: "Category name is required.",
+                title: t('common.error'),
+                description: t('clinicManagement.categoryNameRequired'),
                 variant: "destructive",
             });
             return;
@@ -718,8 +723,8 @@ const ClinicManagement = () => {
                 }
 
                 toast({
-                    title: "Success",
-                    description: "Category created successfully.",
+                    title: t('common.success'),
+                    description: t('clinicManagement.categoryCreatedSuccessfully'),
                 });
 
                 resetCategoryForm();
@@ -763,7 +768,7 @@ const ClinicManagement = () => {
 
                         if (updateError) {
                             toast({
-                                title: "Warning",
+                                title: t('common.warning'),
                                 description: "Category updated but failed to update related clinics.",
                                 variant: "default",
                             });
@@ -775,16 +780,16 @@ const ClinicManagement = () => {
                 }
 
                 toast({
-                    title: "Success",
-                    description: "Category updated successfully.",
+                    title: t('common.success'),
+                    description: t('clinicManagement.categoryUpdatedSuccessfully'),
                 });
 
                 resetCategoryForm();
             }
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to save category. Please try again.",
+                title: t('common.error'),
+                description: t('clinicManagement.failedToSaveCategory'),
                 variant: "destructive",
             });
         } finally {
@@ -794,53 +799,60 @@ const ClinicManagement = () => {
 
     // Main render
     return (
-        <div className="space-y-8">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "clinics" | "categories")} className="w-full">
-                <TabsList>
-                    <TabsTrigger value="clinics">Clinics</TabsTrigger>
-                    <TabsTrigger value="categories">Categories</TabsTrigger>
+        <div className={`space-y-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+            <Tabs
+                value={activeTab}
+                onValueChange={(value) => setActiveTab(value as "clinics" | "categories")}
+                className="w-full"
+            >
+                <TabsList className={isRTL ? 'flex-row-reverse' : ''}>
+                    <TabsTrigger value="clinics">{t('clinicManagement.clinics')}</TabsTrigger>
+                    <TabsTrigger value="categories">{t('clinicManagement.categories')}</TabsTrigger>
                 </TabsList>
 
                 {/* CLINICS TAB */}
                 <TabsContent value="clinics" className="space-y-6">
-                    <div className="flex flex-col lg:flex-row gap-8">
+                    <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
                         {/* Clinics List */}
                         <div className="w-full lg:w-2/3">
                             <Card>
                                 <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle>Clinics Management</CardTitle>
-                                        <div className="flex items-center space-x-2">
+                                    <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <CardTitle>{t('clinicManagement.clinicsManagement')}</CardTitle>
+                                        <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                             <div className="relative">
-                                                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                                <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                                                 <Input
-                                                    placeholder="Search clinics..."
+                                                    placeholder={t('clinicManagement.searchClinics')}
                                                     value={searchQuery}
                                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className="pl-10 w-[250px]"
+                                                    className={`${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10'} w-[250px]`}
+                                                    dir={isRTL ? 'rtl' : 'ltr'}
                                                 />
                                             </div>
                                             <Button variant="outline" size="sm" onClick={loadClinics} disabled={isLoading}>
-                                                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                                                Refresh
+                                                <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
+                                                {t('common.refresh')}
                                             </Button>
                                             <Button size="sm" onClick={resetClinicForm}>
-                                                <Plus className="h-4 w-4 mr-2" />
-                                                Add Clinic
+                                                <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                                {t('clinicManagement.addClinic')}
                                             </Button>
                                         </div>
                                     </div>
                                     <CardDescription>
-                                        Manage all clinic departments
+                                        {t('clinicManagement.description')}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
                                         {filteredClinics.map((clinic) => (
-                                            <div key={clinic.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                                <div className="mb-2 sm:mb-0">
+                                            <div key={clinic.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                                                <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`}>
                                                     <h3 className="font-medium">{clinic.name}</h3>
-                                                    <div className="text-sm text-gray-500 capitalize">Category: {clinic.category}</div>
+                                                    <div className="text-sm text-gray-500 capitalize">
+                                                        {t('clinicManagement.category')}: {clinic.category}
+                                                    </div>
                                                     {clinic.description && (
                                                         <div className="text-sm text-gray-500 mt-1">{clinic.description}</div>
                                                     )}
@@ -849,38 +861,38 @@ const ClinicManagement = () => {
                                                             ? "bg-green-100 text-green-800"
                                                             : "bg-red-100 text-red-800"
                                                             }`}>
-                                                            {clinic.is_active ? "Active" : "Inactive"}
+                                                            {clinic.is_active ? t('common.active') : t('common.inactive')}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                                <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 ${isRTL ? 'sm:flex-row-reverse sm:space-x-reverse' : ''}`}>
                                                     <Button variant="outline" size="sm" onClick={() => handleEditClinic(clinic.id)}>
-                                                        <Edit className="h-4 w-4 mr-1" />
-                                                        Edit
+                                                        <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                        {t('common.edit')}
                                                     </Button>
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
                                                         onClick={() => handleDeleteClinic(clinic.id)}
                                                     >
-                                                        <Trash2 className="h-4 w-4 mr-1" />
-                                                        Delete
+                                                        <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                        {t('common.delete')}
                                                     </Button>
                                                 </div>
                                             </div>
                                         ))}
 
                                         {filteredClinics.length === 0 && (
-                                            <div className="text-center py-8 text-gray-500">
-                                                {searchQuery ? "No clinics found matching your search." : "No clinics found. Add a clinic to get started."}
+                                            <div className={`text-center py-8 text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                                                {searchQuery ? t('clinicManagement.noClinicsFoundSearch') : t('clinicManagement.noClinicFound')}
                                             </div>
                                         )}
                                     </div>
                                 </CardContent>
-                                <CardFooter>
-                                    <div className="text-sm text-gray-500">
-                                        {filteredClinics.length} {filteredClinics.length === 1 ? 'clinic' : 'clinics'}
-                                        {searchQuery && ' (filtered)'}
+                                <CardFooter className={isRTL ? 'flex-row-reverse' : ''}>
+                                    <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                                        {filteredClinics.length} {filteredClinics.length === 1 ? t('clinicManagement.clinic') : t('admin.clinics')}
+                                        {searchQuery && ` (${t('clinicManagement.filtered')})`}
                                     </div>
                                 </CardFooter>
                             </Card>
@@ -890,52 +902,61 @@ const ClinicManagement = () => {
                         <div className="w-full lg:w-1/3">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>{clinicFormMode === "create" ? "Create New Clinic" : "Edit Clinic"}</CardTitle>
-                                    <CardDescription>
+                                    <CardTitle className={isRTL ? 'text-right' : ''}>
+                                        {clinicFormMode === "create" ? t('clinicManagement.createNewClinic') : t('clinicManagement.editClinic')}
+                                    </CardTitle>
+                                    <CardDescription className={isRTL ? 'text-right' : ''}>
                                         {clinicFormMode === "create"
-                                            ? "Add a new clinic department"
-                                            : "Modify existing clinic details"}
+                                            ? t('clinicManagement.addNewClinicDesc')
+                                            : t('clinicManagement.modifyClinicDesc')}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <form onSubmit={handleClinicSubmit} id="clinicForm" className="space-y-4">
+                                    <form onSubmit={handleClinicSubmit} id="clinicForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                                         <div className="space-y-2">
-                                            <Label htmlFor="name">Clinic Name </Label>
+                                            <Label htmlFor="name" className={isRTL ? 'text-right block' : ''}>
+                                                {t('clinicManagement.clinicName')}
+                                            </Label>
                                             <Input
                                                 id="name"
                                                 name="name"
                                                 value={clinicFormData.name}
                                                 onChange={handleClinicInputChange}
-                                                placeholder="e.g. Cardiology Center"
+                                                placeholder={t('clinicManagement.clinicNamePlaceholder')}
                                                 required
+                                                className={isRTL ? 'text-right' : ''}
+                                                dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="category_id">Category </Label>
+                                            <Label htmlFor="category_id" className={isRTL ? 'text-right block' : ''}>
+                                                {t('clinicManagement.category')}
+                                            </Label>
                                             <select
                                                 id="category_id"
                                                 name="category_id"
                                                 value={clinicFormData.category_id}
                                                 onChange={(e) => handleClinicCategoryChange(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-right' : ''}`}
                                                 required
+                                                dir={isRTL ? 'rtl' : 'ltr'}
                                             >
-                                                <option value="">Select a category</option>
+                                                <option value="">{t('clinicManagement.selectCategory')}</option>
                                                 {categories
-                                                    .filter(cat => cat.is_active) // Only show active categories
+                                                    .filter(cat => cat.is_active)
                                                     .map(category => (
                                                         <option key={category.id} value={category.id}>
                                                             {category.name}
                                                         </option>
                                                     ))}
                                             </select>
-                                            {/* Replace the existing "No categories" warning in the clinic form with this: */}
+
                                             {categories.length === 0 && (
-                                                <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mt-2">
-                                                    <h4 className="font-medium text-amber-800">No Categories Available</h4>
+                                                <div className={`bg-amber-50 border border-amber-200 rounded-md p-4 mt-2 ${isRTL ? 'text-right' : ''}`}>
+                                                    <h4 className="font-medium text-amber-800">{t('clinicManagement.noCategoriesAvailable')}</h4>
                                                     <p className="text-amber-700 text-sm mb-3">
-                                                        Categories must be created before you can add clinics.
+                                                        {t('clinicManagement.categoriesRequiredMessage')}
                                                     </p>
                                                     <Button
                                                         type="button"
@@ -943,49 +964,56 @@ const ClinicManagement = () => {
                                                         size="sm"
                                                         className="bg-amber-600 hover:bg-amber-700"
                                                     >
-                                                        <Plus className="h-4 w-4 mr-1" />
-                                                        Create Category Now
+                                                        <Plus className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                        {t('clinicManagement.createCategoryNow')}
                                                     </Button>
                                                 </div>
                                             )}
                                         </div>
+
                                         <div className="space-y-2">
-                                            <Label htmlFor="description">Description</Label>
+                                            <Label htmlFor="description" className={isRTL ? 'text-right block' : ''}>
+                                                {t('common.description')}
+                                            </Label>
                                             <Textarea
                                                 id="description"
                                                 name="description"
                                                 value={clinicFormData.description}
                                                 onChange={handleClinicInputChange}
-                                                placeholder="Describe this clinic's services and specialties"
+                                                placeholder={t('clinicManagement.descriptionPlaceholder')}
                                                 rows={4}
+                                                className={isRTL ? 'text-right' : ''}
+                                                dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <Label htmlFor="is_active">Active Status</Label>
+                                            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                <Label htmlFor="is_active" className={isRTL ? 'text-right' : ''}>
+                                                    {t('clinicManagement.activeStatus')}
+                                                </Label>
                                                 <Switch
                                                     id="is_active"
                                                     checked={clinicFormData.is_active}
                                                     onCheckedChange={handleClinicActiveChange}
                                                 />
                                             </div>
-                                            <p className="text-sm text-gray-500">
+                                            <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
                                                 {clinicFormData.is_active
-                                                    ? "This clinic is visible and accepting appointments"
-                                                    : "This clinic is hidden and not accepting appointments"}
+                                                    ? t('clinicManagement.clinicActive')
+                                                    : t('clinicManagement.clinicInactive')}
                                             </p>
                                         </div>
                                     </form>
                                 </CardContent>
-                                <CardFooter className="flex justify-between border-t pt-4">
+                                <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                     {clinicFormMode === "edit" && (
                                         <Button
                                             type="button"
                                             variant="outline"
                                             onClick={resetClinicForm}
                                         >
-                                            Cancel
+                                            {t('common.cancel')}
                                         </Button>
                                     )}
                                     <Button
@@ -995,10 +1023,10 @@ const ClinicManagement = () => {
                                         disabled={isLoading || categories.length === 0}
                                     >
                                         {isLoading
-                                            ? "Saving..."
+                                            ? t('clinicManagement.saving')
                                             : clinicFormMode === "create"
-                                                ? "Create Clinic"
-                                                : "Update Clinic"
+                                                ? t('clinicManagement.createClinic')
+                                                : t('clinicManagement.updateClinic')
                                         }
                                     </Button>
                                 </CardFooter>
@@ -1009,63 +1037,63 @@ const ClinicManagement = () => {
 
                 {/* CATEGORIES TAB */}
                 <TabsContent value="categories" className="space-y-6">
-                    <div className="flex flex-col lg:flex-row gap-8">
+                    <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
                         {/* Categories List */}
                         <div className="w-full lg:w-2/3">
                             <Card>
                                 <CardHeader>
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle>Clinic Categories</CardTitle>
-                                        <div className="flex items-center space-x-2">
+                                    <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <CardTitle>{t('clinicManagement.clinicCategories')}</CardTitle>
+                                        <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                             <Button variant="outline" size="sm" onClick={loadCategories} disabled={isLoading}>
-                                                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                                                Refresh
+                                                <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
+                                                {t('common.refresh')}
                                             </Button>
                                             <Button size="sm" onClick={resetCategoryForm}>
-                                                <Plus className="h-4 w-4 mr-2" />
-                                                Add Category
+                                                <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                                {t('clinicManagement.addCategory')}
                                             </Button>
                                         </div>
                                     </div>
                                     <CardDescription>
-                                        Manage clinic specialties and categories
+                                        {t('clinicManagement.categoriesDescription')}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
                                         {categories.map((category) => (
-                                            <div key={category.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                                <div className="mb-2 sm:mb-0">
+                                            <div key={category.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                                                <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`}>
                                                     <h3 className="font-medium">{category.name}</h3>
                                                     <div className="mt-1">
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${category.is_active
                                                             ? "bg-green-100 text-green-800"
                                                             : "bg-red-100 text-red-800"
                                                             }`}>
-                                                            {category.is_active ? "Active" : "Inactive"}
+                                                            {category.is_active ? t('common.active') : t('common.inactive')}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                                <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 ${isRTL ? 'sm:flex-row-reverse sm:space-x-reverse' : ''}`}>
                                                     <Button variant="outline" size="sm" onClick={() => handleEditCategory(category.id)}>
-                                                        <Edit className="h-4 w-4 mr-1" />
-                                                        Edit
+                                                        <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                        {t('common.edit')}
                                                     </Button>
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
                                                         onClick={() => handleDeleteCategory(category.id)}
                                                     >
-                                                        <Trash2 className="h-4 w-4 mr-1" />
-                                                        Delete
+                                                        <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                        {t('common.delete')}
                                                     </Button>
                                                 </div>
                                             </div>
                                         ))}
 
                                         {categories.length === 0 && (
-                                            <div className="text-center py-8 text-gray-500">
-                                                No categories found. Add a category to get started.
+                                            <div className={`text-center py-8 text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                                                {t('clinicManagement.noCategoriesFound')}
                                             </div>
                                         )}
                                     </div>
@@ -1077,52 +1105,60 @@ const ClinicManagement = () => {
                         <div className="w-full lg:w-1/3">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle>{categoryFormMode === "create" ? "Create New Category" : "Edit Category"}</CardTitle>
-                                    <CardDescription>
+                                    <CardTitle className={isRTL ? 'text-right' : ''}>
+                                        {categoryFormMode === "create" ? t('clinicManagement.createNewCategory') : t('clinicManagement.editCategory')}
+                                    </CardTitle>
+                                    <CardDescription className={isRTL ? 'text-right' : ''}>
                                         {categoryFormMode === "create"
-                                            ? "Add a new clinic category"
-                                            : "Modify existing category details"}
+                                            ? t('clinicManagement.addNewCategoryDesc')
+                                            : t('clinicManagement.modifyCategoryDesc')}
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <form onSubmit={handleCategorySubmit} id="categoryForm" className="space-y-4">
+                                    <form onSubmit={handleCategorySubmit} id="categoryForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                                         <div className="space-y-2">
-                                            <Label htmlFor="categoryName">Category Name </Label>
+                                            <Label htmlFor="categoryName" className={isRTL ? 'text-right block' : ''}>
+                                                {t('clinicManagement.categoryName')}
+                                            </Label>
                                             <Input
                                                 id="categoryName"
                                                 name="name"
                                                 value={categoryFormData.name}
                                                 onChange={handleCategoryInputChange}
-                                                placeholder="e.g. Cardiology"
+                                                placeholder={t('clinicManagement.categoryNamePlaceholder')}
                                                 required
+                                                className={isRTL ? 'text-right' : ''}
+                                                dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <Label htmlFor="categoryActive">Active Status</Label>
+                                            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                <Label htmlFor="categoryActive" className={isRTL ? 'text-right' : ''}>
+                                                    {t('clinicManagement.activeStatus')}
+                                                </Label>
                                                 <Switch
                                                     id="categoryActive"
                                                     checked={categoryFormData.is_active}
                                                     onCheckedChange={handleCategoryActiveChange}
                                                 />
                                             </div>
-                                            <p className="text-sm text-gray-500">
+                                            <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
                                                 {categoryFormData.is_active
-                                                    ? "This category is active and available for selection"
-                                                    : "This category is inactive and hidden from selection"}
+                                                    ? t('clinicManagement.categoryActive')
+                                                    : t('clinicManagement.categoryInactive')}
                                             </p>
                                         </div>
                                     </form>
                                 </CardContent>
-                                <CardFooter className="flex justify-between border-t pt-4">
+                                <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                     {categoryFormMode === "edit" && (
                                         <Button
                                             type="button"
                                             variant="outline"
                                             onClick={resetCategoryForm}
                                         >
-                                            Cancel
+                                            {t('common.cancel')}
                                         </Button>
                                     )}
                                     <Button
@@ -1132,10 +1168,10 @@ const ClinicManagement = () => {
                                         disabled={isLoading}
                                     >
                                         {isLoading
-                                            ? "Saving..."
+                                            ? t('clinicManagement.saving')
                                             : categoryFormMode === "create"
-                                                ? "Create Category"
-                                                : "Update Category"
+                                                ? t('clinicManagement.createCategory')
+                                                : t('clinicManagement.updateCategory')
                                         }
                                     </Button>
                                 </CardFooter>
@@ -1145,28 +1181,26 @@ const ClinicManagement = () => {
                 </TabsContent>
             </Tabs>
 
-
-
             {/* Alert Dialogs */}
             {/* Clinic Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteClinicDialog} onOpenChange={setShowDeleteClinicDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Clinic</AlertDialogTitle>
+                <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+                    <AlertDialogHeader className={isRTL ? 'text-right' : ''}>
+                        <AlertDialogTitle>{t('clinicManagement.deleteClinic')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete this clinic? This action cannot be undone.
+                            {t('clinicManagement.confirmDeleteClinic')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
                         <AlertDialogCancel onClick={() => setShowDeleteClinicDialog(false)}>
-                            Cancel
+                            {t('common.cancel')}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={confirmDeleteClinic}
                             className="bg-red-600 hover:bg-red-700"
                             disabled={isLoading}
                         >
-                            {isLoading ? "Deleting..." : "Delete"}
+                            {isLoading ? t('clinicManagement.deleting') : t('common.delete')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1174,23 +1208,23 @@ const ClinicManagement = () => {
 
             {/* Category Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteCategoryDialog} onOpenChange={setShowDeleteCategoryDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+                    <AlertDialogHeader className={isRTL ? 'text-right' : ''}>
+                        <AlertDialogTitle>{t('clinicManagement.deleteCategory')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete this category? This action cannot be undone.
+                            {t('clinicManagement.confirmDeleteCategory')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
                         <AlertDialogCancel onClick={() => setShowDeleteCategoryDialog(false)}>
-                            Cancel
+                            {t('common.cancel')}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={confirmDeleteCategory}
                             className="bg-red-600 hover:bg-red-700"
                             disabled={isLoading}
                         >
-                            {isLoading ? "Deleting..." : "Delete"}
+                            {isLoading ? t('clinicManagement.deleting') : t('common.delete')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1198,23 +1232,23 @@ const ClinicManagement = () => {
 
             {/* Doctor Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteDoctorDialog} onOpenChange={setShowDeleteDoctorDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Doctor</AlertDialogTitle>
+                <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+                    <AlertDialogHeader className={isRTL ? 'text-right' : ''}>
+                        <AlertDialogTitle>{t('clinicManagement.deleteDoctor')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete this doctor? This action cannot be undone.
+                            {t('clinicManagement.confirmDeleteDoctor')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
                         <AlertDialogCancel onClick={() => setShowDeleteDoctorDialog(false)}>
-                            Cancel
+                            {t('common.cancel')}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={confirmDeleteDoctor}
                             className="bg-red-600 hover:bg-red-700"
                             disabled={isLoading}
                         >
-                            {isLoading ? "Deleting..." : "Delete"}
+                            {isLoading ? t('clinicManagement.deleting') : t('common.delete')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -1,5 +1,6 @@
 // pages/api/admin/AppointmentsManagement.tsx
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     logActivity: propLogActivity,
     userEmail
 }) => {
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
     const { toast } = useToast();
     const [appointments, setAppointments] = useState<AppointmentInfo[]>(propAppointments || []);
     const [isLoading, setIsLoading] = useState(propIsLoading || false);
@@ -217,11 +220,9 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         if (selectedClinicId) {
             const filteredDoctors = doctors.filter(d => d.clinic_id === selectedClinicId && d.is_available);
             if (filteredDoctors.length > 0 && selectedDoctorId === "") {
-                // Auto-select first doctor if none selected
                 setSelectedDoctorId(filteredDoctors[0].id);
                 setAppointmentPrice(filteredDoctors[0].price);
             } else if (!filteredDoctors.some(d => d.id === selectedDoctorId)) {
-                // Reset doctor selection if current selection is invalid
                 setSelectedDoctorId("");
                 setAppointmentPrice(0);
             }
@@ -309,15 +310,15 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
             // Success toast
             toast({
-                title: "Success",
-                description: `${mappedAppointments.length} appointments loaded.`,
+                title: t('common.success'),
+                description: `${mappedAppointments.length} ${t('appointmentsManagement.appointments')} ${t('appointmentsManagement.loading')}.`,
                 variant: "default",
             });
         } catch (error) {
             console.error('Error loading appointments:', error);
             toast({
-                title: "Error",
-                description: "Failed to load appointments.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToLoad'),
                 variant: "destructive",
             });
         } finally {
@@ -339,8 +340,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         } catch (error) {
             console.error('Error loading clinics:', error);
             toast({
-                title: "Error",
-                description: "Failed to load clinics.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToLoadClinics'),
                 variant: "destructive",
             });
         }
@@ -359,8 +360,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         } catch (error) {
             console.error('Error loading doctors:', error);
             toast({
-                title: "Error",
-                description: "Failed to load doctors.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToLoadDoctors'),
                 variant: "destructive",
             });
         }
@@ -380,8 +381,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         } catch (error) {
             console.error('Error loading patients:', error);
             toast({
-                title: "Error",
-                description: "Failed to load patients.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToLoadPatients'),
                 variant: "destructive",
             });
         }
@@ -406,8 +407,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         } catch (error) {
             console.error('Error loading doctor availability:', error);
             toast({
-                title: "Error",
-                description: "Failed to load doctor availability.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToLoadAvailability'),
                 variant: "destructive",
             });
         }
@@ -430,8 +431,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             if (error) {
                 console.error("Error updating appointment status:", error);
                 toast({
-                    title: "Error",
-                    description: "Failed to update appointment status.",
+                    title: t('common.error'),
+                    description: t('appointmentsManagement.failedToUpdateStatus'),
                     variant: "destructive",
                 });
                 return;
@@ -444,21 +445,21 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
             // Log the activity
             await logActivity(
-                "Appointment Status Updated",
+                t('appointmentsManagement.appointmentStatusUpdated'),
                 userEmail || "admin",
                 `Appointment ID ${id} status changed to ${status}`,
                 "success"
             );
 
             toast({
-                title: "Success",
-                description: `Appointment status updated to ${status}.`,
+                title: t('common.success'),
+                description: t('appointmentsManagement.statusUpdated', { status: t(`appointmentsManagement.${status}`) }),
             });
         } catch (error) {
             console.error("Error updating appointment status:", error);
             toast({
-                title: "Error",
-                description: "Failed to update appointment status.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToUpdateStatus'),
                 variant: "destructive",
             });
         } finally {
@@ -482,8 +483,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             if (error) {
                 console.error("Error updating payment status:", error);
                 toast({
-                    title: "Error",
-                    description: "Failed to update payment status.",
+                    title: t('common.error'),
+                    description: t('appointmentsManagement.failedToUpdatePayment'),
                     variant: "destructive",
                 });
                 return;
@@ -496,21 +497,21 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
             // Log the activity
             await logActivity(
-                "Payment Status Updated",
+                t('appointmentsManagement.paymentStatusUpdated'),
                 userEmail || "admin",
                 `Appointment ID ${id} payment status changed to ${status}`,
                 "success"
             );
 
             toast({
-                title: "Success",
-                description: `Payment status updated to ${status}.`,
+                title: t('common.success'),
+                description: t('appointmentsManagement.paymentStatusUpdated', { status: t(`appointmentsManagement.${status}`) }),
             });
         } catch (error) {
             console.error("Error updating payment status:", error);
             toast({
-                title: "Error",
-                description: "Failed to update payment status.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToUpdatePayment'),
                 variant: "destructive",
             });
         } finally {
@@ -535,8 +536,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             if (error) {
                 console.error("Error updating appointment notes:", error);
                 toast({
-                    title: "Error",
-                    description: "Failed to update appointment notes.",
+                    title: t('common.error'),
+                    description: t('appointmentsManagement.failedToUpdateNotes'),
                     variant: "destructive",
                 });
                 return;
@@ -549,21 +550,21 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
             // Log the activity
             await logActivity(
-                "Appointment Notes Updated",
+                t('appointmentsManagement.appointmentNotesUpdated'),
                 userEmail || "admin",
                 `Notes updated for Appointment ID ${id}`,
                 "success"
             );
 
             toast({
-                title: "Success",
-                description: "Appointment notes updated successfully.",
+                title: t('common.success'),
+                description: t('appointmentsManagement.notesUpdated'),
             });
         } catch (error) {
             console.error("Error updating appointment notes:", error);
             toast({
-                title: "Error",
-                description: "Failed to update appointment notes.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToUpdateNotes'),
                 variant: "destructive",
             });
         } finally {
@@ -574,7 +575,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     // Delete appointment
     const handleDeleteAppointment = async (id: string) => {
         // Confirm deletion
-        if (!window.confirm("Are you sure you want to delete this appointment? This action cannot be undone.")) {
+        if (!window.confirm(t('appointmentsManagement.confirmDelete'))) {
             return;
         }
 
@@ -590,8 +591,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             if (error) {
                 console.error("Error deleting appointment:", error);
                 toast({
-                    title: "Error",
-                    description: "Failed to delete appointment.",
+                    title: t('common.error'),
+                    description: t('appointmentsManagement.failedToDelete'),
                     variant: "destructive",
                 });
                 return;
@@ -602,21 +603,21 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
             // Log the activity
             await logActivity(
-                "Appointment Deleted",
+                t('appointmentsManagement.appointmentDeleted'),
                 userEmail || "admin",
                 `Appointment ID ${id} was deleted`,
                 "success"
             );
 
             toast({
-                title: "Success",
-                description: "Appointment deleted successfully.",
+                title: t('common.success'),
+                description: t('appointmentsManagement.appointmentDeleted'),
             });
         } catch (error) {
             console.error("Error deleting appointment:", error);
             toast({
-                title: "Error",
-                description: "Failed to delete appointment.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToDelete'),
                 variant: "destructive",
             });
         } finally {
@@ -629,8 +630,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         // Validate form
         if (!selectedClinicId || !selectedDoctorId || !selectedPatientId || !selectedDay || !selectedTimeSlot) {
             toast({
-                title: "Missing Information",
-                description: "Please fill in all required fields.",
+                title: t('appointmentsManagement.missingInformation'),
+                description: t('appointmentsManagement.fillRequiredFields'),
                 variant: "destructive",
             });
             return;
@@ -679,8 +680,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             if (error) {
                 console.error("Error creating appointment:", error);
                 toast({
-                    title: "Error",
-                    description: "Failed to create appointment.",
+                    title: t('common.error'),
+                    description: t('appointmentsManagement.failedToCreate'),
                     variant: "destructive",
                 });
                 return;
@@ -716,15 +717,15 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                 // Log the activity
                 await logActivity(
-                    "Appointment Created",
+                    t('appointmentsManagement.appointmentCreatedLog'),
                     userEmail || "admin",
                     `New appointment created for ${newAppointment.patient_name} with Dr. ${newAppointment.doctor_name} at ${newAppointment.clinic_name}`,
                     "success"
                 );
 
                 toast({
-                    title: "Success",
-                    description: "Appointment created successfully.",
+                    title: t('common.success'),
+                    description: t('appointmentsManagement.appointmentCreated'),
                 });
 
                 // Reset form
@@ -740,8 +741,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         } catch (error) {
             console.error("Error creating appointment:", error);
             toast({
-                title: "Error",
-                description: "Failed to create appointment.",
+                title: t('common.error'),
+                description: t('appointmentsManagement.failedToCreate'),
                 variant: "destructive",
             });
         } finally {
@@ -784,8 +785,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
         if (dataToExport.length === 0) {
             toast({
-                title: "No Data",
-                description: "There are no appointments matching your filters to export.",
+                title: t('appointmentsManagement.noDataToExport'),
+                description: t('appointmentsManagement.noAppointmentsToExport'),
                 variant: "destructive",
             });
             return;
@@ -793,8 +794,10 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
         // Create CSV headers
         const headers = [
-            "ID", "Patient", "Doctor", "Clinic", "Date", "Time",
-            "Status", "Payment Status", "Price", "Notes"
+            "ID", t('appointmentsManagement.patient'), t('appointmentsManagement.doctor'),
+            t('appointmentsManagement.clinic'), t('common.date'), t('common.time'),
+            t('appointmentsManagement.status'), t('appointmentsManagement.payment'),
+            t('common.price'), t('appointmentsManagement.notes')
         ];
 
         // Convert data to CSV rows
@@ -829,15 +832,15 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
         // Log activity
         logActivity(
-            "Appointments Exported",
+            t('appointmentsManagement.appointmentsExported'),
             userEmail || "admin",
             `Exported ${dataToExport.length} appointments to CSV`,
             "success"
         );
 
         toast({
-            title: "Export Complete",
-            description: `${dataToExport.length} appointments exported to CSV.`,
+            title: t('appointmentsManagement.exportComplete'),
+            description: t('appointmentsManagement.appointmentsExported', { count: dataToExport.length }),
         });
     };
 
@@ -1032,63 +1035,88 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             .map(slot => `${slot.start_time}-${slot.end_time}`);
     };
 
+    // Get translated day names
+    const getDayNames = () => {
+        if (isRTL) {
+            return [
+                { key: "Monday", short: t('appointmentsManagement.mon'), full: t('doctorManagement.monday') },
+                { key: "Tuesday", short: t('appointmentsManagement.tue'), full: t('doctorManagement.tuesday') },
+                { key: "Wednesday", short: t('appointmentsManagement.wed'), full: t('doctorManagement.wednesday') },
+                { key: "Thursday", short: t('appointmentsManagement.thu'), full: t('doctorManagement.thursday') },
+                { key: "Friday", short: t('appointmentsManagement.fri'), full: t('doctorManagement.friday') },
+                { key: "Saturday", short: t('appointmentsManagement.sat'), full: t('doctorManagement.saturday') },
+                { key: "Sunday", short: t('appointmentsManagement.sun'), full: t('doctorManagement.sunday') }
+            ];
+        } else {
+            return [
+                { key: "Monday", short: "Mon", full: "Monday" },
+                { key: "Tuesday", short: "Tue", full: "Tuesday" },
+                { key: "Wednesday", short: "Wed", full: "Wednesday" },
+                { key: "Thursday", short: "Thu", full: "Thursday" },
+                { key: "Friday", short: "Fri", full: "Friday" },
+                { key: "Saturday", short: "Sat", full: "Saturday" },
+                { key: "Sunday", short: "Sun", full: "Sunday" }
+            ];
+        }
+    };
+
     // Render the appointment list view with fixed pagination
     const renderListView = () => {
         return (
-            <>
+            <div className={isRTL ? 'rtl' : 'ltr'} dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead onClick={() => handleSort("patient")} className="cursor-pointer">
                                     <div className="flex items-center">
-                                        Patient
+                                        {t('appointmentsManagement.patient')}
                                         {sortField === "patient" && (
-                                            <ChevronsUpDown className="h-4 w-4 ml-1" />
+                                            <ChevronsUpDown className={`h-4 w-4 ${isRTL ? 'mr-1' : 'ml-1'}`} />
                                         )}
                                     </div>
                                 </TableHead>
                                 <TableHead onClick={() => handleSort("doctor")} className="cursor-pointer">
                                     <div className="flex items-center">
-                                        Doctor
+                                        {t('appointmentsManagement.doctor')}
                                         {sortField === "doctor" && (
-                                            <ChevronsUpDown className="h-4 w-4 ml-1" />
+                                            <ChevronsUpDown className={`h-4 w-4 ${isRTL ? 'mr-1' : 'ml-1'}`} />
                                         )}
                                     </div>
                                 </TableHead>
                                 <TableHead onClick={() => handleSort("clinic")} className="cursor-pointer">
                                     <div className="flex items-center">
-                                        Clinic
+                                        {t('appointmentsManagement.clinic')}
                                         {sortField === "clinic" && (
-                                            <ChevronsUpDown className="h-4 w-4 ml-1" />
+                                            <ChevronsUpDown className={`h-4 w-4 ${isRTL ? 'mr-1' : 'ml-1'}`} />
                                         )}
                                     </div>
                                 </TableHead>
                                 <TableHead onClick={() => handleSort("date")} className="cursor-pointer">
                                     <div className="flex items-center">
-                                        Date & Time
+                                        {t('appointmentsManagement.dateTime')}
                                         {sortField === "date" && (
-                                            <ChevronsUpDown className="h-4 w-4 ml-1" />
+                                            <ChevronsUpDown className={`h-4 w-4 ${isRTL ? 'mr-1' : 'ml-1'}`} />
                                         )}
                                     </div>
                                 </TableHead>
-                                <TableHead>Status</TableHead>
+                                <TableHead>{t('appointmentsManagement.status')}</TableHead>
                                 <TableHead onClick={() => handleSort("price")} className="cursor-pointer">
                                     <div className="flex items-center">
-                                        Payment
+                                        {t('appointmentsManagement.payment')}
                                         {sortField === "price" && (
-                                            <ChevronsUpDown className="h-4 w-4 ml-1" />
+                                            <ChevronsUpDown className={`h-4 w-4 ${isRTL ? 'mr-1' : 'ml-1'}`} />
                                         )}
                                     </div>
                                 </TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead className={isRTL ? "text-left" : "text-right"}>{t('appointmentsManagement.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {paginatedAppointments.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                                        No appointments found. Try adjusting your filters or add a new appointment.
+                                        {t('appointmentsManagement.noAppointmentsFound')}
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -1103,16 +1131,16 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                         </TableCell>
                                         <TableCell>
                                             <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
-                                                {appointment.status}
+                                                {t(`appointmentsManagement.${appointment.status}`)}
                                             </span>
                                         </TableCell>
                                         <TableCell>
                                             <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
-                                                {appointment.payment_status}
+                                                {t(`appointmentsManagement.${appointment.payment_status}`)}
                                             </span>
                                             <div className="text-sm mt-1">₪{appointment.price}</div>
                                         </TableCell>
-                                        <TableCell className="text-right space-x-2">
+                                        <TableCell className={`${isRTL ? 'text-left' : 'text-right'} space-x-2`}>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -1123,7 +1151,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                 className="h-8 w-8 p-0"
                                             >
                                                 <Edit className="h-4 w-4" />
-                                                <span className="sr-only">Edit</span>
+                                                <span className="sr-only">{t('appointmentsManagement.edit')}</span>
                                             </Button>
                                             <Button
                                                 variant="ghost"
@@ -1132,7 +1160,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                 className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                                             >
                                                 <Trash2 className="h-4 w-4" />
-                                                <span className="sr-only">Delete</span>
+                                                <span className="sr-only">{t('appointmentsManagement.delete')}</span>
                                             </Button>
                                         </TableCell>
                                     </TableRow>
@@ -1144,18 +1172,18 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                 {/* Fixed pagination component */}
                 {paginatedAppointments.length > 0 && (
-                    <div className="flex items-center justify-between mt-4">
+                    <div className={`flex items-center justify-between mt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className="text-sm text-gray-500">
-                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, getFilteredAppointments().length)} of {getFilteredAppointments().length} appointments
+                            {t('appointmentsManagement.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('appointmentsManagement.to')} {Math.min(currentPage * itemsPerPage, getFilteredAppointments().length)} {t('appointmentsManagement.of')} {getFilteredAppointments().length} {t('appointmentsManagement.appointments')}
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setCurrentPage(1)}
                                 disabled={currentPage === 1}
                             >
-                                First
+                                {t('appointmentsManagement.first')}
                             </Button>
                             <Button
                                 variant="outline"
@@ -1163,18 +1191,18 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                {t('appointmentsManagement.previous')}
                             </Button>
                             <span className="px-4 py-2">
-                                Page {currentPage} of {totalPages}
+                                {t('appointmentsManagement.page')} {currentPage} {t('appointmentsManagement.of')} {totalPages}
                             </span>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages)
-                                )}
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                 disabled={currentPage === totalPages}
-                            > Next
+                            >
+                                {t('appointmentsManagement.next')}
                             </Button>
                             <Button
                                 variant="outline"
@@ -1182,11 +1210,11 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 onClick={() => setCurrentPage(totalPages)}
                                 disabled={currentPage === totalPages}
                             >
-                                Last
+                                {t('appointmentsManagement.last')}
                             </Button>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-500">Items per page:</span>
+                        <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
+                            <span className="text-sm text-gray-500">{t('appointmentsManagement.itemsPerPage')}</span>
                             <Select value={itemsPerPage.toString()}
                                 onValueChange={(value) => {
                                     setItemsPerPage(Number(value));
@@ -1206,7 +1234,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         </div>
                     </div>
                 )}
-            </>
+            </div>
         );
     };
 
@@ -1229,12 +1257,12 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         );
 
         return (
-            <div className="space-y-4">
+            <div className={`space-y-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                 {sortedDates.length === 0 ? (
                     <div className="text-center py-12 bg-gray-50 border rounded-lg">
                         <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-600">No Appointments Scheduled</h3>
-                        <p className="text-gray-500 mt-2">Create a new appointment to see it here.</p>
+                        <h3 className="text-lg font-medium text-gray-600">{t('appointmentsManagement.noAppointmentsCalendar')}</h3>
+                        <p className="text-gray-500 mt-2">{t('appointmentsManagement.createAppointmentToSee')}</p>
                     </div>
                 ) : (
                     sortedDates.map(date => (
@@ -1248,13 +1276,13 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Time</TableHead>
-                                            <TableHead>Patient</TableHead>
-                                            <TableHead>Doctor</TableHead>
-                                            <TableHead>Clinic</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Payment</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
+                                            <TableHead>{t('common.time')}</TableHead>
+                                            <TableHead>{t('appointmentsManagement.patient')}</TableHead>
+                                            <TableHead>{t('appointmentsManagement.doctor')}</TableHead>
+                                            <TableHead>{t('appointmentsManagement.clinic')}</TableHead>
+                                            <TableHead>{t('appointmentsManagement.status')}</TableHead>
+                                            <TableHead>{t('appointmentsManagement.payment')}</TableHead>
+                                            <TableHead className={isRTL ? "text-left" : "text-right"}>{t('appointmentsManagement.actions')}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -1268,16 +1296,16 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                     <TableCell>{appointment.clinic_name}</TableCell>
                                                     <TableCell>
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
-                                                            {appointment.status}
+                                                            {t(`appointmentsManagement.${appointment.status}`)}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
-                                                            {appointment.payment_status}
+                                                            {t(`appointmentsManagement.${appointment.payment_status}`)}
                                                         </span>
                                                         <div className="text-sm mt-1">₪{appointment.price}</div>
                                                     </TableCell>
-                                                    <TableCell className="text-right space-x-2">
+                                                    <TableCell className={`${isRTL ? 'text-left' : 'text-right'} space-x-2`}>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
@@ -1288,7 +1316,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                             className="h-8 w-8 p-0"
                                                         >
                                                             <Edit className="h-4 w-4" />
-                                                            <span className="sr-only">Edit</span>
+                                                            <span className="sr-only">{t('appointmentsManagement.edit')}</span>
                                                         </Button>
                                                         <Button
                                                             variant="ghost"
@@ -1297,7 +1325,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                             className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                                                         >
                                                             <Trash2 className="h-4 w-4" />
-                                                            <span className="sr-only">Delete</span>
+                                                            <span className="sr-only">{t('appointmentsManagement.delete')}</span>
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
@@ -1316,15 +1344,15 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     const renderStatsView = () => {
         // Prepare data for charts
         const statusData = [
-            { name: 'Scheduled', value: statsData.scheduled, color: '#3b82f6' },
-            { name: 'Completed', value: statsData.completed, color: '#10b981' },
-            { name: 'Cancelled', value: statsData.cancelled, color: '#ef4444' }
+            { name: t('appointmentsManagement.scheduled'), value: statsData.scheduled, color: '#3b82f6' },
+            { name: t('appointmentsManagement.completed'), value: statsData.completed, color: '#10b981' },
+            { name: t('appointmentsManagement.cancelled'), value: statsData.cancelled, color: '#ef4444' }
         ];
 
         const paymentData = [
-            { name: 'Pending', value: statsData.pending, color: '#f59e0b' },
-            { name: 'Paid', value: statsData.paid, color: '#10b981' },
-            { name: 'Refunded', value: statsData.refunded, color: '#8b5cf6' }
+            { name: t('appointmentsManagement.pending'), value: statsData.pending, color: '#f59e0b' },
+            { name: t('appointmentsManagement.paid'), value: statsData.paid, color: '#10b981' },
+            { name: t('appointmentsManagement.refunded'), value: statsData.refunded, color: '#8b5cf6' }
         ];
 
         // Group appointments by clinic for revenue
@@ -1341,30 +1369,30 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         }));
 
         return (
-            <div className="space-y-6">
+            <div className={`space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardDescription>Total Appointments</CardDescription>
+                            <CardDescription>{t('appointmentsManagement.totalAppointments')}</CardDescription>
                             <CardTitle className="text-3xl">{statsData.total}</CardTitle>
                         </CardHeader>
                     </Card>
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardDescription>Scheduled</CardDescription>
+                            <CardDescription>{t('appointmentsManagement.scheduled')}</CardDescription>
                             <CardTitle className="text-3xl">{statsData.scheduled}</CardTitle>
                         </CardHeader>
                     </Card>
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardDescription>Completed</CardDescription>
+                            <CardDescription>{t('appointmentsManagement.completed')}</CardDescription>
                             <CardTitle className="text-3xl">{statsData.completed}</CardTitle>
                         </CardHeader>
                     </Card>
                     <Card>
                         <CardHeader className="pb-2">
-                            <CardDescription>Total Revenue</CardDescription>
+                            <CardDescription>{t('appointmentsManagement.totalRevenue')}</CardDescription>
                             <CardTitle className="text-3xl">₪{statsData.revenue.toFixed(2)}</CardTitle>
                         </CardHeader>
                     </Card>
@@ -1375,7 +1403,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     {/* Status Pie Chart */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Appointment Status</CardTitle>
+                            <CardTitle>{t('appointmentsManagement.appointmentStatus')}</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             {statusData.some(item => item.value > 0) ? (
@@ -1400,7 +1428,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 </ResponsiveContainer>
                             ) : (
                                 <div className="flex items-center justify-center h-full">
-                                    <p className="text-gray-500">No data available</p>
+                                    <p className="text-gray-500">{t('appointmentsManagement.noDataAvailable')}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -1409,7 +1437,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     {/* Payment Status Pie Chart */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Payment Status</CardTitle>
+                            <CardTitle>{t('appointmentsManagement.paymentStatus')}</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             {paymentData.some(item => item.value > 0) ? (
@@ -1434,7 +1462,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 </ResponsiveContainer>
                             ) : (
                                 <div className="flex items-center justify-center h-full">
-                                    <p className="text-gray-500">No data available</p>
+                                    <p className="text-gray-500">{t('appointmentsManagement.noDataAvailable')}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -1443,7 +1471,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     {/* Revenue by Clinic Bar Chart */}
                     <Card className="lg:col-span-2">
                         <CardHeader>
-                            <CardTitle>Revenue by Clinic</CardTitle>
+                            <CardTitle>{t('appointmentsManagement.revenueByClinic')}</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             {clinicRevenueData.length > 0 ? (
@@ -1454,12 +1482,12 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                         <YAxis />
                                         <Tooltip />
                                         <Legend />
-                                        <Bar dataKey="revenue" name="Revenue ($)" fill="#8884d8" />
+                                        <Bar dataKey="revenue" name={t('common.revenue')} fill="#8884d8" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
                                 <div className="flex items-center justify-center h-full">
-                                    <p className="text-gray-500">No revenue data available</p>
+                                    <p className="text-gray-500">{t('appointmentsManagement.noRevenueData')}</p>
                                 </div>
                             )}
                         </CardContent>
@@ -1471,27 +1499,27 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
     // Main render
     return (
-        <div className="space-y-6">
+        <div className={`space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Header with title and actions */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Appointments Management</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">{t('appointmentsManagement.title')}</h2>
                     <p className="text-muted-foreground">
-                        Manage and track all patient appointments
+                        {t('appointmentsManagement.description')}
                     </p>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
                     <Button variant="outline" onClick={loadAppointments} disabled={isLoading}>
-                        <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                        Refresh
+                        <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
+                        {t('appointmentsManagement.refresh')}
                     </Button>
                     <Button onClick={exportToCSV}>
-                        <Download className="h-4 w-4 mr-2" />
-                        Export
+                        <Download className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('appointmentsManagement.export')}
                     </Button>
                     <Button onClick={() => setIsAddingAppointment(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Appointment
+                        <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('appointmentsManagement.addAppointment')}
                     </Button>
                 </div>
             </div>
@@ -1500,16 +1528,16 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "list" | "calendar" | "stats")}>
                 <TabsList>
                     <TabsTrigger value="list">
-                        <FileText className="h-4 w-4 mr-2" />
-                        List View
+                        <FileText className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('appointmentsManagement.listView')}
                     </TabsTrigger>
                     <TabsTrigger value="calendar">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Calendar View
+                        <Calendar className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('appointmentsManagement.calendarView')}
                     </TabsTrigger>
                     <TabsTrigger value="stats">
-                        <BarChart2 className="h-4 w-4 mr-2" />
-                        Statistics
+                        <BarChart2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('appointmentsManagement.statistics')}
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
@@ -1517,19 +1545,19 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             {/* Filters */}
             <Card>
                 <CardHeader className="pb-0">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
                         <div className="flex-1">
                             <Input
-                                placeholder="Search appointments..."
+                                placeholder={t('appointmentsManagement.searchAppointments')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="max-w-md"
                             />
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
                             <Button variant="outline" onClick={resetFilters}>
-                                <X className="h-4 w-4 mr-2" />
-                                Reset Filters
+                                <X className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                {t('appointmentsManagement.resetFilters')}
                             </Button>
                         </div>
                     </div>
@@ -1539,36 +1567,36 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         {/* Status Filter */}
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Filter by status" />
+                                <SelectValue placeholder={t('appointmentsManagement.filterByStatus')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="scheduled">Scheduled</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                                <SelectItem value="all">{t('appointmentsManagement.allStatuses')}</SelectItem>
+                                <SelectItem value="scheduled">{t('appointmentsManagement.scheduled')}</SelectItem>
+                                <SelectItem value="completed">{t('appointmentsManagement.completed')}</SelectItem>
+                                <SelectItem value="cancelled">{t('appointmentsManagement.cancelled')}</SelectItem>
                             </SelectContent>
                         </Select>
 
                         {/* Payment Status Filter */}
                         <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Filter by payment" />
+                                <SelectValue placeholder={t('appointmentsManagement.filterByPayment')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Payment Statuses</SelectItem>
-                                <SelectItem value="pending">Pending</SelectItem>
-                                <SelectItem value="paid">Paid</SelectItem>
-                                <SelectItem value="refunded">Refunded</SelectItem>
+                                <SelectItem value="all">{t('appointmentsManagement.allPaymentStatuses')}</SelectItem>
+                                <SelectItem value="pending">{t('appointmentsManagement.pending')}</SelectItem>
+                                <SelectItem value="paid">{t('appointmentsManagement.paid')}</SelectItem>
+                                <SelectItem value="refunded">{t('appointmentsManagement.refunded')}</SelectItem>
                             </SelectContent>
                         </Select>
 
                         {/* Clinic Filter */}
                         <Select value={clinicFilter} onValueChange={setClinicFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Filter by clinic" />
+                                <SelectValue placeholder={t('appointmentsManagement.filterByClinic')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Clinics</SelectItem>
+                                <SelectItem value="all">{t('appointmentsManagement.allClinics')}</SelectItem>
                                 {uniqueClinics.map(clinic => (
                                     <SelectItem key={clinic} value={clinic}>{clinic}</SelectItem>
                                 ))}
@@ -1578,10 +1606,10 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         {/* Doctor Filter */}
                         <Select value={doctorFilter} onValueChange={setDoctorFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Filter by doctor" />
+                                <SelectValue placeholder={t('appointmentsManagement.filterByDoctor')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Doctors</SelectItem>
+                                <SelectItem value="all">{t('appointmentsManagement.allDoctors')}</SelectItem>
                                 {uniqueDoctors.map(doctor => (
                                     <SelectItem key={doctor} value={doctor}>{doctor}</SelectItem>
                                 ))}
@@ -1591,27 +1619,27 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         {/* Date Filter */}
                         <Select value={dateFilter} onValueChange={setDateFilter}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Filter by date" />
+                                <SelectValue placeholder={t('appointmentsManagement.filterByDate')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Dates</SelectItem>
-                                <SelectItem value="today">Today</SelectItem>
-                                <SelectItem value="thisWeek">This Week</SelectItem>
-                                <SelectItem value="thisMonth">This Month</SelectItem>
-                                <SelectItem value="custom">Custom Range</SelectItem>
+                                <SelectItem value="all">{t('appointmentsManagement.allDates')}</SelectItem>
+                                <SelectItem value="today">{t('appointmentsManagement.today')}</SelectItem>
+                                <SelectItem value="thisWeek">{t('appointmentsManagement.thisWeek')}</SelectItem>
+                                <SelectItem value="thisMonth">{t('appointmentsManagement.thisMonth')}</SelectItem>
+                                <SelectItem value="custom">{t('appointmentsManagement.customRange')}</SelectItem>
                             </SelectContent>
                         </Select>
 
                         {/* Custom Date Range Picker (shown only when custom is selected) */}
                         {dateFilter === 'custom' && (
-                            <div className="flex items-center space-x-2 col-span-2">
+                            <div className={`flex items-center space-x-2 col-span-2 ${isRTL ? 'space-x-reverse' : ''}`}>
                                 <Input
                                     type="date"
                                     value={startDate?.toISOString().split('T')[0] || ''}
                                     onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
                                     placeholder="Start date"
                                 />
-                                <span>to</span>
+                                <span>{t('appointmentsManagement.to')}</span>
                                 <Input
                                     type="date"
                                     value={endDate?.toISOString().split('T')[0] || ''}
@@ -1625,182 +1653,180 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             </Card>
 
             {/* Content based on view mode */}
-            < div className="space-y-4">
+            <div className="space-y-4">
                 {viewMode === 'list' && renderListView()}
                 {viewMode === 'calendar' && renderCalendarView()}
                 {viewMode === 'stats' && renderStatsView()}
             </div>
 
             {/* Appointment Detail Dialog */}
-            {
-                selectedAppointment && (
-                    <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
-                        <DialogContent className="sm:max-w-[600px]">
-                            <DialogHeader>
-                                <DialogTitle>Appointment Details</DialogTitle>
-                                <DialogDescription>
-                                    Manage appointment for {selectedAppointment.patient_name}
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-sm font-medium">Patient</p>
-                                        <p>{selectedAppointment.patient_name}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium">Doctor</p>
-                                        <p>{selectedAppointment.doctor_name}</p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-sm font-medium">Clinic</p>
-                                        <p>{selectedAppointment.clinic_name}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium">Date & Time</p>
-                                        <p>
-                                            {new Date(selectedAppointment.date).toLocaleDateString()} at {selectedAppointment.time}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-sm font-medium">Status</p>
-                                        <Select
-                                            value={selectedAppointment.status}
-                                            onValueChange={(value) => {
-                                                const newStatus = value as 'scheduled' | 'completed' | 'cancelled';
-                                                setSelectedAppointment({
-                                                    ...selectedAppointment,
-                                                    status: newStatus
-                                                });
-                                                handleUpdateAppointmentStatus(selectedAppointment.id, newStatus);
-                                            }}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="scheduled">Scheduled</SelectItem>
-                                                <SelectItem value="completed">Completed</SelectItem>
-                                                <SelectItem value="cancelled">Cancelled</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium">Payment Status</p>
-                                        <Select
-                                            value={selectedAppointment.payment_status}
-                                            onValueChange={(value) => {
-                                                const newPaymentStatus = value as 'pending' | 'paid' | 'refunded';
-                                                setSelectedAppointment({
-                                                    ...selectedAppointment,
-                                                    payment_status: newPaymentStatus
-                                                });
-                                                handleUpdatePaymentStatus(selectedAppointment.id, newPaymentStatus);
-                                            }}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select payment status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="pending">Pending</SelectItem>
-                                                <SelectItem value="paid">Paid</SelectItem>
-                                                <SelectItem value="refunded">Refunded</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+            {selectedAppointment && (
+                <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
+                    <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                            <DialogTitle>{t('appointmentsManagement.appointmentDetails')}</DialogTitle>
+                            <DialogDescription>
+                                {t('appointmentsManagement.manageAppointment', { patientName: selectedAppointment.patient_name })}
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm font-medium">{t('appointmentsManagement.patient')}</p>
+                                    <p>{selectedAppointment.patient_name}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium">Price</p>
-                                    <Input
-                                        type="number"
-                                        value={selectedAppointment.price}
-                                        onChange={(e) => {
-                                            const newPrice = parseFloat(e.target.value);
-                                            if (!isNaN(newPrice)) {
-                                                setSelectedAppointment({
-                                                    ...selectedAppointment,
-                                                    price: newPrice
-                                                });
-                                            }
-                                        }}
-                                        onBlur={() => {
-                                            // Update price in database when input loses focus
-                                            supabase
-                                                .from('appointments')
-                                                .update({
-                                                    price: selectedAppointment.price,
-                                                    updated_at: new Date().toISOString()
-                                                })
-                                                .eq('id', selectedAppointment.id)
-                                                .then(({ error }) => {
-                                                    if (error) {
-                                                        console.error("Error updating price:", error);
-                                                        toast({
-                                                            title: "Error",
-                                                            description: "Failed to update appointment price.",
-                                                            variant: "destructive",
-                                                        });
-                                                    } else {
-                                                        toast({
-                                                            title: "Success",
-                                                            description: "Appointment price updated.",
-                                                        });
-                                                    }
-                                                });
-                                        }}
-                                    />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium">Notes</p>
-                                    <textarea
-                                        className="w-full p-2 border rounded-md min-h-[100px]"
-                                        value={appointmentNotes}
-                                        onChange={(e) => setAppointmentNotes(e.target.value)}
-                                        placeholder="Add notes about this appointment..."
-                                    />
+                                    <p className="text-sm font-medium">{t('appointmentsManagement.doctor')}</p>
+                                    <p>{selectedAppointment.doctor_name}</p>
                                 </div>
                             </div>
-                            <DialogFooter>
-                                <Button
-                                    onClick={() => {
-                                        handleUpdateAppointmentNotes(selectedAppointment.id, appointmentNotes);
-                                        setSelectedAppointment(null);
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm font-medium">{t('appointmentsManagement.clinic')}</p>
+                                    <p>{selectedAppointment.clinic_name}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium">{t('appointmentsManagement.dateTime')}</p>
+                                    <p>
+                                        {new Date(selectedAppointment.date).toLocaleDateString()} {t('appointmentsManagement.at')} {selectedAppointment.time}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm font-medium">{t('appointmentsManagement.status')}</p>
+                                    <Select
+                                        value={selectedAppointment.status}
+                                        onValueChange={(value) => {
+                                            const newStatus = value as 'scheduled' | 'completed' | 'cancelled';
+                                            setSelectedAppointment({
+                                                ...selectedAppointment,
+                                                status: newStatus
+                                            });
+                                            handleUpdateAppointmentStatus(selectedAppointment.id, newStatus);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('appointmentsManagement.selectStatus')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="scheduled">{t('appointmentsManagement.scheduled')}</SelectItem>
+                                            <SelectItem value="completed">{t('appointmentsManagement.completed')}</SelectItem>
+                                            <SelectItem value="cancelled">{t('appointmentsManagement.cancelled')}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium">{t('appointmentsManagement.paymentStatus')}</p>
+                                    <Select
+                                        value={selectedAppointment.payment_status}
+                                        onValueChange={(value) => {
+                                            const newPaymentStatus = value as 'pending' | 'paid' | 'refunded';
+                                            setSelectedAppointment({
+                                                ...selectedAppointment,
+                                                payment_status: newPaymentStatus
+                                            });
+                                            handleUpdatePaymentStatus(selectedAppointment.id, newPaymentStatus);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('appointmentsManagement.selectPaymentStatus')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="pending">{t('appointmentsManagement.pending')}</SelectItem>
+                                            <SelectItem value="paid">{t('appointmentsManagement.paid')}</SelectItem>
+                                            <SelectItem value="refunded">{t('appointmentsManagement.refunded')}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">{t('common.price')}</p>
+                                <Input
+                                    type="number"
+                                    value={selectedAppointment.price}
+                                    onChange={(e) => {
+                                        const newPrice = parseFloat(e.target.value);
+                                        if (!isNaN(newPrice)) {
+                                            setSelectedAppointment({
+                                                ...selectedAppointment,
+                                                price: newPrice
+                                            });
+                                        }
                                     }}
-                                >
-                                    Save Changes
-                                </Button>
-                                <DialogClose asChild>
-                                    <Button variant="outline">Close</Button>
-                                </DialogClose>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                )
-            }
+                                    onBlur={() => {
+                                        // Update price in database when input loses focus
+                                        supabase
+                                            .from('appointments')
+                                            .update({
+                                                price: selectedAppointment.price,
+                                                updated_at: new Date().toISOString()
+                                            })
+                                            .eq('id', selectedAppointment.id)
+                                            .then(({ error }) => {
+                                                if (error) {
+                                                    console.error("Error updating price:", error);
+                                                    toast({
+                                                        title: t('common.error'),
+                                                        description: t('appointmentsManagement.failedToUpdatePrice'),
+                                                        variant: "destructive",
+                                                    });
+                                                } else {
+                                                    toast({
+                                                        title: t('common.success'),
+                                                        description: t('appointmentsManagement.priceUpdated'),
+                                                    });
+                                                }
+                                            });
+                                    }}
+                                />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">{t('appointmentsManagement.notes')}</p>
+                                <textarea
+                                    className="w-full p-2 border rounded-md min-h-[100px]"
+                                    value={appointmentNotes}
+                                    onChange={(e) => setAppointmentNotes(e.target.value)}
+                                    placeholder={t('appointmentsManagement.addNotes')}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                onClick={() => {
+                                    handleUpdateAppointmentNotes(selectedAppointment.id, appointmentNotes);
+                                    setSelectedAppointment(null);
+                                }}
+                            >
+                                {t('appointmentsManagement.saveChanges')}
+                            </Button>
+                            <DialogClose asChild>
+                                <Button variant="outline">{t('appointmentsManagement.close')}</Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
 
             {/* Add Appointment Dialog */}
             <Dialog open={isAddingAppointment} onOpenChange={setIsAddingAppointment}>
                 <DialogContent className="sm:max-w-[700px]">
                     <DialogHeader>
-                        <DialogTitle>Create New Appointment</DialogTitle>
+                        <DialogTitle>{t('appointmentsManagement.createNewAppointmentTitle')}</DialogTitle>
                         <DialogDescription>
-                            Schedule a new appointment for a patient
+                            {t('appointmentsManagement.scheduleNewAppointment')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-6 py-4">
                         {/* Clinic Selection */}
                         <div>
-                            <Label htmlFor="clinic-select">Select Clinic *</Label>
+                            <Label htmlFor="clinic-select">{t('appointmentsManagement.selectClinic')}</Label>
                             <Select
                                 value={selectedClinicId}
                                 onValueChange={setSelectedClinicId}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Choose a clinic" />
+                                    <SelectValue placeholder={t('appointmentsManagement.chooseClinic')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {clinics.filter(c => c.is_active).map(clinic => (
@@ -1812,21 +1838,21 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             </Select>
                             {clinics.length === 0 && (
                                 <p className="text-yellow-600 text-sm mt-1">
-                                    No active clinics available. Please add clinics first.
+                                    {t('appointmentsManagement.noActiveClinics')}
                                 </p>
                             )}
                         </div>
 
                         {/* Doctor Selection (filtered by clinic) */}
                         <div>
-                            <Label htmlFor="doctor-select">Select Doctor *</Label>
+                            <Label htmlFor="doctor-select">{t('appointmentsManagement.selectDoctor')}</Label>
                             <Select
                                 value={selectedDoctorId}
                                 onValueChange={setSelectedDoctorId}
                                 disabled={!selectedClinicId}
                             >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={selectedClinicId ? "Choose a doctor" : "Select a clinic first"} />
+                                    <SelectValue placeholder={selectedClinicId ? t('appointmentsManagement.chooseDoctor') : t('appointmentsManagement.selectClinicFirst')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {doctors
@@ -1840,23 +1866,23 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             </Select>
                             {selectedClinicId && doctors.filter(d => d.clinic_id === selectedClinicId && d.is_available).length === 0 && (
                                 <p className="text-yellow-600 text-sm mt-1">
-                                    No available doctors for this clinic.
+                                    {t('appointmentsManagement.noAvailableDoctors')}
                                 </p>
                             )}
                         </div>
 
                         {/* Patient Selection with search */}
                         <div>
-                            <Label htmlFor="patient-select">Select Patient *</Label>
+                            <Label htmlFor="patient-select">{t('appointmentsManagement.selectPatient')}</Label>
                             <div className="space-y-2">
                                 <Input
-                                    placeholder="Search patients by name or email..."
+                                    placeholder={t('appointmentsManagement.searchPatients')}
                                     value={patientSearchQuery}
                                     onChange={(e) => setPatientSearchQuery(e.target.value)}
                                 />
                                 <div className="max-h-40 overflow-y-auto border rounded-md">
                                     {filteredPatients.length === 0 ? (
-                                        <div className="p-3 text-center text-gray-500">No patients found</div>
+                                        <div className="p-3 text-center text-gray-500">{t('appointmentsManagement.noPatientsFound')}</div>
                                     ) : (
                                         filteredPatients.map(patient => (
                                             <div
@@ -1877,20 +1903,20 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         {selectedDoctorId && (
                             <div className="space-y-4">
                                 <div>
-                                    <Label>Select Day *</Label>
+                                    <Label>{t('appointmentsManagement.selectDay')}</Label>
                                     <div className="grid grid-cols-3 sm:grid-cols-7 gap-2 mt-2">
-                                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(day => {
-                                            const hasSlots = doctorAvailability.some(slot => slot.day === day);
+                                        {getDayNames().map(day => {
+                                            const hasSlots = doctorAvailability.some(slot => slot.day === day.key);
                                             return (
                                                 <Button
-                                                    key={day}
+                                                    key={day.key}
                                                     type="button"
-                                                    variant={selectedDay === day ? "default" : "outline"}
-                                                    onClick={() => handleDaySelect(day)}
+                                                    variant={selectedDay === day.key ? "default" : "outline"}
+                                                    onClick={() => handleDaySelect(day.key)}
                                                     disabled={!hasSlots}
                                                     className={!hasSlots ? "opacity-50" : ""}
                                                 >
-                                                    {day.substring(0, 3)}
+                                                    {day.short}
                                                 </Button>
                                             );
                                         })}
@@ -1899,11 +1925,11 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                                 {selectedDay && (
                                     <div>
-                                        <Label>Select Time Slot *</Label>
+                                        <Label>{t('appointmentsManagement.selectTimeSlot')}</Label>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-2">
                                             {getAvailableTimeSlots().length === 0 ? (
                                                 <div className="col-span-full text-center py-3 text-yellow-600 bg-yellow-50 rounded-md">
-                                                    No available time slots for this day
+                                                    {t('appointmentsManagement.noAvailableSlots')}
                                                 </div>
                                             ) : (
                                                 getAvailableTimeSlots().map(slot => (
@@ -1925,12 +1951,12 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                         {/* Price (automatically set from doctor selection) */}
                         <div>
-                            <Label>Appointment Price</Label>
-                            <div className="flex items-center space-x-2">
+                            <Label>{t('appointmentsManagement.appointmentPrice')}</Label>
+                            <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
                                 <div className="text-2xl font-bold">₪{appointmentPrice.toFixed(2)}</div>
                                 {appointmentPrice > 0 && (
                                     <div className="text-sm text-gray-500">
-                                        Based on selected doctor's rate
+                                        {t('appointmentsManagement.basedOnDoctorRate')}
                                     </div>
                                 )}
                             </div>
@@ -1938,13 +1964,13 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                         {/* Notes */}
                         <div>
-                            <Label htmlFor="notes">Additional Notes</Label>
+                            <Label htmlFor="notes">{t('appointmentsManagement.additionalNotes')}</Label>
                             <textarea
                                 id="notes"
                                 className="w-full p-2 border rounded-md min-h-[100px]"
                                 value={appointmentNotes}
                                 onChange={(e) => setAppointmentNotes(e.target.value)}
-                                placeholder="Add any notes or special instructions for this appointment..."
+                                placeholder={t('appointmentsManagement.specialInstructions')}
                             />
                         </div>
                     </div>
@@ -1953,15 +1979,15 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             onClick={handleAddAppointment}
                             disabled={!selectedClinicId || !selectedDoctorId || !selectedPatientId || !selectedDay || !selectedTimeSlot}
                         >
-                            Create Appointment
+                            {t('appointmentsManagement.createAppointment')}
                         </Button>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">{t('appointmentsManagement.cancel')}</Button>
                         </DialogClose>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     );
 };
 

@@ -1,5 +1,6 @@
 // pages/admin/DoctorManagement.tsx
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,9 @@ interface AvailabilitySlot {
 }
 
 const DoctorManagement = () => {
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+
     // State for doctors
     const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
     const [clinics, setClinics] = useState<ClinicInfo[]>([]);
@@ -86,7 +90,15 @@ const DoctorManagement = () => {
 
     const { toast } = useToast();
 
-    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const weekdays = [
+        { en: "Monday", ar: t('doctorManagement.monday') },
+        { en: "Tuesday", ar: t('doctorManagement.tuesday') },
+        { en: "Wednesday", ar: t('doctorManagement.wednesday') },
+        { en: "Thursday", ar: t('doctorManagement.thursday') },
+        { en: "Friday", ar: t('doctorManagement.friday') },
+        { en: "Saturday", ar: t('doctorManagement.saturday') },
+        { en: "Sunday", ar: t('doctorManagement.sunday') }
+    ];
 
     // Load doctors and clinics on mount
     useEffect(() => {
@@ -126,8 +138,8 @@ const DoctorManagement = () => {
         } catch (error) {
             console.error("Error loading clinics:", error);
             toast({
-                title: "Error",
-                description: "Failed to load clinics.",
+                title: t('common.error'),
+                description: t('doctorManagement.loadingClinics'),
                 variant: "destructive",
             });
         } finally {
@@ -163,8 +175,8 @@ const DoctorManagement = () => {
         } catch (error) {
             console.error("Error loading doctors:", error);
             toast({
-                title: "Error",
-                description: "Failed to load doctors.",
+                title: t('common.error'),
+                description: t('doctorManagement.loadingDoctors'),
                 variant: "destructive",
             });
         } finally {
@@ -201,8 +213,8 @@ const DoctorManagement = () => {
         } catch (error) {
             console.error("Error loading availability slots:", error);
             toast({
-                title: "Error",
-                description: "Failed to load availability slots.",
+                title: t('common.error'),
+                description: t('doctorManagement.failedToLoadSlots'),
                 variant: "destructive",
             });
         } finally {
@@ -242,8 +254,8 @@ const DoctorManagement = () => {
         const doctorToEdit = doctors.find((d) => d.id === id);
         if (!doctorToEdit) {
             toast({
-                title: "Error",
-                description: "Doctor not found.",
+                title: t('common.error'),
+                description: t('doctorManagement.doctorNotFound'),
                 variant: "destructive",
             });
             return;
@@ -299,8 +311,8 @@ const DoctorManagement = () => {
             setFilteredDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
 
             toast({
-                title: "Success",
-                description: `Dr. ${doctorToDelete.name} has been deleted successfully.`,
+                title: t('common.success'),
+                description: t('doctorManagement.doctorDeletedSuccessfully', { name: doctorToDelete.name }),
             });
 
             // Close the dialog
@@ -309,8 +321,8 @@ const DoctorManagement = () => {
         } catch (error) {
             console.error("Error deleting doctor:", error);
             toast({
-                title: "Error",
-                description: "Failed to delete doctor. Please try again.",
+                title: t('common.error'),
+                description: t('doctorManagement.failedToDeleteDoctor'),
                 variant: "destructive",
             });
         } finally {
@@ -324,8 +336,8 @@ const DoctorManagement = () => {
         // Validate doctor form
         if (!doctorFormData.name.trim() || !doctorFormData.specialty.trim() || !doctorFormData.clinic_id || !doctorFormData.email.trim()) {
             toast({
-                title: "Validation Error",
-                description: "Please fill in all required fields.",
+                title: t('doctorManagement.validationError'),
+                description: t('doctorManagement.fillAllFields'),
                 variant: "destructive",
             });
             return;
@@ -333,8 +345,8 @@ const DoctorManagement = () => {
 
         if (isNaN(doctorFormData.price) || doctorFormData.price < 0) {
             toast({
-                title: "Validation Error",
-                description: "Price must be a valid number.",
+                title: t('doctorManagement.validationError'),
+                description: t('doctorManagement.validPrice'),
                 variant: "destructive",
             });
             return;
@@ -366,8 +378,8 @@ const DoctorManagement = () => {
                     setDoctors(prev => [...prev, data[0]]);
                     setFilteredDoctors(prev => [...prev, data[0]]);
                     toast({
-                        title: "Success",
-                        description: "Doctor created successfully. Don't forget to set their availability.",
+                        title: t('common.success'),
+                        description: t('doctorManagement.doctorCreatedSuccessfully'),
                     });
                 }
 
@@ -396,8 +408,8 @@ const DoctorManagement = () => {
                     setFilteredDoctors(prev => prev.map(d => d.id === selectedDoctor ? data[0] : d));
 
                     toast({
-                        title: "Success",
-                        description: "Doctor updated successfully.",
+                        title: t('common.success'),
+                        description: t('doctorManagement.doctorUpdatedSuccessfully'),
                     });
                 }
 
@@ -406,8 +418,8 @@ const DoctorManagement = () => {
         } catch (error) {
             console.error("Error saving doctor:", error);
             toast({
-                title: "Error",
-                description: "Failed to save doctor. Please try again.",
+                title: t('common.error'),
+                description: t('doctorManagement.failedToSaveDoctor'),
                 variant: "destructive",
             });
         } finally {
@@ -420,8 +432,8 @@ const DoctorManagement = () => {
         const doctor = doctors.find(d => d.id === id);
         if (!doctor) {
             toast({
-                title: "Error",
-                description: "Doctor not found.",
+                title: t('common.error'),
+                description: t('doctorManagement.doctorNotFound'),
                 variant: "destructive",
             });
             return;
@@ -443,8 +455,8 @@ const DoctorManagement = () => {
 
         if (!newSlot.day || !newSlot.start_time || !newSlot.end_time) {
             toast({
-                title: "Validation Error",
-                description: "Please fill in all availability fields.",
+                title: t('doctorManagement.validationError'),
+                description: t('doctorManagement.fillAvailabilityFields'),
                 variant: "destructive",
             });
             return;
@@ -456,8 +468,8 @@ const DoctorManagement = () => {
 
         if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
             toast({
-                title: "Validation Error",
-                description: "Please enter valid time values.",
+                title: t('doctorManagement.validationError'),
+                description: t('doctorManagement.validTimeValues'),
                 variant: "destructive",
             });
             return;
@@ -465,8 +477,8 @@ const DoctorManagement = () => {
 
         if (startTime >= endTime) {
             toast({
-                title: "Validation Error",
-                description: "End time must be after start time.",
+                title: t('doctorManagement.validationError'),
+                description: t('doctorManagement.endTimeAfterStart'),
                 variant: "destructive",
             });
             return;
@@ -498,15 +510,15 @@ const DoctorManagement = () => {
                 });
 
                 toast({
-                    title: "Success",
-                    description: "Availability slot added successfully.",
+                    title: t('common.success'),
+                    description: t('doctorManagement.slotAddedSuccessfully'),
                 });
             }
         } catch (error) {
             console.error("Error adding availability slot:", error);
             toast({
-                title: "Error",
-                description: "Failed to add availability slot. Please try again.",
+                title: t('common.error'),
+                description: t('doctorManagement.failedToAddSlot'),
                 variant: "destructive",
             });
         } finally {
@@ -528,14 +540,14 @@ const DoctorManagement = () => {
             setAvailabilitySlots(prev => prev.filter(slot => slot.id !== id));
 
             toast({
-                title: "Success",
-                description: "Availability slot removed successfully.",
+                title: t('common.success'),
+                description: t('doctorManagement.slotRemovedSuccessfully'),
             });
         } catch (error) {
             console.error("Error deleting availability slot:", error);
             toast({
-                title: "Error",
-                description: "Failed to delete availability slot. Please try again.",
+                title: t('common.error'),
+                description: t('doctorManagement.failedToDeleteSlot'),
                 variant: "destructive",
             });
         } finally {
@@ -561,89 +573,96 @@ const DoctorManagement = () => {
         }
     };
 
+    // Get day name in current language
+    const getDayName = (dayEn: string) => {
+        const day = weekdays.find(d => d.en === dayEn);
+        return isRTL ? day?.ar || dayEn : dayEn;
+    };
+
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col lg:flex-row gap-8">
+        <div className={`space-y-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
                 {/* Doctors List */}
                 <div className="w-full lg:w-2/3">
                     <Card>
                         <CardHeader>
-                            <div className="flex justify-between items-center">
-                                <CardTitle>Doctors Management</CardTitle>
-                                <div className="flex items-center space-x-2">
+                            <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <CardTitle>{t('doctorManagement.doctorsManagement')}</CardTitle>
+                                <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                     <div className="relative">
-                                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                                         <Input
-                                            placeholder="Search doctors..."
+                                            placeholder={t('doctorManagement.searchDoctors')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-10 w-[250px]"
+                                            className={`${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10'} w-[250px]`}
+                                            dir={isRTL ? 'rtl' : 'ltr'}
                                         />
                                     </div>
                                     <Button variant="outline" size="sm" onClick={loadDoctors} disabled={isLoading}>
-                                        <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                                        Refresh
+                                        <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
+                                        {t('common.refresh')}
                                     </Button>
                                     <Button size="sm" onClick={resetDoctorForm}>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Add Doctor
+                                        <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                        {t('doctorManagement.addDoctor')}
                                     </Button>
                                 </div>
                             </div>
                             <CardDescription>
-                                Manage doctors and their clinic assignments
+                                {t('doctorManagement.description')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
                                 {filteredDoctors.map((doctor) => (
-                                    <div key={doctor.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                        <div>
+                                    <div key={doctor.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className={isRTL ? 'text-right' : ''}>
                                             <h3 className="font-medium">{doctor.name}</h3>
                                             <div className="text-sm text-gray-500">{doctor.specialty}</div>
                                             <div className="text-sm text-gray-500">{getClinicNameById(doctor.clinic_id)}</div>
-                                            <div className="mt-1 flex items-center space-x-2">
+                                            <div className={`mt-1 flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                                 <span className={`inline-block px-2 py-1 text-xs rounded-full ${doctor.is_available
                                                     ? "bg-green-100 text-green-800"
                                                     : "bg-red-100 text-red-800"
                                                     }`}>
-                                                    {doctor.is_available ? "Available" : "Unavailable"}
+                                                    {doctor.is_available ? t('common.available') : t('common.unavailable')}
                                                 </span>
                                                 <span className="text-sm font-medium">₪{doctor.price}</span>
                                             </div>
                                         </div>
-                                        <div className="flex space-x-2">
+                                        <div className={`flex space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                             <Button variant="outline" size="sm" onClick={() => handleManageAvailability(doctor.id)}>
-                                                <Clock className="h-4 w-4 mr-1" />
-                                                Hours
+                                                <Clock className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('doctorManagement.hours')}
                                             </Button>
                                             <Button variant="outline" size="sm" onClick={() => handleEditDoctor(doctor.id)}>
-                                                <Edit className="h-4 w-4 mr-1" />
-                                                Edit
+                                                <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('common.edit')}
                                             </Button>
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
                                                 onClick={() => confirmDeleteDoctor(doctor)}
                                             >
-                                                <Trash2 className="h-4 w-4 mr-1" />
-                                                Delete
+                                                <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('common.delete')}
                                             </Button>
                                         </div>
                                     </div>
                                 ))}
 
                                 {filteredDoctors.length === 0 && (
-                                    <div className="text-center py-8 text-gray-500">
-                                        {searchQuery ? "No doctors found matching your search." : "No doctors found. Add a doctor to get started."}
+                                    <div className={`text-center py-8 text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                                        {searchQuery ? t('doctorManagement.noDoctorsFoundSearch') : t('doctorManagement.noDoctorsFound')}
                                     </div>
                                 )}
                             </div>
                         </CardContent>
-                        <CardFooter>
-                            <div className="text-sm text-gray-500">
-                                {filteredDoctors.length} {filteredDoctors.length === 1 ? 'doctor' : 'doctors'}
-                                {searchQuery && ' (filtered)'}
+                        <CardFooter className={isRTL ? 'flex-row-reverse' : ''}>
+                            <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                                {filteredDoctors.length} {filteredDoctors.length === 1 ? t('doctorManagement.doctor') : t('doctorManagement.doctors')}
+                                {searchQuery && ` (${t('doctorManagement.filtered')})`}
                             </div>
                         </CardFooter>
                     </Card>
@@ -653,50 +672,63 @@ const DoctorManagement = () => {
                 <div className="w-full lg:w-1/3">
                     <Card>
                         <CardHeader>
-                            <CardTitle>{doctorFormMode === "create" ? "Create New Doctor" : "Edit Doctor"}</CardTitle>
-                            <CardDescription>
+                            <CardTitle className={isRTL ? 'text-right' : ''}>
+                                {doctorFormMode === "create" ? t('doctorManagement.createNewDoctor') : t('doctorManagement.editDoctor')}
+                            </CardTitle>
+                            <CardDescription className={isRTL ? 'text-right' : ''}>
                                 {doctorFormMode === "create"
-                                    ? "Add a new doctor profile"
-                                    : "Modify existing doctor details"}
+                                    ? t('doctorManagement.addNewDoctorDesc')
+                                    : t('doctorManagement.modifyDoctorDesc')}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleDoctorSubmit} id="doctorForm" className="space-y-4">
+                            <form onSubmit={handleDoctorSubmit} id="doctorForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                                 <div className="space-y-2">
-                                    <Label htmlFor="name">Doctor Name </Label>
+                                    <Label htmlFor="name" className={isRTL ? 'text-right block' : ''}>
+                                        {t('doctorManagement.doctorName')}
+                                    </Label>
                                     <Input
                                         id="name"
                                         name="name"
                                         value={doctorFormData.name}
                                         onChange={handleDoctorInputChange}
-                                        placeholder="Dr. Full Name"
+                                        placeholder={t('doctorManagement.doctorNamePlaceholder')}
                                         required
+                                        className={isRTL ? 'text-right' : ''}
+                                        dir={isRTL ? 'rtl' : 'ltr'}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="specialty">Specialty </Label>
+                                    <Label htmlFor="specialty" className={isRTL ? 'text-right block' : ''}>
+                                        {t('doctorManagement.specialty')}
+                                    </Label>
                                     <Input
                                         id="specialty"
                                         name="specialty"
                                         value={doctorFormData.specialty}
                                         onChange={handleDoctorInputChange}
-                                        placeholder="e.g. Cardiologist"
+                                        placeholder={t('doctorManagement.specialtyPlaceholder')}
                                         required
+                                        className={isRTL ? 'text-right' : ''}
+                                        dir={isRTL ? 'rtl' : 'ltr'}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="clinic_id">Clinic </Label>
+                                    <Label htmlFor="clinic_id" className={isRTL ? 'text-right block' : ''}>
+                                        {t('doctorManagement.clinic')}
+                                    </Label>
                                     <select
                                         id="clinic_id"
                                         name="clinic_id"
                                         value={doctorFormData.clinic_id}
                                         onChange={(e) => handleDoctorClinicChange(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-right' : ''}`}
                                         required
+                                        dir={isRTL ? 'rtl' : 'ltr'}
                                     >
-                                        <option value="" disabled>Select a clinic</option>
+                                        <option value="" disabled>{t('doctorManagement.selectClinic')}</option>
                                         {clinics.map(clinic => (
                                             <option key={clinic.id} value={clinic.id}>
                                                 {clinic.name} ({clinic.category})
@@ -704,74 +736,88 @@ const DoctorManagement = () => {
                                         ))}
                                     </select>
                                     {clinics.length === 0 && (
-                                        <p className="text-sm text-amber-600">
-                                            No clinics available. Please create a clinic first.
+                                        <p className={`text-sm text-amber-600 ${isRTL ? 'text-right' : ''}`}>
+                                            {t('doctorManagement.noClinicsAvailable')}
                                         </p>
                                     )}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email </Label>
+                                    <Label htmlFor="email" className={isRTL ? 'text-right block' : ''}>
+                                        {t('common.email')}
+                                    </Label>
                                     <Input
                                         id="email"
                                         name="email"
                                         type="email"
                                         value={doctorFormData.email}
                                         onChange={handleDoctorInputChange}
-                                        placeholder="doctor@example.com"
+                                        placeholder={t('doctorManagement.emailPlaceholder')}
                                         required
+                                        className={isRTL ? 'text-left' : ''}
+                                        dir="ltr"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="phone">Phone</Label>
+                                    <Label htmlFor="phone" className={isRTL ? 'text-right block' : ''}>
+                                        {t('common.phone')}
+                                    </Label>
                                     <Input
                                         id="phone"
                                         name="phone"
                                         value={doctorFormData.phone}
                                         onChange={handleDoctorInputChange}
-                                        placeholder="e.g. +1234567890"
+                                        placeholder={t('doctorManagement.phonePlaceholder')}
+                                        className={isRTL ? 'text-left' : ''}
+                                        dir="ltr"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="price">Appointment Price (₪) </Label>
+                                    <Label htmlFor="price" className={isRTL ? 'text-right block' : ''}>
+                                        {t('doctorManagement.appointmentPrice')}
+                                    </Label>
                                     <Input
                                         id="price"
                                         name="price"
                                         type="number"
                                         value={doctorFormData.price.toString()}
                                         onChange={handleDoctorInputChange}
-                                        placeholder="0.00"
+                                        placeholder={t('doctorManagement.pricePlaceholder')}
                                         required
+                                        className={isRTL ? 'text-left' : ''}
+                                        dir="ltr"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label htmlFor="is_available">Availability Status</Label>
+                                    <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <Label htmlFor="is_available" className={isRTL ? 'text-right' : ''}>
+                                            {t('doctorManagement.availabilityStatus')}
+                                        </Label>
                                         <Switch
                                             id="is_available"
                                             checked={doctorFormData.is_available}
                                             onCheckedChange={handleDoctorAvailableChange}
                                         />
                                     </div>
-                                    <p className="text-sm text-gray-500">
+                                    <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
                                         {doctorFormData.is_available
-                                            ? "This doctor is available for appointments"
-                                            : "This doctor is not available for appointments"}
+                                            ? t('doctorManagement.doctorAvailable')
+                                            : t('doctorManagement.doctorUnavailable')}
                                     </p>
                                 </div>
                             </form>
                         </CardContent>
-                        <CardFooter className="flex justify-between border-t pt-4">
+                        <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {doctorFormMode === "edit" && (
                                 <Button
                                     type="button"
                                     variant="outline"
                                     onClick={resetDoctorForm}
                                 >
-                                    Cancel
+                                    {t('common.cancel')}
                                 </Button>
                             )}
                             <Button
@@ -781,10 +827,10 @@ const DoctorManagement = () => {
                                 disabled={isLoading || clinics.length === 0}
                             >
                                 {isLoading
-                                    ? "Saving..."
+                                    ? t('doctorManagement.saving')
                                     : doctorFormMode === "create"
-                                        ? "Create Doctor"
-                                        : "Update Doctor"
+                                        ? t('doctorManagement.createDoctor')
+                                        : t('doctorManagement.updateDoctor')
                                 }
                             </Button>
                         </CardFooter>
@@ -794,30 +840,34 @@ const DoctorManagement = () => {
 
             {/* Availability Dialog */}
             <Dialog open={showAvailabilityDialog} onOpenChange={setShowAvailabilityDialog}>
-                <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Manage Doctor's Availability</DialogTitle>
+                <DialogContent className="max-w-3xl" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <DialogHeader className={isRTL ? 'text-right' : ''}>
+                        <DialogTitle>{t('doctorManagement.manageAvailability')}</DialogTitle>
                         <DialogDescription>
-                            Set the available hours for Dr. {selectedDoctorName}
+                            {t('doctorManagement.setAvailableHours', { name: selectedDoctorName })}
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-6">
                         {/* Current availability slots */}
                         <div>
-                            <h3 className="text-lg font-medium mb-3">Current Availability</h3>
+                            <h3 className={`text-lg font-medium mb-3 ${isRTL ? 'text-right' : ''}`}>
+                                {t('doctorManagement.currentAvailability')}
+                            </h3>
                             {availabilitySlots.length > 0 ? (
                                 <div className="space-y-4">
-                                    {weekdays.map(day => {
-                                        const daySlots = availabilitySlots.filter(slot => slot.day === day);
+                                    {weekdays.map(weekday => {
+                                        const daySlots = availabilitySlots.filter(slot => slot.day === weekday.en);
                                         if (daySlots.length === 0) return null;
 
                                         return (
-                                            <div key={day} className="border rounded-md p-4">
-                                                <h4 className="font-medium mb-2">{day}</h4>
+                                            <div key={weekday.en} className="border rounded-md p-4">
+                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : ''}`}>
+                                                    {isRTL ? weekday.ar : weekday.en}
+                                                </h4>
                                                 <div className="space-y-2">
                                                     {daySlots.map(slot => (
-                                                        <div key={slot.id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                                        <div key={slot.id} className={`flex items-center justify-between bg-gray-50 p-2 rounded ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                             <span>
                                                                 {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                                             </span>
@@ -836,33 +886,42 @@ const DoctorManagement = () => {
                                     })}
                                 </div>
                             ) : (
-                                <div className="text-center py-4 border rounded-md bg-gray-50">
-                                    <p className="text-gray-500">No availability slots defined yet.</p>
+                                <div className={`text-center py-4 border rounded-md bg-gray-50 ${isRTL ? 'text-right' : ''}`}>
+                                    <p className="text-gray-500">{t('doctorManagement.noAvailabilitySlots')}</p>
                                 </div>
                             )}
                         </div>
 
                         {/* Add new slot */}
                         <div className="border-t pt-4">
-                            <h3 className="text-lg font-medium mb-3">Add New Availability Slot</h3>
+                            <h3 className={`text-lg font-medium mb-3 ${isRTL ? 'text-right' : ''}`}>
+                                {t('doctorManagement.addNewSlot')}
+                            </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
-                                    <Label htmlFor="day">Day</Label>
+                                    <Label htmlFor="day" className={isRTL ? 'text-right block' : ''}>
+                                        {t('doctorManagement.day')}
+                                    </Label>
                                     <select
                                         id="day"
                                         name="day"
                                         value={newSlot.day}
                                         onChange={handleNewSlotChange}
-                                        className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className={`w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-right' : ''}`}
+                                        dir={isRTL ? 'rtl' : 'ltr'}
                                     >
-                                        {weekdays.map(day => (
-                                            <option key={day} value={day}>{day}</option>
+                                        {weekdays.map(weekday => (
+                                            <option key={weekday.en} value={weekday.en}>
+                                                {isRTL ? weekday.ar : weekday.en}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="start_time">Start Time</Label>
+                                    <Label htmlFor="start_time" className={isRTL ? 'text-right block' : ''}>
+                                        {t('doctorManagement.startTime')}
+                                    </Label>
                                     <Input
                                         id="start_time"
                                         name="start_time"
@@ -870,11 +929,14 @@ const DoctorManagement = () => {
                                         value={newSlot.start_time}
                                         onChange={handleNewSlotChange}
                                         className="mt-1"
+                                        dir="ltr"
                                     />
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="end_time">End Time</Label>
+                                    <Label htmlFor="end_time" className={isRTL ? 'text-right block' : ''}>
+                                        {t('doctorManagement.endTime')}
+                                    </Label>
                                     <Input
                                         id="end_time"
                                         name="end_time"
@@ -882,6 +944,7 @@ const DoctorManagement = () => {
                                         value={newSlot.end_time}
                                         onChange={handleNewSlotChange}
                                         className="mt-1"
+                                        dir="ltr"
                                     />
                                 </div>
                             </div>
@@ -891,15 +954,15 @@ const DoctorManagement = () => {
                                     onClick={handleAddAvailabilitySlot}
                                     disabled={isLoading || !newSlot.day || !newSlot.start_time || !newSlot.end_time}
                                 >
-                                    {isLoading ? "Adding..." : "Add Time Slot"}
+                                    {isLoading ? t('doctorManagement.adding') : t('doctorManagement.addTimeSlot')}
                                 </Button>
                             </div>
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
                         <DialogClose asChild>
-                            <Button>Done</Button>
+                            <Button>{t('doctorManagement.done')}</Button>
                         </DialogClose>
                     </DialogFooter>
                 </DialogContent>
@@ -907,31 +970,31 @@ const DoctorManagement = () => {
 
             {/* Delete Confirmation Dialog */}
             <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
+                <DialogContent className="sm:max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <DialogHeader className={isRTL ? 'text-right' : ''}>
+                        <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <AlertTriangle className="h-5 w-5 text-red-500" />
-                            Confirm Deletion
+                            {t('doctorManagement.confirmDeletion')}
                         </DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete Dr. {doctorToDelete?.name}? This action cannot be undone.
+                            {t('doctorManagement.confirmDeleteDoctor', { name: doctorToDelete?.name })}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
-                        <p className="text-sm text-gray-500">
-                            This will permanently remove the doctor and all their availability slots from the system.
+                        <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                            {t('doctorManagement.permanentRemoval')}
                         </p>
                     </div>
-                    <DialogFooter className="sm:justify-between">
+                    <DialogFooter className={`sm:justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline">{t('common.cancel')}</Button>
                         </DialogClose>
                         <Button
                             variant="destructive"
                             onClick={handleDeleteDoctor}
                             disabled={isLoading}
                         >
-                            {isLoading ? "Deleting..." : "Delete Doctor"}
+                            {isLoading ? t('doctorManagement.deleting') : t('doctorManagement.deleteDoctor')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
