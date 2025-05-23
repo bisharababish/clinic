@@ -1,5 +1,6 @@
 // pages/api/admin/OverviewManagement.tsx
 import React, { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -126,6 +127,9 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
     setActiveTab,
     checkSystemStatus
 }) => {
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+
     // State to manage chart type: 'pie' or 'bar'
     const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
 
@@ -135,11 +139,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
         '#d0ed57', '#ffc658', '#ff8042', '#ff6361', '#bc5090',
     ];
 
-    // Chart data transformations
+    // Chart data transformations with translations
     const getRoleChartData = () => {
         if (!reportData) return [];
         return Object.entries(reportData.users_by_role).map(([role, count], index) => ({
-            role,
+            role: t(`roles.${role.toLowerCase()}`, role),
             count,
             fill: CHART_COLORS[index % CHART_COLORS.length]
         }));
@@ -164,25 +168,24 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
     };
 
     return (
-        <>
+        <div className={`${isRTL ? 'rtl' : 'ltr'} text-${isRTL ? 'right' : 'left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Stats Cards Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow duration-200">
+                <Card className={`border-l-4 ${isRTL ? 'border-r-4 border-l-0' : ''} border-l-blue-500 ${isRTL ? 'border-r-blue-500' : ''} shadow-md hover:shadow-lg transition-shadow duration-200`}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-semibold text-blue-700">Total Users</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-blue-700">{t('admin.totalUsers')}</CardTitle>
                         <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
                             <Users className="h-4 w-4 text-blue-600" />
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-gray-800">{users.length}</div>
-
                     </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow duration-200">
+                <Card className={`border-l-4 ${isRTL ? 'border-r-4 border-l-0' : ''} border-l-green-500 ${isRTL ? 'border-r-green-500' : ''} shadow-md hover:shadow-lg transition-shadow duration-200`}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-semibold text-green-700">Active Appointments</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-green-700">{t('admin.activeAppointments')}</CardTitle>
                         <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
                             <Calendar className="h-4 w-4 text-green-600" />
                         </div>
@@ -191,13 +194,12 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         <div className="text-3xl font-bold text-gray-800">
                             {appointments.filter(a => a.status === 'scheduled').length}
                         </div>
-
                     </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-purple-500 shadow-md hover:shadow-lg transition-shadow duration-200">
+                <Card className={`border-l-4 ${isRTL ? 'border-r-4 border-l-0' : ''} border-l-purple-500 ${isRTL ? 'border-r-purple-500' : ''} shadow-md hover:shadow-lg transition-shadow duration-200`}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-semibold text-purple-700">Available Clinics</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-purple-700">{t('admin.availableClinics')}</CardTitle>
                         <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
                             <Stethoscope className="h-4 w-4 text-purple-600" />
                         </div>
@@ -206,13 +208,12 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         <div className="text-3xl font-bold text-gray-800">
                             {clinics.filter(c => c.isActive).length}
                         </div>
-
                     </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-emerald-500 shadow-md hover:shadow-lg transition-shadow duration-200">
+                <Card className={`border-l-4 ${isRTL ? 'border-r-4 border-l-0' : ''} border-l-emerald-500 ${isRTL ? 'border-r-emerald-500' : ''} shadow-md hover:shadow-lg transition-shadow duration-200`}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-semibold text-emerald-700">System Status</CardTitle>
+                        <CardTitle className="text-sm font-semibold text-emerald-700">{t('admin.systemStatus')}</CardTitle>
                         <div
                             className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center cursor-pointer"
                             onClick={() => checkSystemStatus()}
@@ -224,21 +225,21 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         {isLoading ? (
                             <div className="flex items-center h-6">
                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-700 mr-2"></div>
-                                <p className="text-sm text-gray-600">Checking status...</p>
+                                <p className="text-sm text-gray-600">{t('admin.checkingStatus')}</p>
                             </div>
                         ) : error ? (
                             <div className="flex items-center">
                                 <div className="h-3 w-3 rounded-full bg-red-500 mr-2"></div>
-                                <div className="text-sm font-bold text-red-600">System Issue Detected</div>
+                                <div className="text-sm font-bold text-red-600">{t('admin.systemIssueDetected')}</div>
                             </div>
                         ) : (
                             <div className="flex items-center">
                                 <div className="h-3 w-3 rounded-full bg-green-500 mr-2"></div>
-                                <div className="text-sm font-bold text-green-600">All Systems Operational</div>
+                                <div className="text-sm font-bold text-green-600">{t('admin.allSystemsOperational')}</div>
                             </div>
                         )}
                         <p className="text-xs text-gray-500 mt-1">
-                            Last checked: {new Date().toLocaleTimeString()}
+                            {t('admin.lastChecked')}: {new Date().toLocaleTimeString()}
                         </p>
                     </CardContent>
                 </Card>
@@ -249,14 +250,14 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                 <Card className="shadow-md hover:shadow-lg transition-all duration-200">
                     <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
                         <div className="flex justify-between items-center">
-                            <CardTitle className="text-blue-800">User Distribution by Role</CardTitle>
+                            <CardTitle className="text-blue-800">{t('admin.userDistributionByRole')}</CardTitle>
                             <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">Pie</span>
+                                <span className="text-sm text-gray-600">{t('admin.pie')}</span>
                                 <Switch
                                     checked={chartType === 'bar'}
                                     onCheckedChange={(checked) => setChartType(checked ? 'bar' : 'pie')}
                                 />
-                                <span className="text-sm text-gray-600">Bar</span>
+                                <span className="text-sm text-gray-600">{t('admin.bar')}</span>
                                 <RefreshCw
                                     className="h-4 w-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors"
                                     onClick={refreshReportData}
@@ -294,8 +295,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                 ) : (
                                     <BarChart data={getRoleChartData()}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="role" label={{ value: 'User Role', position: 'insideBottom', offset: -5 }} />
-                                        <YAxis label={{ value: 'Number of Users', angle: -90, position: 'insideLeft' }} />
+                                        <XAxis dataKey="role" label={{ value: t('admin.userRole'), position: 'insideBottom', offset: -5 }} />
+                                        <YAxis label={{ value: t('admin.numberOfUsers'), angle: -90, position: 'insideLeft' }} />
                                         <Legend />
                                         <Bar dataKey="count" isAnimationActive={true}>
                                             {getRoleChartData().map((entry, index) => (
@@ -315,13 +316,13 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         {/* Role Distribution Breakdown */}
                         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div className="flex items-center p-2 rounded-lg border bg-blue-50">
-                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                <div className={`h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
                                     <Users className="h-5 w-5 text-blue-600" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-blue-800">Patients</p>
+                                    <p className="font-medium text-blue-800">{t('admin.patients')}</p>
                                     <p className="text-sm text-blue-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'patient').length} users
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'patient').length} {t('admin.users')}
                                         {' '}
                                         ({users.length > 0 ?
                                             Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'patient').length / users.length) * 100) : 0}%)
@@ -330,13 +331,13 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                             </div>
 
                             <div className="flex items-center p-2 rounded-lg border bg-green-50">
-                                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                <div className={`h-10 w-10 rounded-full bg-green-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
                                     <Stethoscope className="h-5 w-5 text-green-600" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-green-800">Doctors</p>
+                                    <p className="font-medium text-green-800">{t('admin.doctors')}</p>
                                     <p className="text-sm text-green-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length} users
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length} {t('admin.users')}
                                         {' '}
                                         ({users.length > 0 ?
                                             Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length / users.length) * 100) : 0}%)
@@ -345,13 +346,13 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                             </div>
 
                             <div className="flex items-center p-2 rounded-lg border bg-purple-50">
-                                <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                <div className={`h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
                                     <FileText className="h-5 w-5 text-purple-600" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-purple-800">Secretary</p>
+                                    <p className="font-medium text-purple-800">{t('admin.secretaries')}</p>
                                     <p className="text-sm text-purple-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length} users
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length} {t('admin.users')}
                                         {' '}
                                         ({users.length > 0 ?
                                             Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length / users.length) * 100) : 0}%)
@@ -360,13 +361,13 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                             </div>
 
                             <div className="flex items-center p-2 rounded-lg border bg-pink-50">
-                                <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center mr-3">
+                                <div className={`h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
                                     <Activity className="h-5 w-5 text-pink-600" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-pink-800">Nurses</p>
+                                    <p className="font-medium text-pink-800">{t('admin.nurses')}</p>
                                     <p className="text-sm text-pink-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length} users
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length} {t('admin.users')}
                                         {' '}
                                         ({users.length > 0 ?
                                             Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length / users.length) * 100) : 0}%)
@@ -375,13 +376,13 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                             </div>
 
                             <div className="flex items-center p-2 rounded-lg border bg-red-50">
-                                <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                                <div className={`h-10 w-10 rounded-full bg-red-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
                                     <Shield className="h-5 w-5 text-red-600" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-red-800">Administrators</p>
+                                    <p className="font-medium text-red-800">{t('admin.administrators')}</p>
                                     <p className="text-sm text-red-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length} users
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length} {t('admin.users')}
                                         {' '}
                                         ({users.length > 0 ?
                                             Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length / users.length) * 100) : 0}%)
@@ -391,13 +392,13 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
 
                             {/* Added Lab Role */}
                             <div className="flex items-center p-2 rounded-lg border bg-yellow-50">
-                                <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
-                                    <Database className="h-5 w-5 text-yellow-600" /> {/* Using Database icon for Lab */}
+                                <div className={`h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <Database className="h-5 w-5 text-yellow-600" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-yellow-800">Lab</p>
+                                    <p className="font-medium text-yellow-800">{t('admin.labTechnicians')}</p>
                                     <p className="text-sm text-yellow-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'lab').length} users
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'lab').length} {t('admin.users')}
                                         {' '}
                                         ({users.length > 0 ?
                                             Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'lab').length / users.length) * 100) : 0}%)
@@ -407,13 +408,13 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
 
                             {/* Added X Ray Role */}
                             <div className="flex items-center p-2 rounded-lg border bg-teal-50">
-                                <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
-                                    <Layers className="h-5 w-5 text-teal-600" /> {/* Using Layers icon for X Ray */}
+                                <div className={`h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <Layers className="h-5 w-5 text-teal-600" />
                                 </div>
                                 <div>
-                                    <p className="font-medium text-teal-800">X Ray</p>
+                                    <p className="font-medium text-teal-800">{t('admin.xrayTechnicians')}</p>
                                     <p className="text-sm text-teal-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length} users
+                                        {users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length} {t('admin.users')}
                                         {' '}
                                         ({users.length > 0 ?
                                             Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length / users.length) * 100) : 0}%)
@@ -429,12 +430,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
             <div className="mt-8">
                 <Card className="border-none shadow-md bg-gradient-to-r from-gray-900 to-gray-800 text-white">
                     <CardHeader>
-                        <CardTitle className="text-gray-100">Performance Summary</CardTitle>
-                    </CardHeader>
+                        <CardTitle className="text-gray-100" style={{ textAlign: 'right' }}>{t('admin.performanceSummary')}</CardTitle>                    </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                                <p className="text-gray-400 text-sm">Total Revenue</p>
+                            <div className="space-y-2" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                                <p className="text-gray-400 text-sm">{t('admin.totalRevenue')}</p>
                                 <p className="text-3xl font-bold">₪{reportData?.revenue || 0}</p>
                                 <div className="h-2 bg-gray-700 rounded-full">
                                     <div
@@ -444,8 +444,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <p className="text-gray-400 text-sm">Appointment Completion Rate</p>
+                            <div className="space-y-2" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                                <p className="text-gray-400 text-sm">{t('admin.appointmentCompletionRate')}</p>
                                 <p className="text-3xl font-bold">
                                     {appointments.length ?
                                         `${Math.round((appointments.filter(a => a.status === 'completed').length / appointments.length) * 100)}%` :
@@ -463,8 +463,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <p className="text-gray-400 text-sm">Doctor Utilization</p>
+                            <div className="space-y-2" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                                <p className="text-gray-400 text-sm">{t('admin.doctorUtilization')}</p>
                                 <p className="text-3xl font-bold">
                                     {doctors.length ?
                                         `${Math.round((doctors.filter(d => d.isAvailable).length / doctors.length) * 100)}%` :
@@ -488,7 +488,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
 
             {/* Quick Actions */}
             <div className="mt-8 mb-4">
-                <h2 className="text-lg font-semibold mb-4 text-gray-700">Quick Actions</h2>
+                <h2 className="text-lg font-semibold mb-4 text-gray-700" dir="rtl" style={{ textAlign: 'right' }}>{t('admin.quickActions')}</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     <Button
                         variant="outline"
@@ -496,7 +496,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         onClick={() => setActiveTab("users")}
                     >
                         <UserPlus className="h-6 w-6 mb-1 text-blue-600" />
-                        <span>Add User</span>
+                        <span>{t('admin.addUser')}</span>
                     </Button>
 
                     <Button
@@ -505,7 +505,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         onClick={() => setActiveTab("appointments")}
                     >
                         <Calendar className="h-6 w-6 mb-1 text-green-600" />
-                        <span>View Appointments</span>
+                        <span>{t('admin.viewAppointments')}</span>
                     </Button>
 
                     <Button
@@ -514,7 +514,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         onClick={() => setActiveTab("clinics")}
                     >
                         <Stethoscope className="h-6 w-6 mb-1 text-purple-600" />
-                        <span>Manage Clinics</span>
+                        <span>{t('admin.manageClinics')}</span>
                     </Button>
 
                     <Button
@@ -523,11 +523,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         onClick={refreshReportData}
                     >
                         <BarChart2 className="h-6 w-6 mb-1 text-amber-600" />
-                        <span>Refresh Data</span>
+                        <span>{t('admin.refreshData')}</span>
                     </Button>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

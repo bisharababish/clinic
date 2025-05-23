@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { UserRole } from "../../../hooks/useAuth";
 import UserRoleBadge from '../../../components/UserRoleBadge';
+import { useTranslation } from 'react-i18next';
+
 interface UserInfo {
     user_id: string; // uuid/text primary key
     userid: number;
@@ -38,6 +40,8 @@ interface UserInfo {
 
 const UsersManagement = () => {
     const { toast } = useToast();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
 
     // State variables
     const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +88,8 @@ const UsersManagement = () => {
                 user.user_email.toLowerCase().includes(query) ||
                 user.english_username_a.toLowerCase().includes(query) ||
                 (user.english_username_d && user.english_username_d.toLowerCase().includes(query)) ||
+                (user.arabic_username_a && user.arabic_username_a.includes(searchQuery)) ||
+                (user.arabic_username_d && user.arabic_username_d.includes(searchQuery)) ||
                 user.user_roles.toLowerCase().includes(query)
             );
             setFilteredUsers(filtered);
@@ -123,8 +129,8 @@ const UsersManagement = () => {
             if (error) {
                 console.error('Supabase error loading users after multiple attempts:', error);
                 toast({
-                    title: "Error",
-                    description: "Failed to load users from database.",
+                    title: t('common.error'),
+                    description: t('usersManagement.failedToLoadUsers'),
                     variant: "destructive",
                 });
                 return;
@@ -144,6 +150,8 @@ const UsersManagement = () => {
                     (user.user_email && user.user_email.toLowerCase().includes(query)) ||
                     (user.english_username_a && user.english_username_a.toLowerCase().includes(query)) ||
                     (user.english_username_d && user.english_username_d.toLowerCase().includes(query)) ||
+                    (user.arabic_username_a && user.arabic_username_a.includes(searchQuery)) ||
+                    (user.arabic_username_d && user.arabic_username_d.includes(searchQuery)) ||
                     (user.user_roles && user.user_roles.toLowerCase().includes(query))
                 );
                 setFilteredUsers(filtered);
@@ -168,6 +176,8 @@ const UsersManagement = () => {
                             (newUser.user_email && newUser.user_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
                             (newUser.english_username_a && newUser.english_username_a.toLowerCase().includes(searchQuery.toLowerCase())) ||
                             (newUser.english_username_d && newUser.english_username_d.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (newUser.arabic_username_a && newUser.arabic_username_a.includes(searchQuery)) ||
+                            (newUser.arabic_username_d && newUser.arabic_username_d.includes(searchQuery)) ||
                             (newUser.user_roles && newUser.user_roles.toLowerCase().includes(searchQuery.toLowerCase()))) {
                             setFilteredUsers(prev => [newUser, ...prev]);
                         }
@@ -215,8 +225,8 @@ const UsersManagement = () => {
         } catch (error) {
             console.error('Error loading users:', error);
             toast({
-                title: "Error",
-                description: "Failed to load users list.",
+                title: t('common.error'),
+                description: t('admin.failedToLoadUsers'),
                 variant: "destructive",
             });
             setUsers([]);
@@ -266,8 +276,8 @@ const UsersManagement = () => {
         const userToEdit = users.find((u) => u.userid === userid);
         if (!userToEdit) {
             toast({
-                title: "Error",
-                description: "User not found.",
+                title: t('common.error'),
+                description: t('usersManagement.userNotFound'),
                 variant: "destructive",
             });
             return;
@@ -293,6 +303,7 @@ const UsersManagement = () => {
             user_password: "", // Password is not loaded for security
         });
     };
+
     // Function to properly capitalize role names including multi-word roles
     const capitalizeRole = (role: string): string => {
         // Special handling for X Ray to ensure proper capitalization
@@ -303,37 +314,46 @@ const UsersManagement = () => {
         // Handle normal single-word roles
         return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
     };
+
     const handleDeleteUser = async (userid: number) => {
         // Find user to delete
         const userToDelete = users.find(u => u.userid === userid);
         if (!userToDelete) {
             toast({
-                title: "Error",
-                description: "User not found.",
+                title: t('common.error'),
+                description: t('usersManagement.userNotFound'),
                 variant: "destructive",
             });
             return;
         }
 
+        // Get user display name based on language
+        const userName = isRTL
+            ? `${userToDelete.arabic_username_a || userToDelete.english_username_a} ${userToDelete.arabic_username_d || userToDelete.english_username_d || ''}`
+            : `${userToDelete.english_username_a} ${userToDelete.english_username_d || ''}`;
+
         // Custom confirmation toast
         let confirmed = false;
         await new Promise((resolve) => {
             toast({
-                title: "Confirm Deletion",
-                description: `Are you sure you want to delete ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (${userToDelete.user_email})? This action cannot be undone.`,
+                title: t('usersManagement.confirmDeletion'),
+                description: t('usersManagement.deleteConfirmMessage', {
+                    name: userName.trim(),
+                    email: userToDelete.user_email
+                }),
                 action: (
-                    <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                         <button
                             style={{ background: '#dc2626', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
                             onClick={() => { confirmed = true; resolve(undefined); }}
                         >
-                            Confirm
+                            {t('usersManagement.confirm')}
                         </button>
                         <button
                             style={{ background: '#374151', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
                             onClick={() => { confirmed = false; resolve(undefined); }}
                         >
-                            Cancel
+                            {t('common.cancel')}
                         </button>
                     </div>
                 ),
@@ -402,29 +422,29 @@ const UsersManagement = () => {
             setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
 
             toast({
-                title: "Success",
-                description: "User deleted successfully.",
+                title: t('common.success'),
+                description: t('usersManagement.userDeletedSuccessfully'),
             });
 
             // Log the activity
             const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was deleted`;
-            logActivity("User Deleted", "admin", activityMessage, "success");
+            logActivity(t('usersManagement.userDeleted'), "admin", activityMessage, "success");
 
         } catch (error) {
             console.error("Error deleting user:", error);
 
             // More specific error message based on the error
-            let errorMessage = "Failed to delete user from database.";
+            let errorMessage = t('usersManagement.failedToDeleteUser');
 
             // Check if error contains message about foreign key constraint
             if (error instanceof Error &&
                 error.message.includes("foreign key constraint") &&
                 error.message.includes("appointments")) {
-                errorMessage = "Cannot delete user with existing appointments. Please delete their appointments first.";
+                errorMessage = t('usersManagement.cannotDeleteUserWithAppointments');
             }
 
             toast({
-                title: "Error",
+                title: t('common.error'),
                 description: errorMessage,
                 variant: "destructive",
             });
@@ -501,8 +521,8 @@ const UsersManagement = () => {
                 if (userError) {
                     console.error("Error creating user profile:", userError);
                     toast({
-                        title: "Error",
-                        description: userError.message || "Failed to create user profile. Please try again.",
+                        title: t('common.error'),
+                        description: userError.message || t('usersManagement.failedToCreateUser'),
                         variant: "destructive",
                     });
                     return;
@@ -517,13 +537,13 @@ const UsersManagement = () => {
                 }
 
                 toast({
-                    title: "Success",
-                    description: "User created successfully. The user will need to confirm their email to log in.",
+                    title: t('common.success'),
+                    description: t('usersManagement.userCreatedSuccessfully'),
                 });
 
                 // Log the activity
                 logActivity(
-                    "User Created",
+                    t('usersManagement.userCreated'),
                     "admin",
                     `New user ${userFormData.user_email} (${capitalizedRole}) created`,
                     "success"
@@ -535,8 +555,8 @@ const UsersManagement = () => {
             } catch (error) {
                 console.error("Unexpected error creating user:", error);
                 toast({
-                    title: "Error",
-                    description: "An unexpected error occurred. Please try again.",
+                    title: t('common.error'),
+                    description: t('usersManagement.unexpectedError'),
                     variant: "destructive",
                 });
             } finally {
@@ -601,8 +621,8 @@ const UsersManagement = () => {
                 if (error) {
                     console.error("Error updating user:", error);
                     toast({
-                        title: "Error",
-                        description: "Failed to update user. Please try again.",
+                        title: t('common.error'),
+                        description: t('usersManagement.failedToUpdateUser'),
                         variant: "destructive",
                     });
                     return;
@@ -616,15 +636,15 @@ const UsersManagement = () => {
 
                 // Log the activity
                 logActivity(
-                    "User Updated",
+                    t('usersManagement.userUpdated'),
                     "admin",
                     `User ${userFormData.user_email} (ID: ${selectedUser}) was updated`,
                     "success"
                 );
 
                 toast({
-                    title: "Success",
-                    description: "User updated successfully.",
+                    title: t('common.success'),
+                    description: t('usersManagement.userUpdatedSuccessfully'),
                 });
 
                 // Reset form
@@ -632,8 +652,8 @@ const UsersManagement = () => {
             } catch (error) {
                 console.error("Unexpected error:", error);
                 toast({
-                    title: "Error",
-                    description: "An unexpected error occurred. Please try again.",
+                    title: t('common.error'),
+                    description: t('usersManagement.unexpectedError'),
                     variant: "destructive",
                 });
             } finally {
@@ -663,73 +683,81 @@ const UsersManagement = () => {
         }
     };
 
+    // Helper function to get user display name based on language
+    const getUserDisplayName = (user: UserInfo) => {
+        if (isRTL) {
+            return `${user.arabic_username_a || user.english_username_a} ${user.arabic_username_d || user.english_username_d || ''}`;
+        }
+        return `${user.english_username_a} ${user.english_username_d || ''}`;
+    };
+
     // Main render
     return (
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
             <div className="w-full lg:w-2/3 space-y-6">
                 <Card>
                     <CardHeader>
-                        <div className="flex justify-between items-center">
-                            <CardTitle>User Management</CardTitle>
-                            <div className="flex items-center space-x-2">
+                        <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <CardTitle>{t('usersManagement.title')}</CardTitle>
+                            <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                                     <Input
-                                        placeholder="Search users..."
+                                        placeholder={t('usersManagement.searchPlaceholder')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="pl-10 w-[250px]"
+                                        className={`${isRTL ? 'pr-10 pl-3' : 'pl-10'} w-[250px]`}
+                                        dir={isRTL ? 'rtl' : 'ltr'}
                                     />
                                 </div>
                                 <Button variant="outline" size="sm" onClick={loadUsers}>
-                                    <RefreshCw className="h-4 w-4 mr-2" />
-                                    Refresh
+                                    <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                    {t('common.refresh')}
                                 </Button>
                                 <Button size="sm" onClick={() => resetUserForm()}>
-                                    <UserPlus className="h-4 w-4 mr-2" />
-                                    Add User
+                                    <UserPlus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                    {t('usersManagement.addUser')}
                                 </Button>
                             </div>
                         </div>
                         <CardDescription>
-                            Manage all user accounts for the clinic portal
+                            {t('usersManagement.description')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
-                            <div className="text-center py-4">Loading users...</div>
+                            <div className="text-center py-4">{t('usersManagement.loadingUsers')}</div>
                         ) : (
                             <div className="space-y-4">
                                 {filteredUsers.map((u) => (
-                                    <div key={u.userid} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50">
-                                        <div className="mb-2 sm:mb-0">
-                                            <h3 className="font-medium">{u.english_username_a} {u.english_username_d}</h3>
+                                    <div key={u.userid} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                                        <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`}>
+                                            <h3 className="font-medium">{getUserDisplayName(u)}</h3>
                                             <div className="text-sm text-gray-500">{u.user_email}</div>
                                             {u.id_number && (
-                                                <div className="text-sm text-gray-500">ID: {u.id_number}</div>
+                                                <div className="text-sm text-gray-500">{t('usersManagement.id')}: {u.id_number}</div>
                                             )}
-                                            <div className="mt-1 flex items-center space-x-2">
-                                                {/* REPLACE THIS SPAN WITH THE USERROLEBADGE COMPONENT */}
+                                            <div className={`mt-1 flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
                                                 <UserRoleBadge role={u.user_roles} />
                                                 {u.user_phonenumber && (
                                                     <span className="text-xs text-gray-500">
-                                                        Phone: {u.user_phonenumber}
+                                                        {t('usersManagement.phone')}: {u.user_phonenumber}
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                        <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 ${isRTL ? 'sm:flex-row-reverse sm:space-x-reverse' : ''}`}>
                                             <Button variant="outline" size="sm" onClick={() => handleEditUser(u.userid)}>
-                                                <Edit className="h-4 w-4 mr-1" />
-                                                Edit
+                                                <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('common.edit')}
                                             </Button>
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
                                                 onClick={() => handleDeleteUser(u.userid)}
                                             >
-                                                <Trash2 className="h-4 w-4 mr-1" />
-                                                Delete
+                                                <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('common.delete')}
                                             </Button>
                                         </div>
                                     </div>
@@ -737,16 +765,16 @@ const UsersManagement = () => {
 
                                 {filteredUsers.length === 0 && (
                                     <div className="text-center py-8 text-gray-500">
-                                        {searchQuery ? "No users found matching your search." : "No users found."}
+                                        {searchQuery ? t('usersManagement.noUsersFoundSearch') : t('usersManagement.noUsersFound')}
                                     </div>
                                 )}
                             </div>
                         )}
                     </CardContent>
-                    <CardFooter className="flex justify-between border-t pt-4">
+                    <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className="text-sm text-gray-500">
-                            {filteredUsers.length} {filteredUsers.length === 1 ? 'user' : 'users'}
-                            {searchQuery && ' (filtered)'}
+                            {filteredUsers.length} {filteredUsers.length === 1 ? t('usersManagement.user') : t('usersManagement.users')}
+                            {searchQuery && ` (${t('usersManagement.filtered')})`}
                         </div>
                     </CardFooter>
                 </Card>
@@ -755,115 +783,142 @@ const UsersManagement = () => {
             <div className="w-full lg:w-1/3">
                 <Card>
                     <CardHeader>
-                        <CardTitle>{userFormMode === "create" ? "Create New User" : "Edit User"}</CardTitle>
-                        <CardDescription>
+                        <CardTitle className={isRTL ? 'text-left' : ''}
+                        >{userFormMode === "create" ? t('usersManagement.createNewUser') : t('usersManagement.editUser')}</CardTitle>
+                        <CardDescription className={isRTL ? 'text-left' : ''}
+                        >
                             {userFormMode === "create"
-                                ? "Add a new user to the system"
-                                : "Modify existing user details"}
+                                ? t('usersManagement.addNewUserDesc')
+                                : t('usersManagement.modifyUserDesc')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4">
+                        <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                             <div>
-                                <div className="grid grid-cols-2 gap-2 mt-2">
-                                    <div>
-                                        <Label htmlFor="english_username_a" className="text-xs">First Name </Label>
+                                <div className={`grid grid-cols-2 gap-2 mt-2 ${isRTL ? 'grid-flow-row-dense' : ''}`}>
+                                    <div className={isRTL ? 'order-2' : ''}>
+                                        <Label htmlFor="english_username_a" className={`text-xs ${isRTL ? 'text-right block' : ''}`}>
+                                            {isRTL ? `${t('usersManagement.firstName')} (English)` : `${t('usersManagement.firstName')} (English)`}
+                                        </Label>
                                         <Input
                                             id="english_username_a"
                                             name="english_username_a"
                                             value={userFormData.english_username_a}
                                             onChange={handleUserInputChange}
-                                            placeholder="First"
+                                            placeholder={t('usersManagement.firstPlaceholder')}
                                             required
+                                            dir="ltr"
+                                            className={isRTL ? 'text-left' : ''}
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="english_username_b" className="text-xs">Second Name </Label>
+                                    <div className={isRTL ? 'order-1' : ''}>
+                                        <Label htmlFor="english_username_b" className={`text-xs ${isRTL ? 'text-right' : ''}`}>
+                                            {t('usersManagement.secondName')} {!isRTL && '(English)'}
+                                        </Label>
                                         <Input
                                             id="english_username_b"
                                             name="english_username_b"
                                             value={userFormData.english_username_b}
                                             onChange={handleUserInputChange}
-                                            placeholder="Second"
+                                            placeholder={t('usersManagement.secondPlaceholder')}
+                                            dir="ltr"
+                                            className={isRTL ? 'text-left' : ''}
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="english_username_c" className="text-xs">Third Name </Label>
+                                    <div className={isRTL ? 'order-4' : ''}>
+                                        <Label htmlFor="english_username_c" className={`text-xs ${isRTL ? 'text-right' : ''}`}>
+                                            {t('usersManagement.thirdName')} {!isRTL && '(English)'}
+                                        </Label>
                                         <Input
                                             id="english_username_c"
                                             name="english_username_c"
                                             value={userFormData.english_username_c}
                                             onChange={handleUserInputChange}
-                                            placeholder="Third"
+                                            placeholder={t('usersManagement.thirdPlaceholder')}
+                                            dir="ltr"
+                                            className={isRTL ? 'text-left' : ''}
+
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="english_username_d" className="text-xs">Last Name </Label>
+                                    <div className={isRTL ? 'order-3' : ''}>
+                                        <Label htmlFor="english_username_d" className={`text-xs ${isRTL ? 'text-right' : ''}`}>
+                                            {t('usersManagement.lastName')} {!isRTL && '(English)'}
+                                        </Label>
                                         <Input
                                             id="english_username_d"
                                             name="english_username_d"
                                             value={userFormData.english_username_d}
                                             onChange={handleUserInputChange}
-                                            placeholder="Last"
+                                            placeholder={t('usersManagement.lastPlaceholder')}
                                             required
+                                            dir="ltr"
+                                            className={isRTL ? 'text-left' : ''}
                                         />
                                     </div>
                                 </div>
                             </div>
 
                             <div>
-                                <div className="grid grid-cols-2 gap-2 mt-2">
-                                    <div>
-                                        <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block mb-1">الإسم الثاني </Label>
-                                        <Input
-                                            id="arabic_username_b"
-                                            name="arabic_username_b"
-                                            value={userFormData.arabic_username_b}
-                                            onChange={handleUserInputChange}
-                                            dir="rtl"
-                                            placeholder="الثاني"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block mb-1">الإسم الاول</Label>
+                                <div className={`grid grid-cols-2 gap-2 mt-2 ${isRTL ? 'grid-flow-row-dense' : ''}`}>
+                                    <div className={isRTL ? 'order-2' : 'order-1'}>
+                                        <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block mb-1">
+                                            {t('usersManagement.firstNameAr')}
+                                        </Label>
                                         <Input
                                             id="arabic_username_a"
                                             name="arabic_username_a"
                                             value={userFormData.arabic_username_a}
                                             onChange={handleUserInputChange}
                                             dir="rtl"
-                                            placeholder="الأول"
+                                            placeholder={t('usersManagement.firstPlaceholderAr')}
                                             required
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block mb-1">الإسم الرابع</Label>
+                                    <div className={isRTL ? 'order-1' : 'order-2'}>
+                                        <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block mb-1">
+                                            {t('usersManagement.secondNameAr')}
+                                        </Label>
                                         <Input
-                                            id="arabic_username_d"
-                                            name="arabic_username_d"
-                                            value={userFormData.arabic_username_d}
+                                            id="arabic_username_b"
+                                            name="arabic_username_b"
+                                            value={userFormData.arabic_username_b}
                                             onChange={handleUserInputChange}
                                             dir="rtl"
-                                            placeholder="الأخير"
-                                            required
+                                            placeholder={t('usersManagement.secondPlaceholderAr')}
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block mb-1">الإسم الثالث</Label>
+                                    <div className={isRTL ? 'order-4' : 'order-3'}>
+                                        <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block mb-1">
+                                            {t('usersManagement.thirdNameAr')}
+                                        </Label>
                                         <Input
                                             id="arabic_username_c"
                                             name="arabic_username_c"
                                             value={userFormData.arabic_username_c}
                                             onChange={handleUserInputChange}
                                             dir="rtl"
-                                            placeholder="الثالث"
+                                            placeholder={t('usersManagement.thirdPlaceholderAr')}
                                         />
                                     </div>
-
+                                    <div className={isRTL ? 'order-3' : 'order-4'}>
+                                        <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block mb-1">
+                                            {t('usersManagement.lastNameAr')}
+                                        </Label>
+                                        <Input
+                                            id="arabic_username_d"
+                                            name="arabic_username_d"
+                                            value={userFormData.arabic_username_d}
+                                            onChange={handleUserInputChange}
+                                            dir="rtl"
+                                            placeholder={t('usersManagement.lastPlaceholderAr')}
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             </div>
+
                             <div className="space-y-2">
-                                <Label htmlFor="user_email">Email</Label>
+                                <Label htmlFor="user_email">{t('common.email')}</Label>
                                 <Input
                                     id="user_email"
                                     name="user_email"
@@ -871,89 +926,98 @@ const UsersManagement = () => {
                                     value={userFormData.user_email}
                                     onChange={handleUserInputChange}
                                     required
-                                    placeholder="user@example.com"
+                                    placeholder={t('usersManagement.emailPlaceholder')}
+                                    dir="ltr"
+                                    className={isRTL ? 'text-left' : ''}
+
                                 />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="id_number">ID Number </Label>
-                                <div className="relative">
-                                    <Input
-                                        id="id_number"
-                                        name="id_number"
-                                        type="text"
-                                        value={userFormData.id_number}
-                                        onChange={handleUserInputChange}
-                                        className="pl-10"
-                                        required
-                                        placeholder="Your ID Number"
-                                    />
-                                </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="user_phonenumber">Phone Number</Label>
+                                <Label htmlFor="id_number">{t('auth.idNumber')}</Label>
+                                <Input
+                                    id="id_number"
+                                    name="id_number"
+                                    type="text"
+                                    value={userFormData.id_number}
+                                    onChange={handleUserInputChange}
+                                    required
+                                    placeholder={t('auth.yourIDNumber')}
+                                    dir="ltr"
+                                    className={isRTL ? 'text-left' : ''}
+
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="user_phonenumber">{t('usersManagement.phoneNumber')}</Label>
                                 <Input
                                     id="user_phonenumber"
                                     name="user_phonenumber"
                                     value={userFormData.user_phonenumber}
                                     onChange={handleUserInputChange}
-                                    placeholder="e.g. +1234567890"
+                                    placeholder={t('usersManagement.phonePlaceholder')}
+                                    dir="ltr"
+                                    className={isRTL ? 'text-left' : ''}
+
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="date_of_birth">Date of Birth</Label>
+                                    <Label htmlFor="date_of_birth">{t('auth.dateOfBirth')}</Label>
                                     <Input
                                         id="date_of_birth"
                                         name="date_of_birth"
                                         type="date"
                                         value={userFormData.date_of_birth}
                                         onChange={handleUserInputChange}
+                                        dir="ltr"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="gender_user">Gender</Label>
+                                    <Label htmlFor="gender_user">{t('auth.gender')}</Label>
                                     <Select
                                         value={userFormData.gender_user}
                                         onValueChange={handleGenderChange}
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select gender" />
+                                        <SelectTrigger dir={isRTL ? 'rtl' : 'ltr'}>
+                                            <SelectValue placeholder={t('usersManagement.selectGender')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="male">Male</SelectItem>
-                                            <SelectItem value="female">Female</SelectItem>
-                                            <SelectItem value="other">Other</SelectItem>
+                                            <SelectItem value="male">{t('auth.male')}</SelectItem>
+                                            <SelectItem value="female">{t('auth.female')}</SelectItem>
+                                            <SelectItem value="other">{t('usersManagement.other')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="user_roles">Role </Label>
+                                <Label htmlFor="user_roles">{t('usersManagement.role')}</Label>
                                 <Select
                                     value={userFormData.user_roles}
                                     onValueChange={handleUserRoleChange}
                                 >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select role" />
+                                    <SelectTrigger dir={isRTL ? 'rtl' : 'ltr'}>
+                                        <SelectValue placeholder={t('usersManagement.selectRole')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Patient">Patient</SelectItem>
-                                        <SelectItem value="doctor">Doctor</SelectItem>
-                                        <SelectItem value="Secretary">Secretary</SelectItem>
-                                        <SelectItem value="Nurse">Nurse</SelectItem>
-                                        <SelectItem value="Lab">Lab</SelectItem>                                                                      <SelectItem value="Admin">Administrator</SelectItem>
-                                        <SelectItem value="X Ray">X-Ray</SelectItem>
+                                        <SelectItem value="Patient">{t('roles.patient')}</SelectItem>
+                                        <SelectItem value="doctor">{t('roles.doctor')}</SelectItem>
+                                        <SelectItem value="Secretary">{t('roles.secretary')}</SelectItem>
+                                        <SelectItem value="Nurse">{t('roles.nurse')}</SelectItem>
+                                        <SelectItem value="Lab">{t('roles.lab')}</SelectItem>
+                                        <SelectItem value="Admin">{t('roles.admin')}</SelectItem>
+                                        <SelectItem value="X Ray">{t('roles.xray')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="user_password">
-                                    {userFormMode === "create" ? "Password " : "New Password (leave empty to keep current)"}
+                                    {userFormMode === "create" ? t('common.password') : t('usersManagement.newPassword')}
                                 </Label>
                                 <Input
                                     id="user_password"
@@ -963,18 +1027,19 @@ const UsersManagement = () => {
                                     onChange={handleUserInputChange}
                                     placeholder="••••••••"
                                     required={userFormMode === "create"}
+                                    dir="ltr"
                                 />
                             </div>
                         </form>
                     </CardContent>
-                    <CardFooter className="flex justify-between border-t pt-4">
+                    <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         {userFormMode === "edit" && (
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={resetUserForm}
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                         )}
                         <Button
@@ -984,10 +1049,10 @@ const UsersManagement = () => {
                             disabled={isLoading}
                         >
                             {isLoading
-                                ? "Saving..."
+                                ? t('usersManagement.saving')
                                 : userFormMode === "create"
-                                    ? "Create User"
-                                    : "Update User"
+                                    ? t('usersManagement.createUser')
+                                    : t('usersManagement.updateUser')
                             }
                         </Button>
                     </CardFooter>

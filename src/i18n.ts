@@ -141,9 +141,45 @@ const enTranslations = {
         appointments: 'Appointments',
         settings: 'Settings',
 
-        // Overview Tab
+        // Overview Tab - Stats Cards
+        totalUsers: 'Total Users',
+        activeAppointments: 'Active Appointments',
+        availableClinics: 'Available Clinics',
         systemStatus: 'System Status',
-        allSystemsOperational: 'All systems are operational.',
+        checkingStatus: 'Checking status...',
+        systemIssueDetected: 'System Issue Detected',
+        allSystemsOperational: 'All Systems Operational',
+        lastChecked: 'Last checked',
+
+        // Overview Tab - Charts
+        userDistributionByRole: 'User Distribution by Role',
+        pie: 'Pie',
+        bar: 'Bar',
+        numberOfUsers: 'Number of Users',
+        userRole: 'User Role',
+
+        // Overview Tab - Role Breakdown
+        patients: 'Patients',
+        secretaries: 'Secretaries',
+        nurses: 'Nurses',
+        administrators: 'Administrators',
+        labTechnicians: 'Lab Technicians',
+        xrayTechnicians: 'X-Ray Technicians',
+
+        // Overview Tab - Performance Summary
+        performanceSummary: 'Performance Summary',
+        totalRevenue: 'Total Revenue',
+        appointmentCompletionRate: 'Appointment Completion Rate',
+        doctorUtilization: 'Doctor Utilization',
+
+        // Overview Tab - Quick Actions
+        quickActions: 'Quick Actions',
+        addUser: 'Add User',
+        viewAppointments: 'View Appointments',
+        manageClinics: 'Manage Clinics',
+        refreshData: 'Refresh Data',
+
+        // System Status Messages
         systemIssues: 'Some systems are experiencing issues.',
         checkSystemStatus: 'Check System Status',
         refreshReportData: 'Refresh Report Data',
@@ -151,11 +187,8 @@ const enTranslations = {
         failedToRefreshReportData: 'Failed to refresh report data.',
 
         // Statistics
-        totalUsers: 'Total Users',
-        totalClinics: 'Total Clinics',
         totalDoctors: 'Total Doctors',
         totalAppointments: 'Total Appointments',
-        totalRevenue: 'Total Revenue',
         appointmentsByClinic: 'Appointments by Clinic',
         appointmentsByDoctor: 'Appointments by Doctor',
         revenueByClinic: 'Revenue by Clinic',
@@ -212,12 +245,93 @@ const enTranslations = {
         noUsersFound: 'No users found matching your search.',
 
         // Quick Actions
-        quickActions: 'Quick Actions',
         viewUsers: 'View Users',
-        manageClinics: 'Manage Clinics',
         manageDoctors: 'Manage Doctors',
-        viewAppointments: 'View Appointments',
         systemSettings: 'System Settings',
+    },
+    usersManagement: {
+        // Main titles and descriptions
+        title: 'User Management',
+        description: 'Manage all user accounts for the clinic portal',
+
+        // Search and actions
+        searchPlaceholder: 'Search users...',
+        addUser: 'Add User',
+        loadingUsers: 'Loading users...',
+
+        // User info labels
+        id: 'ID',
+        phone: 'Phone',
+        user: 'user',
+        users: 'users',
+        filtered: 'filtered',
+
+        // Messages
+        noUsersFound: 'No users found.',
+        noUsersFoundSearch: 'No users found matching your search.',
+        userNotFound: 'User not found.',
+
+        // Form titles
+        createNewUser: 'Create New User',
+        editUser: 'Edit User',
+        addNewUserDesc: 'Add a new user to the system',
+        modifyUserDesc: 'Modify existing user details',
+
+        // Form fields - English names
+        firstName: 'First Name',
+        secondName: 'Second Name',
+        thirdName: 'Third Name',
+        lastName: 'Last Name',
+        firstPlaceholder: 'First',
+        secondPlaceholder: 'Second',
+        thirdPlaceholder: 'Third',
+        lastPlaceholder: 'Last',
+
+        // Form fields - Arabic names
+        firstNameAr: 'الإسم الأول',
+        secondNameAr: 'الإسم الثاني',
+        thirdNameAr: 'الإسم الثالث',
+        lastNameAr: 'الإسم الرابع',
+        firstPlaceholderAr: 'الأول',
+        secondPlaceholderAr: 'الثاني',
+        thirdPlaceholderAr: 'الثالث',
+        lastPlaceholderAr: 'الأخير',
+
+        // Other form fields
+        emailPlaceholder: 'user@example.com',
+        phoneNumber: 'Phone Number',
+        phonePlaceholder: 'e.g. +1234567890',
+        selectGender: 'Select gender',
+        other: 'Other',
+        role: 'Role',
+        selectRole: 'Select role',
+        password: 'Password',
+        newPassword: 'New Password (leave empty to keep current)',
+
+        // Actions and buttons
+        saving: 'Saving...',
+        createUser: 'Create User',
+        updateUser: 'Update User',
+
+        // Delete confirmation
+        confirmDeletion: 'Confirm Deletion',
+        deleteConfirmMessage: 'Are you sure you want to delete {{name}} ({{email}})? This action cannot be undone.',
+        confirm: 'Confirm',
+
+        // Success/Error messages
+        userCreatedSuccessfully: 'User created successfully. The user will need to confirm their email to log in.',
+        userUpdatedSuccessfully: 'User updated successfully.',
+        userDeletedSuccessfully: 'User deleted successfully.',
+        failedToCreateUser: 'Failed to create user profile. Please try again.',
+        failedToUpdateUser: 'Failed to update user. Please try again.',
+        failedToDeleteUser: 'Failed to delete user from database.',
+        cannotDeleteUserWithAppointments: 'Cannot delete user with existing appointments. Please delete their appointments first.',
+        unexpectedError: 'An unexpected error occurred. Please try again.',
+
+        // Activity log messages
+        userCreated: 'User Created',
+        userUpdated: 'User Updated',
+        userDeleted: 'User Deleted',
     },
     home: {
         reminder: 'Reminder',
@@ -459,9 +573,45 @@ const arTranslations = {
         appointments: 'المواعيد',
         settings: 'الإعدادات',
 
-        // Overview Tab
+        // Overview Tab - Stats Cards
+        totalUsers: 'إجمالي المستخدمين',
+        activeAppointments: 'المواعيد النشطة',
+        availableClinics: 'العيادات المتاحة',
         systemStatus: 'حالة النظام',
-        allSystemsOperational: 'جميع الأنظمة تعمل بشكل طبيعي.',
+        checkingStatus: 'جارٍ فحص الحالة...',
+        systemIssueDetected: 'تم اكتشاف مشكلة في النظام',
+        allSystemsOperational: 'جميع الأنظمة تعمل بشكل طبيعي',
+        lastChecked: 'آخر فحص',
+
+        // Overview Tab - Charts
+        userDistributionByRole: 'توزيع المستخدمين حسب الدور',
+        pie: 'دائري',
+        bar: 'أعمدة',
+        numberOfUsers: 'عدد المستخدمين',
+        userRole: 'دور المستخدم',
+
+        // Overview Tab - Role Breakdown
+        patients: 'المرضى',
+        secretaries: 'السكرتاريات',
+        nurses: 'الممرضات',
+        administrators: 'المديرون',
+        labTechnicians: 'فنيو المختبر',
+        xrayTechnicians: 'فنيو الأشعة',
+
+        // Overview Tab - Performance Summary
+        performanceSummary: 'ملخص الأداء',
+        totalRevenue: 'إجمالي الإيرادات',
+        appointmentCompletionRate: 'معدل إنجاز المواعيد',
+        doctorUtilization: 'استخدام الأطباء',
+
+        // Overview Tab - Quick Actions
+        quickActions: 'الإجراءات السريعة',
+        addUser: 'إضافة مستخدم',
+        viewAppointments: 'عرض المواعيد',
+        manageClinics: 'إدارة العيادات',
+        refreshData: 'تحديث البيانات',
+
+        // System Status Messages
         systemIssues: 'تواجه بعض الأنظمة مشاكل.',
         checkSystemStatus: 'فحص حالة النظام',
         refreshReportData: 'تحديث بيانات التقرير',
@@ -469,11 +619,8 @@ const arTranslations = {
         failedToRefreshReportData: 'فشل في تحديث بيانات التقرير.',
 
         // Statistics
-        totalUsers: 'إجمالي المستخدمين',
-        totalClinics: 'إجمالي العيادات',
         totalDoctors: 'إجمالي الأطباء',
         totalAppointments: 'إجمالي المواعيد',
-        totalRevenue: 'إجمالي الإيرادات',
         appointmentsByClinic: 'المواعيد حسب العيادة',
         appointmentsByDoctor: 'المواعيد حسب الطبيب',
         revenueByClinic: 'الإيرادات حسب العيادة',
@@ -530,12 +677,93 @@ const arTranslations = {
         noUsersFound: 'لم يتم العثور على مستخدمين يطابقون بحثك.',
 
         // Quick Actions
-        quickActions: 'الإجراءات السريعة',
         viewUsers: 'عرض المستخدمين',
-        manageClinics: 'إدارة العيادات',
         manageDoctors: 'إدارة الأطباء',
-        viewAppointments: 'عرض المواعيد',
         systemSettings: 'إعدادات النظام',
+    },
+    usersManagement: {
+        // Main titles and descriptions
+        title: 'إدارة المستخدمين',
+        description: 'إدارة جميع حسابات المستخدمين لبوابة العيادة',
+
+        // Search and actions
+        searchPlaceholder: 'البحث في المستخدمين...',
+        addUser: 'إضافة مستخدم',
+        loadingUsers: 'جارٍ تحميل المستخدمين...',
+
+        // User info labels
+        id: 'الهوية',
+        phone: 'الهاتف',
+        user: 'مستخدم',
+        users: 'مستخدمين',
+        filtered: 'مفلتر',
+
+        // Messages
+        noUsersFound: 'لم يتم العثور على مستخدمين.',
+        noUsersFoundSearch: 'لم يتم العثور على مستخدمين يطابقون بحثك.',
+        userNotFound: 'لم يتم العثور على المستخدم.',
+
+        // Form titles
+        createNewUser: 'إنشاء مستخدم جديد',
+        editUser: 'تعديل المستخدم',
+        addNewUserDesc: 'إضافة مستخدم جديد للنظام',
+        modifyUserDesc: 'تعديل تفاصيل المستخدم الحالي',
+        // Form fields - Arabic label + "الإنجليزي"
+        firstName: '(الاسم الأول (الإنجليزية',
+        secondName: 'الاسم الثاني (الإنجليزية)',
+        thirdName: 'الاسم الثالث (الإنجليزية)',
+        lastName: 'الاسم الأخير (الإنجليزية)',
+
+        firstPlaceholder: 'الأول',
+        secondPlaceholder: 'الثاني',
+        thirdPlaceholder: 'الثالث',
+        lastPlaceholder: 'الأخير',
+
+        // Form fields - Arabic names
+        firstNameAr: 'الإسم الأول',
+        secondNameAr: 'الإسم الثاني',
+        thirdNameAr: 'الإسم الثالث',
+        lastNameAr: 'الإسم الرابع',
+        firstPlaceholderAr: 'الأول',
+        secondPlaceholderAr: 'الثاني',
+        thirdPlaceholderAr: 'الثالث',
+        lastPlaceholderAr: 'الأخير',
+
+        // Other form fields
+        emailPlaceholder: 'user@example.com',
+        phoneNumber: 'رقم الهاتف',
+        phonePlaceholder: 'مثال: +1234567890',
+        selectGender: 'اختر الجنس',
+        other: 'آخر',
+        role: 'الدور',
+        selectRole: 'اختر الدور',
+        password: 'كلمة المرور',
+        newPassword: 'كلمة مرور جديدة (اتركها فارغة للاحتفاظ بالحالية)',
+
+        // Actions and buttons
+        saving: 'جارٍ الحفظ...',
+        createUser: 'إنشاء مستخدم',
+        updateUser: 'تحديث المستخدم',
+
+        // Delete confirmation
+        confirmDeletion: 'تأكيد الحذف',
+        deleteConfirmMessage: 'هل أنت متأكد من حذف {{name}} ({{email}})؟ هذا الإجراء لا يمكن التراجع عنه.',
+        confirm: 'تأكيد',
+
+        // Success/Error messages
+        userCreatedSuccessfully: 'تم إنشاء المستخدم بنجاح. سيحتاج المستخدم لتأكيد بريده الإلكتروني لتسجيل الدخول.',
+        userUpdatedSuccessfully: 'تم تحديث المستخدم بنجاح.',
+        userDeletedSuccessfully: 'تم حذف المستخدم بنجاح.',
+        failedToCreateUser: 'فشل في إنشاء ملف المستخدم. يرجى المحاولة مرة أخرى.',
+        failedToUpdateUser: 'فشل في تحديث المستخدم. يرجى المحاولة مرة أخرى.',
+        failedToDeleteUser: 'فشل في حذف المستخدم من قاعدة البيانات.',
+        cannotDeleteUserWithAppointments: 'لا يمكن حذف مستخدم لديه مواعيد موجودة. يرجى حذف مواعيده أولاً.',
+        unexpectedError: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
+
+        // Activity log messages
+        userCreated: 'تم إنشاء مستخدم',
+        userUpdated: 'تم تحديث مستخدم',
+        userDeleted: 'تم حذف مستخدم',
     },
     home: {
         reminder: 'تذكير',

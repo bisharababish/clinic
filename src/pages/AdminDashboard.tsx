@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 // Interfaces (same as before)
 interface UserInfo {
@@ -910,7 +911,7 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-bold mb-6">{t('admin.title')}</h1>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="flex flex-wrap justify-center w-full">
+                <TabsList className={`flex flex-wrap justify-center w-full ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                     <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
                     <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
                     <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
