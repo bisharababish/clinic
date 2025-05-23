@@ -29,17 +29,16 @@ const Footer: React.FC = () => {
           {/* Quick Links */}
           <div className="space-y-3">
             <h3 className="font-semibold text-lg">{t("footer.quickLinks")}</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col space-y-2">
               <a href="#" className="text-sm text-primary hover:underline">
                 {t("navbar.aboutUs")}
               </a>
               <a href="#" className="text-sm text-primary hover:underline">
-                {t("footer.privacyPolicy")}
-              </a>
-              <a href="#" className="text-sm text-primary hover:underline">
                 {t("footer.termsOfUse")}
               </a>
-
+              <a href="#" className="text-sm text-primary hover:underline">
+                {t("footer.privacyPolicy")}
+              </a>
             </div>
           </div>
 
