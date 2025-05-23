@@ -604,6 +604,19 @@ const enTranslations = {
         loadingClinics: 'Loading clinics...',
         loadingSlots: 'Loading availability slots...',
     },
+    forgotpassowrd: {
+        // Add these to the existing auth section
+        enterCredentials: 'name@example.com',
+        sendingResetLink: 'Sending...',
+        resetLinkSent: 'Reset Link Sent',
+        resetEmailSentDesc: 'If your email exists in our system, you\'ll receive a password reset link',
+        checkEmailTitle: 'Check Your Email',
+        checkEmailDesc: 'We\'ve sent a password reset link to',
+        didntReceiveEmail: 'Didn\'t receive an email? Check your spam folder or try again.',
+        enterEmailAddress: 'Please enter your email address',
+        failedToSendResetLink: 'Failed to send reset link',
+
+    },
     home: {
         reminder: 'Reminder',
         reservationRequired: 'Please make a reservation before visiting our clinic',
@@ -947,6 +960,17 @@ const arTranslations = {
         total: 'المجموع',
         count: 'العدد',
         revenue: 'الإيرادات',
+    }, forgotpassowrd: {
+        // Add these to the existing auth section
+        enterCredentials: 'name@example.com',
+        sendingResetLink: 'جارٍ الإرسال...',
+        resetLinkSent: 'تم إرسال رابط إعادة التعيين',
+        resetEmailSentDesc: 'إذا كان بريدك الإلكتروني موجود في نظامنا، ستستلم رابط إعادة تعيين كلمة المرور',
+        checkEmailTitle: 'تحقق من بريدك الإلكتروني',
+        checkEmailDesc: 'لقد أرسلنا رابط إعادة تعيين كلمة المرور إلى',
+        didntReceiveEmail: 'لم تستلم بريدًا إلكترونيًا؟ تحقق من مجلد البريد العشوائي أو حاول مرة أخرى.',
+        enterEmailAddress: 'الرجاء إدخال عنوان بريدك الإلكتروني',
+        failedToSendResetLink: 'فشل في إرسال رابط إعادة التعيين',
     },
     auth: {
         welcomeBack: 'مرحبًا بعودتك',

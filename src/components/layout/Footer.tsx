@@ -63,15 +63,6 @@ const Footer: React.FC = () => {
                   }
                 </span>
               </div>
-              <div className={`flex items-start text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <MapPin className={`h-4 w-4 ${isRTL ? 'ml-2 mt-0.5' : 'mr-2 mt-0.5'} opacity-0`} />
-                <span className={isRTL ? 'text-right' : 'text-left'}>
-                  {isRTL
-                    ? "بيت لحم "
-                    : "Bethlehem, Palestine"
-                  }
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -79,7 +70,7 @@ const Footer: React.FC = () => {
         <div className="mt-8 pt-4 border-t flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="w-full flex justify-center">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} {t("common.clinicName")}. {t("footer.rights")}.
+              © 2025 {t("common.clinicName")}. {t("footer.rights")}.
             </p>
           </div>
         </div>

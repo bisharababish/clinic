@@ -1,11 +1,13 @@
 // components/auth/ForgotPasswordForm.tsx
 import * as React from "react";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { LanguageContext } from "../contexts/LanguageContext";
 import { supabase } from "../../lib/supabase";
 
 interface ForgotPasswordFormProps {
@@ -17,14 +19,16 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { isRTL } = useContext(LanguageContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email) {
       toast({
-        title: "Error",
-        description: "Please enter your email address",
+        title: t("common.error"),
+        description: t("auth.enterEmailAddress"),
         variant: "destructive",
       });
       return;
@@ -42,14 +46,14 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
 
       setIsSubmitted(true);
       toast({
-        title: "Reset Link Sent",
-        description: "If your email exists in our system, you'll receive a password reset link",
+        title: t("auth.resetLinkSent"),
+        description: t("auth.resetEmailSentDesc"),
       });
     } catch (error) {
       console.error("Password reset error:", error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send reset link",
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("auth.failedToSendResetLink"),
         variant: "destructive",
       });
     } finally {
@@ -59,20 +63,22 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
 
   if (isSubmitted) {
     return (
-      <div className="w-full space-y-6 animate-fade-in">
+      <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="space-y-2 text-center">
-          <h2 className="text-3xl font-bold tracking-tight">Check Your Email</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t("auth.checkEmailTitle")}
+          </h2>
           <p className="text-sm text-muted-foreground">
-            We've sent a password reset link to <span className="font-medium">{email}</span>
+            {t("auth.checkEmailDesc")} <span className="font-medium">{email}</span>
           </p>
         </div>
 
         <div className="space-y-4 text-center">
           <p className="text-sm text-muted-foreground">
-            Didn't receive an email? Check your spam folder or try again.
+            {t("auth.didntReceiveEmail")}
           </p>
           <Button variant="outline" onClick={() => setIsSubmitted(false)}>
-            Try Again
+            {t("auth.tryAgain")}
           </Button>
           <div className="pt-2">
             <button
@@ -80,7 +86,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
               onClick={onSwitchToLogin}
               className="text-primary font-medium hover:underline text-sm"
             >
-              Back to Sign In
+              {t("auth.backToLogin")}
             </button>
           </div>
         </div>
@@ -89,33 +95,36 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
   }
 
   return (
-    <div className="w-full space-y-6 animate-fade-in">
+    <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="space-y-2 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">Forgot Password</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {t("auth.resetPasswordTitle")}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Enter your email address and we'll send you a link to reset your password
+          {t("auth.resetPasswordDesc")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("common.email")}</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Mail className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'
+              }`} />
             <Input
               id="email"
               type="email"
-              placeholder="name@example.com"
+              placeholder={t("auth.enterCredentials")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
+              className={isRTL ? 'pr-10' : 'pl-10'}
               required
             />
           </div>
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Sending..." : "Send Reset Link"}
+          {isLoading ? t("auth.sendingResetLink") : t("auth.sendResetLink")}
         </Button>
       </form>
 
@@ -125,7 +134,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
           onClick={onSwitchToLogin}
           className="text-primary font-medium hover:underline"
         >
-          Back to Sign In
+          {t("auth.backToLogin")}
         </button>
       </div>
     </div>
