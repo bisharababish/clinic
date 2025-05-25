@@ -41,25 +41,24 @@ const Footer: React.FC = () => {
               </a>
             </div>
           </div>
-
           {/* Contact Info */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg">{t("footer.contactUs")}</h3>
+            <h3 className="font-semibold text-lg text-center">{t("footer.contactUs")}</h3>
             <div className="space-y-2">
-              <div className={`flex items-center text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <Phone className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                <span>+970 2 274 4444</span>
+                <span dir="ltr">+970 2 274 4444</span>  {/* Keep phone LTR */}
               </div>
-              <div className={`flex items-center text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <Mail className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                <span>info@bethlehemmedcenter.com</span>
+                <span dir="ltr">info@bethlehemmedcenter.com</span>  {/* Keep email LTR */}
               </div>
-              <div className={`flex items-start text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-start text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <MapPin className={`h-4 w-4 ${isRTL ? 'ml-2 mt-0.5' : 'mr-2 mt-0.5'}`} />
                 <span className={isRTL ? 'text-right' : 'text-left'}>
                   {isRTL
-                    ? "شارع وادي مسلم - مبنى نجيب ناصر"
-                    : "Wadi Musalam St. - Najib Nasser Building"
+                    ? "شارع وادي مسلم - مبنى نجيب ناصر، بيت لحم، فلسطين"
+                    : "Wadi Musalam St. - Najib Nasser Building, Bethlehem, Palestine"
                   }
                 </span>
               </div>

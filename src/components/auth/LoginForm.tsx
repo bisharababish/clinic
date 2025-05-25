@@ -235,10 +235,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
             <Input
               id="email"
               type="email"
-              placeholder={t("auth.enterCredentials")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={isRTL ? 'pr-10' : 'pl-10'}
+              placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
+
               required
             />
           </div>

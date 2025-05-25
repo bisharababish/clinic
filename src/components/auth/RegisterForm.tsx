@@ -460,7 +460,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="email">{t("common.email")}</Label>
+                    <Label htmlFor="email">
+                        {t("common.email")}
+                    </Label>
                     <div className="relative">
                         <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                         <Input
@@ -471,7 +473,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             onChange={handleInputChange}
                             className={isRTL ? 'pr-10' : 'pl-10'}
                             required
-                            placeholder="name@example.com"
+                            placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
+                            dir={isRTL ? "rtl" : "ltr"}  // CHANGED: Now RTL when in Arabic
                         />
                     </div>
                 </div>
@@ -488,6 +491,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             className={isRTL ? 'pr-10' : 'pl-10'}
                             required
                             placeholder={t("auth.yourIDNumber")}
+
                         />
                     </div>
                 </div>
@@ -503,7 +507,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             onChange={handleInputChange}
                             className={isRTL ? 'pr-10' : 'pl-10'}
                             required
-                            placeholder="123456789"
+                            placeholder={isRTL ? "٩٨٧٦٥٤٣٢١" : "123456789"} dir={isRTL ? "rtl" : "ltr"}  // ADD THIS LINE
                         />
                     </div>
                 </div>
@@ -515,13 +519,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                         <Input
                             id="dateOfBirth"
                             name="dateOfBirth"
-                            type="date"
+                            type="date"  // CHANGED: Use text input for Arabic
                             value={formData.dateOfBirth}
                             onChange={handleInputChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
+                            className={`${isRTL ? 'pr-10 text-right' : 'pl-10'}`}
                             required
+                            dir={isRTL ? "rtl" : "ltr"}
+                            placeholder={isRTL ? "سنة/شهر/يوم" : ""}  // CHANGED: Arabic date format
+                            pattern={isRTL ? "\\d{4}/\\d{2}/\\d{2}" : undefined}  // CHANGED: Pattern for validation
+                            style={isRTL ? { textAlign: 'right' } : {}}  // ADD THIS: Force right alignment
                         />
                     </div>
+
                 </div>
 
                 <div className="space-y-2">
@@ -529,13 +538,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     <RadioGroup
                         value={formData.gender}
                         onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
-                        className="flex gap-4 mt-2"
+                        className={`flex gap-4 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}
                     >
-                        <div className="flex items-center space-x-2">
+                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                             <RadioGroupItem value="male" id="male" />
                             <Label htmlFor="male">{t("auth.male")}</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                             <RadioGroupItem value="female" id="female" />
                             <Label htmlFor="female">{t("auth.female")}</Label>
                         </div>

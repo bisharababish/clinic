@@ -114,7 +114,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
             <Input
               id="email"
               type="email"
-              placeholder={t("auth.enterCredentials")}
+              placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={isRTL ? 'pr-10' : 'pl-10'}
@@ -134,7 +134,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
           onClick={onSwitchToLogin}
           className="text-primary font-medium hover:underline"
         >
-          {t("auth.backToLogin")}
+          {isRTL ? "العودة لتسجيل الدخول" : "Back To Login"}
         </button>
       </div>
     </div>
