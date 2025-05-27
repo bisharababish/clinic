@@ -1237,7 +1237,7 @@ const arTranslations = {
         modifyUserDesc: 'تعديل تفاصيل المستخدم الحالي',
 
         // Form fields - Arabic label + "الإنجليزي"
-        firstName: '(الاسم الأول (الإنجليزية',
+        firstName: 'الاسم الأول (الإنجليزية)',
         secondName: 'الاسم الثاني (الإنجليزية)',
         thirdName: 'الاسم الثالث (الإنجليزية)',
         lastName: 'الاسم الأخير (الإنجليزية)',
@@ -1258,9 +1258,9 @@ const arTranslations = {
         lastPlaceholderAr: 'الأخير',
 
         // Other form fields
-        emailPlaceholder: 'user@example.com',
+        emailPlaceholder: 'أدخل بريدك الإلكتروني',
         phoneNumber: 'رقم الهاتف',
-        phonePlaceholder: 'مثال: +1234567890',
+        phonePlaceholder: 'مثال: +٩٨٧٦٥٤٣٢١',
         selectGender: 'اختر الجنس',
         other: 'آخر',
         role: 'الدور',

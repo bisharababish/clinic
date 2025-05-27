@@ -795,10 +795,11 @@ const UsersManagement = () => {
                     <CardContent>
                         <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                             <div>
-                                <div className={`grid grid-cols-2 gap-2 mt-2 ${isRTL ? 'grid-flow-row-dense' : ''}`}>
-                                    <div className={isRTL ? 'order-2' : ''}>
-                                        <Label htmlFor="english_username_a" className={`text-xs ${isRTL ? 'text-right block' : ''}`}>
-                                            {isRTL ? `${t('usersManagement.firstName')} (English)` : `${t('usersManagement.firstName')} (English)`}
+                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                    {/* First Row */}
+                                    <div>
+                                        <Label htmlFor="english_username_a" className="text-xs">
+                                            {t('usersManagement.firstName')}
                                         </Label>
                                         <Input
                                             id="english_username_a"
@@ -808,12 +809,12 @@ const UsersManagement = () => {
                                             placeholder={t('usersManagement.firstPlaceholder')}
                                             required
                                             dir="ltr"
-                                            className={isRTL ? 'text-left' : ''}
+                                            className="text-left"
                                         />
                                     </div>
-                                    <div className={isRTL ? 'order-1' : ''}>
-                                        <Label htmlFor="english_username_b" className={`text-xs ${isRTL ? 'text-right' : ''}`}>
-                                            {t('usersManagement.secondName')} {!isRTL && '(English)'}
+                                    <div>
+                                        <Label htmlFor="english_username_b" className="text-xs">
+                                            {t('usersManagement.secondName')}
                                         </Label>
                                         <Input
                                             id="english_username_b"
@@ -822,12 +823,14 @@ const UsersManagement = () => {
                                             onChange={handleUserInputChange}
                                             placeholder={t('usersManagement.secondPlaceholder')}
                                             dir="ltr"
-                                            className={isRTL ? 'text-left' : ''}
+                                            className="text-left"
                                         />
                                     </div>
-                                    <div className={isRTL ? 'order-4' : ''}>
-                                        <Label htmlFor="english_username_c" className={`text-xs ${isRTL ? 'text-right' : ''}`}>
-                                            {t('usersManagement.thirdName')} {!isRTL && '(English)'}
+
+                                    {/* Second Row */}
+                                    <div>
+                                        <Label htmlFor="english_username_c" className="text-xs">
+                                            {t('usersManagement.thirdName')}
                                         </Label>
                                         <Input
                                             id="english_username_c"
@@ -836,13 +839,13 @@ const UsersManagement = () => {
                                             onChange={handleUserInputChange}
                                             placeholder={t('usersManagement.thirdPlaceholder')}
                                             dir="ltr"
-                                            className={isRTL ? 'text-left' : ''}
-
+                                            className="text-left"
                                         />
                                     </div>
-                                    <div className={isRTL ? 'order-3' : ''}>
-                                        <Label htmlFor="english_username_d" className={`text-xs ${isRTL ? 'text-right' : ''}`}>
-                                            {t('usersManagement.lastName')} {!isRTL && '(English)'}
+
+                                    <div>
+                                        <Label htmlFor="english_username_d" className="text-xs">
+                                            {t('usersManagement.lastName')}
                                         </Label>
                                         <Input
                                             id="english_username_d"
@@ -852,67 +855,84 @@ const UsersManagement = () => {
                                             placeholder={t('usersManagement.lastPlaceholder')}
                                             required
                                             dir="ltr"
-                                            className={isRTL ? 'text-left' : ''}
+                                            className="text-left"
                                         />
                                     </div>
+
                                 </div>
                             </div>
 
                             <div>
-                                <div className={`grid grid-cols-2 gap-2 mt-2 ${isRTL ? 'grid-flow-row-dense' : ''}`}>
-                                    <div className={isRTL ? 'order-2' : 'order-1'}>
-                                        <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block mb-1">
-                                            {t('usersManagement.firstNameAr')}
-                                        </Label>
-                                        <Input
-                                            id="arabic_username_a"
-                                            name="arabic_username_a"
-                                            value={userFormData.arabic_username_a}
-                                            onChange={handleUserInputChange}
-                                            dir="rtl"
-                                            placeholder={t('usersManagement.firstPlaceholderAr')}
-                                            required
-                                        />
-                                    </div>
-                                    <div className={isRTL ? 'order-1' : 'order-2'}>
-                                        <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block mb-1">
-                                            {t('usersManagement.secondNameAr')}
-                                        </Label>
-                                        <Input
-                                            id="arabic_username_b"
-                                            name="arabic_username_b"
-                                            value={userFormData.arabic_username_b}
-                                            onChange={handleUserInputChange}
-                                            dir="rtl"
-                                            placeholder={t('usersManagement.secondPlaceholderAr')}
-                                        />
-                                    </div>
-                                    <div className={isRTL ? 'order-4' : 'order-3'}>
-                                        <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block mb-1">
-                                            {t('usersManagement.thirdNameAr')}
-                                        </Label>
-                                        <Input
-                                            id="arabic_username_c"
-                                            name="arabic_username_c"
-                                            value={userFormData.arabic_username_c}
-                                            onChange={handleUserInputChange}
-                                            dir="rtl"
-                                            placeholder={t('usersManagement.thirdPlaceholderAr')}
-                                        />
-                                    </div>
-                                    <div className={isRTL ? 'order-3' : 'order-4'}>
-                                        <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block mb-1">
-                                            {t('usersManagement.lastNameAr')}
-                                        </Label>
-                                        <Input
-                                            id="arabic_username_d"
-                                            name="arabic_username_d"
-                                            value={userFormData.arabic_username_d}
-                                            onChange={handleUserInputChange}
-                                            dir="rtl"
-                                            placeholder={t('usersManagement.lastPlaceholderAr')}
-                                            required
-                                        />
+
+
+                                <div>
+                                    {/* Arabic Names Section - ALWAYS RTL regardless of interface language */}
+                                    <div className="arabic-names-container" dir="rtl" style={{ direction: 'rtl' }}>
+                                        <div className="grid grid-cols-2 gap-2 mt-2">
+                                            {/* Row 1: First Name (right) | Second Name (left) in RTL layout */}
+                                            <div>
+                                                <Label htmlFor="arabic_username_a" className="text-xs " dir="rtl">
+                                                    {t('usersManagement.firstNameAr')}
+                                                </Label>
+                                                <Input
+                                                    id="arabic_username_a"
+                                                    name="arabic_username_a"
+                                                    value={userFormData.arabic_username_a}
+                                                    onChange={handleUserInputChange}
+                                                    dir="rtl"
+                                                    placeholder={t('usersManagement.firstPlaceholderAr')}
+                                                    required
+                                                    className="text-align-left, direction: rtl"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="arabic_username_b" className="text-xs " dir="rtl">
+                                                    {t('usersManagement.secondNameAr')}
+                                                </Label>
+                                                <Input
+                                                    id="arabic_username_b"
+                                                    name="arabic_username_b"
+                                                    value={userFormData.arabic_username_b}
+                                                    onChange={handleUserInputChange}
+                                                    dir="rtl"
+                                                    placeholder={t('usersManagement.secondPlaceholderAr')}
+                                                    required
+                                                    className="text-align-left, direction: rtl"
+                                                />
+                                            </div>
+
+                                            {/* Row 2: Third Name (right) | Fourth Name (left) in RTL layout */}
+                                            <div>
+                                                <Label htmlFor="arabic_username_c" className="text-xs" dir="rtl">
+                                                    {t('usersManagement.thirdNameAr')}
+                                                </Label>
+                                                <Input
+                                                    id="arabic_username_c"
+                                                    name="arabic_username_c"
+                                                    value={userFormData.arabic_username_c}
+                                                    onChange={handleUserInputChange}
+                                                    dir="rtl"
+                                                    placeholder={t('usersManagement.thirdPlaceholderAr')}
+                                                    required
+                                                    className="text-align-left, direction: rtl"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="arabic_username_d" className="text-xs " dir="rtl">
+                                                    {t('usersManagement.lastNameAr')}
+                                                </Label>
+                                                <Input
+                                                    id="arabic_username_d"
+                                                    name="arabic_username_d"
+                                                    value={userFormData.arabic_username_d}
+                                                    onChange={handleUserInputChange}
+                                                    dir="rtl"
+                                                    placeholder={t('usersManagement.lastPlaceholderAr')}
+                                                    required
+                                                    className="text-align-left, direction: rtl"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1058,7 +1078,7 @@ const UsersManagement = () => {
                     </CardFooter>
                 </Card>
             </div>
-        </div>
+        </div >
     );
 };
 

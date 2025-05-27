@@ -805,7 +805,7 @@ const ClinicManagement = () => {
                 onValueChange={(value) => setActiveTab(value as "clinics" | "categories")}
                 className="w-full"
             >
-                <TabsList className={isRTL ? 'flex-row-reverse' : ''}>
+                <TabsList className={`flex ${isRTL ? "justify-end" : "justify-start"}`}>
                     <TabsTrigger value="clinics">{t('clinicManagement.clinics')}</TabsTrigger>
                     <TabsTrigger value="categories">{t('clinicManagement.categories')}</TabsTrigger>
                 </TabsList>
@@ -1055,7 +1055,7 @@ const ClinicManagement = () => {
                                             </Button>
                                         </div>
                                     </div>
-                                    <CardDescription>
+                                    <CardDescription style={{ textAlign: isRTL ? 'right' : 'left' }}>
                                         {t('clinicManagement.categoriesDescription')}
                                     </CardDescription>
                                 </CardHeader>
@@ -1105,10 +1105,10 @@ const ClinicManagement = () => {
                         <div className="w-full lg:w-1/3">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle className={isRTL ? 'text-right' : ''}>
+                                    <CardTitle className={isRTL ? 'text-left' : ''}>
                                         {categoryFormMode === "create" ? t('clinicManagement.createNewCategory') : t('clinicManagement.editCategory')}
                                     </CardTitle>
-                                    <CardDescription className={isRTL ? 'text-right' : ''}>
+                                    <CardDescription className={isRTL ? 'text-left' : ''}>
                                         {categoryFormMode === "create"
                                             ? t('clinicManagement.addNewCategoryDesc')
                                             : t('clinicManagement.modifyCategoryDesc')}
@@ -1117,7 +1117,7 @@ const ClinicManagement = () => {
                                 <CardContent>
                                     <form onSubmit={handleCategorySubmit} id="categoryForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                                         <div className="space-y-2">
-                                            <Label htmlFor="categoryName" className={isRTL ? 'text-right block' : ''}>
+                                            <Label htmlFor="categoryName" className={isRTL ? 'text-left block' : ''}>
                                                 {t('clinicManagement.categoryName')}
                                             </Label>
                                             <Input
@@ -1127,28 +1127,12 @@ const ClinicManagement = () => {
                                                 onChange={handleCategoryInputChange}
                                                 placeholder={t('clinicManagement.categoryNamePlaceholder')}
                                                 required
-                                                className={isRTL ? 'text-right' : ''}
+                                                className={isRTL ? 'text-left' : ''}
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                                <Label htmlFor="categoryActive" className={isRTL ? 'text-right' : ''}>
-                                                    {t('clinicManagement.activeStatus')}
-                                                </Label>
-                                                <Switch
-                                                    id="categoryActive"
-                                                    checked={categoryFormData.is_active}
-                                                    onCheckedChange={handleCategoryActiveChange}
-                                                />
-                                            </div>
-                                            <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
-                                                {categoryFormData.is_active
-                                                    ? t('clinicManagement.categoryActive')
-                                                    : t('clinicManagement.categoryInactive')}
-                                            </p>
-                                        </div>
+
                                     </form>
                                 </CardContent>
                                 <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
