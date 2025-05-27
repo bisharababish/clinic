@@ -538,13 +538,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     <RadioGroup
                         value={formData.gender}
                         onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
-                        className={`flex gap-4 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                        className={`flex gap-6 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}
                     >
-                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <RadioGroupItem value="male" id="male" />
                             <Label htmlFor="male">{t("auth.male")}</Label>
                         </div>
-                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <RadioGroupItem value="female" id="female" />
                             <Label htmlFor="female">{t("auth.female")}</Label>
                         </div>

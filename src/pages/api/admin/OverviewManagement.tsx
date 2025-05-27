@@ -252,12 +252,20 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         <div className="flex justify-between items-center">
                             <CardTitle className="text-blue-800">{t('admin.userDistributionByRole')}</CardTitle>
                             <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">{t('admin.pie')}</span>
-                                <Switch
-                                    checked={chartType === 'bar'}
-                                    onCheckedChange={(checked) => setChartType(checked ? 'bar' : 'pie')}
-                                />
-                                <span className="text-sm text-gray-600">{t('admin.bar')}</span>
+                                <div className="flex bg-gray-100 rounded-md p-1">
+                                    <button
+                                        onClick={() => setChartType('pie')}
+                                        className={`px-2 py-1 text-xs rounded ${chartType === 'pie' ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
+                                    >
+                                        {t('admin.pie')}
+                                    </button>
+                                    <button
+                                        onClick={() => setChartType('bar')}
+                                        className={`px-2 py-1 text-xs rounded ${chartType === 'bar' ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
+                                    >
+                                        {t('admin.bar')}
+                                    </button>
+                                </div>
                                 <RefreshCw
                                     className="h-4 w-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors"
                                     onClick={refreshReportData}
@@ -275,9 +283,28 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                             cx="50%"
                                             cy="50%"
                                             labelLine={false}
-                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                            outerRadius={80}
-                                            innerRadius={40}
+                                            label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+                                                const RADIAN = Math.PI / 180;
+                                                const radius = outerRadius + 25;
+                                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                                                return (
+                                                    <text
+                                                        x={x}
+                                                        y={y}
+                                                        fill="#374151"
+                                                        textAnchor={x > cx ? 'start' : 'end'}
+                                                        dominantBaseline="central"
+                                                        fontSize="11"
+                                                        fontWeight="500"
+                                                    >
+                                                        {`${(percent * 100).toFixed(0)}%`}
+                                                    </text>
+                                                );
+                                            }}
+                                            outerRadius={70}
+                                            innerRadius={35}
                                             paddingAngle={5}
                                             dataKey="count"
                                             isAnimationActive={true}
@@ -295,9 +322,26 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                 ) : (
                                     <BarChart data={getRoleChartData()}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="role" label={{ value: t('admin.userRole'), position: 'insideBottom', offset: -5 }} />
-                                        <YAxis label={{ value: t('admin.numberOfUsers'), angle: -90, position: 'insideLeft' }} />
-                                        <Legend />
+                                        <XAxis
+                                            dataKey="role"
+                                            tick={{ fontSize: 12 }}
+                                        />
+                                        <YAxis
+                                            label={{
+                                                value: t('admin.numberOfUsers'),
+                                                angle: -90,
+                                                position: 'outside',
+                                                offset: 10,
+                                                style: { textAnchor: 'middle' }
+                                            }}
+                                            tick={{ fontSize: 12 }}
+                                            width={60}
+                                        />
+                                        <Tooltip
+                                            formatter={(value, name) => [value, t('admin.numberOfUsers')]}
+                                            labelFormatter={(label) => label}
+                                        />
+                                        { }
                                         <Bar dataKey="count" isAnimationActive={true}>
                                             {getRoleChartData().map((entry, index) => (
                                                 <Cell
