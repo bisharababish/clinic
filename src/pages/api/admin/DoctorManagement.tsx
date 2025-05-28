@@ -586,16 +586,17 @@ const DoctorManagement = () => {
                 <div className="w-full lg:w-2/3">
                     <Card>
                         <CardHeader>
-                            <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <div className={`flex justify-between items-center ${isRTL ? '' : 'flex-row-reverse'}`}>
                                 <CardTitle>{t('doctorManagement.doctorsManagement')}</CardTitle>
                                 <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                     <div className="relative">
                                         <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                                         <Input
                                             placeholder={t('doctorManagement.searchDoctors')}
+
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className={`${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10'} w-[250px]`}
+                                            className={`${isRTL ? 'pr-10 pl-3 text-left' : 'pl-10'} w-[250px]`}
                                             dir={isRTL ? 'rtl' : 'ltr'}
                                         />
                                     </div>
@@ -617,7 +618,7 @@ const DoctorManagement = () => {
                             <div className="space-y-4">
                                 {filteredDoctors.map((doctor) => (
                                     <div key={doctor.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className={isRTL ? 'text-right' : ''}>
+                                        <div className={isRTL ? 'text-left' : ''}>
                                             <h3 className="font-medium">{doctor.name}</h3>
                                             <div className="text-sm text-gray-500">{doctor.specialty}</div>
                                             <div className="text-sm text-gray-500">{getClinicNameById(doctor.clinic_id)}</div>
@@ -653,14 +654,14 @@ const DoctorManagement = () => {
                                 ))}
 
                                 {filteredDoctors.length === 0 && (
-                                    <div className={`text-center py-8 text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                                    <div className={`text-center py-8 text-gray-500 ${isRTL ? 'text-left' : ''}`}>
                                         {searchQuery ? t('doctorManagement.noDoctorsFoundSearch') : t('doctorManagement.noDoctorsFound')}
                                     </div>
                                 )}
                             </div>
                         </CardContent>
                         <CardFooter className={isRTL ? 'flex-row-reverse' : ''}>
-                            <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                            <div className={`text-sm text-gray-500 ${isRTL ? 'text-left' : ''}`}>
                                 {filteredDoctors.length} {filteredDoctors.length === 1 ? t('doctorManagement.doctor') : t('doctorManagement.doctors')}
                                 {searchQuery && ` (${t('doctorManagement.filtered')})`}
                             </div>
@@ -672,10 +673,10 @@ const DoctorManagement = () => {
                 <div className="w-full lg:w-1/3">
                     <Card>
                         <CardHeader>
-                            <CardTitle className={isRTL ? 'text-right' : ''}>
+                            <CardTitle className={isRTL ? 'text-left' : ''}>
                                 {doctorFormMode === "create" ? t('doctorManagement.createNewDoctor') : t('doctorManagement.editDoctor')}
                             </CardTitle>
-                            <CardDescription className={isRTL ? 'text-right' : ''}>
+                            <CardDescription className={isRTL ? 'text-left' : ''}>
                                 {doctorFormMode === "create"
                                     ? t('doctorManagement.addNewDoctorDesc')
                                     : t('doctorManagement.modifyDoctorDesc')}
@@ -684,7 +685,7 @@ const DoctorManagement = () => {
                         <CardContent>
                             <form onSubmit={handleDoctorSubmit} id="doctorForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                                 <div className="space-y-2">
-                                    <Label htmlFor="name" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="name" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.doctorName')}
                                     </Label>
                                     <Input
@@ -694,13 +695,13 @@ const DoctorManagement = () => {
                                         onChange={handleDoctorInputChange}
                                         placeholder={t('doctorManagement.doctorNamePlaceholder')}
                                         required
-                                        className={isRTL ? 'text-right' : ''}
+                                        className={isRTL ? 'text-left' : ''}
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="specialty" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="specialty" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.specialty')}
                                     </Label>
                                     <Input
@@ -710,13 +711,13 @@ const DoctorManagement = () => {
                                         onChange={handleDoctorInputChange}
                                         placeholder={t('doctorManagement.specialtyPlaceholder')}
                                         required
-                                        className={isRTL ? 'text-right' : ''}
+                                        className={isRTL ? 'text-left' : ''}
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="clinic_id" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="clinic_id" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.clinic')}
                                     </Label>
                                     <select
@@ -724,7 +725,7 @@ const DoctorManagement = () => {
                                         name="clinic_id"
                                         value={doctorFormData.clinic_id}
                                         onChange={(e) => handleDoctorClinicChange(e.target.value)}
-                                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-right' : ''}`}
+                                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : ''}`}
                                         required
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     >
@@ -736,14 +737,14 @@ const DoctorManagement = () => {
                                         ))}
                                     </select>
                                     {clinics.length === 0 && (
-                                        <p className={`text-sm text-amber-600 ${isRTL ? 'text-right' : ''}`}>
+                                        <p className={`text-sm text-amber-600 ${isRTL ? 'text-left' : ''}`}>
                                             {t('doctorManagement.noClinicsAvailable')}
                                         </p>
                                     )}
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="email" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="email" className={isRTL ? 'text-left block' : ''}>
                                         {t('common.email')}
                                     </Label>
                                     <Input
@@ -760,7 +761,7 @@ const DoctorManagement = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="phone" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="phone" className={isRTL ? 'text-left block' : ''}>
                                         {t('common.phone')}
                                     </Label>
                                     <Input
@@ -775,7 +776,7 @@ const DoctorManagement = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="price" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="price" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.appointmentPrice')}
                                     </Label>
                                     <Input
@@ -793,16 +794,17 @@ const DoctorManagement = () => {
 
                                 <div className="space-y-2">
                                     <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <Label htmlFor="is_available" className={isRTL ? 'text-right' : ''}>
+                                        <Label htmlFor="is_available" className={isRTL ? 'text-right order-2' : 'order-1'}>
                                             {t('doctorManagement.availabilityStatus')}
                                         </Label>
                                         <Switch
                                             id="is_available"
                                             checked={doctorFormData.is_available}
                                             onCheckedChange={handleDoctorAvailableChange}
+                                            dir="ltr"
                                         />
                                     </div>
-                                    <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                                    <p className={`text-sm text-gray-500 ${isRTL ? 'text-left' : ''}`}>
                                         {doctorFormData.is_available
                                             ? t('doctorManagement.doctorAvailable')
                                             : t('doctorManagement.doctorUnavailable')}
@@ -841,7 +843,7 @@ const DoctorManagement = () => {
             {/* Availability Dialog */}
             <Dialog open={showAvailabilityDialog} onOpenChange={setShowAvailabilityDialog}>
                 <DialogContent className="max-w-3xl" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <DialogHeader className={isRTL ? 'text-right' : ''}>
+                    <DialogHeader className={isRTL ? 'text-left' : ''}>
                         <DialogTitle>{t('doctorManagement.manageAvailability')}</DialogTitle>
                         <DialogDescription>
                             {t('doctorManagement.setAvailableHours', { name: selectedDoctorName })}
@@ -851,7 +853,7 @@ const DoctorManagement = () => {
                     <div className="space-y-6">
                         {/* Current availability slots */}
                         <div>
-                            <h3 className={`text-lg font-medium mb-3 ${isRTL ? 'text-right' : ''}`}>
+                            <h3 className={`text-lg font-medium mb-3 ${isRTL ? 'text-left' : ''}`}>
                                 {t('doctorManagement.currentAvailability')}
                             </h3>
                             {availabilitySlots.length > 0 ? (
@@ -862,7 +864,7 @@ const DoctorManagement = () => {
 
                                         return (
                                             <div key={weekday.en} className="border rounded-md p-4">
-                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : ''}`}>
+                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-left' : ''}`}>
                                                     {isRTL ? weekday.ar : weekday.en}
                                                 </h4>
                                                 <div className="space-y-2">
@@ -886,7 +888,7 @@ const DoctorManagement = () => {
                                     })}
                                 </div>
                             ) : (
-                                <div className={`text-center py-4 border rounded-md bg-gray-50 ${isRTL ? 'text-right' : ''}`}>
+                                <div className={`text-center py-4 border rounded-md bg-gray-50 ${isRTL ? 'text-left' : ''}`}>
                                     <p className="text-gray-500">{t('doctorManagement.noAvailabilitySlots')}</p>
                                 </div>
                             )}
@@ -894,12 +896,12 @@ const DoctorManagement = () => {
 
                         {/* Add new slot */}
                         <div className="border-t pt-4">
-                            <h3 className={`text-lg font-medium mb-3 ${isRTL ? 'text-right' : ''}`}>
+                            <h3 className={`text-lg font-medium mb-3 ${isRTL ? 'text-left' : ''}`}>
                                 {t('doctorManagement.addNewSlot')}
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
-                                    <Label htmlFor="day" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="day" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.day')}
                                     </Label>
                                     <select
@@ -907,7 +909,7 @@ const DoctorManagement = () => {
                                         name="day"
                                         value={newSlot.day}
                                         onChange={handleNewSlotChange}
-                                        className={`w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-right' : ''}`}
+                                        className={`w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : ''}`}
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     >
                                         {weekdays.map(weekday => (
@@ -919,7 +921,7 @@ const DoctorManagement = () => {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="start_time" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="start_time" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.startTime')}
                                     </Label>
                                     <Input
@@ -934,7 +936,7 @@ const DoctorManagement = () => {
                                 </div>
 
                                 <div>
-                                    <Label htmlFor="end_time" className={isRTL ? 'text-right block' : ''}>
+                                    <Label htmlFor="end_time" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.endTime')}
                                     </Label>
                                     <Input
@@ -971,7 +973,7 @@ const DoctorManagement = () => {
             {/* Delete Confirmation Dialog */}
             <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <DialogContent className="sm:max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <DialogHeader className={isRTL ? 'text-right' : ''}>
+                    <DialogHeader className={isRTL ? 'text-left' : ''}>
                         <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <AlertTriangle className="h-5 w-5 text-red-500" />
                             {t('doctorManagement.confirmDeletion')}
@@ -981,7 +983,7 @@ const DoctorManagement = () => {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
-                        <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                        <p className={`text-sm text-gray-500 ${isRTL ? 'text-left' : ''}`}>
                             {t('doctorManagement.permanentRemoval')}
                         </p>
                     </div>

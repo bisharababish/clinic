@@ -571,16 +571,40 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             updateIsLoading(false);
         }
     };
+    const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
 
     // Delete appointment
-    const handleDeleteAppointment = async (id: string) => {
-        // Confirm deletion
-        if (!window.confirm(t('appointmentsManagement.confirmDelete'))) {
-            return;
-        }
+    const handleDeleteAppointment = (id: string) => {
+        setAppointmentToDelete(id);
 
+        toast({
+            title: t('appointmentsManagement.confirmDelete'),
+            action: (
+                <div className="flex gap-2">
+                    <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => confirmDeleteAppointment(id)}
+                    >
+                        {t('common.delete')}
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setAppointmentToDelete(null)}
+                    >
+                        {t('common.cancel')}
+                    </Button>
+                </div>
+            ),
+        });
+    };
+
+    // Add this new function after handleDeleteAppointment:
+    const confirmDeleteAppointment = async (id: string) => {
         try {
             updateIsLoading(true);
+            setAppointmentToDelete(null);
 
             // Delete from database
             const { error } = await supabase
@@ -624,7 +648,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             updateIsLoading(false);
         }
     };
-
     // Handle adding a new appointment
     const handleAddAppointment = async () => {
         // Validate form
@@ -1109,7 +1132,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                         )}
                                     </div>
                                 </TableHead>
-                                <TableHead className={isRTL ? "text-left" : "text-right"}>{t('appointmentsManagement.actions')}</TableHead>
+                                <TableHead className={isRTL ? "text-right" : "text-left"}>{t('appointmentsManagement.actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1140,7 +1163,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             </span>
                                             <div className="text-sm mt-1">₪{appointment.price}</div>
                                         </TableCell>
-                                        <TableCell className={`${isRTL ? 'text-left' : 'text-right'} space-x-2`}>
+                                        <TableCell className={`${isRTL ? 'text-right' : 'text-left'} ${isRTL ? 'space-x-reverse' : ''} space-x-2`}>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -1173,7 +1196,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 {/* Fixed pagination component */}
                 {paginatedAppointments.length > 0 && (
                     <div className={`flex items-center justify-between mt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className="text-sm text-gray-500">
+                        <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
                             {t('appointmentsManagement.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('appointmentsManagement.to')} {Math.min(currentPage * itemsPerPage, getFilteredAppointments().length)} {t('appointmentsManagement.of')} {getFilteredAppointments().length} {t('appointmentsManagement.appointments')}
                         </div>
                         <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
@@ -1218,10 +1241,10 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             <Select value={itemsPerPage.toString()}
                                 onValueChange={(value) => {
                                     setItemsPerPage(Number(value));
-                                    setCurrentPage(1); // Reset to first page when changing items per page
+                                    setCurrentPage(1);
                                 }}
                             >
-                                <SelectTrigger className="h-8 w-[70px]">
+                                <SelectTrigger className={`h-8 w-[70px] ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                     <SelectValue placeholder={itemsPerPage} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1239,6 +1262,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     };
 
     // Render the calendar view
+    // Updated renderCalendarView function with only specific columns reversed for RTL
     const renderCalendarView = () => {
         // Group appointments by date
         const appointmentsByDate: Record<string, AppointmentInfo[]> = {};
@@ -1269,20 +1293,44 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         <Card key={date}>
                             <CardHeader className="bg-gray-50 p-4">
                                 <CardTitle className="text-lg">
-                                    {format(parseISO(date), 'EEEE, MMMM d, yyyy')}
+                                    {isRTL
+                                        ? new Date(date).toLocaleDateString('ar-EG', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })
+                                        : format(parseISO(date), 'EEEE, MMMM d, yyyy')
+                                    }
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="p-0">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>{t('common.time')}</TableHead>
-                                            <TableHead>{t('appointmentsManagement.patient')}</TableHead>
-                                            <TableHead>{t('appointmentsManagement.doctor')}</TableHead>
-                                            <TableHead>{t('appointmentsManagement.clinic')}</TableHead>
-                                            <TableHead>{t('appointmentsManagement.status')}</TableHead>
-                                            <TableHead>{t('appointmentsManagement.payment')}</TableHead>
-                                            <TableHead className={isRTL ? "text-left" : "text-right"}>{t('appointmentsManagement.actions')}</TableHead>
+                                            {isRTL ? (
+                                                // RTL order: Patient, Doctor, Clinic, Time, Status, Payment, Actions
+                                                <>
+                                                    <TableHead>{t('appointmentsManagement.patient')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.doctor')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.clinic')}</TableHead>
+                                                    <TableHead>{t('common.time')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.status')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.payment')}</TableHead>
+                                                    <TableHead className="text-right">{t('appointmentsManagement.actions')}</TableHead>
+                                                </>
+                                            ) : (
+                                                // LTR order: Time, Patient, Doctor, Clinic, Status, Payment, Actions
+                                                <>
+                                                    <TableHead>{t('common.time')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.patient')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.doctor')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.clinic')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.status')}</TableHead>
+                                                    <TableHead>{t('appointmentsManagement.payment')}</TableHead>
+                                                    <TableHead className="text-left">{t('appointmentsManagement.actions')}</TableHead>
+                                                </>
+                                            )}
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -1290,44 +1338,91 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             .sort((a, b) => a.time.localeCompare(b.time))
                                             .map(appointment => (
                                                 <TableRow key={appointment.id} className="hover:bg-gray-50">
-                                                    <TableCell>{formatTime(appointment.time)}</TableCell>
-                                                    <TableCell className="font-medium">{appointment.patient_name}</TableCell>
-                                                    <TableCell>{appointment.doctor_name}</TableCell>
-                                                    <TableCell>{appointment.clinic_name}</TableCell>
-                                                    <TableCell>
-                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
-                                                            {t(`appointmentsManagement.${appointment.status}`)}
-                                                        </span>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
-                                                            {t(`appointmentsManagement.${appointment.payment_status}`)}
-                                                        </span>
-                                                        <div className="text-sm mt-1">₪{appointment.price}</div>
-                                                    </TableCell>
-                                                    <TableCell className={`${isRTL ? 'text-left' : 'text-right'} space-x-2`}>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setSelectedAppointment(appointment);
-                                                                setAppointmentNotes(appointment.notes || "");
-                                                            }}
-                                                            className="h-8 w-8 p-0"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                            <span className="sr-only">{t('appointmentsManagement.edit')}</span>
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleDeleteAppointment(appointment.id)}
-                                                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                            <span className="sr-only">{t('appointmentsManagement.delete')}</span>
-                                                        </Button>
-                                                    </TableCell>
+                                                    {isRTL ? (
+                                                        // RTL order: Patient, Doctor, Clinic, Time, Status, Payment, Actions
+                                                        <>
+                                                            <TableCell className="font-medium">{appointment.patient_name}</TableCell>
+                                                            <TableCell>{appointment.doctor_name}</TableCell>
+                                                            <TableCell>{appointment.clinic_name}</TableCell>
+                                                            <TableCell>{formatTime(appointment.time)}</TableCell>
+                                                            <TableCell>
+                                                                <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
+                                                                    {t(`appointmentsManagement.${appointment.status}`)}
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
+                                                                    {t(`appointmentsManagement.${appointment.payment_status}`)}
+                                                                </span>
+                                                                <div className="text-sm mt-1">₪{appointment.price}</div>
+                                                            </TableCell>
+                                                            <TableCell className="text-right space-x-2 space-x-reverse">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedAppointment(appointment);
+                                                                        setAppointmentNotes(appointment.notes || "");
+                                                                    }}
+                                                                    className="h-8 w-8 p-0"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                    <span className="sr-only">{t('appointmentsManagement.edit')}</span>
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleDeleteAppointment(appointment.id)}
+                                                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    <span className="sr-only">{t('appointmentsManagement.delete')}</span>
+                                                                </Button>
+                                                            </TableCell>
+                                                        </>
+                                                    ) : (
+                                                        // LTR order: Time, Patient, Doctor, Clinic, Status, Payment, Actions
+                                                        <>
+                                                            <TableCell>{formatTime(appointment.time)}</TableCell>
+                                                            <TableCell className="font-medium">{appointment.patient_name}</TableCell>
+                                                            <TableCell>{appointment.doctor_name}</TableCell>
+                                                            <TableCell>{appointment.clinic_name}</TableCell>
+                                                            <TableCell>
+                                                                <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.status)}`}>
+                                                                    {t(`appointmentsManagement.${appointment.status}`)}
+                                                                </span>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusBadgeClass(appointment.payment_status)}`}>
+                                                                    {t(`appointmentsManagement.${appointment.payment_status}`)}
+                                                                </span>
+                                                                <div className="text-sm mt-1">₪{appointment.price}</div>
+                                                            </TableCell>
+                                                            <TableCell className="text-left space-x-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedAppointment(appointment);
+                                                                        setAppointmentNotes(appointment.notes || "");
+                                                                    }}
+                                                                    className="h-8 w-8 p-0"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                    <span className="sr-only">{t('appointmentsManagement.edit')}</span>
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleDeleteAppointment(appointment.id)}
+                                                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                    <span className="sr-only">{t('appointmentsManagement.delete')}</span>
+                                                                </Button>
+                                                            </TableCell>
+                                                        </>
+                                                    )}
                                                 </TableRow>
                                             ))}
                                     </TableBody>
@@ -1413,17 +1508,36 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             data={statusData}
                                             cx="50%"
                                             cy="50%"
-                                            labelLine={false}
                                             outerRadius={80}
                                             fill="#8884d8"
                                             dataKey="value"
-                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                            label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+                                                const RADIAN = Math.PI / 180;
+                                                const radius = outerRadius + 20;
+                                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                                                return (
+                                                    <text
+                                                        x={x}
+                                                        y={y}
+                                                        fill="#333"
+                                                        textAnchor={x > cx ? 'start' : 'end'}
+                                                        dominantBaseline="central"
+                                                        fontSize="12"
+                                                        fontWeight="bold"
+                                                    >
+                                                        {`${name}: ${(percent * 100).toFixed(0)}%`}
+                                                    </text>
+                                                );
+                                            }}
+                                            labelLine={false}
                                         >
                                             {statusData.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
                                             ))}
                                         </Pie>
-                                        <Tooltip />
+                                        <Tooltip formatter={(value, name) => [value, name]} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             ) : (
@@ -1501,14 +1615,14 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     return (
         <div className={`space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Header with title and actions */}
-            <div className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                <div>
+            <div className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
+                <div className={isRTL ? 'text-right order-2 md:order-1' : 'text-left order-1'}>
                     <h2 className="text-2xl font-bold tracking-tight">{t('appointmentsManagement.title')}</h2>
                     <p className="text-muted-foreground">
                         {t('appointmentsManagement.description')}
                     </p>
                 </div>
-                <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
+                <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse order-1 md:order-2' : 'order-2'}`}>
                     <Button variant="outline" onClick={loadAppointments} disabled={isLoading}>
                         <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
                         {t('appointmentsManagement.refresh')}
@@ -1526,20 +1640,22 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
             {/* Tabs for view mode */}
             <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "list" | "calendar" | "stats")}>
-                <TabsList>
-                    <TabsTrigger value="list">
-                        <FileText className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('appointmentsManagement.listView')}
-                    </TabsTrigger>
-                    <TabsTrigger value="calendar">
-                        <Calendar className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('appointmentsManagement.calendarView')}
-                    </TabsTrigger>
-                    <TabsTrigger value="stats">
-                        <BarChart2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('appointmentsManagement.statistics')}
-                    </TabsTrigger>
-                </TabsList>
+                <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'} w-full`}>
+                    <TabsList className={`${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <TabsTrigger value="list" className={isRTL ? 'flex-row-reverse' : ''}>
+                            <FileText className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                            {t('appointmentsManagement.listView')}
+                        </TabsTrigger>
+                        <TabsTrigger value="calendar" className={isRTL ? 'flex-row-reverse' : ''}>
+                            <Calendar className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                            {t('appointmentsManagement.calendarView')}
+                        </TabsTrigger>
+                        <TabsTrigger value="stats" className={isRTL ? 'flex-row-reverse' : ''}>
+                            <BarChart2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                            {t('appointmentsManagement.statistics')}
+                        </TabsTrigger>
+                    </TabsList>
+                </div>
             </Tabs>
 
             {/* Filters */}
@@ -1563,12 +1679,13 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     </div>
                 </CardHeader>
                 <CardContent className="pt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                         {/* Status Filter */}
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByStatus')} />
                             </SelectTrigger>
+
                             <SelectContent>
                                 <SelectItem value="all">{t('appointmentsManagement.allStatuses')}</SelectItem>
                                 <SelectItem value="scheduled">{t('appointmentsManagement.scheduled')}</SelectItem>
@@ -1579,7 +1696,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                         {/* Payment Status Filter */}
                         <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByPayment')} />
                             </SelectTrigger>
                             <SelectContent>
@@ -1592,7 +1709,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                         {/* Clinic Filter */}
                         <Select value={clinicFilter} onValueChange={setClinicFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByClinic')} />
                             </SelectTrigger>
                             <SelectContent>
@@ -1605,7 +1722,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                         {/* Doctor Filter */}
                         <Select value={doctorFilter} onValueChange={setDoctorFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByDoctor')} />
                             </SelectTrigger>
                             <SelectContent>
@@ -1618,7 +1735,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                         {/* Date Filter */}
                         <Select value={dateFilter} onValueChange={setDateFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByDate')} />
                             </SelectTrigger>
                             <SelectContent>
@@ -1663,12 +1780,14 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             {selectedAppointment && (
                 <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
                     <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                            <DialogTitle>{t('appointmentsManagement.appointmentDetails')}</DialogTitle>
+                        <DialogHeader
+                            className={`${isRTL ? 'text-right' : 'text-left'}`}
+                            style={isRTL ? { textAlign: 'right' } : {}}>   <DialogTitle>{t('appointmentsManagement.appointmentDetails')}</DialogTitle>
                             <DialogDescription>
                                 {t('appointmentsManagement.manageAppointment', { patientName: selectedAppointment.patient_name })}
                             </DialogDescription>
                         </DialogHeader>
+
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -1685,11 +1804,14 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     <p className="text-sm font-medium">{t('appointmentsManagement.clinic')}</p>
                                     <p>{selectedAppointment.clinic_name}</p>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium">{t('appointmentsManagement.dateTime')}</p>
-                                    <p>
-                                        {new Date(selectedAppointment.date).toLocaleDateString()} {t('appointmentsManagement.at')} {selectedAppointment.time}
-                                    </p>
+                                <div className={`grid grid-cols-2 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                    <div className={isRTL ? 'text-left' : 'text-right'}>
+                                        <p className="text-sm font-medium text-left">{t('appointmentsManagement.dateTime')}</p>
+                                        <p className="text-left">
+                                            {new Date(selectedAppointment.date).toLocaleDateString()} - {selectedAppointment.time}
+                                        </p>
+                                    </div>
+
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -1706,13 +1828,13 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             handleUpdateAppointmentStatus(selectedAppointment.id, newStatus);
                                         }}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                             <SelectValue placeholder={t('appointmentsManagement.selectStatus')} />
                                         </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="scheduled">{t('appointmentsManagement.scheduled')}</SelectItem>
-                                            <SelectItem value="completed">{t('appointmentsManagement.completed')}</SelectItem>
-                                            <SelectItem value="cancelled">{t('appointmentsManagement.cancelled')}</SelectItem>
+                                        <SelectContent className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                                            <SelectItem value="scheduled" className={`${isRTL ? 'text-right' : 'text-left'}`}>{t('appointmentsManagement.scheduled')}</SelectItem>
+                                            <SelectItem value="completed" className={`${isRTL ? 'text-right' : 'text-left'}`}>{t('appointmentsManagement.completed')}</SelectItem>
+                                            <SelectItem value="cancelled" className={`${isRTL ? 'text-right' : 'text-left'}`}>{t('appointmentsManagement.cancelled')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -1729,13 +1851,13 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             handleUpdatePaymentStatus(selectedAppointment.id, newPaymentStatus);
                                         }}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                             <SelectValue placeholder={t('appointmentsManagement.selectPaymentStatus')} />
                                         </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="pending">{t('appointmentsManagement.pending')}</SelectItem>
-                                            <SelectItem value="paid">{t('appointmentsManagement.paid')}</SelectItem>
-                                            <SelectItem value="refunded">{t('appointmentsManagement.refunded')}</SelectItem>
+                                        <SelectContent className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                                            <SelectItem value="pending" className={`${isRTL ? 'text-right' : 'text-left'}`}>{t('appointmentsManagement.pending')}</SelectItem>
+                                            <SelectItem value="paid" className={`${isRTL ? 'text-right' : 'text-left'}`}>{t('appointmentsManagement.paid')}</SelectItem>
+                                            <SelectItem value="refunded" className={`${isRTL ? 'text-right' : 'text-left'}`}>{t('appointmentsManagement.refunded')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -1806,7 +1928,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            )}
+            )
+            }
 
             {/* Add Appointment Dialog */}
             <Dialog open={isAddingAppointment} onOpenChange={setIsAddingAppointment}>
@@ -1825,7 +1948,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 value={selectedClinicId}
                                 onValueChange={setSelectedClinicId}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                     <SelectValue placeholder={t('appointmentsManagement.chooseClinic')} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1851,7 +1974,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 onValueChange={setSelectedDoctorId}
                                 disabled={!selectedClinicId}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                     <SelectValue placeholder={selectedClinicId ? t('appointmentsManagement.chooseDoctor') : t('appointmentsManagement.selectClinicFirst')} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1987,7 +2110,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 };
 
