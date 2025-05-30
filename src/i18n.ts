@@ -168,6 +168,19 @@ const enTranslations = {
         address: 'Wadi Musalam St. - Najib Nasser Building',
         city: 'Bethlehem, Palestine',
     },
+    xray: {
+        title: 'X-Ray Image Upload',
+        uploadXrayImage: 'Upload X-Ray Image',
+        dragAndDrop: 'Drag and drop your X-Ray image here',
+        or: 'or',
+        browseFiles: 'Browse Files',
+        supportedFormats: 'Supported formats: JPG, PNG, PDF, DICOM',
+        fileSelected: 'File selected',
+        mb: 'MB',
+        removeFile: 'Remove File',
+        saveXray: 'Save X-Ray',
+        saveSuccess: 'X-Ray image saved successfully!',
+    },
     admin: {
         // Main Dashboard
         title: 'Admin Dashboard',
@@ -1620,6 +1633,19 @@ const arTranslations = {
         thankYouMessage: 'شكرًا لك على رسالتك! سنعاود الاتصال بك قريبًا.',
         contactEmail: 'contact@bethlehemmedcenter.com',
         contactPhone: '(02) 274-2345'
+    },
+    xray: {
+        title: 'رفع صور الأشعة',
+        uploadXrayImage: 'رفع صورة الأشعة',
+        dragAndDrop: 'اسحب وأفلت صورة الأشعة هنا',
+        or: 'أو',
+        browseFiles: 'تصفح الملفات',
+        supportedFormats: 'الأنواع المدعومة: JPG، PNG، PDF، DICOM',
+        fileSelected: 'تم اختيار الملف',
+        mb: 'ميجابايت',
+        removeFile: 'إزالة الملف',
+        saveXray: 'حفظ الأشعة',
+        saveSuccess: 'تم حفظ صورة الأشعة بنجاح!',
     },
     appointmentsManagement: {
         // Main titles and descriptions

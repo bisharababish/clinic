@@ -220,7 +220,7 @@ const Clinics = () => {
             </Alert>
 
             {/* Category Selection */}
-            <div className="flex flex-wrap gap-2 justify-end">
+            <div className={`flex flex-wrap gap-2 ${isRTL ? 'justify-start' : 'justify-end'}`}>
                 <Button
                     key="all"
                     variant={selectedCategory === "all" ? "default" : "outline"}
