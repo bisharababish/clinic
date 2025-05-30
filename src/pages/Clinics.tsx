@@ -201,9 +201,9 @@ const Clinics = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[300px]">
+            <div className="flex items-center justify-center min-h-[300px] flex-row-reverse" dir="rtl">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className={`${isRTL ? 'mr-3' : 'ml-3'} text-gray-600`}>
+                <span className="ml-3 text-gray-600 text-left">
                     {t('clinics.loading')}
                 </span>
             </div>
@@ -211,16 +211,16 @@ const Clinics = () => {
     }
 
     return (
-        <div className={`max-w-7xl mx-auto py-8 space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+        <div className="max-w-7xl mx-auto py-8 space-y-6" dir="rtl">
             {/* Notification Alert */}
-            <Alert variant="default" className="bg-blue-50 border-blue-200">
-                <AlertDescription>
+            <Alert variant="default" className="bg-blue-50 border-blue-200" dir="rtl">
+                <AlertDescription className="text-left">
                     <span className="font-medium">{t('clinics.importantNotice')}</span> {t('clinics.reservationRequired')}
                 </AlertDescription>
             </Alert>
 
             {/* Category Selection */}
-            <div className={`flex flex-wrap gap-2 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+            <div className="flex flex-wrap gap-2 justify-end">
                 <Button
                     key="all"
                     variant={selectedCategory === "all" ? "default" : "outline"}
@@ -249,21 +249,22 @@ const Clinics = () => {
                         key={clinic.id}
                         className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                         onClick={() => handleViewClinic(clinic)}
+                        dir="rtl"
                     >
-                        <h3 className={`text-xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                        <h3 className="text-xl font-bold text-left">
                             {clinic.name}
                         </h3>
-                        <p className={`text-sm text-gray-500 capitalize mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        <p className="text-sm text-gray-500 capitalize mt-1 text-left">
                             {clinic.category}
                         </p>
-                        <p className={`mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        <p className="mt-2 text-left">
                             {clinic.doctors.length} {clinic.doctors.length === 1 ? t('clinics.availableDoctor') : t('clinics.availableDoctors')}
                         </p>
                     </div>
                 ))}
 
                 {filteredClinics.length === 0 && (
-                    <div className="col-span-full text-center py-10 text-gray-500">
+                    <div className="col-span-full text-center py-10 text-gray-500" dir="rtl">
                         {t('clinics.noClinicsFound')}
                     </div>
                 )}
@@ -272,21 +273,21 @@ const Clinics = () => {
             {/* Clinic Details Modal */}
             {selectedClinic && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className={`bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`}>
-                        <div className={`flex justify-between items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <h2 className={`text-2xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
+                        <div className="flex justify-between items-start">
+                            <h2 className={`text-2xl font-bold ${isRTL ? 'text-left' : 'text-left'}`}>
                                 {selectedClinic.name}
                             </h2>
                             <button
                                 onClick={() => setSelectedClinic(null)}
-                                className="text-gray-500 hover:text-gray-700"
+                                className={`text-gray-500 hover:text-gray-700 ${isRTL ? 'mr-4' : 'ml-4'}`}
                             >
-                                {t('clinics.close')}
+                                ✕
                             </button>
                         </div>
 
                         {selectedClinic.description && (
-                            <p className={`text-gray-600 mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                            <p className={`text-gray-600 mt-2 ${isRTL ? 'text-left' : 'text-left'}`}>
                                 {selectedClinic.description}
                             </p>
                         )}
@@ -302,35 +303,36 @@ const Clinics = () => {
                                         key={doctor.id}
                                         className={`border-b pb-4 cursor-pointer ${selectedDoctor?.id === doctor.id ? 'bg-blue-50 border rounded-lg p-4' : ''}`}
                                         onClick={() => handleSelectDoctor(doctor)}
+                                        dir={isRTL ? "rtl" : "ltr"}
                                     >
-                                        <h3 className={`text-lg font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>
+                                        <h3 className={`text-lg font-semibold ${isRTL ? 'text-left' : 'text-left'}`}>
                                             {doctor.name}
                                         </h3>
-                                        <p className={`text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                        <p className={`text-gray-600 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             {doctor.specialty}
                                         </p>
-                                        <p className={`font-medium mt-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                        <p className={`font-medium mt-2 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             {t('clinics.fee')}: ₪{doctor.price}
                                         </p>
 
                                         {selectedDoctor?.id === doctor.id && (
                                             <div className="mt-3">
-                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-left' : 'text-left'}`}>
                                                     {t('clinics.availableHours')}
                                                 </h4>
                                                 {doctor.availability.length === 0 ? (
-                                                    <p className={`text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                    <p className={`text-gray-500 ${isRTL ? 'text-left' : 'text-left'}`}>
                                                         {t('clinics.noAvailabilitySet')}
                                                     </p>
                                                 ) : (
                                                     <div className="space-y-2">
                                                         {/* Group availability by day */}
                                                         {Array.from(new Set(doctor.availability.map(slot => slot.day))).map(day => (
-                                                            <div key={day} className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                                                                <span className="font-medium">
+                                                            <div key={day} className={`flex flex-wrap gap-2 items-center ${isRTL ? 'justify-start' : 'justify-start'}`}>
+                                                                <span className={`font-medium ${isRTL ? 'text-left' : 'text-left'}`}>
                                                                     {translateDay(day)}:
                                                                 </span>
-                                                                <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                                <div className={`flex flex-wrap gap-2 ${isRTL ? 'justify-start' : 'justify-start'}`}>
                                                                     {doctor.availability
                                                                         .filter(slot => slot.day === day)
                                                                         .map(slot => {
@@ -363,18 +365,18 @@ const Clinics = () => {
                             )}
                         </div>
 
-                        <div className={`mt-6 flex gap-3 ${isRTL ? 'justify-start flex-row-reverse' : 'justify-end'}`}>
-                            <Button
-                                variant="outline"
-                                onClick={() => setSelectedClinic(null)}
-                            >
-                                {t('clinics.cancel')}
-                            </Button>
+                        <div className={`mt-6 flex gap-3 ${isRTL ? 'justify-start' : 'justify-end'}`}>
                             <Button
                                 disabled={!selectedDoctor || !selectedTime}
                                 onClick={handleBookAppointment}
                             >
                                 {t('clinics.bookAppointmentNow')}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => setSelectedClinic(null)}
+                            >
+                                {t('clinics.cancel')}
                             </Button>
                         </div>
                     </div>

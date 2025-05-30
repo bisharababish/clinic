@@ -1496,6 +1496,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 {/* Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Status Pie Chart */}
+                   // In the renderStatsView function, replace the Status Pie Chart section with:
+
                     <Card>
                         <CardHeader>
                             <CardTitle>{t('appointmentsManagement.appointmentStatus')}</CardTitle>
@@ -1508,12 +1510,12 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             data={statusData}
                                             cx="50%"
                                             cy="50%"
-                                            outerRadius={80}
+                                            outerRadius={95} // Reduced from 80 to give more space for labels
                                             fill="#8884d8"
                                             dataKey="value"
                                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
                                                 const RADIAN = Math.PI / 180;
-                                                const radius = outerRadius + 20;
+                                                const radius = outerRadius + (isRTL ? 18 : 20); // More space for Arabic text
                                                 const x = cx + radius * Math.cos(-midAngle * RADIAN);
                                                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -1522,10 +1524,11 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                         x={x}
                                                         y={y}
                                                         fill="#333"
-                                                        textAnchor={x > cx ? 'start' : 'end'}
+                                                        textAnchor={x > cx ? (isRTL ? 'end' : 'start') : (isRTL ? 'start' : 'end')}
                                                         dominantBaseline="central"
-                                                        fontSize="12"
+                                                        fontSize="11"
                                                         fontWeight="bold"
+                                                        style={{ direction: isRTL ? 'rtl' : 'ltr' }}
                                                     >
                                                         {`${name}: ${(percent * 100).toFixed(0)}%`}
                                                     </text>
@@ -1549,38 +1552,59 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     </Card>
 
                     {/* Payment Status Pie Chart */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>{t('appointmentsManagement.paymentStatus')}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="h-[300px]">
-                            {paymentData.some(item => item.value > 0) ? (
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={paymentData}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            outerRadius={80}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                        >
-                                            {paymentData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <div className="flex items-center justify-center h-full">
-                                    <p className="text-gray-500">{t('appointmentsManagement.noDataAvailable')}</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                    // Payment Status Pie Chart
+<Card>
+    <CardHeader>
+        <CardTitle>{t('appointmentsManagement.paymentStatus')}</CardTitle>
+    </CardHeader>
+    <CardContent className="h-[300px]">
+        {paymentData.some(item => item.value > 0) ? (
+            <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                    <Pie
+                        data={paymentData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={95} // Reduced from 80
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({cx, cy, midAngle, innerRadius, outerRadius, percent, name}) => {
+                            const RADIAN = Math.PI / 180;
+                            const radius = outerRadius + (isRTL ? 18 : 20);
+                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            
+                            return (
+                                <text 
+                                    x={x} 
+                                    y={y} 
+                                    fill="#333" 
+                                    textAnchor={x > cx ? (isRTL ? 'end' : 'start') : (isRTL ? 'start' : 'end')} 
+                                    dominantBaseline="central"
+                                    fontSize="11"
+                                    fontWeight="bold"
+                                    style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+                                >
+                                    {`${name}: ${(percent * 100).toFixed(0)}%`}
+                                </text>
+                            );
+                        }}
+                    >
+                        {paymentData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                    </Pie>
+                    <Tooltip />
+                </PieChart>
+            </ResponsiveContainer>
+        ) : (
+            <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">{t('appointmentsManagement.noDataAvailable')}</p>
+            </div>
+        )}
+    </CardContent>
+</Card>
 
                     {/* Revenue by Clinic Bar Chart */}
                     <Card className="lg:col-span-2">

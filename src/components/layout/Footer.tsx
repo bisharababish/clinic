@@ -43,8 +43,9 @@ const Footer: React.FC = () => {
           </div>
           {/* Contact Info */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-lg text-center">{t("footer.contactUs")}</h3>
-            <div className="space-y-2">
+<h3 className={`font-semibold text-lg ${isRTL ? 'text-center' : 'text-left'}`}>
+  {t("footer.contactUs")}
+</h3>            <div className="space-y-2">
               <div className={`flex items-center text-sm text-muted-foreground ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <Phone className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 <span dir="ltr">+970 2 274 4444</span>  {/* Keep phone LTR */}
