@@ -1552,7 +1552,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     </Card>
 
                     {/* Payment Status Pie Chart */}
-                    // Payment Status Pie Chart
 <Card>
     <CardHeader>
         <CardTitle>{t('appointmentsManagement.paymentStatus')}</CardTitle>
