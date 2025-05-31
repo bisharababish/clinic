@@ -401,7 +401,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                 {/* Role Breakdown Card */}
                 <Card className="shadow-md hover:shadow-lg transition-all duration-200">
                     <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 border-b">
-                        <CardTitle className="text-gray-800">{t('admin.userDistributionByRole')}</CardTitle>
+                        <CardTitle className="text-gray-800 text-left">{t('admin.userDistributionByRole')}</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-4">
                         <div className="space-y-3">

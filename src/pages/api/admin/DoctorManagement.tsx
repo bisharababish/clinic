@@ -586,17 +586,18 @@ const DoctorManagement = () => {
                 <div className="w-full lg:w-2/3">
                     <Card>
                         <CardHeader>
-                            <div className={`flex justify-between items-center ${isRTL ? '' : 'flex-row-reverse'}`}>
-                                <CardTitle>{t('doctorManagement.doctorsManagement')}</CardTitle>
+                            <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+                                    {t('doctorManagement.doctorsManagement')}
+                                </CardTitle>
                                 <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                     <div className="relative">
                                         <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                                         <Input
                                             placeholder={t('doctorManagement.searchDoctors')}
-
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className={`${isRTL ? 'pr-10 pl-3 text-left' : 'pl-10'} w-[250px]`}
+                                            className={`${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 text-left'} w-[250px]`}
                                             dir={isRTL ? 'rtl' : 'ltr'}
                                         />
                                     </div>
@@ -610,7 +611,7 @@ const DoctorManagement = () => {
                                     </Button>
                                 </div>
                             </div>
-                            <CardDescription>
+                            <CardDescription className={isRTL ? 'text-right' : 'text-left'}>
                                 {t('doctorManagement.description')}
                             </CardDescription>
                         </CardHeader>
