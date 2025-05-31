@@ -1008,7 +1008,6 @@ const UsersManagement = () => {
                                         <SelectContent>
                                             <SelectItem value="male">{t('auth.male')}</SelectItem>
                                             <SelectItem value="female">{t('auth.female')}</SelectItem>
-                                            <SelectItem value="other">{t('usersManagement.other')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>

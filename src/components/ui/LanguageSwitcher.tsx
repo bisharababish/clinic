@@ -32,7 +32,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
             <Globe className="h-4 w-4" />
             {showText && (
                 <span>
-                    {language === 'en' ? t('common.arabic') : t('common.english')}
+                    {language === 'en' ? 'AR' : 'EN'}
                 </span>
             )}
         </Button>

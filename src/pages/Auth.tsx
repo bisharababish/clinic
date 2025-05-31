@@ -47,7 +47,12 @@ const Auth: React.FC = () => {
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
 
-  const handleSwitchToRegister = () => {
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * Switches the current active tab to "register" and hides the forgot password section.
+ */
+
+/*******  fa658a7e-c6d4-4225-93a8-9ae87943246b  *******/  const handleSwitchToRegister = () => {
     setActiveTab("register");
     setShowForgotPassword(false);
   };
@@ -62,14 +67,30 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
       <LoginRedirectHandler />
+
+      {/* IMPROVED: Fixed Language Switcher - Top Right Corner */}
+      <div className="absolute top-6 right-6 z-50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3, type: "spring", stiffness: 120 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <LanguageSwitcher
+            showText={true}
+            size="sm"
+            variant="outline"
+            className="bg-white/90 backdrop-blur-md border-gray-200/60 hover:bg-white hover:border-gray-300 hover:shadow-lg transition-all duration-300 font-semibold shadow-md"
+          />
+        </motion.div>
+      </div>
+
       <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="w-full max-w-md">
-          {/* Language Switcher at top right */}
-          <div className="flex justify-end mb-4">
-            <LanguageSwitcher showText={true} size="default" variant="outline" />
-          </div>
+          {/* REMOVED: Old language switcher div that was here */}
 
           <div className="text-center mb-8">
             <motion.div

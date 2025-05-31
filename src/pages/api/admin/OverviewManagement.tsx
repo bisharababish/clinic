@@ -27,6 +27,7 @@ import {
     Download
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useEffect } from 'react';
 
 interface UserInfo {
     user_id: string;
@@ -130,6 +131,19 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
 
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        console.log('URL tab parameter:', tabParam); // Add this for debugging
+
+        if (tabParam) {
+            console.log('Setting active tab to:', tabParam); // Add this for debugging
+            setActiveTab(tabParam);
+
+            // Clear the URL parameter after setting the tab (optional)
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }, [setActiveTab]);
     // State to manage chart type: 'pie' or 'bar'
     const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
 
@@ -140,13 +154,37 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
     ];
 
     // Chart data transformations with translations
+    // Chart data transformations with translations - Updated to include all roles
     const getRoleChartData = () => {
-        if (!reportData) return [];
-        return Object.entries(reportData.users_by_role).map(([role, count], index) => ({
-            role: t(`roles.${role.toLowerCase()}`, role),
-            count,
-            fill: CHART_COLORS[index % CHART_COLORS.length]
-        }));
+        // Define all possible roles with their colors
+        const allRoles = [
+            { key: 'patient', name: t('admin.patients'), color: '#3b82f6' }, // Blue (matches current patients card)
+            { key: 'doctor', name: t('admin.doctors'), color: '#10b981' }, // Green (matches current doctors card)
+            { key: 'secretary', name: t('admin.secretaries'), color: '#8b5cf6' }, // Purple (matches current secretaries card)
+            { key: 'nurse', name: t('admin.nurses'), color: '#ec4899' }, // Pink (matches current nurses card)
+            { key: 'admin', name: t('admin.administrators'), color: '#ef4444' }, // Red (matches current admin card)
+            { key: 'lab', name: t('admin.labTechnicians'), color: '#eab308' }, // Yellow (matches current lab card)
+            { key: 'x ray', name: t('admin.xrayTechnicians'), color: '#14b8a6' } // Teal (matches current x-ray card)
+        ];
+
+
+        return allRoles.map(role => {
+            let count = 0;
+            if (role.key === 'admin') {
+                count = users.filter(u =>
+                    u.user_roles?.toLowerCase() === 'admin' ||
+                    u.user_roles?.toLowerCase() === 'administrator'
+                ).length;
+            } else {
+                count = users.filter(u => u.user_roles?.toLowerCase() === role.key).length;
+            }
+
+            return {
+                role: role.name,
+                count,
+                fill: role.color
+            };
+        });
     };
 
     const getClinicAppointmentsChartData = () => {
@@ -166,6 +204,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
             fill: CHART_COLORS[index % CHART_COLORS.length]
         }));
     };
+
 
     return (
         <div className={`${isRTL ? 'rtl' : 'ltr'} text-${isRTL ? 'right' : 'left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -245,8 +284,9 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                 </Card>
             </div>
 
-            {/* Middle section */}
+            {/* Middle section - Separate Chart and Legend Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Chart Card */}
                 <Card className="shadow-md hover:shadow-lg transition-all duration-200">
                     <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
                         <div className="flex justify-between items-center">
@@ -341,7 +381,6 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                             formatter={(value, name) => [value, t('admin.numberOfUsers')]}
                                             labelFormatter={(label) => label}
                                         />
-                                        { }
                                         <Bar dataKey="count" isAnimationActive={true}>
                                             {getRoleChartData().map((entry, index) => (
                                                 <Cell
@@ -356,218 +395,198 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                 )}
                             </ResponsiveContainer>
                         </div>
+                    </CardContent>
+                </Card>
 
-                        {/* Role Distribution Breakdown */}
-                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div className="flex items-center p-2 rounded-lg border bg-blue-50">
-                                <div className={`h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
-                                    <Users className="h-5 w-5 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-blue-800">{t('admin.patients')}</p>
-                                    <p className="text-sm text-blue-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'patient').length} {t('admin.users')}
-                                        {' '}
-                                        ({users.length > 0 ?
-                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'patient').length / users.length) * 100) : 0}%)
-                                    </p>
-                                </div>
-                            </div>
+                {/* Role Breakdown Card */}
+                <Card className="shadow-md hover:shadow-lg transition-all duration-200">
+                    <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 border-b">
+                        <CardTitle className="text-gray-800">{t('admin.userDistributionByRole')}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                        <div className="space-y-3">
+                            {(() => {
+                                const roleCards = [
+                                    // Patients
+                                    <div key="patients" className="flex items-center p-3 rounded-lg border bg-blue-50 hover:shadow-sm transition-shadow">
+                                        <div className={`h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                            <Users className="h-5 w-5 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-blue-800">{t('admin.patients')}</p>
+                                            <p className="text-sm text-blue-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'patient').length} {t('admin.users')}
+                                                <span className="ml-1 text-xs">
+                                                    ({users.length > 0 ?
+                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'patient').length / users.length) * 100) : 0}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>,
 
-                            <div className="flex items-center p-2 rounded-lg border bg-green-50">
-                                <div className={`h-10 w-10 rounded-full bg-green-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
-                                    <Stethoscope className="h-5 w-5 text-green-600" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-green-800">{t('admin.doctors')}</p>
-                                    <p className="text-sm text-green-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length} {t('admin.users')}
-                                        {' '}
-                                        ({users.length > 0 ?
-                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length / users.length) * 100) : 0}%)
-                                    </p>
-                                </div>
-                            </div>
+                                    // Doctors
+                                    <div key="doctors" className="flex items-center p-3 rounded-lg border bg-green-50 hover:shadow-sm transition-shadow">
+                                        <div className={`h-10 w-10 rounded-full bg-green-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                            <Stethoscope className="h-5 w-5 text-green-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-green-800">{t('admin.doctors')}</p>
+                                            <p className="text-sm text-green-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length} {t('admin.users')}
+                                                <span className="ml-1 text-xs">
+                                                    ({users.length > 0 ?
+                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length / users.length) * 100) : 0}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>,
 
-                            <div className="flex items-center p-2 rounded-lg border bg-purple-50">
-                                <div className={`h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
-                                    <FileText className="h-5 w-5 text-purple-600" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-purple-800">{t('admin.secretaries')}</p>
-                                    <p className="text-sm text-purple-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length} {t('admin.users')}
-                                        {' '}
-                                        ({users.length > 0 ?
-                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length / users.length) * 100) : 0}%)
-                                    </p>
-                                </div>
-                            </div>
+                                    // Secretaries
+                                    <div key="secretaries" className="flex items-center p-3 rounded-lg border bg-purple-50 hover:shadow-sm transition-shadow">
+                                        <div className={`h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                            <FileText className="h-5 w-5 text-purple-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-purple-800">{t('admin.secretaries')}</p>
+                                            <p className="text-sm text-purple-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length} {t('admin.users')}
+                                                <span className="ml-1 text-xs">
+                                                    ({users.length > 0 ?
+                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length / users.length) * 100) : 0}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>,
 
-                            <div className="flex items-center p-2 rounded-lg border bg-pink-50">
-                                <div className={`h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
-                                    <Activity className="h-5 w-5 text-pink-600" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-pink-800">{t('admin.nurses')}</p>
-                                    <p className="text-sm text-pink-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length} {t('admin.users')}
-                                        {' '}
-                                        ({users.length > 0 ?
-                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length / users.length) * 100) : 0}%)
-                                    </p>
-                                </div>
-                            </div>
+                                    // Nurses
+                                    <div key="nurses" className="flex items-center p-3 rounded-lg border bg-pink-50 hover:shadow-sm transition-shadow">
+                                        <div className={`h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                            <Activity className="h-5 w-5 text-pink-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-pink-800">{t('admin.nurses')}</p>
+                                            <p className="text-sm text-pink-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length} {t('admin.users')}
+                                                <span className="ml-1 text-xs">
+                                                    ({users.length > 0 ?
+                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length / users.length) * 100) : 0}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>,
 
-                            <div className="flex items-center p-2 rounded-lg border bg-red-50">
-                                <div className={`h-10 w-10 rounded-full bg-red-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
-                                    <Shield className="h-5 w-5 text-red-600" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-red-800">{t('admin.administrators')}</p>
-                                    <p className="text-sm text-red-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length} {t('admin.users')}
-                                        {' '}
-                                        ({users.length > 0 ?
-                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length / users.length) * 100) : 0}%)
-                                    </p>
-                                </div>
-                            </div>
+                                    // Administrators
+                                    <div key="administrators" className="flex items-center p-3 rounded-lg border bg-red-50 hover:shadow-sm transition-shadow">
+                                        <div className={`h-10 w-10 rounded-full bg-red-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                            <Shield className="h-5 w-5 text-red-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-red-800">{t('admin.administrators')}</p>
+                                            <p className="text-sm text-red-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length} {t('admin.users')}
+                                                <span className="ml-1 text-xs">
+                                                    ({users.length > 0 ?
+                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length / users.length) * 100) : 0}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>,
 
-                            {/* Added Lab Role */}
-                            <div className="flex items-center p-2 rounded-lg border bg-yellow-50">
-                                <div className={`h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
-                                    <Database className="h-5 w-5 text-yellow-600" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-yellow-800">{t('admin.labTechnicians')}</p>
-                                    <p className="text-sm text-yellow-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'lab').length} {t('admin.users')}
-                                        {' '}
-                                        ({users.length > 0 ?
-                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'lab').length / users.length) * 100) : 0}%)
-                                    </p>
-                                </div>
-                            </div>
+                                    // Lab Technicians
+                                    <div key="lab" className="flex items-center p-3 rounded-lg border bg-yellow-50 hover:shadow-sm transition-shadow">
+                                        <div className={`h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                            <Database className="h-5 w-5 text-yellow-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-yellow-800">{t('admin.labTechnicians')}</p>
+                                            <p className="text-sm text-yellow-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'lab').length} {t('admin.users')}
+                                                <span className="ml-1 text-xs">
+                                                    ({users.length > 0 ?
+                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'lab').length / users.length) * 100) : 0}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>,
 
-                            {/* Added X Ray Role */}
-                            <div className="flex items-center p-2 rounded-lg border bg-teal-50">
-                                <div className={`h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
-                                    <Layers className="h-5 w-5 text-teal-600" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-teal-800">{t('admin.xrayTechnicians')}</p>
-                                    <p className="text-sm text-teal-600">
-                                        {users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length} {t('admin.users')}
-                                        {' '}
-                                        ({users.length > 0 ?
-                                            Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length / users.length) * 100) : 0}%)
-                                    </p>
-                                </div>
-                            </div>
+                                    // X-ray Technicians
+                                    <div key="xray" className="flex items-center p-3 rounded-lg border bg-teal-50 hover:shadow-sm transition-shadow">
+                                        <div className={`h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                            <Layers className="h-5 w-5 text-teal-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-medium text-teal-800">{t('admin.xrayTechnicians')}</p>
+                                            <p className="text-sm text-teal-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length} {t('admin.users')}
+                                                <span className="ml-1 text-xs">
+                                                    ({users.length > 0 ?
+                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length / users.length) * 100) : 0}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                ];
+
+                                // Reverse the array for Arabic (RTL)
+                                return isRTL ? roleCards.reverse() : roleCards;
+                            })()}
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Performance Summary */}
-            <div className="mt-8">
-                <Card className="border-none shadow-md bg-gradient-to-r from-gray-900 to-gray-800 text-white">
-                    <CardHeader>
-                        <CardTitle className="text-gray-100" style={{ textAlign: 'right' }}>{t('admin.performanceSummary')}</CardTitle>                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="space-y-2" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                                <p className="text-gray-400 text-sm">{t('admin.totalRevenue')}</p>
-                                <p className="text-3xl font-bold">₪{reportData?.revenue || 0}</p>
-                                <div className="h-2 bg-gray-700 rounded-full">
-                                    <div
-                                        className="h-2 bg-green-500 rounded-full"
-                                        style={{ width: `${Math.min(100, ((reportData?.revenue || 0) / 10000) * 100)}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                                <p className="text-gray-400 text-sm">{t('admin.appointmentCompletionRate')}</p>
-                                <p className="text-3xl font-bold">
-                                    {appointments.length ?
-                                        `${Math.round((appointments.filter(a => a.status === 'completed').length / appointments.length) * 100)}%` :
-                                        '0%'}
-                                </p>
-                                <div className="h-2 bg-gray-700 rounded-full">
-                                    <div
-                                        className="h-2 bg-blue-500 rounded-full"
-                                        style={{
-                                            width: appointments.length ?
-                                                `${(appointments.filter(a => a.status === 'completed').length / appointments.length) * 100}%` :
-                                                '0%'
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2" style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                                <p className="text-gray-400 text-sm">{t('admin.doctorUtilization')}</p>
-                                <p className="text-3xl font-bold">
-                                    {doctors.length ?
-                                        `${Math.round((doctors.filter(d => d.isAvailable).length / doctors.length) * 100)}%` :
-                                        '0%'}
-                                </p>
-                                <div className="h-2 bg-gray-700 rounded-full">
-                                    <div
-                                        className="h-2 bg-purple-500 rounded-full"
-                                        style={{
-                                            width: doctors.length ?
-                                                `${(doctors.filter(d => d.isAvailable).length / doctors.length) * 100}%` :
-                                                '0%'
-                                        }}
-                                    ></div>
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            {/* Clinics and Doctors Section */}
 
             {/* Quick Actions */}
-            <div className="mt-8 mb-4">
-                <h2 className="text-lg font-semibold mb-4 text-gray-700" dir="rtl" style={{ textAlign: 'right' }}>{t('admin.quickActions')}</h2>
+            <div className={`mt-8 mb-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                <h2
+                    className="text-lg font-semibold mb-4 text-gray-700"
+                    style={{ textAlign: isRTL ? 'right' : 'left' }}
+                >
+                    {t('admin.quickActions')}
+                </h2>
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     <Button
                         variant="outline"
-                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-blue-50 border-2 hover:border-blue-200 transition-all"
-                        onClick={() => setActiveTab("users")}
+                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-blue-50 border-2 hover:border-blue-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+                        onClick={() => {
+                            window.open(window.location.origin + window.location.pathname + '?tab=users', '_blank');
+                        }}
                     >
                         <UserPlus className="h-6 w-6 mb-1 text-blue-600" />
-                        <span>{t('admin.addUser')}</span>
+                        <span className="text-sm font-medium">{t('admin.addUser')}</span>
                     </Button>
 
                     <Button
                         variant="outline"
-                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-green-50 border-2 hover:border-green-200 transition-all"
-                        onClick={() => setActiveTab("appointments")}
+                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-green-50 border-2 hover:border-green-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+                        onClick={() => {
+                            window.open(window.location.origin + window.location.pathname + '?tab=appointments', '_blank');
+                        }}
                     >
                         <Calendar className="h-6 w-6 mb-1 text-green-600" />
-                        <span>{t('admin.viewAppointments')}</span>
+                        <span className="text-sm font-medium">{t('admin.viewAppointments')}</span>
                     </Button>
 
                     <Button
                         variant="outline"
-                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-purple-50 border-2 hover:border-purple-200 transition-all"
-                        onClick={() => setActiveTab("clinics")}
+                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-purple-50 border-2 hover:border-purple-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+                        onClick={() => {
+                            window.open(window.location.origin + window.location.pathname + '?tab=clinics', '_blank');
+                        }}
                     >
                         <Stethoscope className="h-6 w-6 mb-1 text-purple-600" />
-                        <span>{t('admin.manageClinics')}</span>
+                        <span className="text-sm font-medium">{t('admin.manageClinics')}</span>
                     </Button>
 
                     <Button
                         variant="outline"
-                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-amber-50 border-2 hover:border-amber-200 transition-all"
+                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-amber-50 border-2 hover:border-amber-200 transition-all duration-200 hover:shadow-md hover:scale-105"
                         onClick={refreshReportData}
                     >
                         <BarChart2 className="h-6 w-6 mb-1 text-amber-600" />
-                        <span>{t('admin.refreshData')}</span>
+                        <span className="text-sm font-medium">{t('admin.refreshData')}</span>
                     </Button>
                 </div>
             </div>
@@ -576,3 +595,4 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
 };
 
 export default OverviewManagement;
+
