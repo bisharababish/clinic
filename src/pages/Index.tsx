@@ -108,10 +108,10 @@ const Index = () => {
       last: isRTL ? "الأخير (بالإنجليزية)" : "Last"
     },
     arabic: {
-      first: isRTL ? "الأول" : "First (Arabic)",
-      second: isRTL ? "الثاني" : "Second (Arabic)",
-      third: isRTL ? "الثالث" : "Third (Arabic)",
-      last: isRTL ? "الأخير" : "Last (Arabic)"
+      first: isRTL ? "الأول" : "الأول",
+      second: isRTL ? "الثاني" : "الثاني",
+      third: isRTL ? "الثالث" : "الثالث",
+      last: isRTL ? "الأخير" : "الأخير"
     }
   };
 
@@ -146,10 +146,10 @@ const Index = () => {
   return (
     <div className="max-w-7xl mx-auto py-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Notification Alert - visible to all */}
-      <Alert variant="default" className="bg-blue-50 border-blue-200">
-        <AlertDescription>
+      <Alert variant="default" className={`bg-blue-50 border-blue-200 ${isRTL ? 'mb-12' : 'mb-8'}`}>
+        <AlertDescription className={isRTL ? 'py-4 px-2' : 'py-2'}>
           <span className="font-medium">{t("home.reminder")}:</span> {t("home.reservationRequired")}
-          <Button variant="link" className={`h-auto p-0 ${isRTL ? 'mr-2' : 'ml-2'}`} asChild>
+          <Button variant="link" className={`h-auto p-0 ${isRTL ? 'mr-3' : 'ml-2'}`} asChild>
             <Link to="/clinics">{t("home.bookNow")}</Link>
           </Button>
         </AlertDescription>
@@ -162,7 +162,6 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* English Name Fields */}
             <div>
-              <Label className="text-base font-medium">{t("common.name")} ({t("common.english")})</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                 <div>
                   <Label htmlFor="english_username_a" className="text-xs">
@@ -227,9 +226,7 @@ const Index = () => {
 
             {/* Arabic Name Fields */}
             <div>
-              <Label className={`text-base font-medium ${isRTL ? '' : 'text-right w-full block'}`}>
-                {isRTL ? t("common.name") : "الاسم الكامل"} ({isRTL ? t("common.arabic") : "العربية"})
-              </Label>
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
                 {isRTL ? (
                   // RTL Layout
@@ -347,8 +344,7 @@ const Index = () => {
                   onChange={handleFormDataChange}
                   className={isRTL ? 'pr-10' : 'pl-10'}
                   required
-                  placeholder="name@example.com"
-                />
+                  placeholder={t("home.homeemail")} />
               </div>
             </div>
             <div className="space-y-2">
@@ -379,7 +375,7 @@ const Index = () => {
                   onChange={handleFormDataChange}
                   className={isRTL ? 'pr-10' : 'pl-10'}
                   required
-                  placeholder="123456789"
+                  placeholder={isRTL ? "٩٨٧٦٥٤٣٢١" : "123456789"} dir={isRTL ? "rtl" : "ltr"}  // ADD THIS LINE
                 />
               </div>
             </div>
@@ -394,30 +390,46 @@ const Index = () => {
                   type="date"
                   value={formData.dateOfBirth}
                   onChange={handleFormDataChange}
-                  className={isRTL ? 'pr-10' : 'pl-10'}
+                  className={`${isRTL ? 'pr-10' : 'pl-10'} ${isRTL ? 'text-left' : 'text-left'}`}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                   required
                 />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label>{t("auth.gender")}</Label>
               <RadioGroup
                 value={formData.gender}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, gender: value }))}
-                className="flex gap-4 mt-2"
+                className={`flex gap-4 mt-2 ${isRTL ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="male" id="male" />
-                  <Label htmlFor="male">{t("auth.male")}</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="female" id="female" />
-                  <Label htmlFor="female">{t("auth.female")}</Label>
-                </div>
+                {isRTL ? (
+                  // Arabic: Female first, then Male
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="female">{t("auth.female")}</Label>
+                      <RadioGroupItem value="female" id="female" />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="male">{t("auth.male")}</Label>
+                      <RadioGroupItem value="male" id="male" />
+                    </div>
+                  </>
+                ) : (
+                  // English: Male first, then Female
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="male" id="male" />
+                      <Label htmlFor="male">{t("auth.male")}</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="female" id="female" />
+                      <Label htmlFor="female">{t("auth.female")}</Label>
+                    </div>
+                  </>
+                )}
               </RadioGroup>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="password">{t("common.password")}</Label>
               <div className="relative">
