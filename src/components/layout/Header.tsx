@@ -157,7 +157,7 @@ export function Header() {
         <header className={`sticky top-0 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200/60 z-50 ${isRTL ? 'flex-row-reverse' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className={`flex items-center justify-between h-16 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    
+
                     {/* Left section: Language switcher */}
                     <div className={`flex items-center ${isRTL ? 'order-3' : 'order-1'}`}>
                         <div className="hidden sm:block">
@@ -168,12 +168,29 @@ export function Header() {
                     {/* Center section: Logo and clinic name */}
                     <div className={`flex items-center justify-center flex-1 sm:flex-none ${isRTL ? 'order-2' : 'order-2'}`}>
                         <Link to="/" className="flex items-center gap-3 group transition-all duration-200 hover:scale-105">
-                            {/* Enhanced Logo */}
-                            <div className="relative w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg flex items-center justify-center group-hover:shadow-xl transition-all duration-200">
-                                <span className="text-white font-bold text-xl">B</span>
-                                <div className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                            {/* Logo with Image */}
+                            <div className="relative w-12 h-12 rounded-xl shadow-lg overflow-hidden group-hover:shadow-xl transition-all duration-200">
+                                <img
+                                    src="/images.png"
+                                    alt="Clinic Logo"
+                                    className="w-full h-full object-cover object-center"
+                                    onError={(e) => {
+                                        // Fallback to text logo if image fails to load
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        const parent = target.parentElement;
+                                        if (parent) {
+                                            parent.innerHTML = `
+                                                <div class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                                                    <span class="text-white font-bold text-xl">B</span>
+                                                </div>
+                                            `;
+                                        }
+                                    }}
+                                />
+                                <div className="absolute inset-0 bg-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                             </div>
-                            
+
                             {/* Clinic name with better typography */}
                             <div className="flex flex-col">
                                 <span className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">
@@ -188,7 +205,7 @@ export function Header() {
 
                     {/* Right section: Navigation and user info */}
                     <div className={`flex items-center gap-4 ${isRTL ? 'order-1' : 'order-3'}`}>
-                        
+
                         {/* Desktop Navigation */}
                         <nav className="hidden lg:flex items-center gap-1">
                             {canViewHome && (
@@ -232,8 +249,7 @@ export function Header() {
                         <div className="hidden lg:flex items-center gap-3">
                             {effectiveRole && isAuthenticated && (
                                 <div className="relative">
-                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${
-                                        effectiveRole === "admin"
+                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${effectiveRole === "admin"
                                             ? "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border-red-200 hover:from-red-100 hover:to-red-200"
                                             : effectiveRole === "doctor"
                                                 ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border-blue-200 hover:from-blue-100 hover:to-blue-200"
@@ -248,17 +264,16 @@ export function Header() {
                                                                 : effectiveRole === "patient"
                                                                     ? "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border-emerald-200 hover:from-emerald-100 hover:to-emerald-200"
                                                                     : "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border-green-200 hover:from-green-100 hover:to-green-200"
-                                    }`}>
-                                        <div className={`w-2 h-2 rounded-full mr-2 ${
-                                            effectiveRole === "admin" ? "bg-red-500"
-                                            : effectiveRole === "doctor" ? "bg-blue-500"
-                                            : effectiveRole === "secretary" ? "bg-purple-500"
-                                            : effectiveRole === "nurse" ? "bg-teal-500"
-                                            : effectiveRole === "lab" ? "bg-amber-500"
-                                            : effectiveRole === "x ray" ? "bg-indigo-500"
-                                            : effectiveRole === "patient" ? "bg-emerald-500"
-                                            : "bg-green-500"
-                                        }`}></div>
+                                        }`}>
+                                        <div className={`w-2 h-2 rounded-full mr-2 ${effectiveRole === "admin" ? "bg-red-500"
+                                                : effectiveRole === "doctor" ? "bg-blue-500"
+                                                    : effectiveRole === "secretary" ? "bg-purple-500"
+                                                        : effectiveRole === "nurse" ? "bg-teal-500"
+                                                            : effectiveRole === "lab" ? "bg-amber-500"
+                                                                : effectiveRole === "x ray" ? "bg-indigo-500"
+                                                                    : effectiveRole === "patient" ? "bg-emerald-500"
+                                                                        : "bg-green-500"
+                                            }`}></div>
                                         {getRoleDisplayName(effectiveRole)}
                                     </span>
                                 </div>
@@ -289,8 +304,7 @@ export function Header() {
 
                             {/* Mobile Role Badge */}
                             {effectiveRole && isAuthenticated && (
-                                <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${
-                                    effectiveRole === "admin"
+                                <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${effectiveRole === "admin"
                                         ? "bg-red-50 text-red-700 border-red-200"
                                         : effectiveRole === "doctor"
                                             ? "bg-blue-50 text-blue-700 border-blue-200"
@@ -305,7 +319,7 @@ export function Header() {
                                                             : effectiveRole === "patient"
                                                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                                                 : "bg-green-50 text-green-700 border-green-200"
-                                }`}>
+                                    }`}>
                                     {getRoleDisplayName(effectiveRole)}
                                 </span>
                             )}
@@ -338,7 +352,7 @@ export function Header() {
                             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
                             onClick={() => setIsMobileMenuOpen(false)}
                         />
-                        
+
                         {/* Mobile Menu */}
                         <motion.div
                             initial={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -391,7 +405,7 @@ export function Header() {
                                     )}
 
                                     {canViewAdmin && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-red-50 hover:text-red-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-red-700 transition-colors duration-200`}>
                                             <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
                                                 {t('navbar.adminDashboard')}
                                             </Link>
