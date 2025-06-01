@@ -95,7 +95,7 @@ const XRay = () => {
               <div className="p-6 space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                 <div
                   className={`border-2 border-dashed rounded-lg p-6 cursor-pointer min-h-80 md:min-h-96 flex flex-col items-center justify-center transition-colors duration-200 ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-blue-400"
-                    } ${isRTL ? 'text-right' : 'text-center'}`}
+                    }`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
@@ -111,36 +111,36 @@ const XRay = () => {
                   />
 
                   {file ? (
-                    <div className={`space-y-4 py-6 w-full ${isRTL ? 'text-right' : 'text-center'}`}>
+                    <div className="space-y-4 py-6 w-full text-center">
                       <div className="flex items-center justify-center">
                         <svg className="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                         </svg>
                       </div>
-                      <div className={`text-green-600 font-medium text-xl ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className="text-green-600 font-medium text-xl text-center">
                         {t('xray.fileSelected')}
                       </div>
-                      <div className={`text-gray-700 font-medium truncate max-w-full px-4 ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className="text-gray-700 font-medium truncate max-w-full px-4 text-center">
                         {file.name}
                       </div>
-                      <div className={`text-gray-500 text-lg ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className="text-gray-500 text-lg text-center">
                         {(file.size / (1024 * 1024)).toFixed(2)} {t('xray.mb')}
                       </div>
                     </div>
                   ) : (
-                    <div className={`space-y-6 py-8 w-full ${isRTL ? 'text-right' : 'text-center'}`}>
+                    <div className="space-y-6 py-8 w-full text-center">
                       <div className="flex justify-center">
                         <svg className="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
                       </div>
-                      <div className={`text-gray-600 font-medium text-xl ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className="text-gray-600 font-medium text-xl text-center">
                         {t('xray.dragAndDrop')}
                       </div>
-                      <div className={`text-gray-400 text-lg ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className="text-gray-400 text-lg text-center">
                         {t('xray.or')}
                       </div>
-                      <div className={`${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className="text-center">
                         <button
                           className="px-6 py-3 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-150 text-lg"
                           type="button"
@@ -148,7 +148,7 @@ const XRay = () => {
                           {t('xray.browseFiles')}
                         </button>
                       </div>
-                      <div className={`text-gray-400 text-base mt-4 ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className="text-gray-400 text-base mt-4 text-center">
                         {t('xray.supportedFormats')}
                       </div>
                     </div>
@@ -156,7 +156,7 @@ const XRay = () => {
                 </div>
 
                 {file && (
-                  <div className={`pt-4 ${isRTL ? 'text-right' : 'text-center'}`}>
+                  <div className="pt-4 text-center">
                     <button
                       className="px-6 py-3 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       onClick={() => setFile(null)}
@@ -169,7 +169,7 @@ const XRay = () => {
             </div>
           </div>
 
-          <div className={`mt-6 ${isRTL ? 'flex justify-end' : 'flex justify-center'}`}>
+          <div className="mt-6 flex justify-center">
             <button
               onClick={handleSave}
               disabled={!file}
