@@ -610,12 +610,14 @@ const Index = () => {
       <section className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.patientLogs")}</h2>
         <ScrollArea className="h-64 rounded-md border">
-          <div className="p-4">
+          <div className="p-4 ">
             {patientLogs.length > 0 ? (
               <div className="space-y-3">
                 {patientLogs.map((log, index) => (
                   <div key={index}>
-                    <p className="text-sm text-gray-700">{log}</p>
+                    <p className={`text-sm text-gray-700 ${isRTL ? 'text-left' : 'text-right'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                      {log}
+                    </p>
                     {index < patientLogs.length - 1 && <Separator className="my-3" />}
                   </div>
                 ))}
@@ -628,9 +630,14 @@ const Index = () => {
       </section>
 
       {/* Save Button - visible to ALL users */}
-      <Button className="mt-6 w-full md:w-auto" onClick={handleSaveInfo}>
-        {t("common.save")} {t("home.information")}
-      </Button>
+      <div className="mt-6">
+        <Button
+          className={`w-full md:w-auto block ${isRTL ? 'md:mr-auto md:ml-0' : 'md:ml-auto md:mr-0'}`}
+          onClick={handleSaveInfo}
+        >
+          {t("common.save")} {t("home.information")}
+        </Button>
+      </div>
     </div>
   );
 };
