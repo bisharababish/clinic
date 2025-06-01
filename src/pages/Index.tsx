@@ -142,7 +142,22 @@ const Index = () => {
   const canSeeUserCreation = (): boolean => {
     return ["admin", "doctor", "nurse", "secretary"].includes(userRole);
   };
+  const getBloodTypeDisplay = (type: string) => {
+    if (!isRTL) return type;
 
+    const arabicBloodTypes: { [key: string]: string } = {
+      'A+': 'أ+',
+      'A-': 'أ-',
+      'B+': 'ب+',
+      'B-': 'ب-',
+      'AB+': 'أب+',
+      'AB-': 'أب-',
+      'O+': 'ع+',
+      'O-': 'ع-'
+    };
+
+    return arabicBloodTypes[type] || type;
+  };
   return (
     <div className="max-w-7xl mx-auto py-8 space-y-8" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Notification Alert - visible to all */}
@@ -504,17 +519,27 @@ const Index = () => {
               placeholder="175"
             />
           </div>
+
           <div className="space-y-2 md:col-span-2">
             <Label>{t("home.bloodType")}</Label>
             <RadioGroup
               value={patientInfo.bloodType}
               onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
-              className="grid grid-cols-4 md:grid-cols-8 gap-2"
+              className={`grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
             >
-              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(type => (
-                <div key={type} className="flex items-center space-x-2">
+              {(isRTL ?
+                ["O-", "O+", "AB-", "AB+", "B-", "B+", "A-", "A+"] :
+                ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+              ).map(type => (
+                <div key={type} className={`flex items-center ${isRTL ? 'flex-row-reverse gap-3' : 'space-x-2'}`}>
                   <RadioGroupItem value={type} id={type} />
-                  <Label htmlFor={type}>{type}</Label>
+                  <Label
+                    htmlFor={type}
+                    className={`${isRTL ? 'text-right' : 'text-left'} font-medium cursor-pointer`}
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                  >
+                    {getBloodTypeDisplay(type)}
+                  </Label>
                 </div>
               ))}
             </RadioGroup>
