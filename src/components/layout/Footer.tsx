@@ -98,17 +98,22 @@ const Footer: React.FC = () => {
                   </div>
                 </div>
 
+
                 {/* Email */}
                 <div className={`group/contact relative overflow-hidden flex items-center gap-3 p-3 rounded-xl bg-white/50 hover:bg-white/70 border border-purple-200/40 hover:border-purple-300/60 transition-all duration-300 hover:shadow-md transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-100/30 to-transparent scale-x-0 group-hover/contact:scale-x-100 transition-transform duration-300 origin-left rounded-xl"></div>
-                  <div className="relative p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-sm group-hover/contact:shadow-md group-hover/contact:scale-110 transition-all duration-300">
+                  <div className="relative p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-sm group-hover/contact:shadow-md group-hover/contact:scale-110 transition-all duration-300 flex-shrink-0">
                     <Mail className="h-4 w-4 text-white" />
                   </div>
-                  <div className="relative">
+                  <div className="relative flex-1 min-w-0">
                     <p className="text-xs text-purple-600/60 font-medium">
                       {isRTL ? 'راسلنا' : 'Email Us'}
                     </p>
-                    <a href="mailto:info@bethlehemmedcenter.com" className="text-sm font-bold text-purple-700 hover:text-purple-800 transition-colors break-words" dir="ltr">
+                    <a
+                      href="mailto:info@bethlehemmedcenter.com"
+                      className="text-xs font-bold text-purple-700 hover:text-purple-800 transition-colors block break-all"
+                      dir="ltr"
+                    >
                       info@bethlehemmedcenter.com
                     </a>
                   </div>
@@ -124,12 +129,17 @@ const Footer: React.FC = () => {
                     <p className="text-xs text-purple-600/60 font-medium">
                       {isRTL ? 'عنواننا' : 'Visit Us'}
                     </p>
-                    <span className={`text-sm font-bold text-purple-700 leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <a
+                      href="https://www.google.com/maps/search/?api=1&query=Wadi+Musalam+Street+Najib+Nasser+Building+Bethlehem+Palestine"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-sm font-bold text-purple-700 hover:text-purple-800 transition-colors cursor-pointer leading-relaxed ${isRTL ? 'text-right' : 'text-left'} hover:underline`}
+                    >
                       {isRTL
                         ? "شارع وادي مسلم - مبنى نجيب ناصر، بيت لحم، فلسطين"
                         : "Wadi Musalam St. - Najib Nasser Building, Bethlehem, Palestine"
                       }
-                    </span>
+                    </a>
                   </div>
                 </div>
               </div>

@@ -1573,7 +1573,7 @@ const arTranslations = {
     },
     home: {
         reminder: 'تذكير',
-        reservationRequired: 'يرجى حجز موعد قبل زيارة عيادتنا ',  
+        reservationRequired: 'يرجى حجز موعد قبل زيارة عيادتنا ',
         bookNow: 'احجز الآن',
         userCreation: 'إنشاء مستخدم',
         patientInformation: 'معلومات المريض',
@@ -1877,27 +1877,27 @@ const arTranslations = {
 
 };
 
-// Initialize i18next
+// i18n.ts - Add this configuration
 i18n
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
         resources: {
-            en: {
-                translation: enTranslations
-            },
-            ar: {
-                translation: arTranslations
-            }
+            en: { translation: enTranslations },
+            ar: { translation: arTranslations }
         },
         fallbackLng: 'en',
         debug: false,
         interpolation: {
-            escapeValue: false, // not needed for React
+            escapeValue: false,
         },
         react: {
-            useSuspense: false,
-        }
+            useSuspense: true, // Change this to true
+        },
+        // Add these for faster loading
+        load: 'languageOnly',
+        preload: ['en', 'ar'],
+        saveMissing: false,
+        updateMissing: false,
     });
-
 export default i18n;
