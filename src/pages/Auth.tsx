@@ -7,39 +7,9 @@ import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
 import Footer from "@/components/layout/Footer";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { LanguageContext } from "@/components/contexts/LanguageContext";
-
-const LoginRedirectHandler = () => {
-  const navigate = useNavigate();
-  useEffect(() => {
-    // Check if we have a redirect request
-    const handleRedirectAttempt = () => {
-      const loginSuccess = localStorage.getItem('loginSuccess');
-      if (loginSuccess === 'true') {
-        console.log("Login success detected in Auth page, redirecting to home");
-        localStorage.removeItem('loginSuccess');
-        navigate('/', { replace: true });
-        // Fallback in case React Router navigation fails
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 100);
-      }
-    };
-
-    handleRedirectAttempt();
-
-    // Set up a short interval to check for the login flag
-    const intervalId = setInterval(handleRedirectAttempt, 500);
-
-    return () => clearInterval(intervalId);
-  }, [navigate]);
-
-  return null;
-};
 
 const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState("login");
@@ -47,12 +17,7 @@ const Auth: React.FC = () => {
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
 
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * Switches the current active tab to "register" and hides the forgot password section.
- */
-
-/*******  fa658a7e-c6d4-4225-93a8-9ae87943246b  *******/  const handleSwitchToRegister = () => {
+  const handleSwitchToRegister = () => {
     setActiveTab("register");
     setShowForgotPassword(false);
   };
@@ -68,9 +33,7 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      <LoginRedirectHandler />
-
-      {/* IMPROVED: Fixed Language Switcher - Top Right Corner */}
+      {/* Language Switcher - Top Right Corner */}
       <div className="absolute top-6 right-6 z-50">
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: -10 }}
@@ -90,8 +53,6 @@ const Auth: React.FC = () => {
 
       <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="w-full max-w-md">
-          {/* REMOVED: Old language switcher div that was here */}
-
           <div className="text-center mb-8">
             <motion.div
               initial={{ opacity: 0, y: -20 }}

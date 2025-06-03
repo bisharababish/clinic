@@ -32,8 +32,8 @@ const AuthCallback = () => {
                             refresh_token: refreshToken || '',
                         });
 
-                        // Redirect to reset password page with the token
-                        window.location.href = "/auth/reset-password" + window.location.hash;
+                        // Use React Router navigation instead of window.location
+                        navigate("/auth/reset-password" + window.location.hash, { replace: true });
                         return;
                     } catch (sessionError) {
                         console.error("Error setting session:", sessionError);
@@ -50,43 +50,70 @@ const AuthCallback = () => {
                 }
 
                 if (data.session) {
-                    console.log("Session found, redirecting...");
+                    console.log("Session found, processing user data...");
 
-                    // Set a flag to indicate successful authentication
+                    // Set authentication flags for the app
                     localStorage.setItem('auth_success', 'true');
+                    sessionStorage.setItem('login_in_progress', 'true');
 
-                    // Get user profile to check if admin
+                    // Get user profile to check role
                     try {
                         const { data: userData } = await supabase
                             .from('userinfo')
-                            .select('user_roles')
+                            .select('*')
                             .eq('user_email', data.session.user.email)
                             .single();
 
-                        if (userData && (userData.user_roles === 'Admin' || userData.user_roles === 'admin')) {
-                            // Admin user - redirect to admin dashboard
-                            console.log("Admin user detected, redirecting to admin dashboard");
-                            window.location.href = "/admin";
-                            return;
+                        if (userData) {
+                            // Cache user profile for the app
+                            localStorage.setItem('clinic_user_profile', JSON.stringify({
+                                ...userData,
+                                role: userData.user_roles.toLowerCase()
+                            }));
+
+                            // Set role-specific flags
+                            if (userData.user_roles === 'Admin' || userData.user_roles === 'admin') {
+                                console.log("Admin user detected, setting admin flag");
+                                sessionStorage.setItem('admin_login_success', 'true');
+
+                                // Small delay to ensure flags are set before navigation
+                                setTimeout(() => {
+                                    sessionStorage.removeItem('login_in_progress');
+                                    navigate("/admin", { replace: true });
+                                }, 100);
+                                return;
+                            }
                         }
                     } catch (userError) {
                         console.error("Error getting user data:", userError);
+                        // Continue with default behavior
                     }
 
-                    // Regular user or error getting user data - redirect to clinics
-                    window.location.href = "/clinics";
+                    // Regular user or error getting user data - redirect to home
+                    console.log("Regular user, redirecting to home");
+                    setTimeout(() => {
+                        sessionStorage.removeItem('login_in_progress');
+                        navigate("/", { replace: true });
+                    }, 100);
                 } else {
                     console.log("No session found, redirecting to login...");
-                    // Redirect to login
-                    window.location.href = "/auth";
+                    // Clear any auth flags and redirect to login
+                    localStorage.removeItem('auth_success');
+                    sessionStorage.removeItem('login_in_progress');
+                    navigate("/auth", { replace: true });
                 }
             } catch (error) {
                 console.error('Error handling auth callback:', error);
                 setError(error instanceof Error ? error.message : 'Authentication error');
 
-                // Even on error, redirect back to auth page after 3 seconds
+                // Clear auth flags on error
+                localStorage.removeItem('auth_success');
+                sessionStorage.removeItem('login_in_progress');
+                sessionStorage.removeItem('admin_login_success');
+
+                // Redirect back to auth page after 3 seconds using React Router
                 setTimeout(() => {
-                    window.location.href = "/auth";
+                    navigate("/auth", { replace: true });
                 }, 3000);
             }
         };
