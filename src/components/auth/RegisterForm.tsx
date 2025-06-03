@@ -507,7 +507,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             onChange={handleInputChange}
                             className={isRTL ? 'pr-10' : 'pl-10'}
                             required
-                            placeholder={isRTL ? "٩٨٧٦٥٤٣٢١+" : "123456789"} dir={isRTL ? "rtl" : "ltr"}  // ADD THIS LINE
+                            placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
                         />
                     </div>
                 </div>

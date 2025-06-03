@@ -314,10 +314,10 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         </div>
                     </CardHeader>
                     <CardContent className="pt-4">
-                        <div className="h-80">
+                        <div className="h-[500px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 {chartType === 'pie' ? (
-                                    <PieChart>
+                                    <PieChart margin={{ top: 30, right: 30, bottom: 30, left: 30 }}>
                                         <Pie
                                             data={getRoleChartData()}
                                             cx="50%"
@@ -325,7 +325,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                             labelLine={false}
                                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
                                                 const RADIAN = Math.PI / 180;
-                                                const radius = outerRadius + 25;
+                                                const radius = outerRadius + 15;
                                                 const x = cx + radius * Math.cos(-midAngle * RADIAN);
                                                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -343,8 +343,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                                     </text>
                                                 );
                                             }}
-                                            outerRadius={70}
-                                            innerRadius={35}
+                                            outerRadius={150}
+                                            innerRadius={80}
                                             paddingAngle={5}
                                             dataKey="count"
                                             isAnimationActive={true}

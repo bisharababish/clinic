@@ -770,9 +770,8 @@ const DoctorManagement = () => {
                                         name="phone"
                                         value={doctorFormData.phone}
                                         onChange={handleDoctorInputChange}
-                                        placeholder={t('doctorManagement.phonePlaceholder')}
+                                        placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
                                         className={isRTL ? 'text-left' : ''}
-                                        dir="ltr"
                                     />
                                 </div>
 
