@@ -23,6 +23,10 @@ export default defineConfig({
         manualChunks: undefined,
       },
     },
+    // Ensure _redirects file is copied to dist
+    copyPublicDir: true,
   },
   base: '/',
+  // This ensures the _redirects file is properly handled
+  publicDir: 'public'
 })
