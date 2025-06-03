@@ -1,4 +1,4 @@
-// src/pages/AuthCallback.tsx
+// src/pages/AuthCallback.tsx - FIXED VERSION
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -33,7 +33,7 @@ const AuthCallback = () => {
                         });
 
                         // Use React Router navigation instead of window.location
-                        navigate("/auth/reset-password" + window.location.hash, { replace: true });
+                        navigate("/auth/reset-password", { replace: true });
                         return;
                     } catch (sessionError) {
                         console.error("Error setting session:", sessionError);
