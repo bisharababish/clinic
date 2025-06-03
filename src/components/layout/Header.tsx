@@ -10,6 +10,7 @@ import { ThemeContext, ThemeContextType } from '../../components/contexts/ThemeC
 import { LanguageContext } from '../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { getRolePermissions } from '../../lib/rolePermissions';
 
 export function Header() {
     const { user, logout } = useAuth();
@@ -85,22 +86,25 @@ export function Header() {
         checkAuthStatus();
     }, [user]);
 
-    // Define which navigation items are visible based on role
+    // Get user permissions based on role
+    const userPermissions = getRolePermissions(effectiveRole || '');
+
+    // Define which navigation items are visible based on role permissions
+    const canViewHome = isAuthenticated && userPermissions.canViewHome;
+    const canViewClinics = isAuthenticated && userPermissions.canViewClinics;
+    const canViewLabs = isAuthenticated && userPermissions.canViewLabs;
+    const canViewXray = isAuthenticated && userPermissions.canViewXray;
+    const canViewAboutUs = isAuthenticated && userPermissions.canViewAboutUs;
+    const canViewAdmin = isAuthenticated && userPermissions.canViewAdmin;
+
+    // Define role checks for styling
     const isAdmin = effectiveRole === "admin";
     const isDoctor = effectiveRole === "doctor";
     const isSecretary = effectiveRole === "secretary";
     const isNurse = effectiveRole === "nurse";
     const isLab = effectiveRole === "lab";
-    const isXRay = effectiveRole === "x ray";
+    const isXRay = effectiveRole === "x ray" || effectiveRole === "xray";
     const isPatient = effectiveRole === "patient";
-
-    // Define permissions based on roles
-    const canViewHome = isAuthenticated;
-    const canViewClinics = isAuthenticated;
-    const canViewLabs = isAuthenticated && (isAdmin || isDoctor || isLab);
-    const canViewXray = isAuthenticated && (isAdmin || isDoctor || isXRay);
-    const canViewAboutUs = isAuthenticated && (isAdmin || isPatient);
-    const canViewAdmin = isAuthenticated && isAdmin;
 
     // Handle logout click - FIXED TO USE REACT ROUTER
     const handleLogout = async () => {
@@ -149,7 +153,7 @@ export function Header() {
 
     // Function to get role display name with translation
     const getRoleDisplayName = (role: string) => {
-        switch (role) {
+        switch (role?.toLowerCase()) {
             case 'admin':
                 return t('roles.admin');
             case 'doctor':
@@ -161,11 +165,57 @@ export function Header() {
             case 'lab':
                 return t('roles.lab');
             case 'x ray':
+            case 'xray':
                 return t('roles.xray');
             case 'patient':
                 return t('roles.patient');
             default:
                 return role;
+        }
+    };
+
+    // Function to get role badge styling
+    const getRoleBadgeClass = (role: string) => {
+        switch (role?.toLowerCase()) {
+            case "admin":
+                return "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border-red-200 hover:from-red-100 hover:to-red-200";
+            case "doctor":
+                return "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border-blue-200 hover:from-blue-100 hover:to-blue-200";
+            case "secretary":
+                return "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border-purple-200 hover:from-purple-100 hover:to-purple-200";
+            case "nurse":
+                return "bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 border-teal-200 hover:from-teal-100 hover:to-teal-200";
+            case "lab":
+                return "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 border-amber-200 hover:from-amber-100 hover:to-amber-200";
+            case "x ray":
+            case "xray":
+                return "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border-indigo-200 hover:from-indigo-100 hover:to-indigo-200";
+            case "patient":
+                return "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border-emerald-200 hover:from-emerald-100 hover:to-emerald-200";
+            default:
+                return "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border-green-200 hover:from-green-100 hover:to-green-200";
+        }
+    };
+
+    const getRoleDotClass = (role: string) => {
+        switch (role?.toLowerCase()) {
+            case "admin":
+                return "bg-red-500";
+            case "doctor":
+                return "bg-blue-500";
+            case "secretary":
+                return "bg-purple-500";
+            case "nurse":
+                return "bg-teal-500";
+            case "lab":
+                return "bg-amber-500";
+            case "x ray":
+            case "xray":
+                return "bg-indigo-500";
+            case "patient":
+                return "bg-emerald-500";
+            default:
+                return "bg-green-500";
         }
     };
 
@@ -255,8 +305,10 @@ export function Header() {
                             )}
 
                             {canViewAdmin && (
-                                <Button variant="ghost" size="sm" asChild className="hover:bg-red-50 hover:text-red-700 transition-colors duration-200">
-                                    <Link to="/admin" className="font-medium">{t('navbar.adminDashboard')}</Link>
+                                <Button variant="ghost" size="sm" asChild className={`transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
+                                    <Link to="/admin" className="font-medium">
+                                        {isAdmin ? t('navbar.adminDashboard') : t('navbar.dashboard')}
+                                    </Link>
                                 </Button>
                             )}
                         </nav>
@@ -265,31 +317,8 @@ export function Header() {
                         <div className="hidden lg:flex items-center gap-3">
                             {effectiveRole && isAuthenticated && (
                                 <div className="relative">
-                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${effectiveRole === "admin"
-                                        ? "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border-red-200 hover:from-red-100 hover:to-red-200"
-                                        : effectiveRole === "doctor"
-                                            ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border-blue-200 hover:from-blue-100 hover:to-blue-200"
-                                            : effectiveRole === "secretary"
-                                                ? "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border-purple-200 hover:from-purple-100 hover:to-purple-200"
-                                                : effectiveRole === "nurse"
-                                                    ? "bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 border-teal-200 hover:from-teal-100 hover:to-teal-200"
-                                                    : effectiveRole === "lab"
-                                                        ? "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 border-amber-200 hover:from-amber-100 hover:to-amber-200"
-                                                        : effectiveRole === "x ray"
-                                                            ? "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border-indigo-200 hover:from-indigo-100 hover:to-indigo-200"
-                                                            : effectiveRole === "patient"
-                                                                ? "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border-emerald-200 hover:from-emerald-100 hover:to-emerald-200"
-                                                                : "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border-green-200 hover:from-green-100 hover:to-green-200"
-                                        }`}>
-                                        <div className={`w-2 h-2 rounded-full mr-2 ${effectiveRole === "admin" ? "bg-red-500"
-                                            : effectiveRole === "doctor" ? "bg-blue-500"
-                                                : effectiveRole === "secretary" ? "bg-purple-500"
-                                                    : effectiveRole === "nurse" ? "bg-teal-500"
-                                                        : effectiveRole === "lab" ? "bg-amber-500"
-                                                            : effectiveRole === "x ray" ? "bg-indigo-500"
-                                                                : effectiveRole === "patient" ? "bg-emerald-500"
-                                                                    : "bg-green-500"
-                                            }`}></div>
+                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${getRoleBadgeClass(effectiveRole)}`}>
+                                        <div className={`w-2 h-2 rounded-full mr-2 ${getRoleDotClass(effectiveRole)}`}></div>
                                         {getRoleDisplayName(effectiveRole)}
                                     </span>
                                 </div>
@@ -320,22 +349,7 @@ export function Header() {
 
                             {/* Mobile Role Badge */}
                             {effectiveRole && isAuthenticated && (
-                                <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${effectiveRole === "admin"
-                                    ? "bg-red-50 text-red-700 border-red-200"
-                                    : effectiveRole === "doctor"
-                                        ? "bg-blue-50 text-blue-700 border-blue-200"
-                                        : effectiveRole === "secretary"
-                                            ? "bg-purple-50 text-purple-700 border-purple-200"
-                                            : effectiveRole === "nurse"
-                                                ? "bg-teal-50 text-teal-700 border-teal-200"
-                                                : effectiveRole === "lab"
-                                                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                                                    : effectiveRole === "x ray"
-                                                        ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                                                        : effectiveRole === "patient"
-                                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                            : "bg-green-50 text-green-700 border-green-200"
-                                    }`}>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getRoleBadgeClass(effectiveRole).replace('gradient-to-r from-', '').replace(' to-', '').replace(' hover:from-', '').replace(' hover:to-', '')}`}>
                                     {getRoleDisplayName(effectiveRole)}
                                 </span>
                             )}
@@ -421,9 +435,9 @@ export function Header() {
                                     )}
 
                                     {canViewAdmin && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-red-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
                                             <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
-                                                {t('navbar.adminDashboard')}
+                                                {isAdmin ? t('navbar.adminDashboard') : t('navbar.dashboard')}
                                             </Link>
                                         </Button>
                                     )}

@@ -1,4 +1,4 @@
-// pages/AdminDashboard.tsx with i18n support
+// pages/AdminDashboard.tsx with i18n support and role-based access
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,8 @@ import { UserRole } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
+import { getRolePermissions } from '../lib/rolePermissions';
+import { useNavigate } from 'react-router-dom';
 
 // Interfaces (same as before)
 interface UserInfo {
@@ -102,9 +104,11 @@ const AdminDashboard = () => {
     const { user, isLoading: authLoading } = useAuth();
     const { toast } = useToast();
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     // State variables
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isSecretary, setIsSecretary] = useState(false);
     const [activeTab, setActiveTab] = useState("overview");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -120,7 +124,18 @@ const AdminDashboard = () => {
     const [systemSettings, setSystemSettings] = useState<SystemSettings[]>([]);
     const [reportData, setReportData] = useState<ReportData | null>(null);
 
-    // Check admin status
+    // Get user role and permissions
+    const userRole = user?.role?.toLowerCase() || '';
+    const userPermissions = getRolePermissions(userRole);
+
+    // Define which tabs each role can see
+    const canViewOverviewTab = userPermissions.canViewOverview;
+    const canViewUsersTab = userPermissions.canViewUsers;
+    const canViewClinicsTab = userPermissions.canViewClinics;
+    const canViewDoctorsTab = userPermissions.canViewDoctors;
+    const canViewAppointmentsTab = userPermissions.canViewAppointments;
+
+    // Check admin status and access control
     useEffect(() => {
         const initializeAdminDashboard = async () => {
             if (authLoading) return;
@@ -131,59 +146,94 @@ const AdminDashboard = () => {
             console.log('Starting admin dashboard initialization');
 
             try {
-                // Hard-code admin access for development - remove in production
-                setIsAdmin(true);
+                const currentUserRole = user?.role?.toLowerCase() || '';
 
-                // Load all data in sequence to ensure consistent loading
+                // Check if user has admin dashboard access
+                if (!userPermissions.canViewAdmin) {
+                    setError(t('admin.accessDenied'));
+                    toast({
+                        title: t('common.error'),
+                        description: t('admin.accessDenied'),
+                        variant: "destructive",
+                    });
+                    // Redirect to home page after 2 seconds
+                    setTimeout(() => {
+                        navigate('/', { replace: true });
+                    }, 2000);
+                    return;
+                }
+
+                // Set role flags
+                if (currentUserRole === 'admin') {
+                    setIsAdmin(true);
+                    setIsSecretary(false);
+                } else if (currentUserRole === 'secretary') {
+                    setIsAdmin(false);
+                    setIsSecretary(true);
+                    // Force secretary to appointments tab
+                    setActiveTab("appointments");
+                }
+
+                // Load data based on permissions
                 console.log(t('admin.loadingUsers'));
 
-                try {
-                    await loadUsers();
-                    console.log(t('admin.usersLoaded'));
-                } catch (e) {
-                    console.error('Error loading users:', e);
+                if (canViewUsersTab) {
+                    try {
+                        await loadUsers();
+                        console.log(t('admin.usersLoaded'));
+                    } catch (e) {
+                        console.error('Error loading users:', e);
+                    }
                 }
 
-                try {
-                    await loadClinics();
-                    console.log(t('admin.clinicsLoaded'));
-                } catch (e) {
-                    console.error('Error loading clinics:', e);
+                if (canViewClinicsTab) {
+                    try {
+                        await loadClinics();
+                        console.log(t('admin.clinicsLoaded'));
+                    } catch (e) {
+                        console.error('Error loading clinics:', e);
+                    }
                 }
 
-                try {
-                    await loadDoctors();
-                    console.log(t('admin.doctorsLoaded'));
-                } catch (e) {
-                    console.error('Error loading doctors:', e);
+                if (canViewDoctorsTab) {
+                    try {
+                        await loadDoctors();
+                        console.log(t('admin.doctorsLoaded'));
+                    } catch (e) {
+                        console.error('Error loading doctors:', e);
+                    }
                 }
 
-                try {
-                    await loadAppointments();
-                    console.log(t('admin.appointmentsLoaded'));
-                } catch (e) {
-                    console.error('Error loading appointments:', e);
+                if (canViewAppointmentsTab) {
+                    try {
+                        await loadAppointments();
+                        console.log(t('admin.appointmentsLoaded'));
+                    } catch (e) {
+                        console.error('Error loading appointments:', e);
+                    }
                 }
 
-                try {
-                    await loadActivityLog();
-                    console.log(t('admin.activityLogsLoaded'));
-                } catch (e) {
-                    console.error('Error loading activity logs:', e);
-                }
+                if (canViewOverviewTab) {
+                    try {
+                        await loadActivityLog();
+                        console.log(t('admin.activityLogsLoaded'));
+                    } catch (e) {
+                        console.error('Error loading activity logs:', e);
+                    }
 
-                try {
-                    await loadSystemSettings();
-                    console.log(t('admin.systemSettingsLoaded'));
-                } catch (e) {
-                    console.error('Error loading system settings:', e);
-                }
+                    try {
+                        await loadSystemSettings();
+                        console.log(t('admin.systemSettingsLoaded'));
+                    } catch (e) {
+                        console.error('Error loading system settings:', e);
+                    }
 
-                try {
-                    await generateReportData();
-                    console.log(t('admin.reportDataGenerated'));
-                } catch (e) {
-                    console.error('Error generating report data:', e);
+                    try {
+                        await generateReportData();
+                        console.log(t('admin.reportDataGenerated'));
+                    } catch (e) {
+                        console.error('Error generating report data:', e);
+                    }
                 }
 
                 console.log(t('admin.dashboardInitializationComplete'));
@@ -197,7 +247,14 @@ const AdminDashboard = () => {
         };
 
         initializeAdminDashboard();
-    }, [authLoading, t]);
+    }, [authLoading, t, user, userPermissions, navigate]);
+
+    // Force secretary to stay on appointments tab
+    useEffect(() => {
+        if (isSecretary && activeTab !== 'appointments') {
+            setActiveTab('appointments');
+        }
+    }, [isSecretary, activeTab]);
 
     // Handle search filtering
     useEffect(() => {
@@ -352,6 +409,8 @@ const AdminDashboard = () => {
 
     // Set up real-time subscription and periodic refresh
     useEffect(() => {
+        if (!canViewUsersTab) return;
+
         const setupSubscription = loadUsers();
 
         const refreshInterval = setInterval(() => {
@@ -365,7 +424,7 @@ const AdminDashboard = () => {
             });
             clearInterval(refreshInterval);
         };
-    }, []);
+    }, [canViewUsersTab]);
 
     const loadClinics = async () => {
         console.log(t('admin.loadingClinics'));
@@ -834,7 +893,7 @@ const AdminDashboard = () => {
         );
     }
 
-    if (isLoading && !users.length && !clinics.length) {
+    if (isLoading && !users.length && !clinics.length && !appointments.length) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
@@ -860,7 +919,7 @@ const AdminDashboard = () => {
                     </Button>
                     <Button
                         variant="outline"
-                        onClick={() => window.location.href = "/"}
+                        onClick={() => navigate('/', { replace: true })}
                         className="w-full"
                     >
                         {t('admin.returnToHome')}
@@ -904,57 +963,110 @@ const AdminDashboard = () => {
         }
     }
 
+    // Get dashboard title based on user role
+    const getDashboardTitle = () => {
+        if (isAdmin) {
+            return t('admin.title');
+        } else if (isSecretary) {
+            return t('admin.secretaryDashboard');
+        }
+        return t('admin.dashboard');
+    };
+
     // Main render
     return (
         <div className="max-w-7xl mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-6">{t('admin.title')}</h1>
+            <h1 className="text-3xl font-bold mb-6">{getDashboardTitle()}</h1>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className={`flex flex-wrap justify-center w-full ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                    <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
-                    <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
-                    <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
-                    <TabsTrigger value="doctors">{t('admin.doctors')}</TabsTrigger>
-                    <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
+                    {canViewOverviewTab && (
+                        <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
+                    )}
+                    {canViewUsersTab && (
+                        <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
+                    )}
+                    {canViewClinicsTab && (
+                        <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
+                    )}
+                    {canViewDoctorsTab && (
+                        <TabsTrigger value="doctors">{t('admin.doctors')}</TabsTrigger>
+                    )}
+                    {canViewAppointmentsTab && (
+                        <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
+                    )}
                 </TabsList>
 
                 {/* OVERVIEW TAB */}
-                <TabsContent value="overview" className="pt-6">
-                    <OverviewManagement
-                        users={users}
-                        clinics={clinics}
-                        doctors={doctors}
-                        appointments={appointments}
-                        reportData={reportData}
-                        isLoading={isLoading}
-                        error={error}
-                        refreshReportData={refreshReportData}
-                        setActiveTab={setActiveTab}
-                        checkSystemStatus={checkSystemStatus}
-                    />
-                </TabsContent>
+                {canViewOverviewTab && (
+                    <TabsContent value="overview" className="pt-6">
+                        <OverviewManagement
+                            users={users}
+                            clinics={clinics}
+                            doctors={doctors}
+                            appointments={appointments}
+                            reportData={reportData}
+                            isLoading={isLoading}
+                            error={error}
+                            refreshReportData={refreshReportData}
+                            setActiveTab={setActiveTab}
+                            checkSystemStatus={checkSystemStatus}
+                        />
+                    </TabsContent>
+                )}
 
                 {/* USERS TAB */}
-                <TabsContent value="users" className="pt-6">
-                    <UsersManagement />
-                </TabsContent>
+                {canViewUsersTab && (
+                    <TabsContent value="users" className="pt-6">
+                        <UsersManagement />
+                    </TabsContent>
+                )}
 
                 {/* CLINICS TAB */}
-                <TabsContent value="clinics" className="pt-6">
-                    <ClinicManagement />
-                </TabsContent>
+                {canViewClinicsTab && (
+                    <TabsContent value="clinics" className="pt-6">
+                        <ClinicManagement />
+                    </TabsContent>
+                )}
 
                 {/* DOCTORS TAB */}
-                <TabsContent value="doctors" className="pt-6">
-                    <DoctorManagement />
-                </TabsContent>
+                {canViewDoctorsTab && (
+                    <TabsContent value="doctors" className="pt-6">
+                        <DoctorManagement />
+                    </TabsContent>
+                )}
 
                 {/* APPOINTMENTS TAB */}
-                <TabsContent value="appointments" className="pt-6">
-                    <AppointmentsManagement />
-                </TabsContent>
+                {canViewAppointmentsTab && (
+                    <TabsContent value="appointments" className="pt-6">
+                        <AppointmentsManagement
+                            appointments={appointments}
+                            setAppointments={setAppointments}
+                            isLoading={isLoading}
+                            setIsLoading={setIsLoading}
+                            loadAppointments={loadAppointments}
+                            logActivity={logActivity}
+                            userEmail={user?.email || 'admin'}
+                        />
+                    </TabsContent>
+                )}
 
-
+                {/* Show message if user has no accessible tabs */}
+                {!canViewOverviewTab && !canViewUsersTab && !canViewClinicsTab && !canViewDoctorsTab && !canViewAppointmentsTab && (
+                    <TabsContent value={activeTab} className="pt-6">
+                        <div className="text-center py-12">
+                            <h2 className="text-xl font-semibold text-gray-600 mb-4">
+                                {t('admin.noAccessibleSections')}
+                            </h2>
+                            <p className="text-gray-500 mb-6">
+                                {t('admin.contactAdministrator')}
+                            </p>
+                            <Button onClick={() => navigate('/')} variant="outline">
+                                {t('admin.returnToHome')}
+                            </Button>
+                        </div>
+                    </TabsContent>
+                )}
             </Tabs>
         </div>
     );

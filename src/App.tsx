@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AuthProvider } from "./hooks/useAuth";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
 import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
 
@@ -65,10 +65,12 @@ function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Protected routes with MainLayout */}
+            
+            {/* Home - accessible to all authenticated users */}
             <Route
               path="/"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin", "doctor", "secretary", "nurse", "lab", "x ray", "patient"]}>
                   <MainLayout>
                     <Index />
                   </MainLayout>
@@ -76,10 +78,11 @@ function App() {
               }
             />
 
+            {/* About Us - accessible to admin and patient only */}
             <Route
               path="/about"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin", "patient"]}>
                   <MainLayout>
                     <AboutUs />
                   </MainLayout>
@@ -87,10 +90,11 @@ function App() {
               }
             />
 
+            {/* Clinics - accessible to admin, secretary, nurse, patient */}
             <Route
               path="/clinics"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin", "secretary", "nurse", "patient"]}>
                   <MainLayout>
                     <Clinics />
                   </MainLayout>
@@ -98,10 +102,11 @@ function App() {
               }
             />
 
+            {/* Payment - accessible to all authenticated users who can book appointments */}
             <Route
               path="/payment"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin", "secretary", "patient"]}>
                   <MainLayout>
                     <Payment />
                   </MainLayout>
@@ -109,10 +114,11 @@ function App() {
               }
             />
 
+            {/* Confirmation - accessible to all authenticated users who can book appointments */}
             <Route
               path="/confirmation"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin", "secretary", "patient"]}>
                   <MainLayout>
                     <Confirmation />
                   </MainLayout>
@@ -120,11 +126,11 @@ function App() {
               }
             />
 
-            {/* Role-protected routes */}
+            {/* Labs - accessible to admin, doctor, lab ONLY */}
             <Route
               path="/labs"
               element={
-                <ProtectedRoute allowedRoles={["admin", "doctor", "secretary"]}>
+                <ProtectedRoute allowedRoles={["admin", "doctor", "lab"]}>
                   <MainLayout>
                     <Labs />
                   </MainLayout>
@@ -132,10 +138,11 @@ function App() {
               }
             />
 
+            {/* X-Ray - accessible to admin, doctor, x ray ONLY */}
             <Route
               path="/xray"
               element={
-                <ProtectedRoute allowedRoles={["admin", "doctor", "secretary"]}>
+                <ProtectedRoute allowedRoles={["admin", "doctor", "x ray"]}>
                   <MainLayout>
                     <XRay />
                   </MainLayout>
@@ -143,10 +150,12 @@ function App() {
               }
             />
 
+            {/* Admin Dashboard - accessible to admin and secretary */}
+            {/* Secretary will be limited to appointments tab only within the dashboard */}
             <Route
               path="/admin"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={["admin", "secretary"]}>
                   <MainLayout>
                     <AdminDashboard />
                   </MainLayout>
