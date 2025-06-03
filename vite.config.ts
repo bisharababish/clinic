@@ -4,22 +4,25 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    port: 3000,
+  },
+  preview: {
+    port: 3000,
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    // Ensure _redirects file is copied to dist
     rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html')
-      }
-    }
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
-  // Copy public folder contents to dist
-  publicDir: 'public'
+  base: '/',
 })

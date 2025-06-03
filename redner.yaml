@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: clinic-app
+    name: bethlehem-med-center
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist

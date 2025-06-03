@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AuthProvider } from "./hooks/useAuth";
@@ -154,8 +154,15 @@ function App() {
               }
             />
 
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
+            {/* Catch all route - redirect unknown routes to home */}
+            <Route
+              path="*"
+              element={
+                <ProtectedRoute>
+                  <Navigate to="/" replace />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </Suspense>
       </Router>
