@@ -27,6 +27,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
 
@@ -134,10 +135,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
               description: t("auth.secureAdminAccess")
             });
 
-            // Redirect admin to admin dashboard
+            // Use React Router navigation instead of window.location.href
             setTimeout(() => {
               sessionStorage.removeItem('login_in_progress');
-              window.location.href = "/admin";
+              navigate("/admin", { replace: true });
             }, 500);
 
             return;
@@ -155,8 +156,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
           // Clear the login progress flag
           sessionStorage.removeItem('login_in_progress');
 
-          // Force a hard redirect to the home page
-          window.location.href = "/";
+          // Use React Router navigation instead of window.location.href
+          navigate("/", { replace: true });
         }, 500);
 
         return;
@@ -175,10 +176,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
           description: `${t("common.welcome")}, ${userData.name}!`
         });
 
-        // Redirect admin to admin dashboard
+        // Use React Router navigation instead of window.location.href
         setTimeout(() => {
           sessionStorage.removeItem('login_in_progress');
-          window.location.href = "/admin";
+          navigate("/admin", { replace: true });
         }, 500);
 
         return;
@@ -195,8 +196,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
         // Clear the login progress flag
         sessionStorage.removeItem('login_in_progress');
 
-        // Force a hard redirect to the home page
-        window.location.href = "/";
+        // Use React Router navigation instead of window.location.href
+        navigate("/", { replace: true });
       }, 500);
 
     } catch (error) {
@@ -239,7 +240,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
               onChange={(e) => setEmail(e.target.value)}
               className={isRTL ? 'pr-10' : 'pl-10'}
               placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
-
               required
             />
           </div>

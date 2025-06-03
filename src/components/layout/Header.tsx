@@ -1,6 +1,6 @@
 // components/layout/Header.tsx
 import { useEffect, useState, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
@@ -13,6 +13,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export function Header() {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [effectiveRole, setEffectiveRole] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -101,14 +102,23 @@ export function Header() {
     const canViewAboutUs = isAuthenticated && (isAdmin || isPatient);
     const canViewAdmin = isAuthenticated && isAdmin;
 
-    // Handle logout click
+    // Handle logout click - FIXED TO USE REACT ROUTER
     const handleLogout = async () => {
         try {
+            console.log("Starting logout process...");
+
             // First clear any local storage and session storage items
             localStorage.removeItem('clinic_user_profile');
             localStorage.removeItem('supabase.auth.token');
             sessionStorage.removeItem('login_in_progress');
             sessionStorage.removeItem('admin_login_success');
+
+            // Force state update immediately
+            setIsAuthenticated(false);
+            setEffectiveRole(null);
+
+            // Close mobile menu if open
+            setIsMobileMenuOpen(false);
 
             // Then try to logout through the hook
             if (logout) {
@@ -118,16 +128,22 @@ export function Header() {
                 await supabase.auth.signOut();
             }
 
-            // Force state update immediately
+            console.log("Logout successful, navigating to auth page...");
+
+            // Use React Router navigation instead of window.location.href
+            navigate('/auth', { replace: true });
+
+        } catch (error) {
+            console.error('Logout error:', error);
+
+            // Even on error, clear everything and navigate
+            localStorage.clear();
+            sessionStorage.clear();
             setIsAuthenticated(false);
             setEffectiveRole(null);
 
-            // Redirect to login page after logout
-            window.location.href = "/auth";
-        } catch (error) {
-            console.error('Logout error:', error);
-            // Force a hard redirect in case of error
-            window.location.href = "/auth";
+            // Force navigation even if logout failed
+            navigate('/auth', { replace: true });
         }
     };
 
@@ -250,29 +266,29 @@ export function Header() {
                             {effectiveRole && isAuthenticated && (
                                 <div className="relative">
                                     <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${effectiveRole === "admin"
-                                            ? "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border-red-200 hover:from-red-100 hover:to-red-200"
-                                            : effectiveRole === "doctor"
-                                                ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border-blue-200 hover:from-blue-100 hover:to-blue-200"
-                                                : effectiveRole === "secretary"
-                                                    ? "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border-purple-200 hover:from-purple-100 hover:to-purple-200"
-                                                    : effectiveRole === "nurse"
-                                                        ? "bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 border-teal-200 hover:from-teal-100 hover:to-teal-200"
-                                                        : effectiveRole === "lab"
-                                                            ? "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 border-amber-200 hover:from-amber-100 hover:to-amber-200"
-                                                            : effectiveRole === "x ray"
-                                                                ? "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border-indigo-200 hover:from-indigo-100 hover:to-indigo-200"
-                                                                : effectiveRole === "patient"
-                                                                    ? "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border-emerald-200 hover:from-emerald-100 hover:to-emerald-200"
-                                                                    : "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border-green-200 hover:from-green-100 hover:to-green-200"
+                                        ? "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border-red-200 hover:from-red-100 hover:to-red-200"
+                                        : effectiveRole === "doctor"
+                                            ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border-blue-200 hover:from-blue-100 hover:to-blue-200"
+                                            : effectiveRole === "secretary"
+                                                ? "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border-purple-200 hover:from-purple-100 hover:to-purple-200"
+                                                : effectiveRole === "nurse"
+                                                    ? "bg-gradient-to-r from-teal-50 to-teal-100 text-teal-800 border-teal-200 hover:from-teal-100 hover:to-teal-200"
+                                                    : effectiveRole === "lab"
+                                                        ? "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 border-amber-200 hover:from-amber-100 hover:to-amber-200"
+                                                        : effectiveRole === "x ray"
+                                                            ? "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border-indigo-200 hover:from-indigo-100 hover:to-indigo-200"
+                                                            : effectiveRole === "patient"
+                                                                ? "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border-emerald-200 hover:from-emerald-100 hover:to-emerald-200"
+                                                                : "bg-gradient-to-r from-green-50 to-green-100 text-green-800 border-green-200 hover:from-green-100 hover:to-green-200"
                                         }`}>
                                         <div className={`w-2 h-2 rounded-full mr-2 ${effectiveRole === "admin" ? "bg-red-500"
-                                                : effectiveRole === "doctor" ? "bg-blue-500"
-                                                    : effectiveRole === "secretary" ? "bg-purple-500"
-                                                        : effectiveRole === "nurse" ? "bg-teal-500"
-                                                            : effectiveRole === "lab" ? "bg-amber-500"
-                                                                : effectiveRole === "x ray" ? "bg-indigo-500"
-                                                                    : effectiveRole === "patient" ? "bg-emerald-500"
-                                                                        : "bg-green-500"
+                                            : effectiveRole === "doctor" ? "bg-blue-500"
+                                                : effectiveRole === "secretary" ? "bg-purple-500"
+                                                    : effectiveRole === "nurse" ? "bg-teal-500"
+                                                        : effectiveRole === "lab" ? "bg-amber-500"
+                                                            : effectiveRole === "x ray" ? "bg-indigo-500"
+                                                                : effectiveRole === "patient" ? "bg-emerald-500"
+                                                                    : "bg-green-500"
                                             }`}></div>
                                         {getRoleDisplayName(effectiveRole)}
                                     </span>
@@ -305,20 +321,20 @@ export function Header() {
                             {/* Mobile Role Badge */}
                             {effectiveRole && isAuthenticated && (
                                 <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${effectiveRole === "admin"
-                                        ? "bg-red-50 text-red-700 border-red-200"
-                                        : effectiveRole === "doctor"
-                                            ? "bg-blue-50 text-blue-700 border-blue-200"
-                                            : effectiveRole === "secretary"
-                                                ? "bg-purple-50 text-purple-700 border-purple-200"
-                                                : effectiveRole === "nurse"
-                                                    ? "bg-teal-50 text-teal-700 border-teal-200"
-                                                    : effectiveRole === "lab"
-                                                        ? "bg-amber-50 text-amber-700 border-amber-200"
-                                                        : effectiveRole === "x ray"
-                                                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                                                            : effectiveRole === "patient"
-                                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                                : "bg-green-50 text-green-700 border-green-200"
+                                    ? "bg-red-50 text-red-700 border-red-200"
+                                    : effectiveRole === "doctor"
+                                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                                        : effectiveRole === "secretary"
+                                            ? "bg-purple-50 text-purple-700 border-purple-200"
+                                            : effectiveRole === "nurse"
+                                                ? "bg-teal-50 text-teal-700 border-teal-200"
+                                                : effectiveRole === "lab"
+                                                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                                                    : effectiveRole === "x ray"
+                                                        ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                                        : effectiveRole === "patient"
+                                                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                            : "bg-green-50 text-green-700 border-green-200"
                                     }`}>
                                     {getRoleDisplayName(effectiveRole)}
                                 </span>
@@ -416,7 +432,7 @@ export function Header() {
                                         {isAuthenticated ? (
                                             <Button
                                                 variant="ghost"
-                                                onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                                                onClick={handleLogout}
                                                 className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-red-50 hover:text-red-700 transition-colors duration-200 font-medium w-full`}
                                             >
                                                 {t('common.logout')}
