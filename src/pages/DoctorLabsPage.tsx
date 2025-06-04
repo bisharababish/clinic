@@ -1,4 +1,4 @@
-// DoctorLabsPage.tsx - Version without database calls for testing
+// DoctorLabsPage.tsx - Clean UI without mock data
 import React, { useState, useEffect } from 'react';
 import { Search, FileText, Calendar, User, Filter, Download, Eye, AlertCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -19,93 +19,27 @@ interface LabResult {
     createdAt: string;
 }
 
-// Mock data for testing
-const mockLabResults: LabResult[] = [
-    {
-        id: '1',
-        patientName: 'John Smith',
-        patientId: '123456789',
-        dateOfBirth: '1985-03-15',
-        testDate: '2024-12-01',
-        testType: 'Blood Panel',
-        results: 'Hemoglobin: 14.2 g/dL (Normal)\nWhite Blood Cell Count: 6,800/µL (Normal)\nPlatelet Count: 250,000/µL (Normal)\nGlucose: 95 mg/dL (Normal)',
-        doctorNotes: 'All values within normal limits. Patient shows good overall health.',
-        status: 'Normal',
-        labTechnician: 'Dr. Sarah Johnson',
-        createdAt: '2024-12-01T10:30:00Z'
-    },
-    {
-        id: '2',
-        patientName: 'Maria Garcia',
-        patientId: '987654321',
-        dateOfBirth: '1992-07-22',
-        testDate: '2024-11-28',
-        testType: 'Lipid Profile',
-        results: 'Total Cholesterol: 220 mg/dL (Borderline High)\nLDL: 145 mg/dL (Borderline High)\nHDL: 45 mg/dL (Low)\nTriglycerides: 180 mg/dL (Borderline High)',
-        doctorNotes: 'Recommend dietary changes and exercise. Follow-up in 3 months.',
-        status: 'Abnormal',
-        labTechnician: 'Dr. Michael Brown',
-        createdAt: '2024-11-28T14:15:00Z'
-    },
-    {
-        id: '3',
-        patientName: 'Ahmed Hassan',
-        patientId: '456789123',
-        dateOfBirth: '1978-11-08',
-        testDate: '2024-11-25',
-        testType: 'Diabetes Panel',
-        results: 'Fasting Glucose: 126 mg/dL (High)\nHbA1c: 7.2% (High)\nInsulin: 15 µU/mL (Normal)',
-        doctorNotes: 'Diabetes management needed. Start medication and lifestyle modifications.',
-        status: 'Abnormal',
-        labTechnician: 'Dr. Lisa Chen',
-        createdAt: '2024-11-25T09:45:00Z'
-    },
-    {
-        id: '4',
-        patientName: 'Emma Wilson',
-        patientId: '321654987',
-        dateOfBirth: '1990-05-12',
-        testDate: '2024-11-20',
-        testType: 'Urine Analysis',
-        results: 'Protein: Negative\nGlucose: Negative\nKetones: Negative\nBacteria: Few\nWBC: 2-5/hpf (Normal)',
-        doctorNotes: 'Normal urine analysis. No signs of infection or abnormalities.',
-        status: 'Normal',
-        labTechnician: 'Dr. Robert Davis',
-        createdAt: '2024-11-20T11:20:00Z'
-    }
-];
-
 const DoctorLabsPage: React.FC = () => {
     const { user } = useAuth();
     const { t } = useTranslation();
     const [labResults, setLabResults] = useState<LabResult[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [selectedTest, setSelectedTest] = useState<LabResult | null>(null);
     const [filterDate, setFilterDate] = useState<string>('');
     const [filterType, setFilterType] = useState<string>('');
 
-    // Simulate data loading
+    // Initialize empty state
     useEffect(() => {
-        const loadMockData = () => {
-            setLoading(true);
+        // Check if user is authenticated and is a doctor
+        if (!user || user.role !== 'doctor') {
+            setError('Access denied. Only doctors can view lab results.');
+            return;
+        }
 
-            // Check if user is authenticated and is a doctor
-            if (!user || user.role !== 'doctor') {
-                setError('Access denied. Only doctors can view lab results.');
-                setLoading(false);
-                return;
-            }
-
-            // Simulate API delay
-            setTimeout(() => {
-                setLabResults(mockLabResults);
-                setLoading(false);
-            }, 1000);
-        };
-
-        loadMockData();
+        // Set empty results (ready for database integration)
+        setLabResults([]);
     }, [user]);
 
     // Filter results based on search and filters
@@ -155,9 +89,10 @@ ${t('common.status') || 'Status'}: ${result.status}
     };
 
     const handleRefresh = (): void => {
+        // Ready for database refresh implementation
         setLoading(true);
         setTimeout(() => {
-            setLabResults(mockLabResults);
+            setLabResults([]);
             setLoading(false);
         }, 500);
     };
@@ -206,7 +141,6 @@ ${t('common.status') || 'Status'}: ${result.status}
                                 <p className="mt-1 text-sm text-gray-600">
                                     {t('doctorPages.labResultsDesc') || 'View and analyze patient laboratory test results'}
                                 </p>
-
                             </div>
                             <button
                                 onClick={handleRefresh}
@@ -316,10 +250,10 @@ ${t('common.status') || 'Status'}: ${result.status}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${result.status === 'Normal' || result.status === 'Completed'
-                                                ? 'bg-green-100 text-green-800'
-                                                : result.status === 'Abnormal'
-                                                    ? 'bg-red-100 text-red-800'
-                                                    : 'bg-yellow-100 text-yellow-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : result.status === 'Abnormal'
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                 {result.status}
                                             </span>
@@ -350,9 +284,10 @@ ${t('common.status') || 'Status'}: ${result.status}
                 </div>
 
                 {filteredResults.length === 0 && !loading && (
-                    <div className="text-center py-8">
+                    <div className="text-center py-12">
                         <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">{t('doctorPages.noLabResultsFound') || 'No lab results found'}</p>
+                        <p className="text-gray-500 text-lg">{t('doctorPages.noLabResultsFound') || 'No lab results found'}</p>
+                        <p className="text-gray-400 text-sm mt-2">Connect your database to see patient lab results here</p>
                     </div>
                 )}
             </div>
@@ -390,10 +325,10 @@ ${t('common.status') || 'Status'}: ${result.status}
                                         <p><span className="font-medium">{t('doctorPages.labTechnician') || 'Lab Technician'}:</span> {selectedTest.labTechnician}</p>
                                         <p><span className="font-medium">{t('common.status') || 'Status'}:</span>
                                             <span className={`ml-2 px-2 py-1 text-xs rounded ${selectedTest.status === 'Normal' || selectedTest.status === 'Completed'
-                                                ? 'bg-green-100 text-green-800'
-                                                : selectedTest.status === 'Abnormal'
-                                                    ? 'bg-red-100 text-red-800'
-                                                    : 'bg-yellow-100 text-yellow-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : selectedTest.status === 'Abnormal'
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                 {selectedTest.status}
                                             </span>

@@ -1,4 +1,4 @@
-// DoctorXRayPage.tsx - Version without database calls for testing
+// DoctorXRayPage.tsx - Clean UI without mock data
 import React, { useState, useEffect } from 'react';
 import { Search, Image, Calendar, User, Filter, Download, Eye, ZoomIn, ZoomOut, RotateCw, AlertCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -21,75 +21,11 @@ interface XRayImage {
     createdAt: string;
 }
 
-// Mock data for testing
-const mockXRayImages: XRayImage[] = [
-    {
-        id: '1',
-        patientName: 'John Smith',
-        patientId: '123456789',
-        dateOfBirth: '1985-03-15',
-        xrayDate: '2024-12-01',
-        bodyPart: 'Chest',
-        indication: 'Chest pain and shortness of breath',
-        imageUrl: 'https://via.placeholder.com/400x400/2a2a2a/aaa?text=Chest+X-Ray',
-        findings: 'Clear lung fields bilaterally. No evidence of pneumonia, pleural effusion, or pneumothorax. Heart size is normal.',
-        impression: 'Normal chest X-ray.',
-        radiologist: 'Dr. Sarah Johnson',
-        status: 'Normal',
-        createdAt: '2024-12-01T10:30:00Z'
-    },
-    {
-        id: '2',
-        patientName: 'Maria Garcia',
-        patientId: '987654321',
-        dateOfBirth: '1992-07-22',
-        xrayDate: '2024-11-28',
-        bodyPart: 'Knee',
-        indication: 'Knee pain after fall',
-        imageUrl: 'https://via.placeholder.com/400x400/2a2a2a/aaa?text=Knee+X-Ray',
-        findings: 'No evidence of fracture. Mild joint space narrowing. Small effusion present.',
-        impression: 'Mild degenerative changes. Small knee effusion.',
-        radiologist: 'Dr. Michael Brown',
-        status: 'Abnormal',
-        createdAt: '2024-11-28T14:15:00Z'
-    },
-    {
-        id: '3',
-        patientName: 'Ahmed Hassan',
-        patientId: '456789123',
-        dateOfBirth: '1978-11-08',
-        xrayDate: '2024-11-25',
-        bodyPart: 'Spine',
-        indication: 'Lower back pain',
-        imageUrl: 'https://via.placeholder.com/400x400/2a2a2a/aaa?text=Spine+X-Ray',
-        findings: 'Mild degenerative disc disease at L4-L5. No compression fractures seen.',
-        impression: 'Mild lumbar spondylosis.',
-        radiologist: 'Dr. Lisa Chen',
-        status: 'Abnormal',
-        createdAt: '2024-11-25T09:45:00Z'
-    },
-    {
-        id: '4',
-        patientName: 'Emma Wilson',
-        patientId: '321654987',
-        dateOfBirth: '1990-05-12',
-        xrayDate: '2024-11-20',
-        bodyPart: 'Hand',
-        indication: 'Hand injury after accident',
-        imageUrl: 'https://via.placeholder.com/400x400/2a2a2a/aaa?text=Hand+X-Ray',
-        findings: 'No fractures identified. Soft tissue swelling present.',
-        impression: 'Soft tissue injury without bony abnormality.',
-        radiologist: 'Dr. Robert Davis',
-        status: 'Normal',
-        createdAt: '2024-11-20T11:20:00Z'
-    }
-];
-
 const DoctorXRayPage: React.FC = () => {
     const { user } = useAuth();
     const { t } = useTranslation();
     const [xrayImages, setXrayImages] = useState<XRayImage[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [selectedImage, setSelectedImage] = useState<XRayImage | null>(null);
@@ -98,26 +34,16 @@ const DoctorXRayPage: React.FC = () => {
     const [imageZoom, setImageZoom] = useState<number>(100);
     const [imageRotation, setImageRotation] = useState<number>(0);
 
-    // Simulate data loading
+    // Initialize empty state
     useEffect(() => {
-        const loadMockData = () => {
-            setLoading(true);
+        // Check if user is authenticated and is a doctor
+        if (!user || user.role !== 'doctor') {
+            setError('Access denied. Only doctors can view X-ray images.');
+            return;
+        }
 
-            // Check if user is authenticated and is a doctor
-            if (!user || user.role !== 'doctor') {
-                setError('Access denied. Only doctors can view X-ray images.');
-                setLoading(false);
-                return;
-            }
-
-            // Simulate API delay
-            setTimeout(() => {
-                setXrayImages(mockXRayImages);
-                setLoading(false);
-            }, 1000);
-        };
-
-        loadMockData();
+        // Set empty results (ready for database integration)
+        setXrayImages([]);
     }, [user]);
 
     // Filter images based on search and filters
@@ -167,9 +93,10 @@ const DoctorXRayPage: React.FC = () => {
     };
 
     const handleRefresh = (): void => {
+        // Ready for database refresh implementation
         setLoading(true);
         setTimeout(() => {
-            setXrayImages(mockXRayImages);
+            setXrayImages([]);
             setLoading(false);
         }, 500);
     };
@@ -218,7 +145,6 @@ const DoctorXRayPage: React.FC = () => {
                                 <p className="mt-1 text-sm text-gray-600">
                                     {t('doctorPages.xrayImagesDesc') || 'View and analyze patient X-ray images'}
                                 </p>
-
                             </div>
                             <button
                                 onClick={handleRefresh}
@@ -245,15 +171,6 @@ const DoctorXRayPage: React.FC = () => {
                                 placeholder={t('doctorPages.searchPatientsXray') || 'Search patients or body parts...'}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                            <input
-                                type="date"
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -298,10 +215,10 @@ const DoctorXRayPage: React.FC = () => {
                                 />
                                 <div className="absolute top-2 right-2">
                                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${image.status === 'Normal' || image.status === 'Completed'
-                                        ? 'bg-green-100 text-green-800'
-                                        : image.status === 'Abnormal'
-                                            ? 'bg-red-100 text-red-800'
-                                            : 'bg-yellow-100 text-yellow-800'
+                                            ? 'bg-green-100 text-green-800'
+                                            : image.status === 'Abnormal'
+                                                ? 'bg-red-100 text-red-800'
+                                                : 'bg-yellow-100 text-yellow-800'
                                         }`}>
                                         {image.status}
                                     </span>
@@ -356,7 +273,8 @@ const DoctorXRayPage: React.FC = () => {
                 {filteredImages.length === 0 && !loading && (
                     <div className="text-center py-12">
                         <Image className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">{t('doctorPages.noXrayImagesFound') || 'No X-ray images found'}</p>
+                        <p className="text-gray-500 text-lg">{t('doctorPages.noXrayImagesFound') || 'No X-ray images found'}</p>
+                        <p className="text-gray-400 text-sm mt-2">Connect your database to see patient X-ray images here</p>
                     </div>
                 )}
             </div>
@@ -449,10 +367,10 @@ const DoctorXRayPage: React.FC = () => {
                                             <p><span className="font-medium">{t('doctorPages.radiologist') || 'Radiologist'}:</span> {selectedImage.radiologist}</p>
                                             <p><span className="font-medium">{t('common.status') || 'Status'}:</span>
                                                 <span className={`ml-2 px-2 py-1 text-xs rounded ${selectedImage.status === 'Normal' || selectedImage.status === 'Completed'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : selectedImage.status === 'Abnormal'
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : 'bg-yellow-100 text-yellow-800'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : selectedImage.status === 'Abnormal'
+                                                            ? 'bg-red-100 text-red-800'
+                                                            : 'bg-yellow-100 text-yellow-800'
                                                     }`}>
                                                     {selectedImage.status}
                                                 </span>

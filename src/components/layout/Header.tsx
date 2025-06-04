@@ -1,5 +1,5 @@
-// components/layout/Header.tsx - Fixed version with proper doctor navigation
-import { useEffect, useState, useContext } from 'react';
+// components/layout/Header.tsx - Improved version with efficient hamburger menu
+import { useEffect, useState, useContext, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,6 +21,27 @@ export function Header() {
     const { theme, toggleTheme } = useContext<ThemeContextType>(ThemeContext);
     const { isRTL } = useContext(LanguageContext);
     const { t } = useTranslation();
+
+    // Optimized mobile menu handlers with immediate state update
+    const toggleMobileMenu = useCallback(() => {
+        setIsMobileMenuOpen(prev => !prev);
+    }, []);
+
+    const closeMobileMenu = useCallback(() => {
+        // Force immediate state update with flushSync for instant response
+        setIsMobileMenuOpen(false);
+    }, []);
+
+    // Navigation handler that ensures menu closes immediately
+    const handleMobileNavigation = useCallback((path: string) => {
+        // Close menu immediately first
+        setIsMobileMenuOpen(false);
+
+        // Small delay to ensure state update, then navigate
+        setTimeout(() => {
+            navigate(path);
+        }, 10);
+    }, [navigate]);
 
     // Extra check for authentication state on mount and when user changes
     useEffect(() => {
@@ -86,6 +107,54 @@ export function Header() {
         checkAuthStatus();
     }, [user]);
 
+    // Mobile menu event handlers with debouncing
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+            if (isMobileMenuOpen && !target.closest('[data-mobile-menu]')) {
+                // Debounce the close action
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    setIsMobileMenuOpen(false);
+                }, 50);
+            }
+        };
+
+        const handleEscapeKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && isMobileMenuOpen) {
+                event.preventDefault();
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        const handleResize = () => {
+            // Close menu on window resize
+            if (window.innerWidth >= 1024 && isMobileMenuOpen) {
+                setIsMobileMenuOpen(false);
+            }
+        };
+
+        if (isMobileMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEscapeKey);
+            window.addEventListener('resize', handleResize);
+            // Prevent body scroll when menu is open
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+
+        return () => {
+            clearTimeout(timeoutId);
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscapeKey);
+            window.removeEventListener('resize', handleResize);
+            document.body.style.overflow = 'unset';
+        };
+    }, [isMobileMenuOpen]);
+
     // Get user permissions based on role
     const userPermissions = getRolePermissions(effectiveRole || '');
 
@@ -97,7 +166,7 @@ export function Header() {
     const canViewAboutUs = isAuthenticated && userPermissions.canViewAboutUs;
     const canViewAdmin = isAuthenticated && userPermissions.canViewAdmin;
 
-    // ✅ FIXED: Doctor-specific permissions
+    // Doctor-specific permissions
     const canViewDoctorLabs = isAuthenticated && userPermissions.canViewDoctorLabs;
     const canViewDoctorXray = isAuthenticated && userPermissions.canViewDoctorXray;
 
@@ -132,7 +201,7 @@ export function Header() {
             setEffectiveRole(null);
 
             // Close mobile menu if open
-            setIsMobileMenuOpen(false);
+            closeMobileMenu();
 
             // Then try to logout through the hook
             if (logout) {
@@ -252,8 +321,8 @@ export function Header() {
                             to={getDefaultRoute()}
                             className="flex items-center gap-3 group transition-all duration-200 hover:scale-105"
                             onClick={(e) => {
-                                // Ensure lab and x-ray users go to their specific sections
-                                if (isLab || isXRay) {
+                                // Ensure lab, x-ray, and doctor users go to their specific sections
+                                if (isLab || isXRay || isDoctor) {
                                     e.preventDefault();
                                     const route = getDefaultRoute();
                                     console.log(`${effectiveRole} user clicking logo, navigating to: ${route}`);
@@ -316,7 +385,7 @@ export function Header() {
                             </Button>
                         )}
 
-                        {/* ✅ FIXED: Show regular labs/xray only for non-doctor roles */}
+                        {/* Show regular labs/xray only for non-doctor roles */}
                         {canViewLabs && !isDoctor && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/labs" className="font-medium">{t('navbar.labs') || 'Labs'}</Link>
@@ -329,7 +398,7 @@ export function Header() {
                             </Button>
                         )}
 
-                        {/* ✅ FIXED: Doctor-specific navigation for desktop */}
+                        {/* Doctor-specific navigation for desktop */}
                         {canViewDoctorLabs && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/doctor/labs" className="font-medium">{t('navbar.doctorLabs') || 'Lab Results'}</Link>
@@ -409,9 +478,11 @@ export function Header() {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                onClick={toggleMobileMenu}
                                 aria-label={isMobileMenuOpen ? (t('header.closeMenu') || 'Close Menu') : (t('header.toggleMenu') || 'Toggle Menu')}
+                                aria-expanded={isMobileMenuOpen}
                                 className="p-2 hover:bg-gray-100 transition-colors duration-200"
+                                data-mobile-menu
                             >
                                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                             </Button>
@@ -431,7 +502,8 @@ export function Header() {
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
                             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-                            onClick={() => setIsMobileMenuOpen(false)}
+                            onClick={closeMobileMenu}
+                            data-mobile-menu
                         />
 
                         {/* Mobile Menu */}
@@ -442,6 +514,7 @@ export function Header() {
                             transition={{ duration: 0.2, ease: "easeOut" }}
                             className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-xl lg:hidden z-50"
                             dir={isRTL ? 'rtl' : 'ltr'}
+                            data-mobile-menu
                         >
                             <div className="max-w-7xl mx-auto px-4 sm:px-6">
                                 <nav className="flex flex-col py-4 space-y-1">
@@ -459,7 +532,14 @@ export function Header() {
 
                                     {canViewHome && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
+                                            <Link
+                                                to="/"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/');
+                                                }}
+                                                className="font-medium"
+                                            >
                                                 {t('navbar.home') || 'Home'}
                                             </Link>
                                         </Button>
@@ -467,7 +547,14 @@ export function Header() {
 
                                     {canViewClinics && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link to="/clinics" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
+                                            <Link
+                                                to="/clinics"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/clinics');
+                                                }}
+                                                className="font-medium"
+                                            >
                                                 {t('navbar.clinics') || 'Clinics'}
                                             </Link>
                                         </Button>
@@ -475,16 +562,30 @@ export function Header() {
 
                                     {canViewAboutUs && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
+                                            <Link
+                                                to="/about"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/about');
+                                                }}
+                                                className="font-medium"
+                                            >
                                                 {t('navbar.aboutUs') || 'About Us'}
                                             </Link>
                                         </Button>
                                     )}
 
-                                    {/* ✅ FIXED: Show regular labs/xray only for non-doctor roles in mobile */}
+                                    {/* Show regular labs/xray only for non-doctor roles in mobile */}
                                     {canViewLabs && !isDoctor && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link to="/labs" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
+                                            <Link
+                                                to="/labs"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/labs');
+                                                }}
+                                                className="font-medium"
+                                            >
                                                 {t('navbar.labs') || 'Labs'}
                                             </Link>
                                         </Button>
@@ -492,16 +593,30 @@ export function Header() {
 
                                     {canViewXray && !isDoctor && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link to="/xray" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
+                                            <Link
+                                                to="/xray"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/xray');
+                                                }}
+                                                className="font-medium"
+                                            >
                                                 {t('navbar.xray') || 'X-Ray'}
                                             </Link>
                                         </Button>
                                     )}
 
-                                    {/* ✅ FIXED: Doctor-specific navigation for mobile */}
+                                    {/* Doctor-specific navigation for mobile */}
                                     {canViewDoctorLabs && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link to="/doctor/labs" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
+                                            <Link
+                                                to="/doctor/labs"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/doctor/labs');
+                                                }}
+                                                className="font-medium"
+                                            >
                                                 {t('navbar.doctorLabs') || 'Lab Results'}
                                             </Link>
                                         </Button>
@@ -509,7 +624,14 @@ export function Header() {
 
                                     {canViewDoctorXray && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link to="/doctor/xray" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
+                                            <Link
+                                                to="/doctor/xray"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/doctor/xray');
+                                                }}
+                                                className="font-medium"
+                                            >
                                                 {t('navbar.doctorXRay') || 'X-Ray Images'}
                                             </Link>
                                         </Button>
@@ -517,7 +639,14 @@ export function Header() {
 
                                     {canViewAdmin && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
-                                            <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="font-medium">
+                                            <Link
+                                                to="/admin"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/admin');
+                                                }}
+                                                className="font-medium"
+                                            >
                                                 {getDashboardText(effectiveRole || '')}
                                             </Link>
                                         </Button>
@@ -527,14 +656,26 @@ export function Header() {
                                         {isAuthenticated ? (
                                             <Button
                                                 variant="ghost"
-                                                onClick={handleLogout}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setIsMobileMenuOpen(false);
+                                                    setTimeout(() => {
+                                                        handleLogout();
+                                                    }, 100);
+                                                }}
                                                 className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-red-50 hover:text-red-700 transition-colors duration-200 font-medium w-full`}
                                             >
                                                 {t('common.logout') || 'Logout'}
                                             </Button>
                                         ) : (
                                             <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 font-medium`}>
-                                                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                                                <Link
+                                                    to="/auth"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleMobileNavigation('/auth');
+                                                    }}
+                                                >
                                                     {t('common.login') || 'Login'}
                                                 </Link>
                                             </Button>
