@@ -1,7 +1,6 @@
-// DoctorXRayPage.tsx - Fixed version with proper data handling
+// DoctorXRayPage.tsx - Version without database calls for testing
 import React, { useState, useEffect } from 'react';
 import { Search, Image, Calendar, User, Filter, Download, Eye, ZoomIn, ZoomOut, RotateCw, AlertCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 
@@ -22,34 +21,69 @@ interface XRayImage {
     createdAt: string;
 }
 
-interface PatientInfo {
-    first_name_en?: string;
-    last_name_en?: string;
-    first_name_ar?: string;
-    last_name_ar?: string;
-    user_id_number?: string;
-    date_of_birth?: string;
-}
-
-interface DatabaseXRayImage {
-    id: string;
-    patient_name?: string;
-    patient_id?: string;
-    patient_id_number?: string;
-    body_part: string;
-    xray_date: string;
-    clinical_indication?: string;
-    indication?: string;
-    image_url?: string;
-    image_path?: string;
-    findings?: string;
-    impression?: string;
-    radiologist?: string;
-    status?: string;
-    date_of_birth?: string;
-    created_at: string;
-    userinfo?: PatientInfo;
-}
+// Mock data for testing
+const mockXRayImages: XRayImage[] = [
+    {
+        id: '1',
+        patientName: 'John Smith',
+        patientId: '123456789',
+        dateOfBirth: '1985-03-15',
+        xrayDate: '2024-12-01',
+        bodyPart: 'Chest',
+        indication: 'Chest pain and shortness of breath',
+        imageUrl: 'https://via.placeholder.com/400x400/2a2a2a/aaa?text=Chest+X-Ray',
+        findings: 'Clear lung fields bilaterally. No evidence of pneumonia, pleural effusion, or pneumothorax. Heart size is normal.',
+        impression: 'Normal chest X-ray.',
+        radiologist: 'Dr. Sarah Johnson',
+        status: 'Normal',
+        createdAt: '2024-12-01T10:30:00Z'
+    },
+    {
+        id: '2',
+        patientName: 'Maria Garcia',
+        patientId: '987654321',
+        dateOfBirth: '1992-07-22',
+        xrayDate: '2024-11-28',
+        bodyPart: 'Knee',
+        indication: 'Knee pain after fall',
+        imageUrl: 'https://via.placeholder.com/400x400/2a2a2a/aaa?text=Knee+X-Ray',
+        findings: 'No evidence of fracture. Mild joint space narrowing. Small effusion present.',
+        impression: 'Mild degenerative changes. Small knee effusion.',
+        radiologist: 'Dr. Michael Brown',
+        status: 'Abnormal',
+        createdAt: '2024-11-28T14:15:00Z'
+    },
+    {
+        id: '3',
+        patientName: 'Ahmed Hassan',
+        patientId: '456789123',
+        dateOfBirth: '1978-11-08',
+        xrayDate: '2024-11-25',
+        bodyPart: 'Spine',
+        indication: 'Lower back pain',
+        imageUrl: 'https://via.placeholder.com/400x400/2a2a2a/aaa?text=Spine+X-Ray',
+        findings: 'Mild degenerative disc disease at L4-L5. No compression fractures seen.',
+        impression: 'Mild lumbar spondylosis.',
+        radiologist: 'Dr. Lisa Chen',
+        status: 'Abnormal',
+        createdAt: '2024-11-25T09:45:00Z'
+    },
+    {
+        id: '4',
+        patientName: 'Emma Wilson',
+        patientId: '321654987',
+        dateOfBirth: '1990-05-12',
+        xrayDate: '2024-11-20',
+        bodyPart: 'Hand',
+        indication: 'Hand injury after accident',
+        imageUrl: 'https://via.placeholder.com/400x400/2a2a2a/aaa?text=Hand+X-Ray',
+        findings: 'No fractures identified. Soft tissue swelling present.',
+        impression: 'Soft tissue injury without bony abnormality.',
+        radiologist: 'Dr. Robert Davis',
+        status: 'Normal',
+        createdAt: '2024-11-20T11:20:00Z'
+    }
+];
 
 const DoctorXRayPage: React.FC = () => {
     const { user } = useAuth();
@@ -64,103 +98,26 @@ const DoctorXRayPage: React.FC = () => {
     const [imageZoom, setImageZoom] = useState<number>(100);
     const [imageRotation, setImageRotation] = useState<number>(0);
 
-    // Fetch X-ray images from database
-    const fetchXrayImages = async (): Promise<void> => {
-        try {
+    // Simulate data loading
+    useEffect(() => {
+        const loadMockData = () => {
             setLoading(true);
-            setError(null);
 
             // Check if user is authenticated and is a doctor
             if (!user || user.role !== 'doctor') {
                 setError('Access denied. Only doctors can view X-ray images.');
+                setLoading(false);
                 return;
             }
 
-            // First try to get X-ray images with patient relationship
-            const { data, error: fetchError } = await supabase
-                .from('xray_images')
-                .select(`
-                    *,
-                    userinfo!patient_id (
-                        first_name_en,
-                        last_name_en,
-                        first_name_ar,
-                        last_name_ar,
-                        user_id_number,
-                        date_of_birth
-                    )
-                `)
-                .order('xray_date', { ascending: false });
+            // Simulate API delay
+            setTimeout(() => {
+                setXrayImages(mockXRayImages);
+                setLoading(false);
+            }, 1000);
+        };
 
-            if (fetchError) {
-                // If the table doesn't exist or there's a schema issue, try a simpler query
-                console.warn('Primary query failed, trying fallback:', fetchError);
-
-                const { data: fallbackData, error: fallbackError } = await supabase
-                    .from('xray_images')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (fallbackError) {
-                    console.error('Fallback query also failed:', fallbackError);
-                    setError(`Database error: ${fallbackError.message}. Please make sure the xray_images table exists.`);
-                    return;
-                }
-
-                // ✅ FIXED: Use fallback data without patient relationships
-                const fallbackTransformed: XRayImage[] = (fallbackData as DatabaseXRayImage[])?.map(image => ({
-                    id: image.id,
-                    patientName: image.patient_name || 'Unknown Patient',
-                    patientId: image.patient_id_number || image.patient_id || 'N/A',
-                    dateOfBirth: image.date_of_birth || '',
-                    xrayDate: image.xray_date,
-                    bodyPart: image.body_part,
-                    indication: image.clinical_indication || image.indication || '',
-                    imageUrl: image.image_url || image.image_path || '',
-                    findings: image.findings || '',
-                    impression: image.impression || '',
-                    radiologist: image.radiologist || 'N/A',
-                    status: image.status || 'Pending',
-                    createdAt: image.created_at
-                })) || [];
-
-                setXrayImages(fallbackTransformed);
-                return;
-            }
-
-            // ✅ FIXED: Transform data to match component structure
-            const transformedData: XRayImage[] = (data as DatabaseXRayImage[])?.map(image => ({
-                id: image.id,
-                patientName: image.userinfo ?
-                    `${image.userinfo.first_name_en || image.userinfo.first_name_ar || ''} ${image.userinfo.last_name_en || image.userinfo.last_name_ar || ''}`.trim() :
-                    image.patient_name || 'Unknown Patient',
-                patientId: image.userinfo?.user_id_number || image.patient_id_number || image.patient_id || 'N/A',
-                dateOfBirth: image.userinfo?.date_of_birth || image.date_of_birth || '',
-                xrayDate: image.xray_date,
-                bodyPart: image.body_part,
-                indication: image.clinical_indication || image.indication || '',
-                imageUrl: image.image_url || image.image_path || '',
-                findings: image.findings || '',
-                impression: image.impression || '',
-                radiologist: image.radiologist || 'N/A',
-                status: image.status || 'Pending',
-                createdAt: image.created_at
-            })) || [];
-
-            setXrayImages(transformedData);
-
-        } catch (error) {
-            console.error('Error in fetchXrayImages:', error);
-            setError('An unexpected error occurred while loading X-ray images. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (user) {
-            fetchXrayImages();
-        }
+        loadMockData();
     }, [user]);
 
     // Filter images based on search and filters
@@ -183,25 +140,13 @@ const DoctorXRayPage: React.FC = () => {
     const handleDownloadImage = async (image: XRayImage): Promise<void> => {
         try {
             if (image.imageUrl) {
-                // If it's a Supabase storage URL, download directly
-                if (image.imageUrl.includes('supabase')) {
-                    // Create a download link
-                    const link = document.createElement('a');
-                    link.href = image.imageUrl;
-                    link.download = `xray_${image.patientName}_${image.xrayDate}_${image.bodyPart}.jpg`;
-                    link.target = '_blank';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                } else {
-                    // For data URLs or other formats
-                    const link = document.createElement('a');
-                    link.href = image.imageUrl;
-                    link.download = `xray_${image.patientName}_${image.xrayDate}_${image.bodyPart}.jpg`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
+                const link = document.createElement('a');
+                link.href = image.imageUrl;
+                link.download = `xray_${image.patientName}_${image.xrayDate}_${image.bodyPart}.jpg`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
         } catch (error) {
             console.error('Error downloading image:', error);
@@ -222,7 +167,11 @@ const DoctorXRayPage: React.FC = () => {
     };
 
     const handleRefresh = (): void => {
-        fetchXrayImages();
+        setLoading(true);
+        setTimeout(() => {
+            setXrayImages(mockXRayImages);
+            setLoading(false);
+        }, 500);
     };
 
     if (loading) {
@@ -269,6 +218,7 @@ const DoctorXRayPage: React.FC = () => {
                                 <p className="mt-1 text-sm text-gray-600">
                                     {t('doctorPages.xrayImagesDesc') || 'View and analyze patient X-ray images'}
                                 </p>
+
                             </div>
                             <button
                                 onClick={handleRefresh}
@@ -337,32 +287,22 @@ const DoctorXRayPage: React.FC = () => {
                         <div key={image.id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
                             {/* Image Preview */}
                             <div className="aspect-square bg-gray-900 relative">
-                                {image.imageUrl ? (
-                                    <img
-                                        src={image.imageUrl}
-                                        alt={`${image.bodyPart} X-ray for ${image.patientName}`}
-                                        className="w-full h-full object-contain"
-                                        onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                        <div className="text-center">
-                                            <Image className="h-12 w-12 mx-auto mb-2" />
-                                            <p className="text-sm">No Image Available</p>
-                                        </div>
-                                    </div>
-                                )}
+                                <img
+                                    src={image.imageUrl}
+                                    alt={`${image.bodyPart} X-ray for ${image.patientName}`}
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+                                    }}
+                                />
                                 <div className="absolute top-2 right-2">
-                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                        image.status === 'Normal' || image.status === 'Completed'
-                                            ? 'bg-green-100 text-green-800'
-                                            : image.status === 'Abnormal'
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
+                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${image.status === 'Normal' || image.status === 'Completed'
+                                        ? 'bg-green-100 text-green-800'
+                                        : image.status === 'Abnormal'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-yellow-100 text-yellow-800'
+                                        }`}>
                                         {image.status}
                                     </span>
                                 </div>
@@ -475,25 +415,18 @@ const DoctorXRayPage: React.FC = () => {
                         <div className="flex-1 flex overflow-hidden">
                             {/* Image Display */}
                             <div className="flex-1 bg-black flex items-center justify-center overflow-auto">
-                                {selectedImage.imageUrl ? (
-                                    <img
-                                        src={selectedImage.imageUrl}
-                                        alt={`${selectedImage.bodyPart} X-ray`}
-                                        className="max-w-none transition-transform duration-200"
-                                        style={{
-                                            transform: `scale(${imageZoom / 100}) rotate(${imageRotation}deg)`,
-                                        }}
-                                        onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="text-white text-center">
-                                        <Image className="h-16 w-16 mx-auto mb-4" />
-                                        <p>No Image Available</p>
-                                    </div>
-                                )}
+                                <img
+                                    src={selectedImage.imageUrl}
+                                    alt={`${selectedImage.bodyPart} X-ray`}
+                                    className="max-w-none transition-transform duration-200"
+                                    style={{
+                                        transform: `scale(${imageZoom / 100}) rotate(${imageRotation}deg)`,
+                                    }}
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+                                    }}
+                                />
                             </div>
 
                             {/* Side Panel */}
@@ -515,13 +448,12 @@ const DoctorXRayPage: React.FC = () => {
                                             <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(selectedImage.xrayDate).toLocaleDateString()}</p>
                                             <p><span className="font-medium">{t('doctorPages.radiologist') || 'Radiologist'}:</span> {selectedImage.radiologist}</p>
                                             <p><span className="font-medium">{t('common.status') || 'Status'}:</span>
-                                                <span className={`ml-2 px-2 py-1 text-xs rounded ${
-                                                    selectedImage.status === 'Normal' || selectedImage.status === 'Completed'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : selectedImage.status === 'Abnormal'
-                                                            ? 'bg-red-100 text-red-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
-                                                }`}>
+                                                <span className={`ml-2 px-2 py-1 text-xs rounded ${selectedImage.status === 'Normal' || selectedImage.status === 'Completed'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : selectedImage.status === 'Abnormal'
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
+                                                    }`}>
                                                     {selectedImage.status}
                                                 </span>
                                             </p>
@@ -575,4 +507,3 @@ const DoctorXRayPage: React.FC = () => {
 };
 
 export default DoctorXRayPage;
-                                           

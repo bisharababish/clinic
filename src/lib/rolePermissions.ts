@@ -1,4 +1,4 @@
-// lib/rolePermissions.ts - Complete fixed version
+// lib/rolePermissions.ts - Complete fixed version with doctor-specific permissions
 export interface UserPermissions {
   canViewHome: boolean;
   canViewClinics: boolean;
@@ -37,7 +37,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageClinics: true,
     canManageDoctors: true,
     canViewReports: true,
-    canViewDoctorLabs: false,
+    canViewDoctorLabs: false, // Admin doesn't need doctor-specific views
     canViewDoctorXray: false
   },
   secretary: {
@@ -60,10 +60,10 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewDoctorXray: false
   },
   doctor: {
-    canViewHome: false,
+    canViewHome: false,          // ✅ REMOVED: Home page access for doctors
     canViewClinics: false,
-    canViewLabs: false,           
-    canViewXray: false,          
+    canViewLabs: false,           // ✅ REMOVED: Regular labs access for doctors
+    canViewXray: false,          // ✅ REMOVED: Regular x-ray access for doctors
     canViewAboutUs: false,
     canViewAdmin: false,
     canViewAppointments: false,
@@ -75,8 +75,8 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageClinics: false,
     canManageDoctors: false,
     canViewReports: false,
-    canViewDoctorLabs: true,   
-    canViewDoctorXray: true     
+    canViewDoctorLabs: true,     // ✅ NEW: Doctor-specific labs access
+    canViewDoctorXray: true      // ✅ NEW: Doctor-specific x-ray access
   },
   lab: {
     canViewHome: false,
@@ -209,7 +209,7 @@ export const getDefaultRouteForRole = (role: string): string => {
     case 'secretary':
       return '/admin'; // Secretary goes to admin dashboard (appointments)
     case 'doctor':
-      return '/'; // ✅ Doctors start at home page, then can navigate to their specific sections
+      return '/doctor/labs'; // ✅ CHANGED: Doctors go directly to their lab results page
     case 'nurse':
     case 'patient':
     default:
