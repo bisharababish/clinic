@@ -1,4 +1,4 @@
-// utils/rolePermissions.ts
+// lib/rolePermissions.ts - Complete fixed version
 export interface UserPermissions {
   canViewHome: boolean;
   canViewClinics: boolean;
@@ -15,6 +15,9 @@ export interface UserPermissions {
   canManageClinics: boolean;
   canManageDoctors: boolean;
   canViewReports: boolean;
+  // ✅ NEW: Doctor-specific permissions
+  canViewDoctorLabs: boolean;
+  canViewDoctorXray: boolean;
 }
 
 export const RolePermissions: Record<string, UserPermissions> = {
@@ -33,7 +36,9 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageUsers: true,
     canManageClinics: true,
     canManageDoctors: true,
-    canViewReports: true
+    canViewReports: true,
+    canViewDoctorLabs: false,
+    canViewDoctorXray: false
   },
   secretary: {
     canViewHome: true,
@@ -41,22 +46,24 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewLabs: false,
     canViewXray: false,
     canViewAboutUs: false,
-    canViewAdmin: true, // Can access admin dashboard but limited
-    canViewAppointments: true, // Only appointments tab
+    canViewAdmin: true,
+    canViewAppointments: true,
     canViewOverview: false,
     canViewUsers: false,
     canViewDoctors: false,
     canCreateAppointments: true,
     canManageUsers: false,
-    canManageClinics: false,
+    canManageClinics: true,
     canManageDoctors: false,
-    canViewReports: false
+    canViewReports: false,
+    canViewDoctorLabs: false,
+    canViewDoctorXray: false
   },
   doctor: {
-    canViewHome: true,        // ✅ CHANGED: Doctor can see Home
+    canViewHome: false,
     canViewClinics: false,
-    canViewLabs: true,
-    canViewXray: true,
+    canViewLabs: false,           
+    canViewXray: false,          
     canViewAboutUs: false,
     canViewAdmin: false,
     canViewAppointments: false,
@@ -67,10 +74,12 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageUsers: false,
     canManageClinics: false,
     canManageDoctors: false,
-    canViewReports: false
+    canViewReports: false,
+    canViewDoctorLabs: true,   
+    canViewDoctorXray: true     
   },
   lab: {
-    canViewHome: true,        // ✅ CHANGED: Lab can see Home
+    canViewHome: false,
     canViewClinics: false,
     canViewLabs: true,
     canViewXray: false,
@@ -84,10 +93,12 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageUsers: false,
     canManageClinics: false,
     canManageDoctors: false,
-    canViewReports: false
+    canViewReports: false,
+    canViewDoctorLabs: false,
+    canViewDoctorXray: false
   },
   "x ray": {
-    canViewHome: true,        // ✅ CHANGED: X-ray can see Home
+    canViewHome: false,
     canViewClinics: false,
     canViewLabs: false,
     canViewXray: true,
@@ -101,11 +112,13 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageUsers: false,
     canManageClinics: false,
     canManageDoctors: false,
-    canViewReports: false
+    canViewReports: false,
+    canViewDoctorLabs: false,
+    canViewDoctorXray: false
   },
   nurse: {
     canViewHome: true,
-    canViewClinics: true,
+    canViewClinics: false,
     canViewLabs: false,
     canViewXray: false,
     canViewAboutUs: false,
@@ -118,7 +131,9 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageUsers: false,
     canManageClinics: false,
     canManageDoctors: false,
-    canViewReports: false
+    canViewReports: false,
+    canViewDoctorLabs: false,
+    canViewDoctorXray: false
   },
   patient: {
     canViewHome: true,
@@ -135,19 +150,21 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageUsers: false,
     canManageClinics: false,
     canManageDoctors: false,
-    canViewReports: false
+    canViewReports: false,
+    canViewDoctorLabs: false,
+    canViewDoctorXray: false
   }
 };
 
 // Helper function to get permissions for a role
 export const getRolePermissions = (role: string): UserPermissions => {
   const normalizedRole = role?.toLowerCase()?.trim();
-  
-  // Handle special case for x-ray role
+
+  // Handle special case for x-ray role variations
   if (normalizedRole === 'xray' || normalizedRole === 'x-ray' || normalizedRole === 'x ray') {
     return RolePermissions["x ray"];
   }
-  
+
   return RolePermissions[normalizedRole] || RolePermissions.patient;
 };
 
@@ -161,13 +178,41 @@ export const hasPermission = (role: string, permission: keyof UserPermissions): 
 export const getAccessibleRoutes = (role: string): string[] => {
   const permissions = getRolePermissions(role);
   const routes: string[] = [];
-  
+
   if (permissions.canViewHome) routes.push('/');
   if (permissions.canViewClinics) routes.push('/clinics');
   if (permissions.canViewLabs) routes.push('/labs');
   if (permissions.canViewXray) routes.push('/xray');
   if (permissions.canViewAboutUs) routes.push('/about');
   if (permissions.canViewAdmin) routes.push('/admin');
-  
+
+  // ✅ NEW: Add doctor-specific routes
+  if (permissions.canViewDoctorLabs) routes.push('/doctor/labs');
+  if (permissions.canViewDoctorXray) routes.push('/doctor/xray');
+
   return routes;
+};
+
+// Helper function to get the default/primary route for a role
+export const getDefaultRouteForRole = (role: string): string => {
+  const normalizedRole = role?.toLowerCase()?.trim();
+
+  switch (normalizedRole) {
+    case 'lab':
+      return '/labs';
+    case 'x ray':
+    case 'xray':
+    case 'x-ray':
+      return '/xray';
+    case 'admin':
+      return '/admin';
+    case 'secretary':
+      return '/admin'; // Secretary goes to admin dashboard (appointments)
+    case 'doctor':
+      return '/'; // ✅ Doctors start at home page, then can navigate to their specific sections
+    case 'nurse':
+    case 'patient':
+    default:
+      return '/'; // Default to home for roles that can access it
+  }
 };

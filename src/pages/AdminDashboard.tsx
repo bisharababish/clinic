@@ -1,4 +1,4 @@
-// pages/AdminDashboard.tsx with i18n support and role-based access
+// pages/AdminDashboard.tsx with FIXED secretary role support
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ const AdminDashboard = () => {
     // State variables
     const [isAdmin, setIsAdmin] = useState(false);
     const [isSecretary, setIsSecretary] = useState(false);
-    const [activeTab, setActiveTab] = useState("overview");
+    const [activeTab, setActiveTab] = useState("appointments"); // ✅ CHANGED: Default to appointments
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -135,6 +135,23 @@ const AdminDashboard = () => {
     const canViewDoctorsTab = userPermissions.canViewDoctors;
     const canViewAppointmentsTab = userPermissions.canViewAppointments;
 
+    // ✅ ADDED: Get default tab for user role
+    const getDefaultTab = () => {
+        if (userRole === 'secretary') {
+            return 'appointments'; // Secretary starts with appointments
+        } else if (userRole === 'admin') {
+            return 'overview'; // Admin starts with overview
+        } else {
+            // Fallback: find first accessible tab
+            if (canViewAppointmentsTab) return 'appointments';
+            if (canViewOverviewTab) return 'overview';
+            if (canViewClinicsTab) return 'clinics';
+            if (canViewUsersTab) return 'users';
+            if (canViewDoctorsTab) return 'doctors';
+            return 'appointments';
+        }
+    };
+
     // Check admin status and access control
     useEffect(() => {
         const initializeAdminDashboard = async () => {
@@ -150,10 +167,10 @@ const AdminDashboard = () => {
 
                 // Check if user has admin dashboard access
                 if (!userPermissions.canViewAdmin) {
-                    setError(t('admin.accessDenied'));
+                    setError(t('admin.accessDenied') || 'Access denied');
                     toast({
                         title: t('common.error'),
-                        description: t('admin.accessDenied'),
+                        description: t('admin.accessDenied') || 'Access denied',
                         variant: "destructive",
                     });
                     // Redirect to home page after 2 seconds
@@ -163,15 +180,15 @@ const AdminDashboard = () => {
                     return;
                 }
 
-                // Set role flags
+                // Set role flags and default tab
                 if (currentUserRole === 'admin') {
                     setIsAdmin(true);
                     setIsSecretary(false);
+                    setActiveTab(getDefaultTab()); // ✅ CHANGED: Use getDefaultTab()
                 } else if (currentUserRole === 'secretary') {
                     setIsAdmin(false);
                     setIsSecretary(true);
-                    // Force secretary to appointments tab
-                    setActiveTab("appointments");
+                    setActiveTab('appointments'); // ✅ FIXED: Secretary starts with appointments
                 }
 
                 // Load data based on permissions
@@ -249,12 +266,30 @@ const AdminDashboard = () => {
         initializeAdminDashboard();
     }, [authLoading, t, user, userPermissions, navigate]);
 
-    // Force secretary to stay on appointments tab
-    useEffect(() => {
-        if (isSecretary && activeTab !== 'appointments') {
-            setActiveTab('appointments');
+    // ✅ ADDED: Handle tab changes with permission checking
+    const handleTabChange = (newTab: string) => {
+        // Check if user has permission for this tab
+        const hasPermission = {
+            'overview': canViewOverviewTab,
+            'users': canViewUsersTab,
+            'clinics': canViewClinicsTab,
+            'doctors': canViewDoctorsTab,
+            'appointments': canViewAppointmentsTab
+        }[newTab];
+
+        if (hasPermission) {
+            setActiveTab(newTab);
+        } else {
+            // If no permission, redirect to default tab
+            const defaultTab = getDefaultTab();
+            setActiveTab(defaultTab);
+            toast({
+                title: t('common.warning'),
+                description: t('admin.noPermissionForTab') || 'You do not have permission to access this section',
+                variant: "destructive",
+            });
         }
-    }, [isSecretary, activeTab]);
+    };
 
     // Handle search filtering
     useEffect(() => {
@@ -272,7 +307,7 @@ const AdminDashboard = () => {
         }
     }, [searchQuery, users]);
 
-    // Data loading functions (keeping most of the original logic but updating error messages)
+    // Data loading functions (keeping all the original functions)
     const loadUsers = async () => {
         console.log(t('admin.loadingUsers'));
         try {
@@ -856,7 +891,6 @@ const AdminDashboard = () => {
             setIsLoading(false);
         }
     };
-
     // UI helpers
     const getStatusBadgeClass = (status: string) => {
         switch (status.toLowerCase()) {
@@ -973,101 +1007,103 @@ const AdminDashboard = () => {
         return t('admin.dashboard');
     };
 
+    // ✅ ADDED: Check if any tabs are accessible
+    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab;
+
     // Main render
     return (
         <div className="max-w-7xl mx-auto py-8 px-4">
             <h1 className="text-3xl font-bold mb-6">{getDashboardTitle()}</h1>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className={`flex flex-wrap justify-center w-full ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                    {canViewOverviewTab && (
-                        <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
-                    )}
-                    {canViewUsersTab && (
-                        <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
-                    )}
-                    {canViewClinicsTab && (
-                        <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
-                    )}
-                    {canViewDoctorsTab && (
-                        <TabsTrigger value="doctors">{t('admin.doctors')}</TabsTrigger>
-                    )}
+            {/* ✅ ADDED: Show warning if no accessible tabs */}
+            {!hasAccessibleTabs ? (
+                <div className="text-center py-12">
+                    <h2 className="text-xl font-semibold text-gray-600 mb-4">
+                        {t('admin.noAccessibleSections')}
+                    </h2>
+                    <p className="text-gray-500 mb-6">
+                        {t('admin.contactAdministrator')}
+                    </p>
+                    <Button onClick={() => navigate('/')} variant="outline">
+                        {t('admin.returnToHome')}
+                    </Button>
+                </div>
+            ) : (
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                    <TabsList className={`flex flex-wrap justify-center w-full ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        {/* ✅ CHANGED: Reorder tabs to show appointments first for secretary */}
+                        {canViewAppointmentsTab && (
+                            <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
+                        )}
+                        {canViewOverviewTab && (
+                            <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
+                        )}
+                        {canViewUsersTab && (
+                            <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
+                        )}
+                        {canViewClinicsTab && (
+                            <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
+                        )}
+                        {canViewDoctorsTab && (
+                            <TabsTrigger value="doctors">{t('admin.doctors')}</TabsTrigger>
+                        )}
+                    </TabsList>
+
+                    {/* APPOINTMENTS TAB - Now shown first */}
                     {canViewAppointmentsTab && (
-                        <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
+                        <TabsContent value="appointments" className="pt-6">
+                            <AppointmentsManagement
+                                appointments={appointments}
+                                setAppointments={setAppointments}
+                                isLoading={isLoading}
+                                setIsLoading={setIsLoading}
+                                loadAppointments={loadAppointments}
+                                logActivity={logActivity}
+                                userEmail={user?.email || 'admin'}
+                            />
+                        </TabsContent>
                     )}
-                </TabsList>
 
-                {/* OVERVIEW TAB */}
-                {canViewOverviewTab && (
-                    <TabsContent value="overview" className="pt-6">
-                        <OverviewManagement
-                            users={users}
-                            clinics={clinics}
-                            doctors={doctors}
-                            appointments={appointments}
-                            reportData={reportData}
-                            isLoading={isLoading}
-                            error={error}
-                            refreshReportData={refreshReportData}
-                            setActiveTab={setActiveTab}
-                            checkSystemStatus={checkSystemStatus}
-                        />
-                    </TabsContent>
-                )}
+                    {/* OVERVIEW TAB */}
+                    {canViewOverviewTab && (
+                        <TabsContent value="overview" className="pt-6">
+                            <OverviewManagement
+                                users={users}
+                                clinics={clinics}
+                                doctors={doctors}
+                                appointments={appointments}
+                                reportData={reportData}
+                                isLoading={isLoading}
+                                error={error}
+                                refreshReportData={refreshReportData}
+                                setActiveTab={setActiveTab}
+                                checkSystemStatus={checkSystemStatus}
+                            />
+                        </TabsContent>
+                    )}
 
-                {/* USERS TAB */}
-                {canViewUsersTab && (
-                    <TabsContent value="users" className="pt-6">
-                        <UsersManagement />
-                    </TabsContent>
-                )}
+                    {/* USERS TAB */}
+                    {canViewUsersTab && (
+                        <TabsContent value="users" className="pt-6">
+                            <UsersManagement />
+                        </TabsContent>
+                    )}
 
-                {/* CLINICS TAB */}
-                {canViewClinicsTab && (
-                    <TabsContent value="clinics" className="pt-6">
-                        <ClinicManagement />
-                    </TabsContent>
-                )}
+                    {/* CLINICS TAB */}
+                    {canViewClinicsTab && (
+                        <TabsContent value="clinics" className="pt-6">
+                            <ClinicManagement />
+                        </TabsContent>
+                    )}
 
-                {/* DOCTORS TAB */}
-                {canViewDoctorsTab && (
-                    <TabsContent value="doctors" className="pt-6">
-                        <DoctorManagement />
-                    </TabsContent>
-                )}
-
-                {/* APPOINTMENTS TAB */}
-                {canViewAppointmentsTab && (
-                    <TabsContent value="appointments" className="pt-6">
-                        <AppointmentsManagement
-                            appointments={appointments}
-                            setAppointments={setAppointments}
-                            isLoading={isLoading}
-                            setIsLoading={setIsLoading}
-                            loadAppointments={loadAppointments}
-                            logActivity={logActivity}
-                            userEmail={user?.email || 'admin'}
-                        />
-                    </TabsContent>
-                )}
-
-                {/* Show message if user has no accessible tabs */}
-                {!canViewOverviewTab && !canViewUsersTab && !canViewClinicsTab && !canViewDoctorsTab && !canViewAppointmentsTab && (
-                    <TabsContent value={activeTab} className="pt-6">
-                        <div className="text-center py-12">
-                            <h2 className="text-xl font-semibold text-gray-600 mb-4">
-                                {t('admin.noAccessibleSections')}
-                            </h2>
-                            <p className="text-gray-500 mb-6">
-                                {t('admin.contactAdministrator')}
-                            </p>
-                            <Button onClick={() => navigate('/')} variant="outline">
-                                {t('admin.returnToHome')}
-                            </Button>
-                        </div>
-                    </TabsContent>
-                )}
-            </Tabs>
+                    {/* DOCTORS TAB */}
+                    {canViewDoctorsTab && (
+                        <TabsContent value="doctors" className="pt-6">
+                            <DoctorManagement />
+                        </TabsContent>
+                    )}
+                </Tabs>
+            )}
         </div>
     );
 };

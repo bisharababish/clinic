@@ -1004,9 +1004,24 @@ const UsersManagement = () => {
                                         <SelectTrigger dir={isRTL ? 'rtl' : 'ltr'}>
                                             <SelectValue placeholder={t('usersManagement.selectGender')} />
                                         </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="male">{t('auth.male')}</SelectItem>
-                                            <SelectItem value="female">{t('auth.female')}</SelectItem>
+                                        <SelectContent
+                                            className={isRTL ? 'text-right' : 'text-left'}
+                                            style={isRTL ? { direction: 'rtl' } : {}}
+                                        >
+                                            <SelectItem
+                                                value="male"
+                                                className={isRTL ? 'text-right justify-start pr-8' : 'text-left'}
+                                                style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}
+                                            >
+                                                {t('auth.male')}
+                                            </SelectItem>
+                                            <SelectItem
+                                                value="female"
+                                                className={isRTL ? 'text-right justify-start pr-8' : 'text-left'}
+                                                style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}
+                                            >
+                                                {t('auth.female')}
+                                            </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -1021,18 +1036,34 @@ const UsersManagement = () => {
                                     <SelectTrigger dir={isRTL ? 'rtl' : 'ltr'}>
                                         <SelectValue placeholder={t('usersManagement.selectRole')} />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Patient">{t('roles.patient')}</SelectItem>
-                                        <SelectItem value="doctor">{t('roles.doctor')}</SelectItem>
-                                        <SelectItem value="Secretary">{t('roles.secretary')}</SelectItem>
-                                        <SelectItem value="Nurse">{t('roles.nurse')}</SelectItem>
-                                        <SelectItem value="Lab">{t('roles.lab')}</SelectItem>
-                                        <SelectItem value="Admin">{t('roles.admin')}</SelectItem>
-                                        <SelectItem value="X Ray">{t('roles.xray')}</SelectItem>
+                                    <SelectContent
+                                        className={isRTL ? 'text-right' : 'text-left'}
+                                        style={isRTL ? { direction: 'rtl' } : {}}
+                                    >
+                                        <SelectItem value="Patient" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                            {t('roles.patient')}
+                                        </SelectItem>
+                                        <SelectItem value="doctor" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                            {t('roles.doctor')}
+                                        </SelectItem>
+                                        <SelectItem value="Secretary" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                            {t('roles.secretary')}
+                                        </SelectItem>
+                                        <SelectItem value="Nurse" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                            {t('roles.nurse')}
+                                        </SelectItem>
+                                        <SelectItem value="Lab" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                            {t('roles.lab')}
+                                        </SelectItem>
+                                        <SelectItem value="Admin" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                            {t('roles.admin')}
+                                        </SelectItem>
+                                        <SelectItem value="X Ray" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                            {t('roles.xray')}
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
-
                             <div className="space-y-2">
                                 <Label htmlFor="user_password">
                                     {userFormMode === "create" ? t('common.password') : t('usersManagement.newPassword')}

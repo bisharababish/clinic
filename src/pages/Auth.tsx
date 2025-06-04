@@ -1,6 +1,6 @@
 // pages/Auth.tsx
 import * as React from "react";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
@@ -10,12 +10,26 @@ import Footer from "@/components/layout/Footer";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { LanguageContext } from "@/components/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { getDefaultRouteForRole } from "@/lib/rolePermissions";
 
 const Auth: React.FC = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // ✅ AUTOMATIC REDIRECT: If user is already logged in, redirect them
+  useEffect(() => {
+    if (user && user.role) {
+      const defaultRoute = getDefaultRouteForRole(user.role);
+      console.log(`User already authenticated as ${user.role}, redirecting to: ${defaultRoute}`);
+      navigate(defaultRoute, { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSwitchToRegister = () => {
     setActiveTab("register");
@@ -29,6 +43,17 @@ const Auth: React.FC = () => {
 
   const handleSwitchToForgotPassword = () => {
     setShowForgotPassword(true);
+  };
+
+  // ✅ LOGIN SUCCESS HANDLER: Pass this to LoginForm to handle redirect
+  const handleLoginSuccess = (userRole: string) => {
+    const defaultRoute = getDefaultRouteForRole(userRole);
+    console.log(`Login successful for ${userRole}, redirecting to: ${defaultRoute}`);
+
+    // Small delay to ensure state is properly updated
+    setTimeout(() => {
+      navigate(defaultRoute, { replace: true });
+    }, 100);
   };
 
   return (
@@ -97,9 +122,11 @@ const Auth: React.FC = () => {
                         exit={{ opacity: 0, x: isRTL ? -20 : 20 }}
                         transition={{ duration: 0.3 }}
                       >
+                        {/* ✅ UPDATED: Pass onLoginSuccess callback to LoginForm */}
                         <LoginForm
                           onSwitchToRegister={handleSwitchToRegister}
                           onSwitchToForgotPassword={handleSwitchToForgotPassword}
+                          onLoginSuccess={handleLoginSuccess}
                         />
                       </motion.div>
                     </TabsContent>

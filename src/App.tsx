@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
-import { AuthProvider } from "./hooks/useAuth";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
 import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
+import { getDefaultRouteForRole } from "./lib/rolePermissions";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -20,6 +21,10 @@ const XRay = lazy(() => import("./pages/XRay"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
+// ✅ FIXED: Import the new doctor pages
+const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
+const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
+
 // Loading component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -29,6 +34,48 @@ const PageLoader = () => (
     </div>
   </div>
 );
+
+// Home Route with Role-Based Redirect
+function HomeRoute() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  const userRole = user.role?.toLowerCase();
+
+  // ✅ FIXED: Redirect lab and x-ray users to their specific sections
+  if (userRole === 'lab') {
+    console.log('Lab user accessing home - redirecting to /labs');
+    return <Navigate to="/labs" replace />;
+  }
+
+  if (userRole === 'xray' || userRole === 'x ray') {
+    console.log('X-ray user accessing home - redirecting to /xray');
+    return <Navigate to="/xray" replace />;
+  }
+
+  // ✅ Allow other roles (including doctors) to access home page
+  return (
+    <MainLayout>
+      <Index />
+    </MainLayout>
+  );
+}
+
+// Default Redirect Component for unknown routes
+function DefaultRedirect() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  const defaultRoute = getDefaultRouteForRole(user.role);
+  console.log(`Unknown route accessed by ${user.role}, redirecting to: ${defaultRoute}`);
+  return <Navigate to={defaultRoute} replace />;
+}
 
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -65,15 +112,13 @@ function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Protected routes with MainLayout */}
-            
-            {/* Home - accessible to all authenticated users */}
+
+            {/* Home - ✅ FIXED: Now accessible to doctors, lab and x-ray users get redirected */}
             <Route
               path="/"
               element={
-                <ProtectedRoute allowedRoles={["admin", "doctor", "secretary", "nurse", "lab", "x ray", "patient"]}>
-                  <MainLayout>
-                    <Index />
-                  </MainLayout>
+                <ProtectedRoute allowedRoles={["admin", "doctor", "secretary", "nurse", "patient"]}>
+                  <HomeRoute />
                 </ProtectedRoute>
               }
             />
@@ -126,11 +171,11 @@ function App() {
               }
             />
 
-            {/* Labs - accessible to admin, doctor, lab ONLY */}
+            {/* ✅ FIXED: Labs - ONLY accessible to admin and lab (removed doctor access to regular labs) */}
             <Route
               path="/labs"
               element={
-                <ProtectedRoute allowedRoles={["admin", "doctor", "lab"]}>
+                <ProtectedRoute allowedRoles={["admin", "lab"]}>
                   <MainLayout>
                     <Labs />
                   </MainLayout>
@@ -138,13 +183,37 @@ function App() {
               }
             />
 
-            {/* X-Ray - accessible to admin, doctor, x ray ONLY */}
+            {/* ✅ FIXED: X-Ray - ONLY accessible to admin and x ray (removed doctor access to regular x-ray) */}
             <Route
               path="/xray"
               element={
-                <ProtectedRoute allowedRoles={["admin", "doctor", "x ray"]}>
+                <ProtectedRoute allowedRoles={["admin", "x ray"]}>
                   <MainLayout>
                     <XRay />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ✅ NEW: Doctor-specific Lab Results - only for doctors */}
+            <Route
+              path="/doctor/labs"
+              element={
+                <ProtectedRoute allowedRoles={["doctor"]}>
+                  <MainLayout>
+                    <DoctorLabsPage />
+                  </MainLayout>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ✅ NEW: Doctor-specific X-Ray Images - only for doctors */}
+            <Route
+              path="/doctor/xray"
+              element={
+                <ProtectedRoute allowedRoles={["doctor"]}>
+                  <MainLayout>
+                    <DoctorXRayPage />
                   </MainLayout>
                 </ProtectedRoute>
               }
@@ -163,12 +232,12 @@ function App() {
               }
             />
 
-            {/* Catch all route - redirect unknown routes to home */}
+            {/* Catch all route - redirect to user's default route based on role */}
             <Route
               path="*"
               element={
                 <ProtectedRoute>
-                  <Navigate to="/" replace />
+                  <DefaultRedirect />
                 </ProtectedRoute>
               }
             />

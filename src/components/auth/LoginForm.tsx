@@ -11,15 +11,18 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
+import { getDefaultRouteForRole } from "../../lib/rolePermissions";
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
   onSwitchToForgotPassword: () => void;
+  onLoginSuccess?: (userRole: string) => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({
   onSwitchToRegister,
-  onSwitchToForgotPassword
+  onSwitchToForgotPassword,
+  onLoginSuccess
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,13 +34,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
 
+  // Helper function to get role-based redirect
+  const getRoleBasedRedirect = (role: string): string => {
+    return getDefaultRouteForRole(role);
+  };
+
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!email || !password) {
       toast({
-        title: t("auth.missingCredentials"),
-        description: t("auth.enterCredentials"),
+        title: t("auth.missingCredentials") || "Missing Credentials",
+        description: t("auth.enterCredentials") || "Please enter your email and password",
         variant: "destructive",
       });
       return false;
@@ -45,8 +53,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
     if (!emailRegex.test(email)) {
       toast({
-        title: t("auth.invalidEmail"),
-        description: t("auth.invalidEmail"),
+        title: t("auth.invalidEmail") || "Invalid Email",
+        description: t("auth.invalidEmailDesc") || "Please enter a valid email address",
         variant: "destructive",
       });
       return false;
@@ -55,17 +63,24 @@ const LoginForm: React.FC<LoginFormProps> = ({
     return true;
   };
 
-  const bypassLogin = async (email, password) => {
+  const bypassLogin = async (email: string, password: string) => {
     try {
+      console.log("Attempting bypass login for:", email);
+
       // Direct authentication without hooks
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase auth error:", error);
+        throw error;
+      }
 
       if (data && data.session) {
+        console.log("Session created successfully");
+
         // Store session in localStorage
         localStorage.setItem('supabase.auth.token', JSON.stringify({
           currentSession: data.session,
@@ -73,37 +88,53 @@ const LoginForm: React.FC<LoginFormProps> = ({
         }));
 
         // Get user info from database - case insensitive query
-        const { data: userData } = await supabase
+        const { data: userData, error: userError } = await supabase
           .from('userinfo')
           .select('*')
           .ilike('user_email', email)
           .single();
 
+        if (userError) {
+          console.error("Error fetching user data:", userError);
+          throw new Error("Failed to fetch user profile");
+        }
+
         if (userData) {
+          console.log("User data retrieved:", userData);
+
           // Normalize role to lowercase for consistency
-          const role = userData.user_roles.toLowerCase();
+          const role = userData.user_roles?.toLowerCase() || '';
 
           // Store user info in localStorage for immediate access
-          localStorage.setItem('clinic_user_profile', JSON.stringify({
+          const userProfile = {
             id: userData.userid,
             email: userData.user_email,
-            name: userData.english_username_a,
+            name: userData.english_username_a || userData.user_email,
             role: role
-          }));
+          };
+
+          localStorage.setItem('clinic_user_profile', JSON.stringify(userProfile));
 
           // Special handling for admin
           if (role === 'admin' || userData.user_roles === 'Admin') {
-            console.log("Setting admin_login_success flag in bypass login");
+            console.log("Setting admin_login_success flag");
             sessionStorage.setItem('admin_login_success', 'true');
           }
+
+          return {
+            success: true,
+            role: role,
+            name: userData.english_username_a || userData.user_email
+          };
         }
 
-        return true;
+        return { success: true, role: null, name: null };
       }
-      return false;
+
+      return { success: false, role: null, name: null };
     } catch (error) {
       console.error("Bypass login error:", error);
-      return false;
+      return { success: false, role: null, name: null, error };
     }
   };
 
@@ -115,102 +146,118 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setIsLoading(true);
 
     try {
+      console.log("Starting login process for:", email);
+
       // Set a flag to indicate we're mid-login to prevent redirects
       sessionStorage.setItem('login_in_progress', 'true');
 
-      // Use regular bypass login for all users (including admins)
-      const bypassSuccess = await bypassLogin(email, password);
+      // Use bypass login method
+      const bypassResult = await bypassLogin(email, password);
 
-      if (bypassSuccess) {
-        // Check if user is admin from the cached profile and redirect accordingly
-        const cachedUserProfile = localStorage.getItem('clinic_user_profile');
-        if (cachedUserProfile) {
-          const userObj = JSON.parse(cachedUserProfile);
-          if (userObj.role === 'admin') {
-            // Set admin login success flag (still needed for some parts of the app)
-            sessionStorage.setItem('admin_login_success', 'true');
+      if (bypassResult.success && bypassResult.role) {
+        const userRole = bypassResult.role;
+        const userName = bypassResult.name;
 
-            toast({
-              title: t("auth.adminLogin"),
-              description: t("auth.secureAdminAccess")
-            });
+        console.log(`Login successful for role: ${userRole}`);
 
-            // Use React Router navigation instead of window.location.href
-            setTimeout(() => {
-              sessionStorage.removeItem('login_in_progress');
-              navigate("/admin", { replace: true });
-            }, 500);
+        // Get role-based redirect path
+        const redirectPath = getRoleBasedRedirect(userRole);
+        console.log(`Redirecting ${userRole} to: ${redirectPath}`);
 
-            return;
-          }
+        // Show role-specific success messages
+        let toastMessage = `${t("auth.welcomeBack") || "Welcome back"}`;
+
+        if (userName) {
+          toastMessage += `, ${userName}!`;
         }
 
-        // Default redirect for non-admin users
-        toast({
-          title: t("common.login"),
-          description: t("auth.welcomeBack")
-        });
+        if (userRole === 'admin') {
+          toast({
+            title: t("auth.adminLogin") || "Admin Login",
+            description: t("auth.secureAdminAccess") || "Secure admin access granted"
+          });
+        } else if (userRole === 'lab') {
+          toast({
+            title: t("common.login") || "Login Successful",
+            description: toastMessage + " Redirecting to Labs..."
+          });
+        } else if (userRole === 'xray' || userRole === 'x ray') {
+          toast({
+            title: t("common.login") || "Login Successful",
+            description: toastMessage + " Redirecting to X-Ray..."
+          });
+        } else {
+          toast({
+            title: t("common.login") || "Login Successful",
+            description: toastMessage
+          });
+        }
 
-        // Wait for the toast to appear before redirect
+        // Use role-based redirect with a small delay
         setTimeout(() => {
-          // Clear the login progress flag
           sessionStorage.removeItem('login_in_progress');
 
-          // Use React Router navigation instead of window.location.href
-          navigate("/", { replace: true });
-        }, 500);
+          // Call callback if provided
+          if (onLoginSuccess) {
+            onLoginSuccess(userRole);
+          }
+
+          // Navigate to role-specific route
+          console.log(`Navigating to: ${redirectPath}`);
+          navigate(redirectPath, { replace: true });
+        }, 1000); // Increased delay to show toast
 
         return;
       }
 
       // If bypass didn't work, try the hook method (fallback)
+      console.log("Bypass login failed, trying hook method...");
+
       const userData = await login(email, password);
 
-      // Check if user is admin and redirect accordingly
-      if (userData.role === 'admin') {
-        // Set admin login success flag
-        sessionStorage.setItem('admin_login_success', 'true');
+      if (userData && userData.role) {
+        const redirectPath = getRoleBasedRedirect(userData.role);
+        console.log(`Hook login successful for ${userData.role}, redirecting to: ${redirectPath}`);
 
+        // Show success message
         toast({
-          title: t("auth.adminLogin"),
-          description: `${t("common.welcome")}, ${userData.name}!`
+          title: t("common.login") || "Login Successful",
+          description: `${t("auth.welcomeBack") || "Welcome back"}, ${userData.name}!`
         });
 
-        // Use React Router navigation instead of window.location.href
         setTimeout(() => {
           sessionStorage.removeItem('login_in_progress');
-          navigate("/admin", { replace: true });
-        }, 500);
+
+          if (onLoginSuccess) {
+            onLoginSuccess(userData.role);
+          }
+
+          navigate(redirectPath, { replace: true });
+        }, 1000);
 
         return;
       }
 
-      // Default redirect for non-admin users
-      toast({
-        title: t("common.login"),
-        description: `${t("auth.welcomeBack")}, ${userData.name}!`
-      });
+      // If we get here, login failed
+      throw new Error("Login failed - no user data returned");
 
-      // Wait for the toast to be seen before redirect
-      setTimeout(() => {
-        // Clear the login progress flag
-        sessionStorage.removeItem('login_in_progress');
-
-        // Use React Router navigation instead of window.location.href
-        navigate("/", { replace: true });
-      }, 500);
-
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
       sessionStorage.removeItem('login_in_progress');
 
-      let errorMessage = t("auth.missingCredentials");
-      if (error instanceof Error) {
-        errorMessage = error.message;
+      let errorMessage = t("auth.missingCredentials") || "Login failed";
+
+      if (typeof error === "object" && error !== null && "message" in error && typeof (error as { message?: string }).message === "string") {
+        const errMsg = (error as { message: string }).message;
+        if (errMsg.includes("Invalid login credentials")) {
+          errorMessage = t("auth.invalidCredentials") || "Invalid email or password";
+        } else {
+          errorMessage = errMsg;
+        }
       }
 
       toast({
-        title: t("common.login"),
+        title: t("common.login") || "Login Failed",
         description: errorMessage,
         variant: "destructive",
       });
@@ -222,15 +269,17 @@ const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="space-y-2 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">{t("auth.welcomeBack")}</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {t("auth.welcomeBack") || "Welcome Back"}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          {t("auth.enterCredentials2")}
+          {t("auth.enterCredentials2") || "Enter your credentials to continue"}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">{t("common.email")}</Label>
+          <Label htmlFor="email">{t("common.email") || "Email"}</Label>
           <div className="relative">
             <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
             <Input
@@ -241,19 +290,21 @@ const LoginForm: React.FC<LoginFormProps> = ({
               className={isRTL ? 'pr-10' : 'pl-10'}
               placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
               required
+              disabled={isLoading}
             />
           </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">{t("common.password")}</Label>
+            <Label htmlFor="password">{t("common.password") || "Password"}</Label>
             <button
               type="button"
               onClick={onSwitchToForgotPassword}
               className="text-xs text-primary hover:underline"
+              disabled={isLoading}
             >
-              {t("common.forgotPassword")}
+              {t("common.forgotPassword") || "Forgot Password?"}
             </button>
           </div>
           <div className="relative">
@@ -264,13 +315,15 @@ const LoginForm: React.FC<LoginFormProps> = ({
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={isRTL ? 'pr-10' : 'pl-10'}
+              className={isRTL ? 'pr-10 pl-10' : 'pl-10 pr-10'}
               required
+              disabled={isLoading}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 text-muted-foreground hover:text-foreground`}
+              disabled={isLoading}
             >
               {showPassword ? (
                 <EyeOffIcon className="h-4 w-4" />
@@ -282,18 +335,19 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? t("common.loading") : t("common.login")}
+          {isLoading ? (t("common.loading") || "Loading...") : (t("common.login") || "Login")}
         </Button>
       </form>
 
       <div className="text-center text-sm">
-        {t("auth.dontHaveAccount")}{" "}
+        {t("auth.dontHaveAccount") || "Don't have an account?"}{" "}
         <button
           type="button"
           onClick={onSwitchToRegister}
           className="text-primary font-medium hover:underline"
+          disabled={isLoading}
         >
-          {t("common.signup")}
+          {t("common.signup") || "Sign up"}
         </button>
       </div>
     </div>

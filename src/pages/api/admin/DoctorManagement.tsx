@@ -597,8 +597,9 @@ const DoctorManagement = () => {
                                             placeholder={t('doctorManagement.searchDoctors')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className={`${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 text-left'} w-[250px]`}
+                                            className={`${isRTL ? 'pr-10 pl-3 text-right placeholder:text-right' : 'pl-10 text-left placeholder:text-left'} w-[250px]`}
                                             dir={isRTL ? 'rtl' : 'ltr'}
+                                            style={isRTL ? { textAlign: 'right' } : {}}
                                         />
                                     </div>
                                     <Button variant="outline" size="sm" onClick={loadDoctors} disabled={isLoading}>
