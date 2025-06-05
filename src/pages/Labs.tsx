@@ -30,9 +30,10 @@ const Labs = () => {
       return;
     }
 
-    // Check if user has lab role
+    // Check if user has lab or admin role
+    // Check if user has lab or admin role
     const userRole = user.role?.toLowerCase();
-    if (userRole !== 'lab') {
+    if (userRole !== 'lab' && userRole !== 'admin') {
       const defaultRoute = getDefaultRouteForRole(userRole);
       navigate(defaultRoute, { replace: true });
       return;
@@ -72,13 +73,15 @@ const Labs = () => {
   }
 
   // Access denied for non-lab users
-  if (user.role?.toLowerCase() !== 'lab') {
+  // Access denied for non-lab and non-admin users
+  const userRole = user.role?.toLowerCase();
+  if (userRole !== 'lab' && userRole !== 'admin') {
     return (
       <div className="p-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <h2 className="text-lg font-semibold text-red-800">Access Restricted</h2>
           <p className="text-red-600">
-            This page is only accessible to Lab users. Your role: {user.role}
+            This page is only accessible to Lab and Admin users. Your role: {user.role}
           </p>
           <button
             onClick={() => navigate(getDefaultRouteForRole(user.role))}

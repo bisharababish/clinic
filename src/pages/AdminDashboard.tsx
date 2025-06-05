@@ -878,24 +878,29 @@ const AdminDashboard = () => {
             ) : (
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                     <TabsList className={`flex flex-wrap justify-center w-full ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                        {/* Appointments tab first for secretary */}
-                        {canViewAppointmentsTab && (
-                            <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
-                        )}
+                        {/* Overview tab first */}
                         {canViewOverviewTab && (
                             <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
                         )}
-                        {canViewPatientHealthTab && (
-                            <TabsTrigger value="patient-health">Patient Health</TabsTrigger>
-                        )}
+                        {/* Users tab second */}
                         {canViewUsersTab && (
                             <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
                         )}
+                        {/* Clinics tab third */}
                         {canViewClinicsTab && (
                             <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
                         )}
+                        {/* Doctors tab fourth */}
                         {canViewDoctorsTab && (
                             <TabsTrigger value="doctors">{t('admin.doctors')}</TabsTrigger>
+                        )}
+                        {/* Patient Health tab fifth */}
+                        {canViewPatientHealthTab && (
+                            <TabsTrigger value="patient-health">{t('admin.patientHealth')}</TabsTrigger>
+                        )}
+                        {/* Appointments tab last */}
+                        {canViewAppointmentsTab && (
+                            <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
                         )}
                     </TabsList>
 

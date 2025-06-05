@@ -247,6 +247,8 @@ const enTranslations = {
         reloadPage: 'Reload Page',
         returnToHome: 'Return to Home',
 
+        patientHealth: "Patient Health",
+
         // Add these lines to the existing admin section
         secretaryDashboard: 'Secretary Dashboard',
         dashboard: 'Dashboard',
@@ -1265,6 +1267,8 @@ const arTranslations = {
         reloadPage: 'إعادة تحميل الصفحة',
         returnToHome: 'العودة للرئيسية',
         // Add these lines to the existing admin section  
+
+        patientHealth: "السجلات الصحية للمرضى",
 
         secretaryDashboard: 'لوحة تحكم السكرتير',
         dashboard: 'لوحة التحكم',

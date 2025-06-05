@@ -37,8 +37,8 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageClinics: true,
     canManageDoctors: true,
     canViewReports: true,
-    canViewDoctorLabs: false, // Admin doesn't need doctor-specific views
-    canViewDoctorXray: false
+    canViewDoctorLabs: true, 
+    canViewDoctorXray: true
   },
   secretary: {
     canViewHome: true,
@@ -60,10 +60,10 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewDoctorXray: false
   },
   doctor: {
-    canViewHome: false,          // ✅ REMOVED: Home page access for doctors
+    canViewHome: false,
     canViewClinics: false,
-    canViewLabs: false,           // ✅ REMOVED: Regular labs access for doctors
-    canViewXray: false,          // ✅ REMOVED: Regular x-ray access for doctors
+    canViewLabs: false,
+    canViewXray: false,
     canViewAboutUs: false,
     canViewAdmin: false,
     canViewAppointments: false,
@@ -75,8 +75,8 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageClinics: false,
     canManageDoctors: false,
     canViewReports: false,
-    canViewDoctorLabs: true,     // ✅ NEW: Doctor-specific labs access
-    canViewDoctorXray: true      // ✅ NEW: Doctor-specific x-ray access
+    canViewDoctorLabs: true,
+    canViewDoctorXray: true
   },
   lab: {
     canViewHome: false,

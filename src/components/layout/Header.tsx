@@ -577,17 +577,17 @@ export function Header() {
 
                                     {/* Show regular labs/xray only for non-doctor roles in mobile */}
                                     {canViewLabs && !isDoctor && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/labs"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/labs');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.labs') || 'Labs'}
-                                            </Link>
+                                        <Button
+                                            variant="ghost"
+                                            className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                console.log('Labs clicked - closing menu and navigating');
+                                                setIsMobileMenuOpen(false);
+                                                navigate('/labs');
+                                            }}
+                                        >
+                                            <span className="font-medium">{t('navbar.labs') || 'Labs'}</span>
                                         </Button>
                                     )}
 
