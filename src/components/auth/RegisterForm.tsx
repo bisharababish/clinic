@@ -258,64 +258,140 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 {/* English Name Fields */}
                 <div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                        <div>
-                            <Label htmlFor="english_username_a" className="text-xs">
-                                {isRTL ? t("auth.firstNameEn") : "First Name"}
-                            </Label>
-                            <div className="relative">
-                                <Input
-                                    id="english_username_a"
-                                    name="english_username_a"
-                                    value={formData.english_username_a}
-                                    onChange={handleInputChange}
-                                    required
-                                    placeholder={placeholders.english.first}
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="english_username_b" className="text-xs">
-                                {isRTL ? t("auth.secondNameEn") : "Second Name"}
-                            </Label>
-                            <div className="relative">
-                                <Input
-                                    id="english_username_b"
-                                    name="english_username_b"
-                                    value={formData.english_username_b}
-                                    onChange={handleInputChange}
-                                    placeholder={placeholders.english.second}
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="english_username_c" className="text-xs">
-                                {isRTL ? t("auth.thirdNameEn") : "Third Name"}
-                            </Label>
-                            <div className="relative">
-                                <Input
-                                    id="english_username_c"
-                                    name="english_username_c"
-                                    value={formData.english_username_c}
-                                    onChange={handleInputChange}
-                                    placeholder={placeholders.english.third}
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <Label htmlFor="english_username_d" className="text-xs">
-                                {isRTL ? t("auth.lastNameEn") : "Last Name"}
-                            </Label>
-                            <div className="relative">
-                                <Input
-                                    id="english_username_d"
-                                    name="english_username_d"
-                                    value={formData.english_username_d}
-                                    onChange={handleInputChange}
-                                    required
-                                    placeholder={placeholders.english.last}
-                                />
-                            </div>
-                        </div>
+                        {isRTL ? (
+                            // RTL Layout - English names REVERSED order
+                            <>
+                                <div>
+                                    <Label htmlFor="english_username_d" className="text-xs !text-left !w-full !block" dir="ltr" style={{ textAlign: 'left' }}>
+                                        Last Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="english_username_d"
+                                            name="english_username_d"
+                                            value={formData.english_username_d}
+                                            onChange={handleInputChange}
+                                            required
+                                            placeholder="Last"
+                                            dir="ltr"
+                                            style={{ textAlign: 'left' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="english_username_c" className="text-xs !text-left w-full block" dir="ltr" style={{ textAlign: 'left' }}>
+                                        Third Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="english_username_c"
+                                            name="english_username_c"
+                                            value={formData.english_username_c}
+                                            onChange={handleInputChange}
+                                            placeholder="Third"
+                                            dir="ltr"
+                                            style={{ textAlign: 'left' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="english_username_b" className="text-xs !text-left w-full block" dir="ltr" style={{ textAlign: 'left' }}>
+                                        Second Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="english_username_b"
+                                            name="english_username_b"
+                                            value={formData.english_username_b}
+                                            onChange={handleInputChange}
+                                            placeholder="Second"
+                                            dir="ltr"
+                                            style={{ textAlign: 'left' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+
+                                    <Label htmlFor="english_username_a" className="text-xs !text-left w-full block" dir="ltr" style={{ textAlign: 'left' }}>
+                                        First Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="english_username_a"
+                                            name="english_username_a"
+                                            value={formData.english_username_a}
+                                            onChange={handleInputChange}
+                                            required
+                                            placeholder="First"
+                                            dir="ltr"
+                                            style={{ textAlign: 'left' }}
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            // LTR Layout - English names normal order
+                            <>
+                                <div>
+                                    <Label htmlFor="english_username_a" className="text-xs">
+                                        First Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="english_username_a"
+                                            name="english_username_a"
+                                            value={formData.english_username_a}
+                                            onChange={handleInputChange}
+                                            required
+                                            placeholder="First"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="english_username_b" className="text-xs">
+                                        Second Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="english_username_b"
+                                            name="english_username_b"
+                                            value={formData.english_username_b}
+                                            onChange={handleInputChange}
+                                            placeholder="Second"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="english_username_c" className="text-xs">
+                                        Third Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="english_username_c"
+                                            name="english_username_c"
+                                            value={formData.english_username_c}
+                                            onChange={handleInputChange}
+                                            placeholder="Third"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label htmlFor="english_username_d" className="text-xs ">
+                                        Last Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="english_username_d"
+                                            name="english_username_d"
+                                            value={formData.english_username_d}
+                                            onChange={handleInputChange}
+                                            required
+                                            placeholder="Last"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
