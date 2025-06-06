@@ -332,34 +332,74 @@ const UsersManagement = () => {
             ? `${userToDelete.arabic_username_a || userToDelete.english_username_a} ${userToDelete.arabic_username_d || userToDelete.english_username_d || ''}`
             : `${userToDelete.english_username_a} ${userToDelete.english_username_d || ''}`;
 
-        // Custom confirmation toast
+        // Custom confirmation toast with proper dismiss handling
         let confirmed = false;
-        await new Promise((resolve) => {
-            toast({
+        let toastId: string | undefined;
+
+        const confirmationPromise = new Promise<void>((resolve) => {
+            const { dismiss } = toast({
                 title: t('usersManagement.confirmDeletion'),
                 description: t('usersManagement.deleteConfirmMessage', {
                     name: userName.trim(),
                     email: userToDelete.user_email
                 }),
                 action: (
-                    <div style={{ display: 'flex', gap: 8, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                    <div style={{
+                        display: 'flex',
+                        gap: 6,
+                        flexDirection: isRTL ? 'row-reverse' : 'row',
+                        marginTop: '12px',
+                        width: '100%',
+                        justifyContent: 'flex-end'
+                    }}>
                         <button
-                            style={{ background: '#dc2626', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
-                            onClick={() => { confirmed = true; resolve(undefined); }}
+                            style={{
+                                background: '#dc2626',
+                                color: 'white',
+                                borderRadius: 4,
+                                padding: '4px 12px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                            }}
+                            onClick={() => {
+                                confirmed = true;
+                                dismiss?.();
+                                resolve();
+                            }}
                         >
                             {t('usersManagement.confirm')}
                         </button>
                         <button
-                            style={{ background: '#374151', color: 'white', borderRadius: 4, padding: '4px 12px', border: 'none', cursor: 'pointer' }}
-                            onClick={() => { confirmed = false; resolve(undefined); }}
+                            style={{
+                                background: '#6b7280',
+                                color: 'white',
+                                borderRadius: 4,
+                                padding: '4px 12px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '500'
+                            }}
+                            onClick={() => {
+                                confirmed = false;
+                                dismiss?.();
+                                resolve();
+                            }}
                         >
                             {t('common.cancel')}
                         </button>
                     </div>
                 ),
-                duration: 10000,
+                duration: Infinity,
+                className: "min-w-[400px]"
             });
+
         });
+
+        await confirmationPromise;
+
         if (!confirmed) return;
 
         try {
