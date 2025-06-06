@@ -1,5 +1,5 @@
 // pages/AdminDashboard.tsx - Complete version with patient health records table
-import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { usePatientHealth, PatientWithHealthData } from "@/hooks/usePatientHealth";
 import { Button } from "@/components/ui/button";
@@ -7,33 +7,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import ClinicManagement from "./api/admin/ClinicManagement";
 import DoctorManagement from "./api/admin/DoctorManagement";
 import UsersManagement from "./api/admin/UsersManagement";
 import AppointmentsManagement from "./api/admin/AppointmentsManagement";
 import OverviewManagement from "./api/admin/OverviewManagement";
 import { useToast } from "@/hooks/use-toast";
-import { UserRole } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
 import {
-    User,
     Mail,
     Calendar,
-    Activity,
     Phone,
-    CreditCard,
     Heart,
     Pill,
     Search,
     RefreshCw,
-    Users,
-    TrendingUp,
-    AlertTriangle,
     Loader2,
     FileText,
     Database
@@ -777,9 +769,6 @@ const AdminDashboard = () => {
     };
 
     const refreshReportData = async () => {
-    };
-
-    const getStatusBadgeClass = (status: string) => {
     };
 
     const checkSystemStatus = async (): Promise<void> => {
