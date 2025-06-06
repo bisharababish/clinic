@@ -318,18 +318,14 @@ export function Header() {
                     {/* Far Left: Logo and clinic name */}
                     <div className="flex items-center">
                         <Link
-                            to={getDefaultRoute()}
+                            to="/"
                             className="flex items-center gap-3 group transition-all duration-200 hover:scale-105"
                             onClick={(e) => {
-                                // Ensure lab, x-ray, and doctor users go to their specific sections
-                                if (isLab || isXRay || isDoctor) {
-                                    e.preventDefault();
-                                    const route = getDefaultRoute();
-                                    console.log(`${effectiveRole} user clicking logo, navigating to: ${route}`);
-                                    navigate(route);
-                                }
+                                e.preventDefault();
+                                navigate('/');
                             }}
                         >
+
                             {/* Logo with Image */}
                             <div className="relative w-12 h-12 rounded-xl shadow-lg overflow-hidden group-hover:shadow-xl transition-all duration-200">
                                 <img

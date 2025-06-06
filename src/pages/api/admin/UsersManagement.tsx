@@ -763,6 +763,10 @@ const UsersManagement = () => {
                         <CardDescription>
                             {t('usersManagement.description')}
                         </CardDescription>
+                        <div className={`text-sm text-gray-600 mt-3 pt-3 border-t ${isRTL ? 'text-right' : 'text-left'}`} style={isRTL ? { textAlign: 'right' } : {}}>
+                            {filteredUsers.length} {filteredUsers.length === 1 ? t('usersManagement.user') : t('usersManagement.users')}
+                            {searchQuery && ` (${t('usersManagement.filtered')})`}
+                        </div>
                     </CardHeader>
                     <CardContent>
                         {isLoading ? (
@@ -811,12 +815,7 @@ const UsersManagement = () => {
                             </div>
                         )}
                     </CardContent>
-                    <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className="text-sm text-gray-500">
-                            {filteredUsers.length} {filteredUsers.length === 1 ? t('usersManagement.user') : t('usersManagement.users')}
-                            {searchQuery && ` (${t('usersManagement.filtered')})`}
-                        </div>
-                    </CardFooter>
+                    <CardFooter />
                 </Card>
             </div>
 

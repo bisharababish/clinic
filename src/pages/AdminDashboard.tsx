@@ -1,5 +1,5 @@
 // pages/AdminDashboard.tsx - Complete version with patient health records table
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { usePatientHealth, PatientWithHealthData } from "@/hooks/usePatientHealth";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,19 @@ import i18n from '../i18n';
 import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
 import {
+    User,
     Mail,
     Calendar,
+    Activity,
     Phone,
+    CreditCard,
     Heart,
     Pill,
     Search,
     RefreshCw,
+    Users,
+    TrendingUp,
+    AlertTriangle,
     Loader2,
     FileText,
     Database
@@ -413,7 +419,7 @@ const AdminDashboard = () => {
     // State variables
     const [isAdmin, setIsAdmin] = useState(false);
     const [isSecretary, setIsSecretary] = useState(false);
-    const [activeTab, setActiveTab] = useState("appointments");
+    const [activeTab, setActiveTab] = useState("overview");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -454,10 +460,11 @@ const AdminDashboard = () => {
             if (canViewClinicsTab) return 'clinics';
             if (canViewUsersTab) return 'users';
             if (canViewDoctorsTab) return 'doctors';
-            return 'appointments';
+            return 'overview';
         }
     };
 
+    // Check admin status and access control
     // Check admin status and access control
     useEffect(() => {
         const initializeAdminDashboard = async () => {
@@ -465,8 +472,6 @@ const AdminDashboard = () => {
 
             setIsLoading(true);
             setError(null);
-
-            console.log('Starting admin dashboard initialization');
 
             try {
                 const currentUserRole = user?.role?.toLowerCase() || '';
@@ -485,80 +490,26 @@ const AdminDashboard = () => {
                     return;
                 }
 
-                // Set role flags and default tab
-                if (currentUserRole === 'admin') {
-                    setIsAdmin(true);
-                    setIsSecretary(false);
+                // Set role flags
+                setIsAdmin(currentUserRole === 'admin');
+                setIsSecretary(currentUserRole === 'secretary');
+
+                // Set default tab if not already set
+                if (!activeTab) {
                     setActiveTab(getDefaultTab());
-                } else if (currentUserRole === 'secretary') {
-                    setIsAdmin(false);
-                    setIsSecretary(true);
-                    setActiveTab('appointments');
                 }
 
-                // Load data based on permissions
-                console.log(t('admin.loadingUsers'));
-
-                if (canViewUsersTab) {
-                    try {
-                        await loadUsers();
-                        console.log(t('admin.usersLoaded'));
-                    } catch (e) {
-                        console.error('Error loading users:', e);
-                    }
-                }
-
-                if (canViewClinicsTab) {
-                    try {
-                        await loadClinics();
-                        console.log(t('admin.clinicsLoaded'));
-                    } catch (e) {
-                        console.error('Error loading clinics:', e);
-                    }
-                }
-
-                if (canViewDoctorsTab) {
-                    try {
-                        await loadDoctors();
-                        console.log(t('admin.doctorsLoaded'));
-                    } catch (e) {
-                        console.error('Error loading doctors:', e);
-                    }
-                }
-
-                if (canViewAppointmentsTab) {
-                    try {
-                        await loadAppointments();
-                        console.log(t('admin.appointmentsLoaded'));
-                    } catch (e) {
-                        console.error('Error loading appointments:', e);
-                    }
-                }
-
-                if (canViewOverviewTab) {
-                    try {
-                        await loadActivityLog();
-                        console.log(t('admin.activityLogsLoaded'));
-                    } catch (e) {
-                        console.error('Error loading activity logs:', e);
-                    }
-
-                    try {
-                        await loadSystemSettings();
-                        console.log(t('admin.systemSettingsLoaded'));
-                    } catch (e) {
-                        console.error('Error loading system settings:', e);
-                    }
-
-                    try {
-                        await generateReportData();
-                        console.log(t('admin.reportDataGenerated'));
-                    } catch (e) {
-                        console.error('Error generating report data:', e);
-                    }
-                }
-
-                console.log(t('admin.dashboardInitializationComplete'));
+                // Load initial data
+                await Promise.all([
+                    loadUsers(),
+                    loadClinics(),
+                    loadDoctors(),
+                    loadAppointments(),
+                    loadActivityLog(),
+                    loadSystemSettings(),
+                    generateReportData(),
+                    checkSystemStatus()
+                ]);
 
             } catch (error) {
                 console.error('Error in dashboard initialization:', error);
@@ -569,8 +520,7 @@ const AdminDashboard = () => {
         };
 
         initializeAdminDashboard();
-    }, [authLoading, t, user, userPermissions, navigate]);
-
+    }, [authLoading, user, userPermissions, navigate, t]); // Add t back to dependencies
     // Handle tab changes with permission checking
     const handleTabChange = (newTab: string) => {
         const hasPermission = {
