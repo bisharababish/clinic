@@ -37,8 +37,8 @@ const DoctorXRayPage: React.FC = () => {
     // Initialize empty state
     useEffect(() => {
         // Check if user is authenticated and is a doctor
-        if (!user || user.role !== 'doctor') {
-            setError('Access denied. Only doctors can view X-ray images.');
+        if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
+            setError('Access denied. Only doctors and administrators can view X-ray images.');
             return;
         }
 

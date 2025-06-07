@@ -33,8 +33,8 @@ const DoctorLabsPage: React.FC = () => {
     // Initialize empty state
     useEffect(() => {
         // Check if user is authenticated and is a doctor
-        if (!user || user.role !== 'doctor') {
-            setError('Access denied. Only doctors can view lab results.');
+        if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
+            setError('Access denied. Only doctors and administrators can view lab results.');
             return;
         }
 
@@ -250,10 +250,10 @@ ${t('common.status') || 'Status'}: ${result.status}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${result.status === 'Normal' || result.status === 'Completed'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : result.status === 'Abnormal'
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : 'bg-yellow-100 text-yellow-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : result.status === 'Abnormal'
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                 {result.status}
                                             </span>
@@ -325,10 +325,10 @@ ${t('common.status') || 'Status'}: ${result.status}
                                         <p><span className="font-medium">{t('doctorPages.labTechnician') || 'Lab Technician'}:</span> {selectedTest.labTechnician}</p>
                                         <p><span className="font-medium">{t('common.status') || 'Status'}:</span>
                                             <span className={`ml-2 px-2 py-1 text-xs rounded ${selectedTest.status === 'Normal' || selectedTest.status === 'Completed'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : selectedTest.status === 'Abnormal'
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : 'bg-yellow-100 text-yellow-800'
+                                                ? 'bg-green-100 text-green-800'
+                                                : selectedTest.status === 'Abnormal'
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                 {selectedTest.status}
                                             </span>
