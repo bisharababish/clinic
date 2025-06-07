@@ -586,11 +586,16 @@ const DoctorManagement = () => {
                 <div className="w-full lg:w-2/3">
                     <Card>
                         <CardHeader>
-                            <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
-                                    {t('doctorManagement.doctorsManagement')}
-                                </CardTitle>
-                                <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                            <div className={`flex justify-between items-start`}>
+                                <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                    <CardTitle className={isRTL ? 'text-left' : 'text-left'}>
+                                        {t('doctorManagement.doctorsManagement')}
+                                    </CardTitle>
+                                    <CardDescription className={`mt-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                                        {t('doctorManagement.description')}
+                                    </CardDescription>
+                                </div>
+                                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''} flex-shrink-0`}>
                                     <div className="relative">
                                         <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                                         <Input
@@ -612,12 +617,9 @@ const DoctorManagement = () => {
                                     </Button>
                                 </div>
                             </div>
-                            <CardDescription className={isRTL ? 'text-right' : 'text-left'}>
-                                {t('doctorManagement.description')}
-                            </CardDescription>
-                            {/* ADD THIS: Doctor count right below description */}
+
                             <div
-                                className="text-sm text-gray-600 font-medium"
+                                className="text-sm text-gray-600 font-medium mt-2"
                                 style={{
                                     textAlign: isRTL ? 'right' : 'left',
                                     direction: isRTL ? 'rtl' : 'ltr'
@@ -631,18 +633,32 @@ const DoctorManagement = () => {
                             <div className="space-y-4">
                                 {filteredDoctors.map((doctor) => (
                                     <div key={doctor.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className={isRTL ? 'text-left' : ''}>
+                                        <div className={isRTL ? 'text-right' : ''}>
                                             <h3 className="font-medium">{doctor.name}</h3>
                                             <div className="text-sm text-gray-500">{doctor.specialty}</div>
                                             <div className="text-sm text-gray-500">{getClinicNameById(doctor.clinic_id)}</div>
                                             <div className={`mt-1 flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                                                <span className={`inline-block px-2 py-1 text-xs rounded-full ${doctor.is_available
-                                                    ? "bg-green-100 text-green-800"
-                                                    : "bg-red-100 text-red-800"
-                                                    }`}>
-                                                    {doctor.is_available ? t('common.available') : t('common.unavailable')}
-                                                </span>
-                                                <span className="text-sm font-medium">₪{doctor.price}</span>
+                                                {isRTL ? (
+                                                    <>
+                                                        <span className="text-sm font-medium">₪{doctor.price}</span>
+                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${doctor.is_available
+                                                            ? "bg-green-100 text-green-800"
+                                                            : "bg-red-100 text-red-800"
+                                                            }`}>
+                                                            {doctor.is_available ? t('common.available') : t('common.unavailable')}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${doctor.is_available
+                                                            ? "bg-green-100 text-green-800"
+                                                            : "bg-red-100 text-red-800"
+                                                            }`}>
+                                                            {doctor.is_available ? t('common.available') : t('common.unavailable')}
+                                                        </span>
+                                                        <span className="text-sm font-medium">₪{doctor.price}</span>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                         <div className={`flex space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
