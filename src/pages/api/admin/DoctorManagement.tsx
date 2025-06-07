@@ -661,7 +661,7 @@ const DoctorManagement = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className={`flex space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                                        <div className={`flex ${isRTL ? 'flex-row-reverse gap-2' : 'gap-2'}`}>
                                             <Button variant="outline" size="sm" onClick={() => handleManageAvailability(doctor.id)}>
                                                 <Clock className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                 {t('doctorManagement.hours')}
