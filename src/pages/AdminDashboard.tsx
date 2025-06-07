@@ -156,6 +156,7 @@ const AdminDashboard = () => {
     const canViewDoctorsTab = userPermissions.canViewDoctors;
     const canViewAppointmentsTab = userPermissions.canViewAppointments;
     const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole);
+    const canViewDoctorXrayTab = ['admin', 'doctor'].includes(userRole);
 
     // Get default tab for user role
     const getDefaultTab = () => {
@@ -168,6 +169,7 @@ const AdminDashboard = () => {
             if (canViewAppointmentsTab) return 'appointments';
             if (canViewOverviewTab) return 'overview';
             if (canViewPatientHealthTab) return 'patient-health';
+            if (canViewDoctorXrayTab) return 'doctor-xray';
             if (canViewClinicsTab) return 'clinics';
             if (canViewUsersTab) return 'users';
             if (canViewDoctorsTab) return 'doctors';
@@ -502,7 +504,7 @@ const AdminDashboard = () => {
     };
 
     // Check if any tabs are accessible
-    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab;
+    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewDoctorXrayTab;
 
     // Main render
     return (
@@ -543,6 +545,12 @@ const AdminDashboard = () => {
                         {/* Patient Health tab fifth */}
                         {canViewPatientHealthTab && (
                             <TabsTrigger value="patient-health">{t('admin.patientHealth')}</TabsTrigger>
+                        )}
+                        {/* DOCTOR X-RAY TAB - ADD THIS */}
+                        {canViewDoctorXrayTab && (
+                            <TabsContent value="doctor-xray" className="pt-6">
+                                <DoctorXRayPage />
+                            </TabsContent>
                         )}
                         {/* Appointments tab last */}
                         {canViewAppointmentsTab && (

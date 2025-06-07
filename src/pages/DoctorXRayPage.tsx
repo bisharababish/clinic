@@ -168,7 +168,7 @@ const DoctorXRayPage: React.FC = () => {
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder={t('doctorPages.searchPatientsXray') || 'Search patients or body parts...'}
+                                placeholder={t('doctorPages.searchPatientsXray') || 'Search for a patient...'}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -215,10 +215,10 @@ const DoctorXRayPage: React.FC = () => {
                                 />
                                 <div className="absolute top-2 right-2">
                                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${image.status === 'Normal' || image.status === 'Completed'
-                                            ? 'bg-green-100 text-green-800'
-                                            : image.status === 'Abnormal'
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-yellow-100 text-yellow-800'
+                                        ? 'bg-green-100 text-green-800'
+                                        : image.status === 'Abnormal'
+                                            ? 'bg-red-100 text-red-800'
+                                            : 'bg-yellow-100 text-yellow-800'
                                         }`}>
                                         {image.status}
                                     </span>
@@ -356,6 +356,7 @@ const DoctorXRayPage: React.FC = () => {
                                             <p><span className="font-medium">{t('common.name') || 'Name'}:</span> {selectedImage.patientName}</p>
                                             <p><span className="font-medium">{t('usersManagement.id') || 'ID'}:</span> {selectedImage.patientId}</p>
                                             <p><span className="font-medium">{t('auth.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.dateOfBirth}</p>
+                                            <p><span className="font-medium">{t('auth.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.dateOfBirth}</p>
                                         </div>
                                     </div>
 
@@ -367,10 +368,10 @@ const DoctorXRayPage: React.FC = () => {
                                             <p><span className="font-medium">{t('doctorPages.radiologist') || 'Radiologist'}:</span> {selectedImage.radiologist}</p>
                                             <p><span className="font-medium">{t('common.status') || 'Status'}:</span>
                                                 <span className={`ml-2 px-2 py-1 text-xs rounded ${selectedImage.status === 'Normal' || selectedImage.status === 'Completed'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : selectedImage.status === 'Abnormal'
-                                                            ? 'bg-red-100 text-red-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : selectedImage.status === 'Abnormal'
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
                                                     }`}>
                                                     {selectedImage.status}
                                                 </span>

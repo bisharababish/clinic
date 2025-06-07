@@ -1552,58 +1552,58 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     </Card>
 
                     {/* Payment Status Pie Chart */}
-<Card>
-    <CardHeader>
-        <CardTitle>{t('appointmentsManagement.paymentStatus')}</CardTitle>
-    </CardHeader>
-    <CardContent className="h-[300px]">
-        {paymentData.some(item => item.value > 0) ? (
-            <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                    <Pie
-                        data={paymentData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={95} // Reduced from 80
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({cx, cy, midAngle, innerRadius, outerRadius, percent, name}) => {
-                            const RADIAN = Math.PI / 180;
-                            const radius = outerRadius + (isRTL ? 18 : 20);
-                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                            
-                            return (
-                                <text 
-                                    x={x} 
-                                    y={y} 
-                                    fill="#333" 
-                                    textAnchor={x > cx ? (isRTL ? 'end' : 'start') : (isRTL ? 'start' : 'end')} 
-                                    dominantBaseline="central"
-                                    fontSize="11"
-                                    fontWeight="bold"
-                                    style={{ direction: isRTL ? 'rtl' : 'ltr' }}
-                                >
-                                    {`${name}: ${(percent * 100).toFixed(0)}%`}
-                                </text>
-                            );
-                        }}
-                    >
-                        {paymentData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                    </Pie>
-                    <Tooltip />
-                </PieChart>
-            </ResponsiveContainer>
-        ) : (
-            <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500">{t('appointmentsManagement.noDataAvailable')}</p>
-            </div>
-        )}
-    </CardContent>
-</Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t('appointmentsManagement.paymentStatus')}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="h-[300px]">
+                            {paymentData.some(item => item.value > 0) ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={paymentData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            outerRadius={95} // Reduced from 80
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                            label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+                                                const RADIAN = Math.PI / 180;
+                                                const radius = outerRadius + (isRTL ? 18 : 20);
+                                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                                                return (
+                                                    <text
+                                                        x={x}
+                                                        y={y}
+                                                        fill="#333"
+                                                        textAnchor={x > cx ? (isRTL ? 'end' : 'start') : (isRTL ? 'start' : 'end')}
+                                                        dominantBaseline="central"
+                                                        fontSize="11"
+                                                        fontWeight="bold"
+                                                        style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+                                                    >
+                                                        {`${name}: ${(percent * 100).toFixed(0)}%`}
+                                                    </text>
+                                                );
+                                            }}
+                                        >
+                                            {paymentData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-gray-500">{t('appointmentsManagement.noDataAvailable')}</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
 
                     {/* Revenue by Clinic Bar Chart */}
                     <Card className="lg:col-span-2">
@@ -1705,68 +1705,67 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                         {/* Status Filter */}
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                            <SelectTrigger className={`${isRTL ? 'text-right [&>span]:text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByStatus')} />
                             </SelectTrigger>
-
-                            <SelectContent>
-                                <SelectItem value="all">{t('appointmentsManagement.allStatuses')}</SelectItem>
-                                <SelectItem value="scheduled">{t('appointmentsManagement.scheduled')}</SelectItem>
-                                <SelectItem value="completed">{t('appointmentsManagement.completed')}</SelectItem>
-                                <SelectItem value="cancelled">{t('appointmentsManagement.cancelled')}</SelectItem>
+                            <SelectContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
+                                <SelectItem value="all" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.allStatuses')}</SelectItem>
+                                <SelectItem value="scheduled" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.scheduled')}</SelectItem>
+                                <SelectItem value="completed" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.completed')}</SelectItem>
+                                <SelectItem value="cancelled" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.cancelled')}</SelectItem>
                             </SelectContent>
                         </Select>
 
                         {/* Payment Status Filter */}
                         <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                            <SelectTrigger className={`${isRTL ? 'text-right [&>span]:text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByPayment')} />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('appointmentsManagement.allPaymentStatuses')}</SelectItem>
-                                <SelectItem value="pending">{t('appointmentsManagement.pending')}</SelectItem>
-                                <SelectItem value="paid">{t('appointmentsManagement.paid')}</SelectItem>
-                                <SelectItem value="refunded">{t('appointmentsManagement.refunded')}</SelectItem>
+                            <SelectContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
+                                <SelectItem value="all" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.allPaymentStatuses')}</SelectItem>
+                                <SelectItem value="pending" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.pending')}</SelectItem>
+                                <SelectItem value="paid" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.paid')}</SelectItem>
+                                <SelectItem value="refunded" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.refunded')}</SelectItem>
                             </SelectContent>
                         </Select>
 
                         {/* Clinic Filter */}
                         <Select value={clinicFilter} onValueChange={setClinicFilter}>
-                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                            <SelectTrigger className={`${isRTL ? 'text-right [&>span]:text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByClinic')} />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('appointmentsManagement.allClinics')}</SelectItem>
+                            <SelectContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
+                                <SelectItem value="all" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.allClinics')}</SelectItem>
                                 {uniqueClinics.map(clinic => (
-                                    <SelectItem key={clinic} value={clinic}>{clinic}</SelectItem>
+                                    <SelectItem key={clinic} value={clinic} className={isRTL ? 'text-right' : ''}>{clinic}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
 
                         {/* Doctor Filter */}
                         <Select value={doctorFilter} onValueChange={setDoctorFilter}>
-                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                            <SelectTrigger className={`${isRTL ? 'text-right [&>span]:text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByDoctor')} />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('appointmentsManagement.allDoctors')}</SelectItem>
+                            <SelectContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
+                                <SelectItem value="all" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.allDoctors')}</SelectItem>
                                 {uniqueDoctors.map(doctor => (
-                                    <SelectItem key={doctor} value={doctor}>{doctor}</SelectItem>
+                                    <SelectItem key={doctor} value={doctor} className={isRTL ? 'text-right' : ''}>{doctor}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
 
                         {/* Date Filter */}
                         <Select value={dateFilter} onValueChange={setDateFilter}>
-                            <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                            <SelectTrigger className={`${isRTL ? 'text-right [&>span]:text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                 <SelectValue placeholder={t('appointmentsManagement.filterByDate')} />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('appointmentsManagement.allDates')}</SelectItem>
-                                <SelectItem value="today">{t('appointmentsManagement.today')}</SelectItem>
-                                <SelectItem value="thisWeek">{t('appointmentsManagement.thisWeek')}</SelectItem>
-                                <SelectItem value="thisMonth">{t('appointmentsManagement.thisMonth')}</SelectItem>
-                                <SelectItem value="custom">{t('appointmentsManagement.customRange')}</SelectItem>
+                            <SelectContent className={isRTL ? 'text-right' : 'text-left'} dir={isRTL ? 'rtl' : 'ltr'}>
+                                <SelectItem value="all" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.allDates')}</SelectItem>
+                                <SelectItem value="today" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.today')}</SelectItem>
+                                <SelectItem value="thisWeek" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.thisWeek')}</SelectItem>
+                                <SelectItem value="thisMonth" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.thisMonth')}</SelectItem>
+                                <SelectItem value="custom" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.customRange')}</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -1778,6 +1777,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     value={startDate?.toISOString().split('T')[0] || ''}
                                     onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : null)}
                                     placeholder="Start date"
+                                    className={isRTL ? 'text-right' : 'text-left'}
                                 />
                                 <span>{t('appointmentsManagement.to')}</span>
                                 <Input
@@ -1785,6 +1785,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     value={endDate?.toISOString().split('T')[0] || ''}
                                     onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : null)}
                                     placeholder="End date"
+                                    className={isRTL ? 'text-right' : 'text-left'}
                                 />
                             </div>
                         )}
@@ -1956,9 +1957,11 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
             {/* Add Appointment Dialog */}
             <Dialog open={isAddingAppointment} onOpenChange={setIsAddingAppointment}>
-                <DialogContent className="sm:max-w-[700px]">
-                    <DialogHeader>
-                        <DialogTitle>{t('appointmentsManagement.createNewAppointmentTitle')}</DialogTitle>
+                <DialogContent className={`sm:max-w-[700px] ${isRTL ? '[&>button]:left-4 [&>button]:right-auto' : ''}`}>
+                    <DialogHeader style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+                        <DialogTitle>
+                            {t('appointmentsManagement.createNewAppointmentTitle')}
+                        </DialogTitle>
                         <DialogDescription>
                             {t('appointmentsManagement.scheduleNewAppointment')}
                         </DialogDescription>

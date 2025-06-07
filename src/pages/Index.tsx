@@ -1711,7 +1711,7 @@ const Index = () => {
                         </RadioGroup>
                       </div>
 
-                      <div>
+                      <div style={{ marginTop: '32px' }}>
                         <Label htmlFor="create_password" className="text-sm">
                           {isRTL ? "كلمة المرور" : "Password"}
                         </Label>

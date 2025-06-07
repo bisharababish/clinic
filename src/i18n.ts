@@ -176,7 +176,7 @@ const enTranslations = {
         testResults: 'Test Results',
         doctorsNotes: 'Doctor\'s Notes',
         labTechnician: 'Lab Technician',
-        searchPatientsTests: 'Search patients, ID, or test type...',
+        searchPatientsTests: 'Search for a patient...',
         allTestTypes: 'All Test Types',
         bloodTests: 'Blood Tests',
         urineTests: 'Urine Tests',
@@ -198,7 +198,7 @@ const enTranslations = {
         impression: 'Impression',
         bodyPart: 'Body Part',
         radiologist: 'Radiologist',
-        searchPatientsXray: 'Search patients, ID, or body part...',
+        searchPatientsXray: 'Search for a patient...',
         allBodyParts: 'All Body Parts',
         chest: 'Chest',
         knee: 'Knee',
@@ -955,18 +955,18 @@ const enTranslations = {
         scheduleNewAppointment: 'Schedule a new appointment for a patient',
 
         // Form fields
-        selectClinic: 'Select Clinic *',
+        selectClinic: 'Select Clinic ',
         chooseClinic: 'Choose a clinic',
-        selectDoctor: 'Select Doctor *',
+        selectDoctor: 'Select Doctor ',
         chooseDoctor: 'Choose a doctor',
         selectClinicFirst: 'Select a clinic first',
-        selectPatient: 'Select Patient *',
+        selectPatient: 'Select Patient ',
         searchPatients: 'Search patients by name or email...',
         noPatientsFound: 'No patients found',
 
         // Time selection
-        selectDay: 'Select Day *',
-        selectTimeSlot: 'Select Time Slot *',
+        selectDay: 'Select Day ',
+        selectTimeSlot: 'Select Time Slot ',
         noAvailableSlots: 'No available time slots for this day',
 
         // Days of week (shortened)
@@ -1319,7 +1319,7 @@ const arTranslations = {
         testResults: 'نتائج الفحص',
         doctorsNotes: 'ملاحظات الطبيب',
         labTechnician: 'فني المختبر',
-        searchPatientsTests: 'البحث في المرضى أو رقم الهوية أو نوع الفحص...',
+        searchPatientsTests: 'ابحث عن مريض...',
         allTestTypes: 'جميع أنواع الفحوصات',
         bloodTests: 'فحوصات الدم',
         urineTests: 'فحوصات البول',
@@ -1341,7 +1341,7 @@ const arTranslations = {
         impression: 'الانطباع',
         bodyPart: 'جزء الجسم',
         radiologist: 'أخصائي الأشعة',
-        searchPatientsXray: 'البحث في المرضى أو رقم الهوية أو جزء الجسم...',
+        searchPatientsXray: 'ابحث عن مريض...',
         allBodyParts: 'جميع أجزاء الجسم',
         chest: 'الصدر',
         knee: 'الركبة',
@@ -2013,18 +2013,18 @@ const arTranslations = {
         scheduleNewAppointment: 'جدولة موعد جديد لمريض',
 
         // Form fields
-        selectClinic: 'اختر العيادة *',
+        selectClinic: 'اختر العيادة ',
         chooseClinic: 'اختر عيادة',
-        selectDoctor: 'اختر الطبيب *',
+        selectDoctor: 'اختر الطبيب ',
         chooseDoctor: 'اختر طبيب',
         selectClinicFirst: 'اختر عيادة أولاً',
-        selectPatient: 'اختر المريض *',
+        selectPatient: 'اختر المريض ',
         searchPatients: 'البحث في المرضى بالاسم أو البريد الإلكتروني...',
         noPatientsFound: 'لم يتم العثور على مرضى',
 
         // Time selection
-        selectDay: 'اختر اليوم *',
-        selectTimeSlot: 'اختر فترة زمنية *',
+        selectDay: 'اختر اليوم ',
+        selectTimeSlot: 'اختر فترة زمنية ',
         noAvailableSlots: 'لا توجد فترات زمنية متاحة لهذا اليوم',
 
         // Days of week (shortened)
