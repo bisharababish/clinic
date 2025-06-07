@@ -817,15 +817,31 @@ const DoctorManagement = () => {
 
                                 <div className="space-y-2">
                                     <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <Label htmlFor="is_available" className={isRTL ? 'text-right order-2' : 'order-1'}>
-                                            {t('doctorManagement.availabilityStatus')}
-                                        </Label>
-                                        <Switch
-                                            id="is_available"
-                                            checked={doctorFormData.is_available}
-                                            onCheckedChange={handleDoctorAvailableChange}
-                                            dir="ltr"
-                                        />
+                                        {isRTL ? (
+                                            <>
+                                                <Switch
+                                                    id="is_available"
+                                                    checked={doctorFormData.is_available}
+                                                    onCheckedChange={handleDoctorAvailableChange}
+                                                    dir="ltr"
+                                                />
+                                                <Label htmlFor="is_available" className="text-right">
+                                                    {t('doctorManagement.availabilityStatus')}
+                                                </Label>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Label htmlFor="is_available" className="text-left">
+                                                    {t('doctorManagement.availabilityStatus')}
+                                                </Label>
+                                                <Switch
+                                                    id="is_available"
+                                                    checked={doctorFormData.is_available}
+                                                    onCheckedChange={handleDoctorAvailableChange}
+                                                    dir="ltr"
+                                                />
+                                            </>
+                                        )}
                                     </div>
                                     <p className={`text-sm text-gray-500 ${isRTL ? 'text-left' : ''}`}>
                                         {doctorFormData.is_available
