@@ -128,6 +128,7 @@ const PatientHealthRecordsManagement: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const { toast } = useToast();
     const { t } = useTranslation();
+    const isRTL = i18n.language === 'ar';
 
     useEffect(() => {
         fetchAllRecords();
@@ -204,25 +205,26 @@ const PatientHealthRecordsManagement: React.FC = () => {
     }
 
     return (
-        <Card>
+        <Card dir={isRTL ? 'ltr' : 'ltr'}>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                     <Database className="h-5 w-5" />
-                    Patient Health Records
+                    {t('patientHealth.title')}
                 </CardTitle>
-                <div className="flex items-center gap-4">
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`relative flex-1 max-w-sm ${isRTL ? 'text-right' : ''}`}>
+                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-gray-400`} />
                         <Input
-                            placeholder="Search patients, emails, or staff..."
+                            placeholder={t('patientHealth.searchPlaceholder')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
+                            className={`${isRTL ? 'pr-10 pl-3 text-right placeholder:text-right' : 'pl-10'}`}
+                            dir={isRTL ? 'rtl' : 'ltr'}
                         />
                     </div>
                     <Button onClick={fetchAllRecords} variant="outline" size="sm">
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
+                        <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('patientHealth.refresh')}
                     </Button>
                 </div>
             </CardHeader>
@@ -231,26 +233,26 @@ const PatientHealthRecordsManagement: React.FC = () => {
                     <div className="min-w-full">
                         {/* Summary Stats */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-blue-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-blue-800">Total Records</h3>
+                            <div className={`bg-blue-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
+                                <h3 className="text-sm font-medium text-blue-800">{t('patientHealth.totalRecords')}</h3>
                                 <p className="text-2xl font-bold text-blue-600">{filteredRecords.length}</p>
                             </div>
-                            <div className="bg-green-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-green-800">Recent Updates</h3>
+                            <div className={`bg-green-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
+                                <h3 className="text-sm font-medium text-green-800">{t('patientHealth.recentUpdates')}</h3>
                                 <p className="text-2xl font-bold text-green-600">
                                     {filteredRecords.filter(r =>
                                         new Date(r.updated_at || '').getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
                                     ).length}
                                 </p>
                             </div>
-                            <div className="bg-orange-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-orange-800">With Conditions</h3>
+                            <div className={`bg-orange-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
+                                <h3 className="text-sm font-medium text-orange-800">{t('patientHealth.withConditions')}</h3>
                                 <p className="text-2xl font-bold text-orange-600">
                                     {filteredRecords.filter(r => calculateDiseaseCount(r) > 0).length}
                                 </p>
                             </div>
-                            <div className="bg-purple-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-purple-800">On Medications</h3>
+                            <div className={`bg-purple-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
+                                <h3 className="text-sm font-medium text-purple-800">{t('patientHealth.onMedications')}</h3>
                                 <p className="text-2xl font-bold text-purple-600">
                                     {filteredRecords.filter(r => calculateMedicationCount(r) > 0).length}
                                 </p>
@@ -263,20 +265,20 @@ const PatientHealthRecordsManagement: React.FC = () => {
                                 <table className="w-full">
                                     <thead className="bg-gray-50">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Patient Info
+                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                {t('patientHealth.patientInfo')}
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Health Summary
+                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                {t('patientHealth.healthSummary')}
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Created By
+                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                {t('patientHealth.createdBy')}
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Last Updated By
+                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                {t('patientHealth.lastUpdatedBy')}
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Dates
+                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                {t('patientHealth.dates')}
                                             </th>
                                         </tr>
                                     </thead>

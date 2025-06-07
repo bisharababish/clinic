@@ -1177,7 +1177,7 @@ const arTranslations = {
         noRecordsCreated: 'لم يتم إنشاء سجلات صحية للمرضى بعد',
         loadingRecords: 'جارٍ تحميل سجلات المرضى...',
 
-        // THIS IS THE MISSING ONE:
+        // Error messages
         failedToLoad: 'فشل في تحميل سجلات المرضى',
     },
     labs: {
