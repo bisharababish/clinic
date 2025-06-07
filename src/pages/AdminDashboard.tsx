@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
+import DoctorXRayPage from "./DoctorXRayPage";
 import {
     User,
     Mail,
@@ -242,7 +243,10 @@ const AdminDashboard = () => {
             'clinics': canViewClinicsTab,
             'doctors': canViewDoctorsTab,
             'appointments': canViewAppointmentsTab,
-            'patient-health': canViewPatientHealthTab
+            'patient-health': canViewPatientHealthTab,
+            'doctor-xray': canViewDoctorXrayTab
+
+
         }[newTab];
 
         if (hasPermission) {
@@ -546,11 +550,9 @@ const AdminDashboard = () => {
                         {canViewPatientHealthTab && (
                             <TabsTrigger value="patient-health">{t('admin.patientHealth')}</TabsTrigger>
                         )}
-                        {/* DOCTOR X-RAY TAB - ADD THIS */}
+                        {/* Doctor X-Ray tab sixth */}
                         {canViewDoctorXrayTab && (
-                            <TabsContent value="doctor-xray" className="pt-6">
-                                <DoctorXRayPage />
-                            </TabsContent>
+                            <TabsTrigger value="doctor-xray">{t('admin.doctorXray') || 'Doctor X-Ray'}</TabsTrigger>
                         )}
                         {/* Appointments tab last */}
                         {canViewAppointmentsTab && (
