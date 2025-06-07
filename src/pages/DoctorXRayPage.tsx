@@ -168,7 +168,7 @@ const DoctorXRayPage: React.FC = () => {
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder={t('doctorPages.searchPatientsXray') || 'Search for a patient...'}
+                                placeholder={t('doctorPages.searchPatientsXray') || 'Search patients or body parts...'}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -355,7 +355,6 @@ const DoctorXRayPage: React.FC = () => {
                                         <div className="space-y-1 text-sm">
                                             <p><span className="font-medium">{t('common.name') || 'Name'}:</span> {selectedImage.patientName}</p>
                                             <p><span className="font-medium">{t('usersManagement.id') || 'ID'}:</span> {selectedImage.patientId}</p>
-                                            <p><span className="font-medium">{t('auth.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.dateOfBirth}</p>
                                             <p><span className="font-medium">{t('auth.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.dateOfBirth}</p>
                                         </div>
                                     </div>

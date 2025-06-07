@@ -818,15 +818,16 @@ const ClinicManagement = () => {
                             <Card>
                                 <CardHeader>
                                     <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <CardTitle>{t('clinicManagement.clinicsManagement')}</CardTitle>
-                                        <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                                        <CardTitle className={isRTL ? 'text-left' : 'text-left'}>
+                                            {t('clinicManagement.clinicsManagement')}
+                                        </CardTitle>                                        <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                             <div className="relative">
                                                 <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                                                 <Input
                                                     placeholder={t('clinicManagement.searchClinics')}
                                                     value={searchQuery}
                                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className={`${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10'} w-[250px]`}
+                                                    className={`${isRTL ? 'pr-10 pl-3 text-left' : 'pl-10'} w-[250px]`}
                                                     dir={isRTL ? 'rtl' : 'ltr'}
                                                 />
                                             </div>
@@ -840,7 +841,7 @@ const ClinicManagement = () => {
                                             </Button>
                                         </div>
                                     </div>
-                                    <CardDescription>
+                                    <CardDescription className={isRTL ? 'text-left' : 'text-left'}>
                                         {t('clinicManagement.description')}
                                     </CardDescription>
                                     {/* ADD THIS: Clinic count right below description */}
@@ -908,10 +909,10 @@ const ClinicManagement = () => {
                         <div className="w-full lg:w-1/3">
                             <Card>
                                 <CardHeader>
-                                    <CardTitle className={isRTL ? 'text-right' : ''}>
+                                    <CardTitle className={isRTL ? 'text-left' : ''}>
                                         {clinicFormMode === "create" ? t('clinicManagement.createNewClinic') : t('clinicManagement.editClinic')}
                                     </CardTitle>
-                                    <CardDescription className={isRTL ? 'text-right' : ''}>
+                                    <CardDescription className={isRTL ? 'text-left' : ''}>
                                         {clinicFormMode === "create"
                                             ? t('clinicManagement.addNewClinicDesc')
                                             : t('clinicManagement.modifyClinicDesc')}
@@ -920,7 +921,7 @@ const ClinicManagement = () => {
                                 <CardContent>
                                     <form onSubmit={handleClinicSubmit} id="clinicForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                                         <div className="space-y-2">
-                                            <Label htmlFor="name" className={isRTL ? 'text-right block' : ''}>
+                                            <Label htmlFor="name" className={isRTL ? 'text-left block' : ''}>
                                                 {t('clinicManagement.clinicName')}
                                             </Label>
                                             <Input
@@ -930,13 +931,13 @@ const ClinicManagement = () => {
                                                 onChange={handleClinicInputChange}
                                                 placeholder={t('clinicManagement.clinicNamePlaceholder')}
                                                 required
-                                                className={isRTL ? 'text-right' : ''}
+                                                className={isRTL ? 'text-left' : ''}
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="category_id" className={isRTL ? 'text-right block' : ''}>
+                                            <Label htmlFor="category_id" className={isRTL ? 'text-left block' : ''}>
                                                 {t('clinicManagement.category')}
                                             </Label>
                                             <select
@@ -947,6 +948,8 @@ const ClinicManagement = () => {
                                                 className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-right' : ''}`}
                                                 required
                                                 dir={isRTL ? 'rtl' : 'ltr'}
+                                                style={{ textAlign: isRTL ? 'right' : 'left' }}
+
                                             >
                                                 <option value="">{t('clinicManagement.selectCategory')}</option>
                                                 {categories
@@ -978,7 +981,7 @@ const ClinicManagement = () => {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label htmlFor="description" className={isRTL ? 'text-right block' : ''}>
+                                            <Label htmlFor="description" className={isRTL ? 'text-left block' : ''}>
                                                 {t('common.description')}
                                             </Label>
                                             <Textarea
@@ -988,23 +991,29 @@ const ClinicManagement = () => {
                                                 onChange={handleClinicInputChange}
                                                 placeholder={t('clinicManagement.descriptionPlaceholder')}
                                                 rows={4}
-                                                className={isRTL ? 'text-right' : ''}
+                                                className={isRTL ? 'text-left' : ''}
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                                <Label htmlFor="is_active" className={isRTL ? 'text-right' : ''}>
+                                            <div className={`flex items-center justify-between ${isRTL ? '' : ''}`}>
+                                                <Label htmlFor="is_active" className={isRTL ? 'text-right' : 'text-left'}>
                                                     {t('clinicManagement.activeStatus')}
                                                 </Label>
-                                                <Switch
-                                                    id="is_active"
-                                                    checked={clinicFormData.is_active}
-                                                    onCheckedChange={handleClinicActiveChange}
-                                                />
+                                                <div className="flex items-center">
+                                                    <Switch
+                                                        id="is_active"
+                                                        checked={clinicFormData.is_active}
+                                                        onCheckedChange={handleClinicActiveChange}
+                                                        style={{
+                                                            direction: 'ltr',
+                                                            transform: isRTL ? 'scaleX(-1)' : 'none'
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
-                                            <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
+                                            <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
                                                 {clinicFormData.is_active
                                                     ? t('clinicManagement.clinicActive')
                                                     : t('clinicManagement.clinicInactive')}
