@@ -843,12 +843,23 @@ const ClinicManagement = () => {
                                     <CardDescription>
                                         {t('clinicManagement.description')}
                                     </CardDescription>
+                                    {/* ADD THIS: Clinic count right below description */}
+                                    <div
+                                        className="text-sm text-gray-600 font-medium"
+                                        style={{
+                                            textAlign: isRTL ? 'right' : 'left',
+                                            direction: isRTL ? 'rtl' : 'ltr'
+                                        }}
+                                    >
+                                        {filteredClinics.length} {filteredClinics.length === 1 ? t('clinicManagement.clinic') : t('admin.clinics')}
+                                        {searchQuery && ` (${t('clinicManagement.filtered')})`}
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
                                         {filteredClinics.map((clinic) => (
                                             <div key={clinic.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-                                                <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`}>
+                                                <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
                                                     <h3 className="font-medium">{clinic.name}</h3>
                                                     <div className="text-sm text-gray-500 capitalize">
                                                         {t('clinicManagement.category')}: {clinic.category}
@@ -856,7 +867,7 @@ const ClinicManagement = () => {
                                                     {clinic.description && (
                                                         <div className="text-sm text-gray-500 mt-1">{clinic.description}</div>
                                                     )}
-                                                    <div className="mt-1">
+                                                    <div className="mt-1" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${clinic.is_active
                                                             ? "bg-green-100 text-green-800"
                                                             : "bg-red-100 text-red-800"
@@ -889,12 +900,7 @@ const ClinicManagement = () => {
                                         )}
                                     </div>
                                 </CardContent>
-                                <CardFooter className={isRTL ? 'flex-row-reverse' : ''}>
-                                    <div className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>
-                                        {filteredClinics.length} {filteredClinics.length === 1 ? t('clinicManagement.clinic') : t('admin.clinics')}
-                                        {searchQuery && ` (${t('clinicManagement.filtered')})`}
-                                    </div>
-                                </CardFooter>
+
                             </Card>
                         </div>
 
@@ -1063,9 +1069,9 @@ const ClinicManagement = () => {
                                     <div className="space-y-4">
                                         {categories.map((category) => (
                                             <div key={category.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-                                                <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`}>
+                                                <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
                                                     <h3 className="font-medium">{category.name}</h3>
-                                                    <div className="mt-1">
+                                                    <div className="mt-1" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${category.is_active
                                                             ? "bg-green-100 text-green-800"
                                                             : "bg-red-100 text-red-800"
@@ -1175,7 +1181,10 @@ const ClinicManagement = () => {
                             {t('clinicManagement.confirmDeleteClinic')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+                    <AlertDialogFooter
+                        className={`${isRTL ? 'flex-row-reverse' : ''}`}
+                        style={{ gap: isRTL ? '12px' : '8px' }}
+                    >
                         <AlertDialogCancel onClick={() => setShowDeleteClinicDialog(false)}>
                             {t('common.cancel')}
                         </AlertDialogCancel>
@@ -1190,6 +1199,7 @@ const ClinicManagement = () => {
                 </AlertDialogContent>
             </AlertDialog>
 
+
             {/* Category Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteCategoryDialog} onOpenChange={setShowDeleteCategoryDialog}>
                 <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
@@ -1199,7 +1209,10 @@ const ClinicManagement = () => {
                             {t('clinicManagement.confirmDeleteCategory')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+                    <AlertDialogFooter
+                        className={`${isRTL ? 'flex-row-reverse' : ''}`}
+                        style={{ gap: isRTL ? '12px' : '8px' }}
+                    >
                         <AlertDialogCancel onClick={() => setShowDeleteCategoryDialog(false)}>
                             {t('common.cancel')}
                         </AlertDialogCancel>
@@ -1223,7 +1236,10 @@ const ClinicManagement = () => {
                             {t('clinicManagement.confirmDeleteDoctor')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
+                    <AlertDialogFooter
+                        className={`${isRTL ? 'flex-row-reverse' : ''}`}
+                        style={{ gap: isRTL ? '12px' : '8px' }}
+                    >
                         <AlertDialogCancel onClick={() => setShowDeleteDoctorDialog(false)}>
                             {t('common.cancel')}
                         </AlertDialogCancel>

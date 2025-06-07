@@ -1,7 +1,6 @@
-// pages/AdminDashboard.tsx - Complete version with patient health records table
+// pages/AdminDashboard.tsx - Updated with imported PatientHealthManagement
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { usePatientHealth, PatientWithHealthData } from "@/hooks/usePatientHealth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,7 @@ import DoctorManagement from "./api/admin/DoctorManagement";
 import UsersManagement from "./api/admin/UsersManagement";
 import AppointmentsManagement from "./api/admin/AppointmentsManagement";
 import OverviewManagement from "./api/admin/OverviewManagement";
+import PatientHealthManagement from "./api/admin/PatientHealthManagement"; // NEW IMPORT
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "../lib/supabase";
 import { useTranslation } from 'react-i18next';
@@ -37,7 +37,7 @@ import {
     Database
 } from 'lucide-react';
 
-// Interfaces
+// Keep all your existing interfaces...
 interface UserInfo {
     user_id: string;
     userid: number;
@@ -120,295 +120,6 @@ interface ReportData {
     recent_activity: ActivityLog[];
 }
 
-// Patient Health Records Component
-const PatientHealthRecordsManagement: React.FC = () => {
-    const { getAllPatientHealthData, isLoading } = usePatientHealth();
-    const [records, setRecords] = useState<PatientWithHealthData[]>([]);
-    const [filteredRecords, setFilteredRecords] = useState<PatientWithHealthData[]>([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const { toast } = useToast();
-    const { t } = useTranslation();
-
-    useEffect(() => {
-        fetchAllRecords();
-    }, []);
-
-    useEffect(() => {
-        // Filter records based on search term
-        if (searchTerm.trim() === '') {
-            setFilteredRecords(records);
-        } else {
-            const filtered = records.filter(record =>
-                record.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.patient_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.created_by_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.created_by_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.patient_id_number?.includes(searchTerm)
-            );
-            setFilteredRecords(filtered);
-        }
-    }, [searchTerm, records]);
-
-    const fetchAllRecords = async () => {
-        try {
-            const data = await getAllPatientHealthData();
-            setRecords(data);
-            setFilteredRecords(data);
-        } catch (error) {
-            console.error('Error fetching patient records:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load patient records",
-                variant: "destructive",
-            });
-        }
-    };
-
-    const getRoleColor = (role?: string) => {
-        switch (role?.toLowerCase()) {
-            case 'admin': return 'bg-red-100 text-red-800 border-red-200';
-            case 'doctor': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'nurse': return 'bg-green-100 text-green-800 border-green-200';
-            case 'secretary': return 'bg-purple-100 text-purple-800 border-purple-200';
-            case 'patient': return 'bg-gray-100 text-gray-800 border-gray-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
-    };
-
-    const calculateDiseaseCount = (record: PatientWithHealthData) => {
-        return [
-            record.has_high_blood_pressure,
-            record.has_diabetes,
-            record.has_cholesterol_hdl,
-            record.has_cholesterol_ldl,
-            record.has_kidney_disease,
-            record.has_cancer,
-            record.has_heart_disease,
-            record.has_asthma,
-            record.has_alzheimer_dementia
-        ].filter(Boolean).length;
-    };
-
-    const calculateMedicationCount = (record: PatientWithHealthData) => {
-        if (!record.medications) return 0;
-        return Object.values(record.medications).flat().length;
-    };
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin mr-2" />
-                <span className="text-gray-600">Loading patient records...</span>
-            </div>
-        );
-    }
-
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Database className="h-5 w-5" />
-                    Patient Health Records
-                </CardTitle>
-                <div className="flex items-center gap-4">
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Input
-                            placeholder="Search patients, emails, or staff..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
-                    <Button onClick={fetchAllRecords} variant="outline" size="sm">
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="overflow-x-auto">
-                    <div className="min-w-full">
-                        {/* Summary Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-blue-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-blue-800">Total Records</h3>
-                                <p className="text-2xl font-bold text-blue-600">{filteredRecords.length}</p>
-                            </div>
-                            <div className="bg-green-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-green-800">Recent Updates</h3>
-                                <p className="text-2xl font-bold text-green-600">
-                                    {filteredRecords.filter(r =>
-                                        new Date(r.updated_at || '').getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
-                                    ).length}
-                                </p>
-                            </div>
-                            <div className="bg-orange-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-orange-800">With Conditions</h3>
-                                <p className="text-2xl font-bold text-orange-600">
-                                    {filteredRecords.filter(r => calculateDiseaseCount(r) > 0).length}
-                                </p>
-                            </div>
-                            <div className="bg-purple-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-purple-800">On Medications</h3>
-                                <p className="text-2xl font-bold text-purple-600">
-                                    {filteredRecords.filter(r => calculateMedicationCount(r) > 0).length}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Records Table */}
-                        <div className="border rounded-lg overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Patient Info
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Health Summary
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Created By
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Last Updated By
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Dates
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {filteredRecords.map((record) => (
-                                            <tr key={record.id} className="hover:bg-gray-50">
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    <div className="space-y-1">
-                                                        <div className="font-medium text-gray-900">
-                                                            {record.patient_name || 'Unknown Patient'}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 flex items-center gap-1">
-                                                            <Mail className="h-3 w-3" />
-                                                            {record.patient_email || 'No email'}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 flex items-center gap-1">
-                                                            <Phone className="h-3 w-3" />
-                                                            {record.patient_phone || 'No phone'}
-                                                        </div>
-                                                        <div className="text-xs text-gray-400">
-                                                            ID: {record.patient_id}
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    <div className="space-y-2">
-                                                        {/* BMI */}
-                                                        {record.weight_kg && record.height_cm && (
-                                                            <div className="text-sm">
-                                                                <span className="font-medium">BMI:</span> {
-                                                                    ((record.weight_kg / Math.pow(record.height_cm / 100, 2))).toFixed(1)
-                                                                }
-                                                            </div>
-                                                        )}
-
-                                                        {/* Blood Type */}
-                                                        <div className="text-sm">
-                                                            <span className="font-medium">Blood:</span> {record.blood_type || 'Not set'}
-                                                        </div>
-
-                                                        {/* Conditions and Medications */}
-                                                        <div className="flex gap-2 flex-wrap">
-                                                            <Badge variant="outline" className="text-xs">
-                                                                <Heart className="h-3 w-3 mr-1" />
-                                                                {calculateDiseaseCount(record)} conditions
-                                                            </Badge>
-                                                            <Badge variant="outline" className="text-xs">
-                                                                <Pill className="h-3 w-3 mr-1" />
-                                                                {calculateMedicationCount(record)} medications
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    {record.created_by_name ? (
-                                                        <div className="space-y-1">
-                                                            <div className="font-medium text-sm text-gray-900">
-                                                                {record.created_by_name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {record.created_by_email}
-                                                            </div>
-                                                            <Badge className={`text-xs ${getRoleColor(record.created_by_role)}`}>
-                                                                {record.created_by_role || 'Patient'}
-                                                            </Badge>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-gray-400 text-sm">Unknown</span>
-                                                    )}
-                                                </td>
-
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    {record.updated_by_name ? (
-                                                        <div className="space-y-1">
-                                                            <div className="font-medium text-sm text-gray-900">
-                                                                {record.updated_by_name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {record.updated_by_email}
-                                                            </div>
-                                                            <Badge className={`text-xs ${getRoleColor(record.updated_by_role)}`}>
-                                                                {record.updated_by_role || 'Patient'}
-                                                            </Badge>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-gray-400 text-sm">Unknown</span>
-                                                    )}
-                                                </td>
-
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    <div className="space-y-1 text-xs text-gray-500">
-                                                        <div className="flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3" />
-                                                            <span className="font-medium">Created:</span>
-                                                        </div>
-                                                        <div className="ml-4">
-                                                            {new Date(record.created_at || '').toLocaleDateString()}
-                                                        </div>
-                                                        <div className="flex items-center gap-1 mt-2">
-                                                            <Calendar className="h-3 w-3" />
-                                                            <span className="font-medium">Updated:</span>
-                                                        </div>
-                                                        <div className="ml-4">
-                                                            {new Date(record.updated_at || '').toLocaleDateString()}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {filteredRecords.length === 0 && (
-                            <div className="text-center py-12">
-                                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">No patient records found</h3>
-                                <p className="text-gray-500">
-                                    {searchTerm ? 'Try adjusting your search criteria' : 'No patient health records have been created yet'}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-};
-
 // Main AdminDashboard Component
 const AdminDashboard = () => {
     const { user, isLoading: authLoading } = useAuth();
@@ -444,7 +155,7 @@ const AdminDashboard = () => {
     const canViewClinicsTab = userPermissions.canViewClinics;
     const canViewDoctorsTab = userPermissions.canViewDoctors;
     const canViewAppointmentsTab = userPermissions.canViewAppointments;
-    const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole); // NEW: Patient health tab permission
+    const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole);
 
     // Get default tab for user role
     const getDefaultTab = () => {
@@ -464,7 +175,6 @@ const AdminDashboard = () => {
         }
     };
 
-    // Check admin status and access control
     // Check admin status and access control
     useEffect(() => {
         const initializeAdminDashboard = async () => {
@@ -520,7 +230,8 @@ const AdminDashboard = () => {
         };
 
         initializeAdminDashboard();
-    }, [authLoading, user, userPermissions, navigate, t]); // Add t back to dependencies
+    }, [authLoading, user, userPermissions, navigate, t]);
+
     // Handle tab changes with permission checking
     const handleTabChange = (newTab: string) => {
         const hasPermission = {
@@ -529,7 +240,7 @@ const AdminDashboard = () => {
             'clinics': canViewClinicsTab,
             'doctors': canViewDoctorsTab,
             'appointments': canViewAppointmentsTab,
-            'patient-health': canViewPatientHealthTab // NEW
+            'patient-health': canViewPatientHealthTab
         }[newTab];
 
         if (hasPermission) {
@@ -696,32 +407,40 @@ const AdminDashboard = () => {
         }
     };
 
-
     const loadClinics = async () => {
+        // Your existing loadClinics implementation
     };
 
     const loadDoctors = async () => {
+        // Your existing loadDoctors implementation
     };
 
     const loadAppointments = async () => {
+        // Your existing loadAppointments implementation
     };
 
     const loadActivityLog = async () => {
+        // Your existing loadActivityLog implementation
     };
 
     const loadSystemSettings = async () => {
+        // Your existing loadSystemSettings implementation
     };
 
     const generateReportData = async () => {
+        // Your existing generateReportData implementation
     };
 
     const logActivity = async (action: string, user: string, details: string, status: 'success' | 'failed' | 'pending') => {
+        // Your existing logActivity implementation
     };
 
     const refreshReportData = async () => {
+        // Your existing refreshReportData implementation
     };
 
     const checkSystemStatus = async (): Promise<void> => {
+        // Your existing checkSystemStatus implementation
     };
 
     // Loading and error states
@@ -867,7 +586,7 @@ const AdminDashboard = () => {
                     {/* PATIENT HEALTH TAB - NEW */}
                     {canViewPatientHealthTab && (
                         <TabsContent value="patient-health" className="pt-6">
-                            <PatientHealthRecordsManagement />
+                            <PatientHealthManagement />
                         </TabsContent>
                     )}
 

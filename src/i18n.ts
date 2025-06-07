@@ -817,6 +817,60 @@ const enTranslations = {
         contactEmail: 'contact@bethlehemmedcenter.com',
         contactPhone: '(02) 274-2345'
     },
+    patientHealth: {
+        // Main titles
+        title: 'Patient Health Records',
+        description: 'View and manage patient health data',
+
+        // Search and actions
+        searchPlaceholder: 'Search patients, emails, or staff...',
+        refresh: 'Refresh',
+
+        // Summary stats
+        totalRecords: 'Total Records',
+        recentUpdates: 'Recent Updates',
+        withConditions: 'With Conditions',
+        onMedications: 'On Medications',
+
+        // Table headers
+        patientInfo: 'Patient Info',
+        healthSummary: 'Health Summary',
+        createdBy: 'Created By',
+        lastUpdatedBy: 'Last Updated By',
+        dates: 'Dates',
+
+        // Patient details
+        unknownPatient: 'Unknown Patient',
+        noEmail: 'No email',
+        noPhone: 'No phone',
+
+        // Health info
+        bloodType: 'Blood',
+        notSet: 'Not set',
+        conditions: 'conditions',
+        medications: 'medications',
+
+        record: 'record',
+        records: 'records',
+        filtered: 'filtered',
+
+        // Staff info
+        unknown: 'Unknown',
+
+        // Dates
+        created: 'Created',
+        updated: 'Updated',
+
+        // Messages
+        noRecordsFound: 'No patient records found',
+        noRecordsFoundSearch: 'Try adjusting your search criteria',
+        noRecordsCreated: 'No patient health records have been created yet',
+        loadingRecords: 'Loading patient records...',
+
+        // Errors
+        failedToLoad: 'Failed to load patient records',
+    },
+
     appointmentsManagement: {
         // Main titles and descriptions
         title: 'Appointments Management',
@@ -1071,6 +1125,60 @@ const arTranslations = {
         didntReceiveEmail: 'لم تستلم بريدًا إلكترونيًا؟ تحقق من مجلد البريد العشوائي أو حاول مرة أخرى.',
         enterEmailAddress: 'الرجاء إدخال عنوان بريدك الإلكتروني',
         failedToSendResetLink: 'فشل في إرسال رابط إعادة التعيين',
+    },
+    patientHealth: {
+        // Main titles
+        title: 'السجلات الصحية للمرضى',
+        description: 'عرض وإدارة البيانات الصحية للمرضى',
+
+        // Search and actions
+        searchPlaceholder: 'البحث في المرضى أو البريد الإلكتروني أو الطاقم...',
+        refresh: 'تحديث',
+
+        // Summary stats
+        totalRecords: 'إجمالي السجلات',
+        recentUpdates: 'التحديثات الأخيرة',
+        withConditions: 'مع حالات مرضية',
+        onMedications: 'يتناولون أدوية',
+
+        // Table headers
+        patientInfo: 'معلومات المريض',
+        healthSummary: 'الملخص الصحي',
+        createdBy: 'أنشأ بواسطة',
+        lastUpdatedBy: 'آخر تحديث بواسطة',
+        dates: 'التواريخ',
+
+        // Patient details
+        unknownPatient: 'مريض غير معروف',
+        noEmail: 'لا يوجد بريد إلكتروني',
+        noPhone: 'لا يوجد هاتف',
+
+        // Health info
+        bloodType: 'فصيلة الدم',
+        notSet: 'غير محدد',
+        conditions: 'حالات مرضية',
+        medications: 'أدوية',
+
+        // Staff info
+        unknown: 'غير معروف',
+
+        // Dates
+        created: 'تاريخ الإنشاء',
+        updated: 'تاريخ التحديث',
+
+        // Count labels
+        record: 'سجل',
+        records: 'سجلات',
+        filtered: 'مفلتر',
+
+        // Messages
+        noRecordsFound: 'لم يتم العثور على سجلات المرضى',
+        noRecordsFoundSearch: 'حاول تعديل معايير البحث',
+        noRecordsCreated: 'لم يتم إنشاء سجلات صحية للمرضى بعد',
+        loadingRecords: 'جارٍ تحميل سجلات المرضى...',
+
+        // THIS IS THE MISSING ONE:
+        failedToLoad: 'فشل في تحميل سجلات المرضى',
     },
     labs: {
         title: 'نتائج الفحوصات المخبرية',
@@ -1422,10 +1530,10 @@ const arTranslations = {
         modifyUserDesc: 'تعديل تفاصيل المستخدم الحالي',
 
         // Form fields - Arabic label + "الإنجليزي"
-        firstName: 'الاسم الأول (الإنجليزية)',
-        secondName: 'الاسم الثاني (الإنجليزية)',
-        thirdName: 'الاسم الثالث (الإنجليزية)',
-        lastName: 'الاسم الأخير (الإنجليزية)',
+        firstName: 'الاسم الأول (بالإنجليزية)',
+        secondName: 'الاسم الثاني (بالإنجليزية)',
+        thirdName: 'الاسم الثالث (بالإنجليزية)',
+        lastName: 'الاسم الأخير (بالإنجليزية)',
 
         firstPlaceholder: 'الأول',
         secondPlaceholder: 'الثاني',

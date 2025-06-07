@@ -615,6 +615,17 @@ const DoctorManagement = () => {
                             <CardDescription className={isRTL ? 'text-right' : 'text-left'}>
                                 {t('doctorManagement.description')}
                             </CardDescription>
+                            {/* ADD THIS: Doctor count right below description */}
+                            <div
+                                className="text-sm text-gray-600 font-medium"
+                                style={{
+                                    textAlign: isRTL ? 'right' : 'left',
+                                    direction: isRTL ? 'rtl' : 'ltr'
+                                }}
+                            >
+                                {filteredDoctors.length} {filteredDoctors.length === 1 ? t('doctorManagement.doctor') : t('doctorManagement.doctors')}
+                                {searchQuery && ` (${t('doctorManagement.filtered')})`}
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
@@ -662,12 +673,7 @@ const DoctorManagement = () => {
                                 )}
                             </div>
                         </CardContent>
-                        <CardFooter className={isRTL ? 'flex-row-reverse' : ''}>
-                            <div className={`text-sm text-gray-500 ${isRTL ? 'text-left' : ''}`}>
-                                {filteredDoctors.length} {filteredDoctors.length === 1 ? t('doctorManagement.doctor') : t('doctorManagement.doctors')}
-                                {searchQuery && ` (${t('doctorManagement.filtered')})`}
-                            </div>
-                        </CardFooter>
+
                     </Card>
                 </div>
 
@@ -1002,7 +1008,7 @@ const DoctorManagement = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 };
 

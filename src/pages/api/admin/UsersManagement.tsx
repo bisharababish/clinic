@@ -760,7 +760,10 @@ const UsersManagement = () => {
                                 </Button>
                             </div>
                         </div>
-                        <CardDescription>
+                        <CardDescription
+                            className={i18n.language === 'ar' ? 'text-right rtl' : ''}
+                            style={i18n.language === 'ar' ? { direction: 'rtl', textAlign: 'right' } : {}}
+                        >
                             {t('usersManagement.description')}
                         </CardDescription>
                         <div className={`text-sm text-gray-600 mt-3 pt-3 border-t ${isRTL ? 'text-right' : 'text-left'}`} style={isRTL ? { textAlign: 'right' } : {}}>
