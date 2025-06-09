@@ -88,8 +88,8 @@ const Footer: React.FC = () => {
                   <div className="relative p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-sm group-hover/contact:shadow-md group-hover/contact:scale-110 transition-all duration-300">
                     <Phone className="h-4 w-4 text-white" />
                   </div>
-                  <div className="relative">
-                    <p className="text-xs text-purple-600/60 font-medium">
+                  <div className="relative flex-1 min-w-0">
+                    <p className="text-xs text-purple-600/60 font-medium text-left">
                       {isRTL ? 'اتصل بنا' : 'Call Us'}
                     </p>
                     <a href="tel:+97022744444" className="text-sm font-bold text-purple-700 hover:text-purple-800 transition-colors" dir="ltr">

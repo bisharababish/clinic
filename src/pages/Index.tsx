@@ -923,12 +923,11 @@ const Index = () => {
     return true;
   };
 
-  // ENHANCED: Save information to database with user tracking
   const handleSaveInfo = async () => {
     // Determine which patient ID to use
     let targetPatientId: string;
 
-    if (userRole === 'nurse' && selectedPatient) {
+    if ((userRole === 'nurse' || userRole === 'admin' || userRole === 'administrator') && selectedPatient) {
       // Nurse is updating a selected patient's information
       targetPatientId = selectedPatient.userid.toString();
     } else if (userRole === 'patient' && user?.id) {
@@ -979,7 +978,8 @@ const Index = () => {
         // Reload data to get updated user tracking info
         if (userRole === 'patient') {
           await loadPatientHealthData();
-        } else if (userRole === 'nurse' && selectedPatient) {
+        } else if ((userRole === 'nurse' || userRole === 'admin') && selectedPatient) {
+
           // Refresh the selected patient's data
           const updatedHealthData = await getPatientHealthData(selectedPatient.userid);
           setHealthData(updatedHealthData);
@@ -1020,12 +1020,11 @@ const Index = () => {
 
   // Function to check if the current user role can search for patients
   const canSearchPatients = (): boolean => {
-    return ["nurse", "doctor", "admin"].includes(userRole);
+    return ["nurse", "doctor", "admin", "administrator"].includes(userRole);
   };
-
   // NEW: Function to check if the current user role can create patients
   const canCreatePatients = (): boolean => {
-    return ["nurse", "admin"].includes(userRole);
+    return ["nurse", "admin", "administrator"].includes(userRole);
   };
 
   const getBloodTypeDisplay = (type: string) => {

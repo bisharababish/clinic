@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
+import { HeaderOnlyLayout } from "./components/layout/HeaderOnlyLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
@@ -128,9 +129,9 @@ function App() {
               path="/about"
               element={
                 <ProtectedRoute allowedRoles={["admin", "patient"]}>
-                  <MainLayout>
+                  <HeaderOnlyLayout>
                     <AboutUs />
-                  </MainLayout>
+                  </HeaderOnlyLayout>
                 </ProtectedRoute>
               }
             />
@@ -171,51 +172,50 @@ function App() {
               }
             />
 
-            {/* ✅ FIXED: Labs - ONLY accessible to admin and lab (removed doctor access to regular labs) */}
+            {/* Labs - accessible to admin, lab, doctor */}
             <Route
               path="/labs"
               element={
-                <ProtectedRoute allowedRoles={["admin", "lab"]}>
-                  <MainLayout>
+                <ProtectedRoute allowedRoles={["admin", "lab", "doctor"]}>
+                  <HeaderOnlyLayout>
                     <Labs />
-                  </MainLayout>
+                  </HeaderOnlyLayout>
                 </ProtectedRoute>
               }
             />
 
-            {/* ✅ FIXED: X-Ray - ONLY accessible to admin and x ray (removed doctor access to regular x-ray) */}
+            {/* X-Ray - accessible to admin, xray, doctor */}
             <Route
               path="/xray"
               element={
-                <ProtectedRoute allowedRoles={["admin", "x ray"]}>
-                  <MainLayout>
+                <ProtectedRoute allowedRoles={["admin", "xray", "doctor"]}>
+                  <HeaderOnlyLayout>
                     <XRay />
-                  </MainLayout>
+                  </HeaderOnlyLayout>
                 </ProtectedRoute>
               }
             />
 
-            {/* ✅ NEW: Doctor-specific Lab Results - only for doctors */}
+            {/* Doctor Labs - accessible to admin, doctor */}
             <Route
               path="/doctor/labs"
               element={
-                <ProtectedRoute allowedRoles={["doctor", "admin"]}>
-                  <MainLayout>
+                <ProtectedRoute allowedRoles={["admin", "doctor"]}>
+                  <HeaderOnlyLayout>
                     <DoctorLabsPage />
-                  </MainLayout>
+                  </HeaderOnlyLayout>
                 </ProtectedRoute>
               }
             />
 
-            {/* ✅ NEW: Doctor-specific X-Ray Images - only for doctors */}
+            {/* Doctor X-Ray - accessible to admin, doctor */}
             <Route
               path="/doctor/xray"
               element={
-                <ProtectedRoute allowedRoles={["doctor", "admin"]}>
-
-                  <MainLayout>
+                <ProtectedRoute allowedRoles={["admin", "doctor"]}>
+                  <HeaderOnlyLayout>
                     <DoctorXRayPage />
-                  </MainLayout>
+                  </HeaderOnlyLayout>
                 </ProtectedRoute>
               }
             />

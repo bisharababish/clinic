@@ -201,9 +201,9 @@ const Clinics = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-[300px] flex-row-reverse" dir="rtl">
+            <div className={`flex items-center justify-center min-h-[300px] ${isRTL ? 'flex-row-reverse' : 'flex-row'}`} dir={isRTL ? "rtl" : "ltr"}>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600 text-left">
+                <span className={`${isRTL ? 'mr-3' : 'ml-3'} text-gray-600`}>
                     {t('clinics.loading')}
                 </span>
             </div>
@@ -211,7 +211,7 @@ const Clinics = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto py-8 space-y-6" dir="rtl">
+        <div className={`max-w-7xl mx-auto py-8 space-y-6 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"}>
             {/* Notification Alert */}
             <Alert variant="default" className="bg-blue-50 border-blue-200" dir="rtl">
                 <AlertDescription className="text-left">
@@ -220,7 +220,7 @@ const Clinics = () => {
             </Alert>
 
             {/* Category Selection */}
-            <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+            <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row justify-start' : 'flex-row justify-start'}`} dir={isRTL ? "rtl" : "ltr"}>
                 <Button
                     key="all"
                     variant={selectedCategory === "all" ? "default" : "outline"}
@@ -249,7 +249,7 @@ const Clinics = () => {
                         key={clinic.id}
                         className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                         onClick={() => handleViewClinic(clinic)}
-                        dir="rtl"
+                        dir={isRTL ? "rtl" : "ltr"}
                     >
                         <h3 className="text-xl font-bold text-left">
                             {clinic.name}
