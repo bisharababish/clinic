@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LanguageContext } from '../contexts/LanguageContext';
+import { toast as ToastFunction } from '@/hooks/use-toast';
 
 interface PasswordChangeModalProps {
     isOpen: boolean;
@@ -119,115 +120,111 @@ export function PasswordChangeModal({
         ]);
     }
 
+    const performPasswordChange = async (userEmail: string, currentPassword: string, newPassword: string, isRTL: boolean, toast: typeof ToastFunction) => {
+        try {
+            // 1. Verify current password
+            console.log('🔑 Verifying current password...');
+            const { error: verifyError } = await withTimeout(
+                supabase.auth.signInWithPassword({
+                    email: userEmail,
+                    password: currentPassword
+                }),
+                8000,
+                isRTL ? 'انتهت مهلة التحقق من كلمة المرور الحالية.' : 'Timeout verifying current password.'
+            );
+            if (verifyError) {
+                console.error('❌ Current password verification failed:', verifyError);
+                toast({
+                    variant: "destructive",
+                    title: isRTL ? 'خطأ في تغيير كلمة المرور' : 'Password Change Error',
+                    description: isRTL ? 'كلمة المرور الحالية غير صحيحة' : 'Current password is incorrect',
+                });
+                return;
+            }
+            console.log('✅ Current password verified successfully');
+
+            // 2. Update password
+            console.log('🔄 Updating password...');
+            const { error: updateError } = await withTimeout(
+                supabase.auth.updateUser({
+                    password: newPassword
+                }),
+                8000,
+                isRTL ? 'انتهت مهلة تحديث كلمة المرور.' : 'Timeout updating password.'
+            );
+            if (updateError) {
+                console.error('❌ Password update failed:', updateError);
+                toast({
+                    variant: "destructive",
+                    title: isRTL ? 'خطأ في تغيير كلمة المرور' : 'Password Change Error',
+                    description: updateError.message || (isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password'),
+                });
+                return;
+            }
+            console.log('✅ Password updated successfully');
+
+            // 3. Update userinfo table (non-blocking)
+            try {
+                console.log('🗄️ Updating userinfo table...');
+                const { error: dbUpdateError } = await withTimeout(
+                    supabase
+                        .from('userinfo')
+                        .update({
+                            user_password: newPassword,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('user_email', userEmail),
+                    8000,
+                    isRTL ? 'انتهت مهلة تحديث قاعدة البيانات.' : 'Timeout updating database.'
+                );
+                if (dbUpdateError) {
+                    console.warn('⚠️ Failed to update password in userinfo table (non-critical):', dbUpdateError);
+                } else {
+                    console.log('✅ Password also updated in userinfo table');
+                }
+            } catch (dbError) {
+                console.warn('⚠️ Database update error (non-critical):', dbError);
+            }
+
+            // 4. Show success message
+            toast({
+                title: isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password Changed Successfully',
+                description: isRTL ?
+                    'تم تحديث كلمة المرور الخاصة بك بنجاح' :
+                    'Your password has been updated successfully',
+            });
+        } catch (error) {
+            console.error('❌ Unexpected error during password change (in background):', error);
+            toast({
+                variant: "destructive",
+                title: isRTL ? 'خطأ غير متوقع' : 'Unexpected Error',
+                description: error instanceof Error
+                    ? error.message
+                    : (isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred'),
+            });
+        }
+    };
+
     const handlePasswordChange = async () => {
         if (!validatePasswords()) {
             console.log('❌ Validation failed');
             return;
         }
-        setIsChanging(true);
+
+        setIsChanging(true); // Keep this for the immediate "Changing..." state, then it's gone
         setError(null);
-        // Optimistically close the modal and reset form
+
+        // Optimistic UI: Close modal immediately and clear form
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        setIsChanging(false);
-        setTimeout(() => { onClose(); }, 200);
+        setTimeout(() => { // Small delay to ensure the UI updates before closing
+            onClose();
+            setIsChanging(false); // Reset loading state after modal closes
+        }, 100);
 
-        // Run password change logic in the background
-        setTimeout(async () => {
-            try {
-                // 1. Verify current password
-                const { error: verifyError } = await withTimeout(
-                    supabase.auth.signInWithPassword({
-                        email: userEmail,
-                        password: currentPassword
-                    }),
-                    8000,
-                    isRTL ? 'انتهت مهلة التحقق من كلمة المرور الحالية.' : 'Timeout verifying current password.'
-                );
-                if (verifyError) {
-                    toast({
-                        title: isRTL ? 'خطأ في كلمة المرور الحالية' : 'Current Password Error',
-                        description: isRTL ? 'كلمة المرور الحالية غير صحيحة' : 'Current password is incorrect',
-                        variant: 'destructive',
-                    });
-                    return;
-                }
-
-                // 2. Update password
-                let updateError;
-                try {
-                    ({ error: updateError } = await withTimeout(
-                        supabase.auth.updateUser({
-                            password: newPassword
-                        }),
-                        8000,
-                        isRTL ? 'انتهت مهلة تحديث كلمة المرور.' : 'Timeout updating password.'
-                    ));
-                } catch (err) {
-                    // If timeout, try to log in with new password
-                    const { error: loginWithNewError } = await supabase.auth.signInWithPassword({
-                        email: userEmail,
-                        password: newPassword
-                    });
-                    if (!loginWithNewError) {
-                        toast({
-                            title: isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password Changed Successfully',
-                            description: isRTL ?
-                                'تم تحديث كلمة المرور الخاصة بك بنجاح' :
-                                'Your password has been updated successfully',
-                        });
-                        return;
-                    } else {
-                        toast({
-                            title: isRTL ? 'انتهت مهلة تحديث كلمة المرور' : 'Timeout updating password',
-                            description: isRTL ? 'يرجى المحاولة مرة أخرى' : 'Please try again',
-                            variant: 'destructive',
-                        });
-                        return;
-                    }
-                }
-                if (updateError) {
-                    toast({
-                        title: isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password',
-                        description: updateError.message || (isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password'),
-                        variant: 'destructive',
-                    });
-                    return;
-                }
-
-                // 3. Update userinfo table (non-blocking)
-                try {
-                    await withTimeout(
-                        supabase
-                            .from('userinfo')
-                            .update({
-                                user_password: newPassword,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('user_email', userEmail),
-                        8000,
-                        isRTL ? 'انتهت مهلة تحديث قاعدة البيانات.' : 'Timeout updating database.'
-                    );
-                } catch (dbError) {
-                    // Ignore db error for userinfo
-                }
-
-                // 4. Show success message
-                toast({
-                    title: isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password Changed Successfully',
-                    description: isRTL ?
-                        'تم تحديث كلمة المرور الخاصة بك بنجاح' :
-                        'Your password has been updated successfully',
-                });
-            } catch (error) {
-                toast({
-                    title: isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred',
-                    description: error.message || (isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred'),
-                    variant: 'destructive',
-                });
-            }
-        }, 300);
+        // Perform the actual password change in the background
+        performPasswordChange(userEmail, currentPassword, newPassword, isRTL, toast);
     };
 
     const handleSkip = () => {

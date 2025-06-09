@@ -1601,7 +1601,7 @@ const PatientHealthManagement: React.FC = () => {
                                                         )}
                                                         {/* Blood Type */}
                                                         {record.blood_type && (
-                                                            <div className={`text-sm ${isRTL ? 'text-left' : ''}`}>
+                                                            <div className={`text-sm ${isRTL ? 'text-right' : ''}`}>
                                                                 <span className="font-medium">{isRTL ? 'فصيلة الدم:' : 'Blood:'}</span> {
                                                                     isRTL ? (
                                                                         record.blood_type === 'A+' ? '+أ' :
@@ -1620,12 +1620,12 @@ const PatientHealthManagement: React.FC = () => {
 
                                                         {/* Conditions and Medications */}
                                                         <div className={`flex gap-2 flex-wrap ${isRTL ? 'justify-end' : ''}`}>
-                                                            <Badge variant="outline" className={`text-xs flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                                                <Heart className="h-3 w-3" />
+                                                            <Badge variant="outline" className={`text-xs flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                                <Heart className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                 {isRTL ? `حالات مرضية ${calculateDiseaseCount(record)}` : `${calculateDiseaseCount(record)} conditions`}
                                                             </Badge>
-                                                            <Badge variant="outline" className={`text-xs flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                                                <Pill className="h-3 w-3" />
+                                                            <Badge variant="outline" className={`text-xs flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                                <Pill className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                 {isRTL ? `أدوية ${calculateMedicationCount(record)}` : `${calculateMedicationCount(record)} medications`}
                                                             </Badge>
                                                         </div>
@@ -1646,7 +1646,7 @@ const PatientHealthManagement: React.FC = () => {
                                                         {record.created_by_name && (
                                                             <div className="space-y-1">
                                                                 <div className={`text-xs font-medium text-gray-700 ${isRTL ? 'text-right' : ''}`}>
-                                                                    {isRTL ? ':تم إنشاؤه بواسطة' : 'Created by:'}
+                                                                    {isRTL ? 'تم إنشاؤه بواسطة:' : 'Created by:'}
                                                                 </div>
                                                                 <div className={`text-sm font-medium text-gray-900 ${isRTL ? 'text-left' : ''}`}>
                                                                     {record.created_by_name}

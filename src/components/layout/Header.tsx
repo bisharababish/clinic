@@ -499,12 +499,15 @@ export function Header() {
             </div>
 
             {/* Password Change Modal */}
-            {isAuthenticated && (
+            {isAuthenticated && user && (
                 <PasswordChangeModal
                     isOpen={isPasswordModalOpen}
-                    onClose={() => setIsPasswordModalOpen(false)}
-                    userEmail={user?.email || ''}
-                    userName={user?.user_metadata?.full_name || ''}
+                    onClose={() => {
+                        console.log('PasswordChangeModal onClose triggered in Header');
+                        setIsPasswordModalOpen(false);
+                    }}
+                    userEmail={user.email || ''}
+                    userName={user.name || ''}
                 />
             )}
 
