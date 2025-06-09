@@ -115,7 +115,7 @@ const enTranslations = {
         // Page title and alerts
         title: 'Clinics',
         importantNotice: 'Important:',
-        reservationRequired: 'Reservations are required for all clinic visits. Please book your appointment in advance.',
+        reservationRequired: 'Reservations are required for all clinic visits. Please book your appointment in advance',
 
         // Category selection
         allClinics: 'All Clinics',
@@ -1258,7 +1258,7 @@ const arTranslations = {
         // Page title and alerts
         title: 'العيادات',
         importantNotice: 'مهم:',
-        reservationRequired: 'الحجز مطلوب لجميع زيارات العيادة. يرجى حجز موعدك مسبقاً.',
+        reservationRequired: 'الحجز مطلوب لجميع زيارات العيادة. يرجى حجز موعدك مسبقاً',
 
         // Category selection
         allClinics: 'جميع العيادات',

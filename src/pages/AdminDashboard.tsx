@@ -1,12 +1,8 @@
-// pages/AdminDashboard.tsx - Complete version with patient health records table
-import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
+// pages/AdminDashboard.tsx - Complete Fixed Version
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { usePatientHealth, PatientWithHealthData } from "@/hooks/usePatientHealth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import ClinicManagement from "./api/admin/ClinicManagement";
 import DoctorManagement from "./api/admin/DoctorManagement";
 import UsersManagement from "./api/admin/UsersManagement";
@@ -18,24 +14,9 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
-import {
-    User,
-    Mail,
-    Calendar,
-    Activity,
-    Phone,
-    CreditCard,
-    Heart,
-    Pill,
-    Search,
-    RefreshCw,
-    Users,
-    TrendingUp,
-    AlertTriangle,
-    Loader2,
-    FileText,
-    Database
-} from 'lucide-react';
+
+// FIXED: Import the complete PatientHealthManagement component
+import PatientHealthManagement from "./api/admin/PatientHealthManagement";
 
 // Interfaces
 interface UserInfo {
@@ -120,296 +101,8 @@ interface ReportData {
     recent_activity: ActivityLog[];
 }
 
-// Patient Health Records Component
-const PatientHealthRecordsManagement: React.FC = () => {
-    const { getAllPatientHealthData, isLoading } = usePatientHealth();
-    const [records, setRecords] = useState<PatientWithHealthData[]>([]);
-    const [filteredRecords, setFilteredRecords] = useState<PatientWithHealthData[]>([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const { toast } = useToast();
-    const { t } = useTranslation();
-    const isRTL = i18n.language === 'ar';
-
-    useEffect(() => {
-        fetchAllRecords();
-    }, []);
-
-    useEffect(() => {
-        // Filter records based on search term
-        if (searchTerm.trim() === '') {
-            setFilteredRecords(records);
-        } else {
-            const filtered = records.filter(record =>
-                record.patient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.patient_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.created_by_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.created_by_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.patient_id_number?.includes(searchTerm)
-            );
-            setFilteredRecords(filtered);
-        }
-    }, [searchTerm, records]);
-
-    const fetchAllRecords = async () => {
-        try {
-            const data = await getAllPatientHealthData();
-            setRecords(data);
-            setFilteredRecords(data);
-        } catch (error) {
-            console.error('Error fetching patient records:', error);
-            toast({
-                title: "Error",
-                description: "Failed to load patient records",
-                variant: "destructive",
-            });
-        }
-    };
-
-    const getRoleColor = (role?: string) => {
-        switch (role?.toLowerCase()) {
-            case 'admin': return 'bg-red-100 text-red-800 border-red-200';
-            case 'doctor': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'nurse': return 'bg-green-100 text-green-800 border-green-200';
-            case 'secretary': return 'bg-purple-100 text-purple-800 border-purple-200';
-            case 'patient': return 'bg-gray-100 text-gray-800 border-gray-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
-    };
-
-    const calculateDiseaseCount = (record: PatientWithHealthData) => {
-        return [
-            record.has_high_blood_pressure,
-            record.has_diabetes,
-            record.has_cholesterol_hdl,
-            record.has_cholesterol_ldl,
-            record.has_kidney_disease,
-            record.has_cancer,
-            record.has_heart_disease,
-            record.has_asthma,
-            record.has_alzheimer_dementia
-        ].filter(Boolean).length;
-    };
-
-    const calculateMedicationCount = (record: PatientWithHealthData) => {
-        if (!record.medications) return 0;
-        return Object.values(record.medications).flat().length;
-    };
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin mr-2" />
-                <span className="text-gray-600">Loading patient records...</span>
-            </div>
-        );
-    }
-
-    return (
-        <Card dir={isRTL ? 'ltr' : 'ltr'}>
-            <CardHeader>
-                <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                    <Database className="h-5 w-5" />
-                    {t('patientHealth.title')}
-                </CardTitle>
-                <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`relative flex-1 max-w-sm ${isRTL ? 'text-right' : ''}`}>
-                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-gray-400`} />
-                        <Input
-                            placeholder={t('patientHealth.searchPlaceholder')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className={`${isRTL ? 'pr-10 pl-3 text-right placeholder:text-right' : 'pl-10'}`}
-                            dir={isRTL ? 'rtl' : 'ltr'}
-                        />
-                    </div>
-                    <Button onClick={fetchAllRecords} variant="outline" size="sm">
-                        <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('patientHealth.refresh')}
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="overflow-x-auto">
-                    <div className="min-w-full">
-                        {/* Summary Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div className={`bg-blue-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
-                                <h3 className="text-sm font-medium text-blue-800">{t('patientHealth.totalRecords')}</h3>
-                                <p className="text-2xl font-bold text-blue-600">{filteredRecords.length}</p>
-                            </div>
-                            <div className={`bg-green-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
-                                <h3 className="text-sm font-medium text-green-800">{t('patientHealth.recentUpdates')}</h3>
-                                <p className="text-2xl font-bold text-green-600">
-                                    {filteredRecords.filter(r =>
-                                        new Date(r.updated_at || '').getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
-                                    ).length}
-                                </p>
-                            </div>
-                            <div className={`bg-orange-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
-                                <h3 className="text-sm font-medium text-orange-800">{t('patientHealth.withConditions')}</h3>
-                                <p className="text-2xl font-bold text-orange-600">
-                                    {filteredRecords.filter(r => calculateDiseaseCount(r) > 0).length}
-                                </p>
-                            </div>
-                            <div className={`bg-purple-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
-                                <h3 className="text-sm font-medium text-purple-800">{t('patientHealth.onMedications')}</h3>
-                                <p className="text-2xl font-bold text-purple-600">
-                                    {filteredRecords.filter(r => calculateMedicationCount(r) > 0).length}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Records Table */}
-                        <div className="border rounded-lg overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
-                                                {t('patientHealth.patientInfo')}
-                                            </th>
-                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
-                                                {t('patientHealth.healthSummary')}
-                                            </th>
-                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
-                                                {t('patientHealth.createdBy')}
-                                            </th>
-                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
-                                                {t('patientHealth.lastUpdatedBy')}
-                                            </th>
-                                            <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
-                                                {t('patientHealth.dates')}
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {filteredRecords.map((record) => (
-                                            <tr key={record.id} className="hover:bg-gray-50">
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    <div className="space-y-1">
-                                                        <div className="font-medium text-gray-900">
-                                                            {record.patient_name || 'Unknown Patient'}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 flex items-center gap-1">
-                                                            <Mail className="h-3 w-3" />
-                                                            {record.patient_email || 'No email'}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500 flex items-center gap-1">
-                                                            <Phone className="h-3 w-3" />
-                                                            {record.patient_phone || 'No phone'}
-                                                        </div>
-                                                        <div className="text-xs text-gray-400">
-                                                            ID: {record.patient_id}
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    <div className="space-y-2">
-                                                        {/* BMI */}
-                                                        {record.weight_kg && record.height_cm && (
-                                                            <div className="text-sm">
-                                                                <span className="font-medium">BMI:</span> {
-                                                                    ((record.weight_kg / Math.pow(record.height_cm / 100, 2))).toFixed(1)
-                                                                }
-                                                            </div>
-                                                        )}
-
-                                                        {/* Blood Type */}
-                                                        <div className="text-sm">
-                                                            <span className="font-medium">Blood:</span> {record.blood_type || 'Not set'}
-                                                        </div>
-
-                                                        {/* Conditions and Medications */}
-                                                        <div className="flex gap-2 flex-wrap">
-                                                            <Badge variant="outline" className="text-xs">
-                                                                <Heart className="h-3 w-3 mr-1" />
-                                                                {calculateDiseaseCount(record)} conditions
-                                                            </Badge>
-                                                            <Badge variant="outline" className="text-xs">
-                                                                <Pill className="h-3 w-3 mr-1" />
-                                                                {calculateMedicationCount(record)} medications
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    {record.created_by_name ? (
-                                                        <div className="space-y-1">
-                                                            <div className="font-medium text-sm text-gray-900">
-                                                                {record.created_by_name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {record.created_by_email}
-                                                            </div>
-                                                            <Badge className={`text-xs ${getRoleColor(record.created_by_role)}`}>
-                                                                {record.created_by_role || 'Patient'}
-                                                            </Badge>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-gray-400 text-sm">Unknown</span>
-                                                    )}
-                                                </td>
-
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    {record.updated_by_name ? (
-                                                        <div className="space-y-1">
-                                                            <div className="font-medium text-sm text-gray-900">
-                                                                {record.updated_by_name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {record.updated_by_email}
-                                                            </div>
-                                                            <Badge className={`text-xs ${getRoleColor(record.updated_by_role)}`}>
-                                                                {record.updated_by_role || 'Patient'}
-                                                            </Badge>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-gray-400 text-sm">Unknown</span>
-                                                    )}
-                                                </td>
-
-                                                <td className="px-4 py-4 whitespace-nowrap">
-                                                    <div className="space-y-1 text-xs text-gray-500">
-                                                        <div className="flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3" />
-                                                            <span className="font-medium">Created:</span>
-                                                        </div>
-                                                        <div className="ml-4">
-                                                            {new Date(record.created_at || '').toLocaleDateString()}
-                                                        </div>
-                                                        <div className="flex items-center gap-1 mt-2">
-                                                            <Calendar className="h-3 w-3" />
-                                                            <span className="font-medium">Updated:</span>
-                                                        </div>
-                                                        <div className="ml-4">
-                                                            {new Date(record.updated_at || '').toLocaleDateString()}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {filteredRecords.length === 0 && (
-                            <div className="text-center py-12">
-                                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">No patient records found</h3>
-                                <p className="text-gray-500">
-                                    {searchTerm ? 'Try adjusting your search criteria' : 'No patient health records have been created yet'}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-};
+// REMOVED: The duplicate PatientHealthRecordsManagement component
+// that was causing the PatientHealthForm error
 
 // Main AdminDashboard Component
 const AdminDashboard = () => {
@@ -446,7 +139,7 @@ const AdminDashboard = () => {
     const canViewClinicsTab = userPermissions.canViewClinics;
     const canViewDoctorsTab = userPermissions.canViewDoctors;
     const canViewAppointmentsTab = userPermissions.canViewAppointments;
-    const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole); // NEW: Patient health tab permission
+    const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole);
 
     // Get default tab for user role
     const getDefaultTab = () => {
@@ -466,7 +159,6 @@ const AdminDashboard = () => {
         }
     };
 
-    // Check admin status and access control
     // Check admin status and access control
     useEffect(() => {
         const initializeAdminDashboard = async () => {
@@ -515,14 +207,15 @@ const AdminDashboard = () => {
 
             } catch (error) {
                 console.error('Error in dashboard initialization:', error);
-                setError(t('admin.errorLoadingDashboard'));
+                setError(t('admin.errorLoadingDashboard') || 'Error loading dashboard');
             } finally {
                 setIsLoading(false);
             }
         };
 
         initializeAdminDashboard();
-    }, [authLoading, user, userPermissions, navigate, t]); // Add t back to dependencies
+    }, [authLoading, user, userPermissions, navigate, t]);
+
     // Handle tab changes with permission checking
     const handleTabChange = (newTab: string) => {
         const hasPermission = {
@@ -531,7 +224,7 @@ const AdminDashboard = () => {
             'clinics': canViewClinicsTab,
             'doctors': canViewDoctorsTab,
             'appointments': canViewAppointmentsTab,
-            'patient-health': canViewPatientHealthTab // NEW
+            'patient-health': canViewPatientHealthTab
         }[newTab];
 
         if (hasPermission) {
@@ -563,13 +256,12 @@ const AdminDashboard = () => {
         }
     }, [searchQuery, users]);
 
-    // Data loading functions (keeping all the original functions from your existing code)
+    // Data loading functions
     const loadUsers = async () => {
-        console.log(t('admin.loadingUsers'));
+        console.log(t('admin.loadingUsers') || 'Loading users...');
         try {
             setIsLoading(true);
 
-            const timestamp = new Date().getTime();
             let data = [];
             let error = null;
 
@@ -596,7 +288,7 @@ const AdminDashboard = () => {
                 console.error('Supabase error loading users after multiple attempts:', error);
                 toast({
                     title: t('common.error'),
-                    description: t('admin.errorLoadingUsers'),
+                    description: t('admin.errorLoadingUsers') || 'Failed to load users',
                     variant: "destructive",
                 });
                 return null;
@@ -687,7 +379,7 @@ const AdminDashboard = () => {
             console.error('Error loading users:', error);
             toast({
                 title: t('common.error'),
-                description: t('admin.failedToLoadUsers'),
+                description: t('admin.failedToLoadUsers') || 'Failed to load users',
                 variant: "destructive",
             });
             setUsers([]);
@@ -698,32 +390,140 @@ const AdminDashboard = () => {
         }
     };
 
-
     const loadClinics = async () => {
+        try {
+            console.log('Loading clinics...');
+            // Add your clinic loading logic here
+            // Example:
+            // const { data, error } = await supabase.from('clinics').select('*');
+            // if (data) setClinics(data);
+        } catch (error) {
+            console.error('Error loading clinics:', error);
+            toast({
+                title: t('common.error'),
+                description: 'Failed to load clinics',
+                variant: "destructive",
+            });
+        }
     };
 
     const loadDoctors = async () => {
+        try {
+            console.log('Loading doctors...');
+            // Add your doctor loading logic here
+            // Example:
+            // const { data, error } = await supabase.from('doctors').select('*');
+            // if (data) setDoctors(data);
+        } catch (error) {
+            console.error('Error loading doctors:', error);
+            toast({
+                title: t('common.error'),
+                description: 'Failed to load doctors',
+                variant: "destructive",
+            });
+        }
     };
 
     const loadAppointments = async () => {
+        try {
+            console.log('Loading appointments...');
+            // Add your appointment loading logic here
+            // Example:
+            // const { data, error } = await supabase.from('appointments').select('*');
+            // if (data) setAppointments(data);
+        } catch (error) {
+            console.error('Error loading appointments:', error);
+            toast({
+                title: t('common.error'),
+                description: 'Failed to load appointments',
+                variant: "destructive",
+            });
+        }
     };
 
     const loadActivityLog = async () => {
+        try {
+            console.log('Loading activity log...');
+            // Add your activity log loading logic here
+            // Example:
+            // const { data, error } = await supabase.from('activity_log').select('*');
+            // if (data) setActivityLog(data);
+        } catch (error) {
+            console.error('Error loading activity log:', error);
+        }
     };
 
     const loadSystemSettings = async () => {
+        try {
+            console.log('Loading system settings...');
+            // Add your system settings loading logic here
+            // Example:
+            // const { data, error } = await supabase.from('system_settings').select('*');
+            // if (data) setSystemSettings(data);
+        } catch (error) {
+            console.error('Error loading system settings:', error);
+        }
     };
 
     const generateReportData = async () => {
+        try {
+            console.log('Generating report data...');
+            // Add your report generation logic here
+            // Example:
+            // const reportData = {
+            //     appointments_count: appointments.length,
+            //     total_users: users.length,
+            //     // ... other metrics
+            // };
+            // setReportData(reportData);
+        } catch (error) {
+            console.error('Error generating report data:', error);
+        }
     };
 
     const logActivity = async (action: string, user: string, details: string, status: 'success' | 'failed' | 'pending') => {
+        try {
+            console.log(`Logging activity: ${action} by ${user} - ${status}`);
+            // Add your activity logging logic here
+            // Example:
+            // await supabase.from('activity_log').insert({
+            //     action,
+            //     user,
+            //     details,
+            //     status,
+            //     timestamp: new Date().toISOString()
+            // });
+        } catch (error) {
+            console.error('Error logging activity:', error);
+        }
     };
 
     const refreshReportData = async () => {
+        try {
+            setIsLoading(true);
+            await generateReportData();
+        } catch (error) {
+            console.error('Error refreshing report data:', error);
+            toast({
+                title: t('common.error'),
+                description: 'Failed to refresh report data',
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const checkSystemStatus = async (): Promise<void> => {
+        try {
+            console.log('Checking system status...');
+            // Add your system status check logic here
+            // Example:
+            // const { data, error } = await supabase.from('system_status').select('*');
+            // Handle system status checks
+        } catch (error) {
+            console.error('Error checking system status:', error);
+        }
     };
 
     // Loading and error states
@@ -732,7 +532,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">{t('admin.authenticating')}</p>
+                    <p className="mt-4 text-gray-600">{t('admin.authenticating') || 'Authenticating...'}</p>
                 </div>
             </div>
         );
@@ -743,7 +543,7 @@ const AdminDashboard = () => {
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">{t('admin.loadingDashboard')}</p>
+                    <p className="mt-4 text-gray-600">{t('admin.loadingDashboard') || 'Loading dashboard...'}</p>
                 </div>
             </div>
         );
@@ -752,7 +552,7 @@ const AdminDashboard = () => {
     if (error) {
         return (
             <div className="text-center py-12 max-w-2xl mx-auto px-4">
-                <h1 className="text-2xl font-bold text-red-600">{t('common.error')}</h1>
+                <h1 className="text-2xl font-bold text-red-600">{t('common.error') || 'Error'}</h1>
                 <p className="mt-2">{error}</p>
 
                 <div className="space-y-4 mt-6">
@@ -760,14 +560,14 @@ const AdminDashboard = () => {
                         onClick={() => window.location.reload()}
                         className="w-full"
                     >
-                        {t('admin.reloadPage')}
+                        {t('admin.reloadPage') || 'Reload Page'}
                     </Button>
                     <Button
                         variant="outline"
                         onClick={() => navigate('/', { replace: true })}
                         className="w-full"
                     >
-                        {t('admin.returnToHome')}
+                        {t('admin.returnToHome') || 'Return to Home'}
                     </Button>
                 </div>
             </div>
@@ -777,11 +577,11 @@ const AdminDashboard = () => {
     // Get dashboard title based on user role
     const getDashboardTitle = () => {
         if (isAdmin) {
-            return t('admin.title');
+            return t('admin.title') || 'Admin Dashboard';
         } else if (isSecretary) {
-            return t('admin.secretaryDashboard');
+            return t('admin.secretaryDashboard') || 'Secretary Dashboard';
         }
-        return t('admin.dashboard');
+        return t('admin.dashboard') || 'Dashboard';
     };
 
     // Check if any tabs are accessible
@@ -795,13 +595,13 @@ const AdminDashboard = () => {
             {!hasAccessibleTabs ? (
                 <div className="text-center py-12">
                     <h2 className="text-xl font-semibold text-gray-600 mb-4">
-                        {t('admin.noAccessibleSections')}
+                        {t('admin.noAccessibleSections') || 'No accessible sections'}
                     </h2>
                     <p className="text-gray-500 mb-6">
-                        {t('admin.contactAdministrator')}
+                        {t('admin.contactAdministrator') || 'Contact your administrator for access'}
                     </p>
                     <Button onClick={() => navigate('/')} variant="outline">
-                        {t('admin.returnToHome')}
+                        {t('admin.returnToHome') || 'Return to Home'}
                     </Button>
                 </div>
             ) : (
@@ -809,44 +609,29 @@ const AdminDashboard = () => {
                     <TabsList className={`flex flex-wrap justify-center w-full ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         {/* Overview tab first */}
                         {canViewOverviewTab && (
-                            <TabsTrigger value="overview">{t('admin.overview')}</TabsTrigger>
+                            <TabsTrigger value="overview">{t('admin.overview') || 'Overview'}</TabsTrigger>
                         )}
                         {/* Users tab second */}
                         {canViewUsersTab && (
-                            <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
+                            <TabsTrigger value="users">{t('admin.users') || 'Users'}</TabsTrigger>
                         )}
                         {/* Clinics tab third */}
                         {canViewClinicsTab && (
-                            <TabsTrigger value="clinics">{t('admin.clinics')}</TabsTrigger>
+                            <TabsTrigger value="clinics">{t('admin.clinics') || 'Clinics'}</TabsTrigger>
                         )}
                         {/* Doctors tab fourth */}
                         {canViewDoctorsTab && (
-                            <TabsTrigger value="doctors">{t('admin.doctors')}</TabsTrigger>
+                            <TabsTrigger value="doctors">{t('admin.doctors') || 'Doctors'}</TabsTrigger>
                         )}
                         {/* Patient Health tab fifth */}
                         {canViewPatientHealthTab && (
-                            <TabsTrigger value="patient-health">{t('admin.patientHealth')}</TabsTrigger>
+                            <TabsTrigger value="patient-health">{t('admin.patientHealth') || 'Patient Health'}</TabsTrigger>
                         )}
                         {/* Appointments tab last */}
                         {canViewAppointmentsTab && (
-                            <TabsTrigger value="appointments">{t('admin.appointments')}</TabsTrigger>
+                            <TabsTrigger value="appointments">{t('admin.appointments') || 'Appointments'}</TabsTrigger>
                         )}
                     </TabsList>
-
-                    {/* APPOINTMENTS TAB */}
-                    {canViewAppointmentsTab && (
-                        <TabsContent value="appointments" className="pt-6">
-                            <AppointmentsManagement
-                                appointments={appointments}
-                                setAppointments={setAppointments}
-                                isLoading={isLoading}
-                                setIsLoading={setIsLoading}
-                                loadAppointments={loadAppointments}
-                                logActivity={logActivity}
-                                userEmail={user?.email || 'admin'}
-                            />
-                        </TabsContent>
-                    )}
 
                     {/* OVERVIEW TAB */}
                     {canViewOverviewTab && (
@@ -863,13 +648,6 @@ const AdminDashboard = () => {
                                 setActiveTab={setActiveTab}
                                 checkSystemStatus={checkSystemStatus}
                             />
-                        </TabsContent>
-                    )}
-
-                    {/* PATIENT HEALTH TAB - NEW */}
-                    {canViewPatientHealthTab && (
-                        <TabsContent value="patient-health" className="pt-6">
-                            <PatientHealthRecordsManagement />
                         </TabsContent>
                     )}
 
@@ -891,6 +669,28 @@ const AdminDashboard = () => {
                     {canViewDoctorsTab && (
                         <TabsContent value="doctors" className="pt-6">
                             <DoctorManagement />
+                        </TabsContent>
+                    )}
+
+                    {/* PATIENT HEALTH TAB - FIXED: Using the imported component */}
+                    {canViewPatientHealthTab && (
+                        <TabsContent value="patient-health" className="pt-6">
+                            <PatientHealthManagement />
+                        </TabsContent>
+                    )}
+
+                    {/* APPOINTMENTS TAB */}
+                    {canViewAppointmentsTab && (
+                        <TabsContent value="appointments" className="pt-6">
+                            <AppointmentsManagement
+                                appointments={appointments}
+                                setAppointments={setAppointments}
+                                isLoading={isLoading}
+                                setIsLoading={setIsLoading}
+                                loadAppointments={loadAppointments}
+                                logActivity={logActivity}
+                                userEmail={user?.email || 'admin'}
+                            />
                         </TabsContent>
                     )}
                 </Tabs>

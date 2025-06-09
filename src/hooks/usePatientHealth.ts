@@ -1,11 +1,11 @@
-// hooks/usePatientHealth.ts - Complete version with user tracking
+// hooks/usePatientHealth.ts - Fixed version with correct data types and patient self-save capability
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 export interface PatientHealthData {
     id?: number;
-    patient_id: number | string;
+    patient_id: number;
     weight_kg?: number;
     height_cm?: number;
     blood_type?: string;
@@ -26,11 +26,11 @@ export interface PatientHealthData {
     };
 
     // User tracking fields
-    created_by_user_id?: number | string;
+    created_by_user_id?: number;
     created_by_email?: string;
     created_by_name?: string;
     created_by_role?: string;
-    updated_by_user_id?: number | string;
+    updated_by_user_id?: number;
     updated_by_email?: string;
     updated_by_name?: string;
     updated_by_role?: string;
@@ -52,7 +52,7 @@ export const usePatientHealth = () => {
     const { toast } = useToast();
 
     // Get patient health data with user tracking
-    const getPatientHealthData = useCallback(async (patientId: number | string): Promise<PatientHealthData | null> => {
+    const getPatientHealthData = useCallback(async (patientId: number): Promise<PatientHealthData | null> => {
         console.log('🔍 Fetching health data for patient ID:', patientId);
         setIsLoading(true);
 
@@ -79,7 +79,7 @@ export const usePatientHealth = () => {
                     updated_by_name,
                     updated_by_role
                 `)
-                .eq('patient_id', patientId.toString())
+                .eq('patient_id', patientId)
                 .maybeSingle();
 
             console.log('📊 Supabase response:', { data, error });
@@ -115,7 +115,7 @@ export const usePatientHealth = () => {
         }
     }, [toast]);
 
-    // Save or update patient health data
+    // FIXED: Save or update patient health data - now works for both patients and staff
     const savePatientHealthData = useCallback(async (data: Omit<PatientHealthData, 'id' | 'created_at' | 'updated_at' | 'created_by_user_id' | 'created_by_email' | 'created_by_name' | 'created_by_role' | 'updated_by_user_id' | 'updated_by_email' | 'updated_by_name' | 'updated_by_role'>): Promise<boolean> => {
         console.log('💾 Saving health data:', data);
         setIsSaving(true);
@@ -127,22 +127,64 @@ export const usePatientHealth = () => {
                 throw new Error('User not authenticated');
             }
 
-            // The trigger will automatically populate user tracking fields
-            const { error } = await supabase
+            // Get current user info from userinfo table
+            const { data: currentUserData, error: userError } = await supabase
+                .from('userinfo')
+                .select('userid, user_email, english_username_a, user_roles')
+                .eq('user_email', user.email)
+                .single();
+
+            if (userError || !currentUserData) {
+                console.error('❌ Error getting user data:', userError);
+                throw new Error('Failed to get user information');
+            }
+
+            console.log('👤 Current user data:', currentUserData);
+
+            // Check if this is an existing record
+            const { data: existingRecord } = await supabase
                 .from('patient_health_info')
-                .upsert({
-                    ...data,
-                    patient_id: data.patient_id.toString(),
-                }, {
+                .select('id')
+                .eq('patient_id', data.patient_id)
+                .maybeSingle();
+
+            const isUpdate = !!existingRecord;
+            console.log('🔄 Is update operation:', isUpdate);
+
+            // Prepare data for database with explicit user tracking
+            const dbData = {
+                ...data,
+                patient_id: data.patient_id,
+                // For new records, set both created and updated fields
+                ...(isUpdate ? {} : {
+                    created_by_user_id: currentUserData.userid,
+                    created_by_email: currentUserData.user_email,
+                    created_by_name: currentUserData.english_username_a,
+                    created_by_role: currentUserData.user_roles,
+                }),
+                // Always set updated fields
+                updated_by_user_id: currentUserData.userid,
+                updated_by_email: currentUserData.user_email,
+                updated_by_name: currentUserData.english_username_a,
+                updated_by_role: currentUserData.user_roles,
+                updated_at: new Date().toISOString(),
+            };
+
+            console.log('📤 Data being sent to database:', dbData);
+
+            const { error, data: savedData } = await supabase
+                .from('patient_health_info')
+                .upsert(dbData, {
                     onConflict: 'patient_id',
-                });
+                })
+                .select();
 
             if (error) {
                 console.error('❌ Save error:', error);
                 throw error;
             }
 
-            console.log('✅ Health data saved successfully');
+            console.log('✅ Health data saved successfully:', savedData);
 
             toast({
                 title: "Success",
@@ -152,9 +194,17 @@ export const usePatientHealth = () => {
             return true;
         } catch (error: unknown) {
             console.error('❌ Error saving patient health data:', error);
+
+            let errorMessage = 'Unknown error occurred';
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            } else if (typeof error === 'object' && error !== null && 'message' in error) {
+                errorMessage = String(error.message);
+            }
+
             toast({
                 title: "Error",
-                description: `Failed to save health information: ${error instanceof Error ? error.message : String(error)}`,
+                description: `Failed to save health information: ${errorMessage}`,
                 variant: "destructive",
             });
             return false;
@@ -169,45 +219,65 @@ export const usePatientHealth = () => {
         setIsLoading(true);
 
         try {
-            const { data, error } = await supabase
+            // First, get all health records with user tracking info
+            const { data: healthRecords, error: healthError } = await supabase
                 .from('patient_health_info')
                 .select(`
                     *,
-                    userinfo!patient_id (
-                        user_email,
-                        english_username_a,
-                        english_username_b,
-                        english_username_c,
-                        english_username_d,
-                        user_phone,
-                        user_id_number
-                    )
+                    created_by_user_id,
+                    created_by_email,
+                    created_by_name,
+                    created_by_role,
+                    updated_by_user_id,
+                    updated_by_email,
+                    updated_by_name,
+                    updated_by_role
                 `)
                 .order('updated_at', { ascending: false });
 
-            if (error) {
-                console.error('❌ Database error:', error);
-                throw error;
+            if (healthError) {
+                console.error('❌ Database error fetching health records:', healthError);
+                throw healthError;
             }
 
-            // Process the data to include patient info
-            const processedRecords: PatientWithHealthData[] = data?.map(record => {
-                const patientInfo = record.userinfo;
-                const patientName = patientInfo ?
-                    `${patientInfo.english_username_a || ''} ${patientInfo.english_username_b || ''} ${patientInfo.english_username_c || ''} ${patientInfo.english_username_d || ''}`.trim() :
+            if (!healthRecords || healthRecords.length === 0) {
+                console.log('ℹ️ No health records found');
+                return [];
+            }
+
+            // Get patient IDs from health records
+            const patientIds = healthRecords.map(record => record.patient_id);
+
+            // Fetch patient info for these IDs
+            const { data: patientInfo, error: patientError } = await supabase
+                .from('userinfo')
+                .select('userid, user_email, english_username_a, english_username_b, english_username_c, english_username_d, user_phonenumber, id_number')
+                .in('userid', patientIds);
+
+            if (patientError) {
+                console.error('❌ Database error fetching patient info:', patientError);
+                // Continue with health records even if patient info fails
+            }
+
+            // Combine health records with patient info
+            const combinedRecords: PatientWithHealthData[] = healthRecords.map(record => {
+                const patient = patientInfo?.find(p => p.userid === record.patient_id);
+
+                const patientName = patient ?
+                    `${patient.english_username_a || ''} ${patient.english_username_b || ''} ${patient.english_username_c || ''} ${patient.english_username_d || ''}`.trim() :
                     'Unknown Patient';
 
                 return {
                     ...record,
                     patient_name: patientName,
-                    patient_email: patientInfo?.user_email || 'Unknown',
-                    patient_phone: patientInfo?.user_phone || 'Unknown',
-                    patient_id_number: patientInfo?.user_id_number || 'Unknown',
+                    patient_email: patient?.user_email || 'Unknown',
+                    patient_phone: patient?.user_phonenumber || 'Unknown',
+                    patient_id_number: patient?.id_number || 'Unknown',
                 };
-            }) || [];
+            });
 
-            console.log('✅ All patient records fetched successfully:', processedRecords.length);
-            return processedRecords;
+            console.log('✅ All patient records fetched successfully:', combinedRecords.length);
+            return combinedRecords;
 
         } catch (error: unknown) {
             console.error('❌ Error fetching all patient health data:', error);
@@ -223,12 +293,12 @@ export const usePatientHealth = () => {
     }, [toast]);
 
     // Delete patient health data
-    const deletePatientHealthData = useCallback(async (patientId: number | string): Promise<boolean> => {
+    const deletePatientHealthData = useCallback(async (patientId: number): Promise<boolean> => {
         try {
             const { error } = await supabase
                 .from('patient_health_info')
                 .delete()
-                .eq('patient_id', patientId.toString());
+                .eq('patient_id', patientId);
 
             if (error) {
                 throw error;
