@@ -1646,7 +1646,7 @@ const PatientHealthManagement: React.FC = () => {
                                                         {record.created_by_name && (
                                                             <div className="space-y-1">
                                                                 <div className={`text-xs font-medium text-gray-700 ${isRTL ? 'text-right' : ''}`}>
-                                                                    {isRTL ? 'تم إنشاؤه بواسطة:' : 'Created by:'}
+                                                                    {isRTL ? ':تم إنشاؤه بواسطة' : 'Created by:'}
                                                                 </div>
                                                                 <div className={`text-sm font-medium text-gray-900 ${isRTL ? 'text-left' : ''}`}>
                                                                     {record.created_by_name}

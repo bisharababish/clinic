@@ -913,196 +913,197 @@ const enTranslations = {
         noDataReturned: 'No data returned from patient creation'
     },
 
+    // Add this appointmentsManagement section to your enTranslations object in i18n.ts
+
     appointmentsManagement: {
         // Main titles and descriptions
-        title: 'إدارة المواعيد',
-        description: 'إدارة وتتبع جميع مواعيد المرضى',
+        title: 'Appointments Management',
+        description: 'Manage and track all patient appointments',
 
         // Header actions
-        refresh: 'تحديث',
-        export: 'تصدير',
-        addAppointment: 'إضافة موعد',
+        refresh: 'Refresh',
+        export: 'Export',
+        addAppointment: 'Add Appointment',
 
         // View modes
-        listView: 'عرض القائمة',
-        calendarView: 'عرض التقويم',
-        statistics: 'الإحصائيات',
+        listView: 'List View',
+        calendarView: 'Calendar View',
+        statistics: 'Statistics',
 
         // Search and filters
-        searchAppointments: 'البحث في المواعيد...',
-        resetFilters: 'إعادة تعيين المرشحات',
-        filterByStatus: 'تصفية حسب الحالة',
-        filterByPayment: 'تصفية حسب الدفع',
-        filterByClinic: 'تصفية حسب العيادة',
-        filterByDoctor: 'تصفية حسب الطبيب',
-        filterByDate: 'تصفية حسب التاريخ',
+        searchAppointments: 'Search appointments...',
+        resetFilters: 'Reset Filters',
+        filterByStatus: 'Filter by Status',
+        filterByPayment: 'Filter by Payment',
+        filterByClinic: 'Filter by Clinic',
+        filterByDoctor: 'Filter by Doctor',
+        filterByDate: 'Filter by Date',
 
         // Filter options
-        allStatuses: 'جميع الحالات',
-        allPaymentStatuses: 'جميع حالات الدفع',
-        allClinics: 'جميع العيادات',
-        allDoctors: 'جميع الأطباء',
-        allDates: 'جميع التواريخ',
-        today: 'اليوم',
-        thisWeek: 'هذا الأسبوع',
-        thisMonth: 'هذا الشهر',
-        customRange: 'نطاق مخصص',
+        allStatuses: 'All Statuses',
+        allPaymentStatuses: 'All Payment Statuses',
+        allClinics: 'All Clinics',
+        allDoctors: 'All Doctors',
+        allDates: 'All Dates',
+        today: 'Today',
+        thisWeek: 'This Week',
+        thisMonth: 'This Month',
+        customRange: 'Custom Range',
 
         // Table headers
-        patient: 'المريض',
-        doctor: 'الطبيب',
-        clinic: 'العيادة',
-        dateTime: 'التاريخ والوقت',
-        status: 'الحالة',
-        payment: 'الدفع',
-        actions: 'الإجراءات',
+        patient: 'Patient',
+        doctor: 'Doctor',
+        clinic: 'Clinic',
+        dateTime: 'Date & Time',
+        status: 'Status',
+        payment: 'Payment',
+        actions: 'Actions',
 
         // Statuses
-        scheduled: 'مجدول',
-        completed: 'مكتمل',
-        cancelled: 'ملغى',
-        pending: 'في الانتظار',
-        paid: 'مدفوع',
-        refunded: 'مسترد',
+        scheduled: 'Scheduled',
+        completed: 'Completed',
+        cancelled: 'Cancelled',
+        pending: 'Pending',
+        paid: 'Paid',
+        refunded: 'Refunded',
 
         // Messages
-        noAppointmentsFound: 'لم يتم العثور على مواعيد. حاول تعديل المرشحات أو إضافة موعد جديد.',
-        noAppointmentsScheduled: 'لا توجد مواعيد مجدولة',
-        createNewAppointment: 'إنشاء موعد جديد لرؤيته هنا.',
+        noAppointmentsFound: 'No appointments found. Try adjusting filters or add a new appointment.',
+        noAppointmentsScheduled: 'No appointments scheduled',
+        createNewAppointment: 'Create a new appointment to see it here.',
 
         // Pagination
-        showing: 'عرض',
-        to: 'إلى',
-        of: 'من',
-        appointments: 'مواعيد',
-        page: 'صفحة',
-        first: 'الأولى',
-        previous: 'السابق',
-        next: 'التالي',
-        last: 'الأخيرة',
-        itemsPerPage: 'عناصر لكل صفحة:',
+        showing: 'Showing',
+        to: 'to',
+        of: 'of',
+        appointments: 'appointments',
+        page: 'Page',
+        first: 'First',
+        previous: 'Previous',
+        next: 'Next',
+        last: 'Last',
+        itemsPerPage: 'Items per page:',
 
         // Appointment details dialog
-        appointmentDetails: 'تفاصيل الموعد',
-        manageAppointment: 'إدارة الموعد لـ {{patientName}}',
-        selectStatus: 'اختر الحالة',
-        selectPaymentStatus: 'اختر حالة الدفع',
-        notes: 'الملاحظات',
-        addNotes: 'إضافة ملاحظات حول هذا الموعد...',
-        saveChanges: 'حفظ التغييرات',
-        close: 'إغلاق',
+        appointmentDetails: 'Appointment Details',
+        manageAppointment: 'Manage appointment for {{patientName}}',
+        selectStatus: 'Select status',
+        selectPaymentStatus: 'Select payment status',
+        notes: 'Notes',
+        addNotes: 'Add notes about this appointment...',
+        saveChanges: 'Save Changes',
+        close: 'Close',
 
         // Create appointment dialog
-        createNewAppointmentTitle: 'إنشاء موعد جديد',
-        scheduleNewAppointment: 'جدولة موعد جديد لمريض',
+        createNewAppointmentTitle: 'Create New Appointment',
+        scheduleNewAppointment: 'Schedule a new appointment for a patient',
 
         // Form fields
-        selectClinic: 'اختر العيادة ',
-        chooseClinic: 'اختر عيادة',
-        selectDoctor: 'اختر الطبيب ',
-        chooseDoctor: 'اختر طبيب',
-        selectClinicFirst: 'اختر عيادة أولاً',
-        selectPatient: 'اختر المريض ',
-        searchPatients: 'البحث في المرضى بالاسم أو البريد الإلكتروني...',
-        noPatientsFound: 'لم يتم العثور على مرضى',
+        selectClinic: 'Select Clinic',
+        chooseClinic: 'Choose a clinic',
+        selectDoctor: 'Select Doctor',
+        chooseDoctor: 'Choose a doctor',
+        selectClinicFirst: 'Select a clinic first',
+        selectPatient: 'Select Patient',
+        searchPatients: 'Search patients by name or email...',
+        noPatientsFound: 'No patients found',
 
         // Time selection
-        selectDay: 'اختر اليوم ',
-        selectTimeSlot: 'اختر فترة زمنية ',
-        noAvailableSlots: 'لا توجد فترات زمنية متاحة لهذا اليوم',
+        selectDay: 'Select Day',
+        selectTimeSlot: 'Select Time Slot',
+        noAvailableSlots: 'No available time slots for this day',
 
         // Days of week (shortened)
-        mon: 'الإث',
-        tue: 'الثلا',
-        wed: 'الأرب',
-        thu: 'الخمي',
-        fri: 'الجمع',
-        sat: 'السبت',
-        sun: 'الأحد',
+        mon: 'Mon',
+        tue: 'Tue',
+        wed: 'Wed',
+        thu: 'Thu',
+        fri: 'Fri',
+        sat: 'Sat',
+        sun: 'Sun',
 
         // Price and notes
-        appointmentPrice: 'سعر الموعد',
-        basedOnDoctorRate: 'بناءً على سعر الطبيب المحدد',
-        additionalNotes: 'ملاحظات إضافية',
-        specialInstructions: 'إضافة أي ملاحظات أو تعليمات خاصة لهذا الموعد...',
+        appointmentPrice: 'Appointment Price',
+        basedOnDoctorRate: 'Based on the selected doctor\'s rate',
+        additionalNotes: 'Additional Notes',
+        specialInstructions: 'Add any special notes or instructions for this appointment...',
 
         // Buttons
-        createAppointment: 'إنشاء الموعد',
-        cancel: 'إلغاء',
-        edit: 'تعديل',
-        delete: 'حذف',
+        createAppointment: 'Create Appointment',
+        cancel: 'Cancel',
+        edit: 'Edit',
+        delete: 'Delete',
 
         // Warnings and errors
-        noActiveClinics: 'لا توجد عيادات نشطة متاحة. يرجى إضافة عيادات أولاً.',
-        noAvailableDoctors: 'لا يوجد أطباء متاحون لهذه العيادة.',
-        missingInformation: 'معلومات ناقصة',
-        fillRequiredFields: 'يرجى ملء جميع الحقول المطلوبة.',
+        noActiveClinics: 'No active clinics available. Please add clinics first.',
+        noAvailableDoctors: 'No available doctors for this clinic.',
+        missingInformation: 'Missing Information',
+        fillRequiredFields: 'Please fill in all required fields.',
 
         // Success messages
-        appointmentCreated: 'تم إنشاء الموعد بنجاح.',
-        appointmentUpdated: 'تم تحديث الموعد بنجاح.',
-        appointmentDeleted: 'تم حذف الموعد بنجاح.',
-        statusUpdated: 'تم تحديث حالة الموعد إلى {{status}}.',
-        paymentStatusUpdated: 'تم تحديث حالة الدفع إلى {{status}}.',
-        notesUpdated: 'تم تحديث ملاحظات الموعد بنجاح.',
-        priceUpdated: 'تم تحديث سعر الموعد.',
+        appointmentCreated: 'Appointment created successfully.',
+        appointmentUpdated: 'Appointment updated successfully.',
+        appointmentDeleted: 'Appointment deleted successfully.',
+        statusUpdated: 'Appointment status updated to {{status}}.',
+        paymentStatusUpdated: 'Payment status updated to {{status}}.',
+        notesUpdated: 'Appointment notes updated successfully.',
+        priceUpdated: 'Appointment price updated.',
 
         // Error messages
-        failedToCreate: 'فشل في إنشاء الموعد.',
-        failedToUpdate: 'فشل في تحديث الموعد.',
-        failedToDelete: 'فشل في حذف الموعد.',
-        failedToUpdateStatus: 'فشل في تحديث حالة الموعد.',
-        failedToUpdatePayment: 'فشل في تحديث حالة الدفع.',
-        failedToUpdateNotes: 'فشل في تحديث ملاحظات الموعد.',
-        failedToUpdatePrice: 'فشل في تحديث سعر الموعد.',
-        failedToLoad: 'فشل في تحميل المواعيد.',
-        failedToLoadClinics: 'فشل في تحميل العيادات.',
-        failedToLoadDoctors: 'فشل في تحميل الأطباء.',
-        failedToLoadPatients: 'فشل في تحميل المرضى.',
-        failedToLoadAvailability: 'فشل في تحميل أوقات توفر الطبيب.',
+        failedToCreate: 'Failed to create appointment.',
+        failedToUpdate: 'Failed to update appointment.',
+        failedToDelete: 'Failed to delete appointment.',
+        failedToUpdateStatus: 'Failed to update appointment status.',
+        failedToUpdatePayment: 'Failed to update payment status.',
+        failedToUpdateNotes: 'Failed to update appointment notes.',
+        failedToUpdatePrice: 'Failed to update appointment price.',
+        failedToLoad: 'Failed to load appointments.',
+        failedToLoadClinics: 'Failed to load clinics.',
+        failedToLoadDoctors: 'Failed to load doctors.',
+        failedToLoadPatients: 'Failed to load patients.',
+        failedToLoadAvailability: 'Failed to load doctor availability.',
 
         // Loading states
-        loading: 'جارٍ التحميل...',
-        loadingAppointments: 'جارٍ تحميل المواعيد...',
-        saving: 'جارٍ الحفظ...',
-        deleting: 'جارٍ الحذف...',
+        loading: 'Loading...',
+        loadingAppointments: 'Loading appointments...',
+        saving: 'Saving...',
+        deleting: 'Deleting...',
 
         // Delete confirmation
-        confirmDelete: 'هل أنت متأكد من حذف هذا الموعد؟ لا يمكن التراجع عن هذا الإجراء.',
+        confirmDelete: 'Are you sure you want to delete this appointment? This action cannot be undone.',
 
         // Export
-        exportComplete: 'اكتمل التصدير',
-        appointmentsExported: '{{count}} موعد تم تصديره إلى CSV.',
-        noDataToExport: 'لا توجد بيانات',
-        noAppointmentsToExport: 'لا توجد مواعيد تطابق المرشحات للتصدير.',
+        exportComplete: 'Export Complete',
+        appointmentsExported: '{{count}} appointments exported to CSV.',
+        noDataToExport: 'No Data to Export',
+        noAppointmentsToExport: 'No appointments match the filters for export.',
 
         // Activity log
-        appointmentCreatedLog: 'تم إنشاء الموعد',
-        appointmentStatusUpdated: 'تم تحديث حالة الموعد',
-        appointmentNotesUpdated: 'تم تحديث ملاحظات الموعد',
+        appointmentCreatedLog: 'Appointment Created',
+        appointmentStatusUpdated: 'Appointment Status Updated',
+        appointmentNotesUpdated: 'Appointment Notes Updated',
 
         // Statistics view
-        totalAppointments: 'إجمالي المواعيد',
-        totalRevenue: 'إجمالي الإيرادات',
-        appointmentStatus: 'حالة المواعيد',
-        paymentStatus: 'حالة الدفع',
-        revenueByClinic: 'الإيرادات حسب العيادة',
-        noDataAvailable: 'لا توجد بيانات متاحة',
-        noRevenueData: 'لا توجد بيانات إيرادات متاحة',
+        totalAppointments: 'Total Appointments',
+        totalRevenue: 'Total Revenue',
+        appointmentStatus: 'Appointment Status',
+        paymentStatus: 'Payment Status',
+        revenueByClinic: 'Revenue by Clinic',
+        noDataAvailable: 'No data available',
+        noRevenueData: 'No revenue data available',
 
         // Calendar view
-        noAppointmentsCalendar: 'لا توجد مواعيد مجدولة',
-        createAppointmentToSee: 'إنشاء موعد جديد لرؤيته هنا.',
+        noAppointmentsCalendar: 'No appointments scheduled',
+        createAppointmentToSee: 'Create a new appointment to see it here.',
 
         // Time formatting
-        am: 'ص',
-        pm: 'م',
+        am: 'AM',
+        pm: 'PM',
 
         // Summary cards
-        summary: 'ملخص',
-        averagePrice: 'متوسط السعر'
+        summary: 'Summary',
+        averagePrice: 'Average Price'
     }
-
 };
 
 // Arabic translations
