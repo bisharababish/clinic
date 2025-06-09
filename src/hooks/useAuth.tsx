@@ -54,160 +54,117 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Function to safely update user state and cache
+    const updateUserState = (userData: User | null) => {
+        if (userData) {
+            localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
+        } else {
+            localStorage.removeItem('clinic_user_profile');
+        }
+        setUser(userData);
+    };
+
+    // Function to fetch user data from database
+    const fetchUserData = async (email: string) => {
+        try {
+            const { data: userData, error: userError } = await supabase
+                .from('userinfo')
+                .select('*')
+                .ilike('user_email', email)
+                .single();
+
+            if (userError) {
+                console.error("Error fetching user data:", userError);
+                return null;
+            }
+
+            if (userData) {
+                return {
+                    id: userData.userid.toString(),
+                    email: userData.user_email,
+                    name: userData.english_username_a,
+                    role: (userData.user_roles || 'patient').toLowerCase() as UserRole
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error("Error in fetchUserData:", error);
+            return null;
+        }
+    };
 
     useEffect(() => {
-        // Try to load user from localStorage first for immediate UI updates
-        const cachedUser = localStorage.getItem('clinic_user_profile');
-        if (cachedUser) {
-            try {
-                const parsed = JSON.parse(cachedUser);
-                setUser({
-                    id: parsed.id.toString(),
-                    email: parsed.email,
-                    name: parsed.name,
-                    role: parsed.role as UserRole
-                });
-            } catch (e) {
-                console.error('Error parsing cached user:', e);
-            }
-        }
+        let mounted = true;
 
-        // Check for active session on mount
-        const checkSession = async () => {
+        const initializeAuth = async () => {
             try {
-                console.log("Checking session on mount...");
+                // Check for active session
                 const { data: { session }, error } = await supabase.auth.getSession();
 
                 if (error) {
                     console.error("Session error:", error);
-                    setIsLoading(false);
+                    if (mounted) {
+                        updateUserState(null);
+                        setIsLoading(false);
+                        setIsInitialized(true);
+                    }
                     return;
                 }
 
                 if (session?.user) {
-                    console.log("Session found:", session.user.email);
-                    // Use case-insensitive query
-                    const { data: userData, error: userError } = await supabase
-                        .from('userinfo')
-                        .select('*')
-                        .ilike('user_email', session.user.email || '')
-                        .single();
-
-                    if (userError) {
-                        console.error("Error fetching user data:", userError);
-                        setIsLoading(false);
-                        return;
-                    }
-
-                    if (userData) {
-                        console.log("User data found in database:", userData.english_username_a);
-                        const userObj = {
-                            id: userData.userid.toString(),
-                            email: userData.user_email,
-                            name: userData.english_username_a,
-                            role: (userData.user_roles || 'patient').toLowerCase() as UserRole
-                        };
-
-                        // Cache the user profile for faster access
-                        localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
-
-                        setUser(userObj);
-                    } else {
-                        console.log("No user data found for email:", session.user.email);
+                    const userData = await fetchUserData(session.user.email || '');
+                    if (mounted) {
+                        updateUserState(userData);
                     }
                 } else {
-                    console.log("No active session found");
-                    // Clear cached user if no session exists
-                    localStorage.removeItem('clinic_user_profile');
+                    if (mounted) {
+                        updateUserState(null);
+                    }
                 }
             } catch (error) {
-                console.error("Session check error:", error);
+                console.error("Initialization error:", error);
+                if (mounted) {
+                    updateUserState(null);
+                }
             } finally {
-                setIsLoading(false);
+                if (mounted) {
+                    setIsLoading(false);
+                    setIsInitialized(true);
+                }
             }
         };
 
-        checkSession();
+        initializeAuth();
 
         // Set up auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                console.log("Auth state changed:", event, session?.user?.email);
+                if (!mounted) return;
 
-                if (session?.user) {
-                    try {
-                        // Use case-insensitive query
-                        const { data: userData, error: userError } = await supabase
-                            .from('userinfo')
-                            .select('*')
-                            .ilike('user_email', session.user.email || '')
-                            .single();
-
-                        if (userError) {
-                            console.error("Error fetching user data on auth change:", userError);
-                            return;
+                try {
+                    if (session?.user) {
+                        const userData = await fetchUserData(session.user.email || '');
+                        if (mounted) {
+                            updateUserState(userData);
                         }
-
-                        if (userData) {
-                            console.log("User data found on auth change:", userData.english_username_a);
-                            const userObj = {
-                                id: userData.userid.toString(),
-                                email: userData.user_email,
-                                name: userData.english_username_a,
-                                role: (userData.user_roles || 'patient').toLowerCase() as UserRole
-                            };
-
-                            // Cache the user profile
-                            localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
-
-                            setUser(userObj);
-                        } else {
-                            console.log("No user data found for email on auth change:", session.user.email);
-                            // Create basic profile data if it doesn't exist
-                            const timestamp = new Date().toISOString();
-                            const { error: insertError } = await supabase.from('userinfo').insert({
-                                user_roles: 'Patient',
-                                english_username_a: session.user.email,
-                                english_username_b: session.user.email,
-                                english_username_c: session.user.email,
-                                english_username_d: session.user.email,
-                                arabic_username_a: session.user.email,
-                                arabic_username_b: session.user.email,
-                                arabic_username_c: session.user.email,
-                                arabic_username_d: session.user.email,
-                                user_email: session.user.email,
-                                created_at: timestamp,
-                                updated_at: timestamp
-                            });
-
-                            if (insertError) {
-                                console.error("Error creating user profile on auth change:", insertError);
-                            } else {
-                                // Set basic user object
-                                const userObj = {
-                                    id: '0', // Will be updated on next auth change
-                                    email: session.user.email || '',
-                                    name: session.user.email || '',
-                                    role: 'patient' as UserRole
-                                };
-
-                                localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
-                                setUser(userObj);
-                            }
+                    } else {
+                        if (mounted) {
+                            updateUserState(null);
                         }
-                    } catch (error) {
-                        console.error("Error handling auth state change:", error);
                     }
-                } else {
-                    // No session, clear user data
-                    localStorage.removeItem('clinic_user_profile');
-                    setUser(null);
+                } catch (error) {
+                    console.error("Auth state change error:", error);
+                    if (mounted) {
+                        updateUserState(null);
+                    }
                 }
-                setIsLoading(false);
             }
         );
 
         return () => {
+            mounted = false;
             subscription.unsubscribe();
         };
     }, []);
@@ -237,36 +194,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // 2. Check if user exists in database (case insensitive)
             console.log('Looking for user profile in database');
-            const { data: userData, error: dbError } = await supabase
-                .from('userinfo')
-                .select('*')
-                .ilike('user_email', email)
-                .single();
+            const userData = await fetchUserData(email);
 
             console.log('Database lookup result:', userData ? 'Found' : 'Not found');
 
             // Handle admin special case
-            if (userData && userData.user_roles.toLowerCase() === 'admin') {
+            if (userData && userData.role === 'admin') {
                 console.log('Admin user detected');
 
                 // Set special flag for admin session
                 sessionStorage.setItem('admin_login_success', 'true');
 
-                const userObj: User = {
-                    id: userData.userid.toString(),
-                    email: userData.user_email,
-                    name: userData.english_username_a,
-                    role: 'admin'
-                };
-
                 // Cache user profile for faster access
-                localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
-                setUser(userObj);
+                localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
+                setUser(userData);
 
-                return userObj;
+                return userData;
             }
             // 3. If user doesn't exist in database, create profile automatically
-            if (!userData || dbError) {
+            if (!userData) {
                 console.log('User profile not found, creating one...');
 
                 const currentTimestamp = new Date().toISOString();
@@ -321,18 +267,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // 4. User exists, return data
             console.log('Existing profile found, login successful');
-            const userObj: User = {
-                id: userData.userid.toString(),
-                email: userData.user_email,
-                name: userData.english_username_a,
-                role: userData.user_roles.toLowerCase() as UserRole
-            };
-
             // Cache user profile
-            localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
-            setUser(userObj);
+            localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
+            setUser(userData);
 
-            return userObj;
+            return userData;
 
         } catch (error) {
             setIsLoading(false);
@@ -359,12 +298,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             // 1. Check email availability (case insensitive)
-            const { data: existingEmail, error: emailCheckError } = await supabase
-                .from('userinfo')
-                .select('user_email')
-                .ilike('user_email', email)
-                .maybeSingle();
-
+            const existingEmail = await fetchUserData(email);
             if (existingEmail) {
                 throw new Error('This email is already registered. Please login.');
             }

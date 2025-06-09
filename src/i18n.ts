@@ -821,6 +821,8 @@ const enTranslations = {
     patientHealth: {
         title: 'Patient Health Management',
         searchPlaceholder: 'Search patients...',
+        searchPlaceholderr: 'Search patients...',
+
         refresh: 'Refresh',
         totalPatients: 'Total Patients',
         withHealthData: 'With Health Data',
@@ -1169,6 +1171,7 @@ const arTranslations = {
     patientHealth: {
         title: 'إدارة صحة المرضى',
         searchPlaceholder: '...البحث عن المرضى ',
+        searchPlaceholderr: 'البحث عن المرضى...',
         refresh: 'تحديث',
         totalPatients: 'إجمالي المرضى',
         withHealthData: 'مع بيانات صحية',

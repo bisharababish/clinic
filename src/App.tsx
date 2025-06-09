@@ -5,8 +5,8 @@ import { HeaderOnlyLayout } from "./components/layout/HeaderOnlyLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
-import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
 import { getDefaultRouteForRole } from "./lib/rolePermissions";
+import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -80,6 +80,7 @@ function DefaultRedirect() {
 
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -90,6 +91,7 @@ function App() {
         // await migrateExistingUsers();
       } catch (error) {
         console.error('Error initializing app:', error);
+        setInitError('Failed to initialize application. Please refresh the page.');
       } finally {
         setIsInitializing(false);
       }
@@ -100,6 +102,22 @@ function App() {
 
   if (isInitializing) {
     return <PageLoader />;
+  }
+
+  if (initError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-4 bg-red-50 rounded-lg">
+          <p className="text-red-600 mb-4">{initError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
