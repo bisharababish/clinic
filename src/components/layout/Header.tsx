@@ -647,6 +647,7 @@ export function Header() {
                                     )}
 
                                     <div className="pt-2 border-t border-gray-200 mt-2">
+
                                         {isAuthenticated ? (
                                             <Button
                                                 variant="ghost"
