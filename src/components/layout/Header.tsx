@@ -4,13 +4,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Lock, Key } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ThemeContext, ThemeContextType } from '../../components/contexts/ThemeContext';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { getRolePermissions, getDefaultRouteForRole } from '../../lib/rolePermissions';
+import { PasswordChangeModal } from '../ui/PasswordChangeModal';
 
 export function Header() {
     const { user, logout } = useAuth();
@@ -18,6 +19,7 @@ export function Header() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [effectiveRole, setEffectiveRole] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const { theme, toggleTheme } = useContext<ThemeContextType>(ThemeContext);
     const { isRTL } = useContext(LanguageContext);
     const { t } = useTranslation();
@@ -439,14 +441,25 @@ export function Header() {
                             )}
 
                             {isAuthenticated ? (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleLogout}
-                                    className="font-medium hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all duration-200"
-                                >
-                                    {t('common.logout') || 'Logout'}
-                                </Button>
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setIsPasswordModalOpen(true)}
+                                        className="font-medium hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all duration-200"
+                                    >
+                                        <Key className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                        {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleLogout}
+                                        className="font-medium hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all duration-200"
+                                    >
+                                        {t('common.logout') || 'Logout'}
+                                    </Button>
+                                </>
                             ) : (
                                 <Button variant="default" size="sm" asChild className="font-medium bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
                                     <Link to="/auth">{t('common.login') || 'Login'}</Link>
@@ -484,6 +497,16 @@ export function Header() {
                     </div>
                 </div>
             </div>
+
+            {/* Password Change Modal */}
+            {isAuthenticated && (
+                <PasswordChangeModal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    userEmail={user?.email || ''}
+                    userName={user?.user_metadata?.full_name || ''}
+                />
+            )}
 
             {/* Mobile Menu Overlay */}
             <AnimatePresence>
@@ -645,37 +668,6 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-
-                                    <div className="pt-2 border-t border-gray-200 mt-2">
-
-                                        {isAuthenticated ? (
-                                            <Button
-                                                variant="ghost"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setIsMobileMenuOpen(false);
-                                                    setTimeout(() => {
-                                                        handleLogout();
-                                                    }, 100);
-                                                }}
-                                                className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-red-50 hover:text-red-700 transition-colors duration-200 font-medium w-full`}
-                                            >
-                                                {t('common.logout') || 'Logout'}
-                                            </Button>
-                                        ) : (
-                                            <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 font-medium`}>
-                                                <Link
-                                                    to="/auth"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleMobileNavigation('/auth');
-                                                    }}
-                                                >
-                                                    {t('common.login') || 'Login'}
-                                                </Link>
-                                            </Button>
-                                        )}
-                                    </div>
                                 </nav>
                             </div>
                         </motion.div>

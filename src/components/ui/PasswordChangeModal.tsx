@@ -111,86 +111,123 @@ export function PasswordChangeModal({
         return true;
     };
 
-    const handlePasswordChange = async () => {
-        if (!validatePasswords()) return;
+    // Helper to add timeout to a promise
+    function withTimeout(promise, ms, timeoutMsg) {
+        return Promise.race([
+            promise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutMsg)), ms))
+        ]);
+    }
 
+    const handlePasswordChange = async () => {
+        if (!validatePasswords()) {
+            console.log('❌ Validation failed');
+            return;
+        }
         setIsChanging(true);
         setError(null);
+        // Optimistically close the modal and reset form
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setIsChanging(false);
+        setTimeout(() => { onClose(); }, 200);
 
-        try {
-            console.log('🔐 Starting password change process...');
-
-            // First, verify current password by attempting to sign in
-            const { error: verifyError } = await supabase.auth.signInWithPassword({
-                email: userEmail,
-                password: currentPassword
-            });
-
-            if (verifyError) {
-                console.error('❌ Current password verification failed:', verifyError);
-                setError(isRTL ? 'كلمة المرور الحالية غير صحيحة' : 'Current password is incorrect');
-                return;
-            }
-
-            console.log('✅ Current password verified successfully');
-
-            // Update password
-            const { error: updateError } = await supabase.auth.updateUser({
-                password: newPassword
-            });
-
-            if (updateError) {
-                console.error('❌ Password update failed:', updateError);
-                setError(updateError.message || (isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password'));
-                return;
-            }
-
-            console.log('✅ Password updated successfully');
-
-            // Update password in userinfo table as well (for backup/reference)
+        // Run password change logic in the background
+        setTimeout(async () => {
             try {
-                const { error: dbUpdateError } = await supabase
-                    .from('userinfo')
-                    .update({
-                        user_password: newPassword,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('user_email', userEmail);
-
-                if (dbUpdateError) {
-                    console.warn('⚠️ Failed to update password in userinfo table:', dbUpdateError);
-                    // Don't fail the entire operation for this
-                } else {
-                    console.log('✅ Password also updated in userinfo table');
+                // 1. Verify current password
+                const { error: verifyError } = await withTimeout(
+                    supabase.auth.signInWithPassword({
+                        email: userEmail,
+                        password: currentPassword
+                    }),
+                    8000,
+                    isRTL ? 'انتهت مهلة التحقق من كلمة المرور الحالية.' : 'Timeout verifying current password.'
+                );
+                if (verifyError) {
+                    toast({
+                        title: isRTL ? 'خطأ في كلمة المرور الحالية' : 'Current Password Error',
+                        description: isRTL ? 'كلمة المرور الحالية غير صحيحة' : 'Current password is incorrect',
+                        variant: 'destructive',
+                    });
+                    return;
                 }
-            } catch (dbError) {
-                console.warn('⚠️ Database update error (non-critical):', dbError);
+
+                // 2. Update password
+                let updateError;
+                try {
+                    ({ error: updateError } = await withTimeout(
+                        supabase.auth.updateUser({
+                            password: newPassword
+                        }),
+                        8000,
+                        isRTL ? 'انتهت مهلة تحديث كلمة المرور.' : 'Timeout updating password.'
+                    ));
+                } catch (err) {
+                    // If timeout, try to log in with new password
+                    const { error: loginWithNewError } = await supabase.auth.signInWithPassword({
+                        email: userEmail,
+                        password: newPassword
+                    });
+                    if (!loginWithNewError) {
+                        toast({
+                            title: isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password Changed Successfully',
+                            description: isRTL ?
+                                'تم تحديث كلمة المرور الخاصة بك بنجاح' :
+                                'Your password has been updated successfully',
+                        });
+                        return;
+                    } else {
+                        toast({
+                            title: isRTL ? 'انتهت مهلة تحديث كلمة المرور' : 'Timeout updating password',
+                            description: isRTL ? 'يرجى المحاولة مرة أخرى' : 'Please try again',
+                            variant: 'destructive',
+                        });
+                        return;
+                    }
+                }
+                if (updateError) {
+                    toast({
+                        title: isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password',
+                        description: updateError.message || (isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password'),
+                        variant: 'destructive',
+                    });
+                    return;
+                }
+
+                // 3. Update userinfo table (non-blocking)
+                try {
+                    await withTimeout(
+                        supabase
+                            .from('userinfo')
+                            .update({
+                                user_password: newPassword,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('user_email', userEmail),
+                        8000,
+                        isRTL ? 'انتهت مهلة تحديث قاعدة البيانات.' : 'Timeout updating database.'
+                    );
+                } catch (dbError) {
+                    // Ignore db error for userinfo
+                }
+
+                // 4. Show success message
+                toast({
+                    title: isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password Changed Successfully',
+                    description: isRTL ?
+                        'تم تحديث كلمة المرور الخاصة بك بنجاح' :
+                        'Your password has been updated successfully',
+                });
+            } catch (error) {
+                toast({
+                    title: isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred',
+                    description: error.message || (isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred'),
+                    variant: 'destructive',
+                });
             }
-
-            // Show success message
-            toast({
-                title: isRTL ? 'تم تغيير كلمة المرور بنجاح' : 'Password Changed Successfully',
-                description: isRTL ?
-                    'تم تحديث كلمة المرور الخاصة بك بنجاح' :
-                    'Your password has been updated successfully',
-            });
-
-            // Reset form and close modal
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-            onClose();
-
-        } catch (error) {
-            console.error('❌ Unexpected error during password change:', error);
-            setError(
-                error instanceof Error
-                    ? error.message
-                    : (isRTL ? 'حدث خطأ غير متوقع' : 'An unexpected error occurred')
-            );
-        } finally {
-            setIsChanging(false);
-        }
+        }, 300);
     };
 
     const handleSkip = () => {
@@ -304,8 +341,8 @@ export function PasswordChangeModal({
                                         {isRTL ? 'قوة كلمة المرور:' : 'Password strength:'}
                                     </span>
                                     <span className={`text-xs font-medium ${passwordStrength.score < 2 ? 'text-red-600' :
-                                            passwordStrength.score < 4 ? 'text-yellow-600' :
-                                                'text-green-600'
+                                        passwordStrength.score < 4 ? 'text-yellow-600' :
+                                            'text-green-600'
                                         }`}>
                                         {getPasswordStrengthText(passwordStrength.score)}
                                     </span>
