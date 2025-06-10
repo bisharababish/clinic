@@ -713,7 +713,9 @@ const enTranslations = {
         didntReceiveEmail: 'Didn\'t receive an email? Check your spam folder or try again.',
         enterEmailAddress: 'Please enter your email address',
         failedToSendResetLink: 'Failed to send reset link',
-
+        important: 'Important',
+        checkSpamFolder: 'Please check your spam/junk folder if you don\'t see the email in your inbox within a few minutes.',
+        willReceiveLink: 'you will receive a password reset link',
     },
     home: {
         reminder: 'Reminder',
@@ -1168,6 +1170,10 @@ const arTranslations = {
         didntReceiveEmail: 'لم تستلم بريدًا إلكترونيًا؟ تحقق من مجلد البريد العشوائي أو حاول مرة أخرى.',
         enterEmailAddress: 'الرجاء إدخال عنوان بريدك الإلكتروني',
         failedToSendResetLink: 'فشل في إرسال رابط إعادة التعيين',
+        important: 'مهم',
+        checkSpamFolder: 'يرجى التحقق من مجلد البريد العشوائي إذا لم تر البريد الإلكتروني في صندوق الوارد خلال بضع دقائق.',
+        willReceiveLink: 'ستتلقى رابط إعادة تعيين كلمة المرور',
+
     },
     patientHealth: {
         title: 'إدارة صحة المرضى',

@@ -96,8 +96,8 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
       // Always show success message (even if user doesn't exist - for security)
       setIsSubmitted(true);
       toast({
-        title: t("auth.resetLinkSent") || "Reset Link Sent",
-        description: t("auth.resetEmailSentDesc") || "If an account with this email exists, you will receive a password reset link.",
+        title: t("forgotpassowrd.resetLinkSent") || "Reset Link Sent",
+        description: t("forgotpassowrd.resetEmailSentDesc") || "If an account with this email exists, you will receive a password reset link.",
       });
 
     } catch (error) {
@@ -127,14 +127,14 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
             {t("auth.checkEmailTitle") || "Check Your Email"}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {t("auth.checkEmailDesc") || "If an account exists with"} <span className="font-medium">{email}</span>, you will receive a password reset link.
+            {t("forgotpassowrd.checkEmailDesc") || "If an account exists with"} <span className="font-medium">{email}</span>, {t("forgotpassowrd.willReceiveLink") || "you will receive a password reset link"}.
           </p>
         </div>
 
         <div className="space-y-4 text-center">
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-800">
-              <strong>Important:</strong> Please check your spam/junk folder if you don't see the email in your inbox within a few minutes.
+              <strong>{t("forgotpassowrd.important") || "Important"}:</strong> {t("forgotpassowrd.checkSpamFolder") || "Please check your spam/junk folder if you don't see the email in your inbox within a few minutes."}
             </p>
           </div>
 
