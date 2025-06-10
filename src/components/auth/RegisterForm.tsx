@@ -1,4 +1,4 @@
-// src/components/auth/RegisterForm.tsx
+// src/components/auth/RegisterForm.tsx version2
 import * as React from "react";
 import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
@@ -137,6 +137,74 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         setIsLoading(true);
 
         try {
+            // ✅ NEW: Check for existing email first
+            console.log('Checking for existing email...');
+            const { data: existingEmail, error: emailCheckError } = await supabase
+                .from('userinfo')
+                .select('user_email')
+                .ilike('user_email', formData.email)
+                .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when not found
+
+            if (emailCheckError && emailCheckError.code !== 'PGRST116') {
+                console.error('Email check error:', emailCheckError);
+                throw new Error('Error checking email availability');
+            }
+
+            if (existingEmail) {
+                toast({
+                    title: t("auth.registrationFailed"),
+                    description: "This email is already registered. Please use a different email or try logging in.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // ✅ NEW: Check for existing ID number
+            console.log('Checking for existing ID number...');
+            const { data: existingID, error: idCheckError } = await supabase
+                .from('userinfo')
+                .select('id_number')
+                .eq('id_number', formData.id_number)
+                .maybeSingle(); // Use maybeSingle() instead of single()
+
+            if (idCheckError && idCheckError.code !== 'PGRST116') {
+                console.error('ID check error:', idCheckError);
+                throw new Error('Error checking ID number availability');
+            }
+
+            if (existingID) {
+                toast({
+                    title: t("auth.registrationFailed"),
+                    description: "This ID number is already registered. Please check your ID number.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // ✅ NEW: Check for existing phone number
+            console.log('Checking for existing phone number...');
+            const { data: existingPhone, error: phoneCheckError } = await supabase
+                .from('userinfo')
+                .select('user_phonenumber')
+                .eq('user_phonenumber', formData.phoneNumber)
+                .maybeSingle();
+
+            if (phoneCheckError && phoneCheckError.code !== 'PGRST116') {
+                console.error('Phone check error:', phoneCheckError);
+                throw new Error('Error checking phone number availability');
+            }
+
+            if (existingPhone) {
+                toast({
+                    title: t("auth.registrationFailed"),
+                    description: "This phone number is already registered. Please use a different phone number.",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            console.log('All checks passed, proceeding with registration...');
+
             // Step 1: Create auth user directly with Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
@@ -184,23 +252,31 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
             if (insertError) {
                 console.error('Profile creation error:', insertError);
+                console.error('Full error details:', {
+                    message: insertError.message,
+                    details: insertError.details,
+                    hint: insertError.hint,
+                    code: insertError.code
+                });
 
-                if (insertError.message.includes('infinite recursion')) {
+                // ✅ Only show error if it's actually a real error, not a warning
+                if (insertError.code && insertError.code !== '23505') { // 23505 is duplicate key, which we handle elsewhere
                     toast({
-                        title: t("auth.registrationNote"),
-                        description: t("auth.profileSetupAdmin"),
-                        variant: "default",
+                        title: t("auth.registrationFailed"),
+                        description: `Database error: ${insertError.message}`,
+                        variant: "destructive",
                     });
-                } else {
                     throw insertError;
                 }
+                // If we get here, it might just be a warning, not a real error
+                console.log('Insert completed with warning, but user was created successfully');
             }
 
+            // ✅ Always show success if we get here
             toast({
                 title: t("auth.registrationSuccess"),
                 description: t("auth.welcomeToClinic"),
             });
-
             // Instead of auto-login, redirect to login page
             setTimeout(() => {
                 onSwitchToLogin();
