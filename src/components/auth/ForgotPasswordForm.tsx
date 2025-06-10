@@ -1,13 +1,11 @@
 // components/auth/ForgotPasswordForm.tsx
 import * as React from "react";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslation } from "react-i18next";
-import { LanguageContext } from "../contexts/LanguageContext";
 import { supabase } from "../../lib/supabase";
 
 interface ForgotPasswordFormProps {
@@ -19,27 +17,14 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { t } = useTranslation();
-  const { isRTL } = useContext(LanguageContext);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email) {
       toast({
-        title: t("common.error"),
-        description: t("auth.enterEmailAddress"),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        title: t("common.error"),
-        description: "Please enter a valid email address",
+        title: "Error",
+        description: "Please enter your email address",
         variant: "destructive",
       });
       return;
@@ -48,71 +33,23 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
     setIsLoading(true);
 
     try {
-      console.log("Sending password reset email to:", email);
-      console.log("Current location:", window.location.href);
-      console.log("Current origin:", window.location.origin);
-
-      // Get the current origin to ensure correct redirect URL
-      const currentOrigin = window.location.origin;
-      let redirectUrl = `${currentOrigin}/auth/reset-password`;
-
-      // For production, ensure we use the correct domain
-      if (currentOrigin.includes('bethlehemmedcenter.com')) {
-        redirectUrl = 'https://bethlehemmedcenter.com/auth/reset-password';
-      }
-
-      console.log("Using redirect URL:", redirectUrl);
-
       // Send password reset email using Supabase
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
-      console.log("Supabase response:", { data, error });
-
-      if (error) {
-        console.error("Password reset error:", error);
-        throw error;
-      }
-
-      console.log("Password reset email sent successfully");
+      if (error) throw error;
 
       setIsSubmitted(true);
       toast({
-        title: t("auth.resetLinkSent") || "Reset Link Sent",
-        description: t("auth.resetEmailSentDesc") || "Please check your email for the reset link",
+        title: "Reset Link Sent",
+        description: "If your email exists in our system, you'll receive a password reset link",
       });
     } catch (error) {
       console.error("Password reset error:", error);
-      console.error("Error details:", JSON.stringify(error, null, 2));
-
-      let errorMessage = t("auth.failedToSendResetLink") || "Failed to send reset link";
-
-      if (error instanceof Error) {
-        console.log("Error message:", error.message);
-        // Handle specific Supabase errors
-        if (error.message.includes("Invalid email")) {
-          errorMessage = "Please enter a valid email address";
-        } else if (error.message.includes("rate limit") || error.message.includes("rate exceeded") || error.message.includes("Email rate limit exceeded")) {
-          errorMessage = "Too many reset requests. Please wait a few minutes before trying again.";
-        } else if (error.message.includes("User not found")) {
-          errorMessage = "No account found with this email address";
-        } else if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "No account found with this email address";
-        } else if (error.message.includes("signup")) {
-          errorMessage = "Email configuration issue. Please contact support.";
-        } else if (error.message.includes("Invalid API key")) {
-          errorMessage = "Configuration error. Please contact support.";
-        } else if (error.message.includes("SMTP")) {
-          errorMessage = "Email service temporarily unavailable. Please try again later.";
-        } else {
-          errorMessage = `Error: ${error.message}`;
-        }
-      }
-
       toast({
-        title: t("common.error") || "Error",
-        description: errorMessage,
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send reset link",
         variant: "destructive",
       });
     } finally {
@@ -122,38 +59,28 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
 
   if (isSubmitted) {
     return (
-      <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="w-full space-y-6 animate-fade-in">
         <div className="space-y-2 text-center">
-          <h2 className="text-3xl font-bold tracking-tight">
-            {t("auth.checkEmailTitle") || "Check Your Email"}
-          </h2>
+          <h2 className="text-3xl font-bold tracking-tight">Check Your Email</h2>
           <p className="text-sm text-muted-foreground">
-            {t("auth.checkEmailDesc") || "We've sent a password reset link to"} <span className="font-medium">{email}</span>
+            We've sent a password reset link to <span className="font-medium">{email}</span>
           </p>
         </div>
 
         <div className="space-y-4 text-center">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>Important:</strong> Please check your spam/junk folder if you don't see the email in your inbox.
-            </p>
-          </div>
-
           <p className="text-sm text-muted-foreground">
-            {t("auth.didntReceiveEmail") || "Didn't receive the email?"}
+            Didn't receive an email? Check your spam folder or try again.
           </p>
-
-          <Button variant="outline" onClick={() => setIsSubmitted(false)} disabled={isLoading}>
-            {t("auth.tryAgain") || "Try Again"}
+          <Button variant="outline" onClick={() => setIsSubmitted(false)}>
+            Try Again
           </Button>
-
           <div className="pt-2">
             <button
               type="button"
               onClick={onSwitchToLogin}
               className="text-primary font-medium hover:underline text-sm"
             >
-              {t("auth.backToLogin") || "Back to Login"}
+              Back to Sign In
             </button>
           </div>
         </div>
@@ -162,37 +89,33 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
   }
 
   return (
-    <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full space-y-6 animate-fade-in">
       <div className="space-y-2 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">
-          {t("auth.resetPasswordTitle") || "Reset Password"}
-        </h2>
+        <h2 className="text-3xl font-bold tracking-tight">Forgot Password</h2>
         <p className="text-sm text-muted-foreground">
-          {t("auth.resetPasswordDesc") || "Enter your email to receive a reset link"}
+          Enter your email address and we'll send you a link to reset your password
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">{t("common.email") || "Email"}</Label>
+          <Label htmlFor="email">Email</Label>
           <div className="relative">
-            <Mail className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'
-              }`} />
+            <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               id="email"
               type="email"
-              placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
+              placeholder="name@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value.trim())}
-              className={isRTL ? 'pr-10' : 'pl-10'}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10"
               required
-              disabled={isLoading}
             />
           </div>
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (t("auth.sendingResetLink") || "Sending...") : (t("auth.sendResetLink") || "Send Reset Link")}
+          {isLoading ? "Sending..." : "Send Reset Link"}
         </Button>
       </form>
 
@@ -201,9 +124,8 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
           type="button"
           onClick={onSwitchToLogin}
           className="text-primary font-medium hover:underline"
-          disabled={isLoading}
         >
-          {isRTL ? "العودة لتسجيل الدخول" : "Back To Login"}
+          Back to Sign In
         </button>
       </div>
     </div>
