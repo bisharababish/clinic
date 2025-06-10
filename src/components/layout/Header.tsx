@@ -671,6 +671,17 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
+
+                                    {/* Add Logout Button to Mobile Menu */}
+                                    {isAuthenticated && (
+                                        <Button
+                                            variant="ghost"
+                                            onClick={handleLogout}
+                                            className={`${isRTL ? 'text-right' : 'text-left'} justify-start text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200`}
+                                        >
+                                            <span className="font-medium">{t('common.logout') || 'Logout'}</span>
+                                        </Button>
+                                    )}
                                 </nav>
                             </div>
                         </motion.div>

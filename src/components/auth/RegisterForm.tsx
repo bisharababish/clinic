@@ -201,15 +201,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 description: t("auth.welcomeToClinic"),
             });
 
-            // Auto-login after successful registration
-            setTimeout(async () => {
-                try {
-                    await login(formData.email, formData.password);
-                    window.location.href = "/";
-                } catch (error) {
-                    console.error("Auto-login failed:", error);
-                    onSwitchToLogin();
-                }
+            // Instead of auto-login, redirect to login page
+            setTimeout(() => {
+                onSwitchToLogin();
             }, 1500);
 
         } catch (error) {
