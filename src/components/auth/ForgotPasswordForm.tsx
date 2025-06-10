@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "../../lib/supabase";
-import { AuthApiError } from "@supabase/supabase-js";
 
 interface ForgotPasswordFormProps {
   onSwitchToLogin: () => void;
@@ -48,23 +47,9 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
       });
     } catch (error) {
       console.error("Password reset error:", error);
-      let description = "Failed to send reset link";
-
-      if (error instanceof AuthApiError) {
-        if (error.message.includes("over_email_send_rate_limit")) {
-          description = "Too many password reset emails sent to this address. Please wait a while before trying again.";
-        } else if (error.message.includes("over_request_rate_limit")) {
-          description = "Too many requests from your current IP address. Please try again in a few minutes.";
-        } else {
-          description = error.message;
-        }
-      } else if (error instanceof Error) {
-        description = error.message;
-      }
-
       toast({
         title: "Error",
-        description,
+        description: error instanceof Error ? error.message : "Failed to send reset link",
         variant: "destructive",
       });
     } finally {
