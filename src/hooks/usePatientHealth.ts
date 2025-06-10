@@ -9,6 +9,9 @@ export interface PatientHealthData {
     weight_kg?: number;
     height_cm?: number;
     blood_type?: string;
+    blood_pressure?: string;
+    heart_rate?: number;
+    temperature?: number;
     has_high_blood_pressure: boolean;
     has_diabetes: boolean;
     has_cholesterol_hdl: boolean;

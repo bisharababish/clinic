@@ -28,7 +28,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
     if (!email) {
       toast({
         title: t("common.error"),
-        description: t("auth.enterEmailAddress"),
+        description: t("auth.enterEmailAddress") || "Please enter your email address",
         variant: "destructive",
       });
       return;
@@ -50,43 +50,63 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
     try {
       console.log("Sending password reset email to:", email);
 
-      // Get the current origin to ensure correct redirect URL
-      const currentOrigin = window.location.origin;
-      const redirectUrl = `${currentOrigin}/auth/reset-password`;
-      
+      // Use the specific redirect URLs that match your Supabase configuration
+      const redirectUrl = `${window.location.origin}/auth/reset-password`;
+
       console.log("Using redirect URL:", redirectUrl);
 
-      // Send password reset email using Supabase
+      // First, check if the user exists in your database
+      const { data: userData, error: userCheckError } = await supabase
+        .from('userinfo')
+        .select('user_email')
+        .ilike('user_email', email)
+        .single();
+
+      if (userCheckError && userCheckError.code !== 'PGRST116') {
+        console.error("Error checking user:", userCheckError);
+      }
+
+      if (!userData) {
+        // User doesn't exist in database - still send "success" message for security
+        console.log("User not found in database, but showing success message for security");
+      }
+
+      // Send password reset email using Supabase (always attempt this)
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
       });
 
       if (error) {
         console.error("Password reset error:", error);
-        throw error;
+
+        // Handle specific error cases
+        if (error.message.includes('rate limit')) {
+          throw new Error('Too many requests. Please wait a few minutes before trying again.');
+        } else if (error.message.includes('invalid') || error.message.includes('Invalid')) {
+          throw new Error('Please enter a valid email address.');
+        } else if (error.message.includes('not authorized')) {
+          throw new Error('Email service is not properly configured. Please contact support.');
+        } else {
+          throw new Error(error.message || 'Failed to send reset email.');
+        }
       }
 
       console.log("Password reset email sent successfully");
 
+      // Always show success message (even if user doesn't exist - for security)
       setIsSubmitted(true);
       toast({
         title: t("auth.resetLinkSent") || "Reset Link Sent",
-        description: t("auth.resetEmailSentDesc") || "Please check your email for the reset link",
+        description: t("auth.resetEmailSentDesc") || "If an account with this email exists, you will receive a password reset link.",
       });
+
     } catch (error) {
       console.error("Password reset error:", error);
-      
-      let errorMessage = t("auth.failedToSendResetLink") || "Failed to send reset link";
-      
+
+      let errorMessage = "Failed to send reset link. Please try again.";
+
       if (error instanceof Error) {
-        // Handle specific Supabase errors
-        if (error.message.includes("Invalid email")) {
-          errorMessage = "Please enter a valid email address";
-        } else if (error.message.includes("rate limit")) {
-          errorMessage = "Too many requests. Please try again later";
-        } else {
-          errorMessage = error.message;
-        }
+        errorMessage = error.message;
       }
 
       toast({
@@ -107,25 +127,25 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
             {t("auth.checkEmailTitle") || "Check Your Email"}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {t("auth.checkEmailDesc") || "We've sent a password reset link to"} <span className="font-medium">{email}</span>
+            {t("auth.checkEmailDesc") || "If an account exists with"} <span className="font-medium">{email}</span>, you will receive a password reset link.
           </p>
         </div>
 
         <div className="space-y-4 text-center">
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-800">
-              <strong>Important:</strong> Please check your spam/junk folder if you don't see the email in your inbox.
+              <strong>Important:</strong> Please check your spam/junk folder if you don't see the email in your inbox within a few minutes.
             </p>
           </div>
-          
+
           <p className="text-sm text-muted-foreground">
             {t("auth.didntReceiveEmail") || "Didn't receive the email?"}
           </p>
-          
+
           <Button variant="outline" onClick={() => setIsSubmitted(false)} disabled={isLoading}>
             {t("auth.tryAgain") || "Try Again"}
           </Button>
-          
+
           <div className="pt-2">
             <button
               type="button"
@@ -155,8 +175,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
         <div className="space-y-2">
           <Label htmlFor="email">{t("common.email") || "Email"}</Label>
           <div className="relative">
-            <Mail className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'
-              }`} />
+            <Mail className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
             <Input
               id="email"
               type="email"
@@ -166,6 +185,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
               className={isRTL ? 'pr-10' : 'pl-10'}
               required
               disabled={isLoading}
+              autoComplete="email"
             />
           </div>
         </div>

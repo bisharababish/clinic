@@ -91,8 +91,98 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground min-h-screen;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Mobile-first responsive container */
+  .container {
+    @apply px-4 mx-auto w-full;
+    max-width: 100%;
+  }
+
+  @screen sm {
+    .container {
+      max-width: 640px;
+    }
+  }
+
+  @screen md {
+    .container {
+      max-width: 768px;
+    }
+  }
+
+  @screen lg {
+    .container {
+      max-width: 1024px;
+    }
+  }
+
+  @screen xl {
+    .container {
+      max-width: 1280px;
+    }
+  }
+
+  /* Mobile-friendly spacing */
+  .mobile-padding {
+    @apply px-4 py-3;
+  }
+
+  /* Mobile-friendly text sizes */
+  h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl font-bold;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl md:text-3xl font-semibold;
+  }
+
+  h3 {
+    @apply text-lg sm:text-xl md:text-2xl font-medium;
+  }
+
+  p {
+    @apply text-base sm:text-lg;
+  }
+
+  /* Mobile-friendly card styles */
+  .card {
+    @apply rounded-lg shadow-sm border border-border bg-card;
+  }
+
+  .card-mobile {
+    @apply p-4 sm:p-6;
+  }
+
+  /* Mobile-friendly button styles */
+  .btn-mobile {
+    @apply w-full sm:w-auto px-4 py-2 text-sm sm:text-base;
+  }
+
+  /* Mobile-friendly form styles */
+  .form-group {
+    @apply space-y-2 mb-4;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 rounded-md border border-input;
+  }
+
+  /* Mobile-friendly grid system */
+  .grid-mobile {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+  }
+
+  /* Mobile-friendly flex layouts */
+  .flex-mobile {
+    @apply flex flex-col sm:flex-row;
+  }
+
+  /* Mobile-friendly spacing utilities */
+  .space-mobile {
+    @apply space-y-4 sm:space-y-0 sm:space-x-4;
   }
 }
 
