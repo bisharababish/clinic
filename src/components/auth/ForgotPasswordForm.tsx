@@ -1,4 +1,4 @@
-// components/auth/ForgotPasswordForm.tsx - FIXED VERSION
+// components/auth/ForgotPasswordForm.tsx
 import * as React from "react";
 import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
@@ -34,73 +34,26 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        title: t("common.error"),
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      console.log("Sending password reset email to:", email);
-      console.log("Current location:", window.location.href);
-      console.log("Current origin:", window.location.origin);
-
-      // Get the current origin to ensure correct redirect URL
-      const currentOrigin = window.location.origin;
-      let redirectUrl = `${currentOrigin}/auth/reset-password`;
-
-      // For production, ensure we use the correct domain
-      if (currentOrigin.includes('bethlehemmedcenter.com')) {
-        redirectUrl = 'https://bethlehemmedcenter.com/auth/reset-password';
-      }
-
-      console.log("Using redirect URL:", redirectUrl);
-
       // Send password reset email using Supabase
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
-      console.log("Supabase response:", { data, error });
-
-      if (error) {
-        console.error("Password reset error:", error);
-        throw error;
-      }
-
-      console.log("Password reset email sent successfully");
+      if (error) throw error;
 
       setIsSubmitted(true);
       toast({
-        title: t("auth.resetLinkSent") || "Reset Link Sent",
-        description: t("auth.resetEmailSentDesc") || "Please check your email for the reset link",
+        title: t("auth.resetLinkSent"),
+        description: t("auth.resetEmailSentDesc"),
       });
     } catch (error) {
       console.error("Password reset error:", error);
-
-      let errorMessage = t("auth.failedToSendResetLink") || "Failed to send reset link";
-
-      if (error instanceof Error) {
-        // Handle specific Supabase errors
-        if (error.message.includes("Invalid email")) {
-          errorMessage = "Please enter a valid email address";
-        } else if (error.message.includes("rate limit")) {
-          errorMessage = "Too many requests. Please try again later";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-
       toast({
-        title: t("common.error") || "Error",
-        description: errorMessage,
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("auth.failedToSendResetLink"),
         variant: "destructive",
       });
     } finally {
@@ -113,35 +66,27 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
       <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="space-y-2 text-center">
           <h2 className="text-3xl font-bold tracking-tight">
-            {t("auth.checkEmailTitle") || "Check Your Email"}
+            {t("auth.checkEmailTitle")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {t("auth.checkEmailDesc") || "We've sent a password reset link to"} <span className="font-medium">{email}</span>
+            {t("auth.checkEmailDesc")} <span className="font-medium">{email}</span>
           </p>
         </div>
 
         <div className="space-y-4 text-center">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>Important:</strong> Please check your spam/junk folder if you don't see the email in your inbox.
-            </p>
-          </div>
-
           <p className="text-sm text-muted-foreground">
-            {t("auth.didntReceiveEmail") || "Didn't receive the email?"}
+            {t("auth.didntReceiveEmail")}
           </p>
-
-          <Button variant="outline" onClick={() => setIsSubmitted(false)} disabled={isLoading}>
-            {t("auth.tryAgain") || "Try Again"}
+          <Button variant="outline" onClick={() => setIsSubmitted(false)}>
+            {t("auth.tryAgain")}
           </Button>
-
           <div className="pt-2">
             <button
               type="button"
               onClick={onSwitchToLogin}
               className="text-primary font-medium hover:underline text-sm"
             >
-              {t("auth.backToLogin") || "Back to Login"}
+              {t("auth.backToLogin")}
             </button>
           </div>
         </div>
@@ -153,16 +98,16 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
     <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="space-y-2 text-center">
         <h2 className="text-3xl font-bold tracking-tight">
-          {t("auth.resetPasswordTitle") || "Reset Password"}
+          {t("auth.resetPasswordTitle")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {t("auth.resetPasswordDesc") || "Enter your email to receive a reset link"}
+          {t("auth.resetPasswordDesc")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">{t("common.email") || "Email"}</Label>
+          <Label htmlFor="email">{t("common.email")}</Label>
           <div className="relative">
             <Mail className={`absolute top-3 h-4 w-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'
               }`} />
@@ -171,16 +116,15 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
               type="email"
               placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
               value={email}
-              onChange={(e) => setEmail(e.target.value.trim())}
+              onChange={(e) => setEmail(e.target.value)}
               className={isRTL ? 'pr-10' : 'pl-10'}
               required
-              disabled={isLoading}
             />
           </div>
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (t("auth.sendingResetLink") || "Sending...") : (t("auth.sendResetLink") || "Send Reset Link")}
+          {isLoading ? t("auth.sendingResetLink") : t("auth.sendResetLink")}
         </Button>
       </form>
 
@@ -189,7 +133,6 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
           type="button"
           onClick={onSwitchToLogin}
           className="text-primary font-medium hover:underline"
-          disabled={isLoading}
         >
           {isRTL ? "العودة لتسجيل الدخول" : "Back To Login"}
         </button>
