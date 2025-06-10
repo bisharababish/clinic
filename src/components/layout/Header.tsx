@@ -180,6 +180,7 @@ export function Header() {
     const isLab = effectiveRole === "lab";
     const isXRay = effectiveRole === "x ray" || effectiveRole === "xray";
     const isPatient = effectiveRole === "patient";
+    const canChangePassword = isAuthenticated && isPatient;
 
     // Get the appropriate default route based on role
     const getDefaultRoute = () => {
@@ -442,15 +443,18 @@ export function Header() {
 
                             {isAuthenticated ? (
                                 <>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setIsPasswordModalOpen(true)}
-                                        className="font-medium hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all duration-200"
-                                    >
-                                        <Key className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                        {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
-                                    </Button>
+                                    {/* ✅ ADD canChangePassword && condition here */}
+                                    {canChangePassword && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setIsPasswordModalOpen(true)}
+                                            className="font-medium hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all duration-200"
+                                        >
+                                            <Key className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                            {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                                        </Button>
+                                    )}
                                     <Button
                                         variant="outline"
                                         size="sm"
