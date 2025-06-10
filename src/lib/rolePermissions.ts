@@ -37,7 +37,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageClinics: true,
     canManageDoctors: true,
     canViewReports: true,
-    canViewDoctorLabs: true, 
+    canViewDoctorLabs: true,
     canViewDoctorXray: true
   },
   secretary: {

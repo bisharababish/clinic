@@ -244,7 +244,7 @@ function App() {
               path="/admin"
               element={
                 <ProtectedRoute allowedRoles={["admin", "secretary"]}>
-                  <HeaderOnlyLayout>  
+                  <HeaderOnlyLayout>
                     <AdminDashboard />
                   </HeaderOnlyLayout>
                 </ProtectedRoute>
