@@ -927,13 +927,14 @@ const Index = () => {
     // Determine which patient ID to use
     let targetPatientId: string;
 
-    if ((userRole === 'nurse' || userRole === 'admin' || userRole === 'administrator') && selectedPatient) {
-      // Nurse is updating a selected patient's information
+    if ((userRole === 'nurse' || userRole === 'admin' || userRole === 'administrator' || userRole === 'secretary') && selectedPatient) {
+      // Nurse/Admin/Secretary is updating a selected patient's information
       targetPatientId = selectedPatient.userid.toString();
     } else if (userRole === 'patient' && user?.id) {
       // Patient is updating their own information
       targetPatientId = user.id;
     } else {
+      console.log('Debug info:', { userRole, selectedPatient: !!selectedPatient, userId: user?.id });
       toast({
         title: isRTL ? "خطأ" : "Error",
         description: isRTL ? "لا يمكن تحديد المريض المراد تحديث معلوماته" : "Cannot determine which patient to update",
@@ -978,7 +979,7 @@ const Index = () => {
         // Reload data to get updated user tracking info
         if (userRole === 'patient') {
           await loadPatientHealthData();
-        } else if ((userRole === 'nurse' || userRole === 'admin') && selectedPatient) {
+        } else if ((userRole === 'nurse' || userRole === 'admin' || userRole === 'secretary') && selectedPatient) {
 
           // Refresh the selected patient's data
           const updatedHealthData = await getPatientHealthData(selectedPatient.userid);
@@ -1020,13 +1021,12 @@ const Index = () => {
 
   // Function to check if the current user role can search for patients
   const canSearchPatients = (): boolean => {
-    return ["nurse", "doctor", "admin", "administrator"].includes(userRole);
+    return ["nurse", "doctor", "admin", "administrator", "secretary"].includes(userRole);
   };
   // NEW: Function to check if the current user role can create patients
   const canCreatePatients = (): boolean => {
-    return ["nurse", "admin", "administrator"].includes(userRole);
+    return ["nurse", "admin", "administrator", "secretary"].includes(userRole);
   };
-
   const getBloodTypeDisplay = (type: string) => {
     if (!isRTL) return type;
 
