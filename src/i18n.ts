@@ -719,7 +719,7 @@ const enTranslations = {
     },
     home: {
         reminder: 'Reminder',
-        reservationRequired: 'Please make a reservation before visiting our clinic',
+        reservationRequired: 'Please make a reservation before visiting our clinic.',
         bookNow: 'Book Now',
         homeemail: 'name@example.com',
         userCreation: 'User Creation',
