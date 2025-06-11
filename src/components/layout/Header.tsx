@@ -675,7 +675,24 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-
+                                    {/*  Add Password Change Button to Mobile Menu */}
+                                    {isAuthenticated && canChangePassword && (
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => {
+                                                setIsPasswordModalOpen(true);
+                                                setIsMobileMenuOpen(false); // Close mobile menu when opening modal
+                                            }}
+                                            className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Key className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                <span className="font-medium">
+                                                    {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                                                </span>
+                                            </div>
+                                        </Button>
+                                    )}
                                     {/* Add Logout Button to Mobile Menu */}
                                     {isAuthenticated && (
                                         <Button
