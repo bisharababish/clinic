@@ -199,13 +199,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log('Database lookup result:', userData ? 'Found' : 'Not found');
 
             // Handle admin special case
-            // Handle admin special case
             if (userData && userData.role === 'admin') {
                 console.log('Admin user detected');
 
-                // Cache user profile for faster access (using localStorage instead of sessionStorage)
+                // Cache user profile for faster access
                 localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
-                localStorage.setItem('admin_authenticated', 'true'); // Use localStorage instead of sessionStorage
                 setUser(userData);
 
                 return userData;
@@ -308,7 +306,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                    emailRedirectTo: process.env.NODE_ENV === 'production'
+                        ? 'https://bethlehemmedcenter.com/auth/callback'
+                        : `${window.location.origin}/auth/callback`
                 }
             });
 
@@ -394,14 +394,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await supabase.auth.signOut();
             // Clear user data
             localStorage.removeItem('clinic_user_profile');
-            localStorage.removeItem('admin_authenticated'); // Clear admin flag
             sessionStorage.removeItem('login_in_progress');
+            localStorage.removeItem('admin_authenticated'); // Add this line for cleanup
+
             setUser(null);
         } catch (error) {
             console.error('Error logging out:', error);
             throw error;
         }
     };
+
     return (
         <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
             {children}
