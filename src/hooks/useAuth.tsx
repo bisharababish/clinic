@@ -100,11 +100,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const initializeAuth = async () => {
             try {
+                console.log("[useAuth] Initializing authentication...");
                 // Check for active session
                 const { data: { session }, error } = await supabase.auth.getSession();
 
                 if (error) {
-                    console.error("Session error:", error);
+                    console.error("[useAuth] Session error on init:", error);
                     if (mounted) {
                         updateUserState(null);
                         setIsLoading(false);
@@ -114,17 +115,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 if (session?.user) {
+                    console.log("[useAuth] Session found on init, fetching user data for:", session.user.email);
                     const userData = await fetchUserData(session.user.email || '');
                     if (mounted) {
+                        console.log("[useAuth] User data fetched on init:", userData);
                         updateUserState(userData);
                     }
                 } else {
+                    console.log("[useAuth] No session found on init.");
                     if (mounted) {
                         updateUserState(null);
                     }
                 }
             } catch (error) {
-                console.error("Initialization error:", error);
+                console.error("[useAuth] Initialization error:", error);
                 if (mounted) {
                     updateUserState(null);
                 }
@@ -132,6 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 if (mounted) {
                     setIsLoading(false);
                     setIsInitialized(true);
+                    console.log("[useAuth] Auth initialization complete. isLoading:", false, "user:", user);
                 }
             }
         };
@@ -142,20 +147,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 if (!mounted) return;
+                console.log("[useAuth] Auth state change event:", event, "session:", session);
 
                 try {
                     if (session?.user) {
+                        console.log("[useAuth] Auth state change - session user found, fetching data for:", session.user.email);
                         const userData = await fetchUserData(session.user.email || '');
                         if (mounted) {
+                            console.log("[useAuth] Auth state change - user data fetched:", userData);
                             updateUserState(userData);
                         }
                     } else {
+                        console.log("[useAuth] Auth state change - no session user.");
                         if (mounted) {
                             updateUserState(null);
                         }
                     }
                 } catch (error) {
-                    console.error("Auth state change error:", error);
+                    console.error("[useAuth] Auth state change error:", error);
                     if (mounted) {
                         updateUserState(null);
                     }

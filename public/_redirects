@@ -6,4 +6,4 @@
 
 # Static assets should be served directly
 /assets/*  /assets/:splat  200
-/favicon.ico  /favicon.ico  200
+/favicon.ico  /favicon.ico  200 

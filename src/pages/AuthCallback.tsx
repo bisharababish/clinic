@@ -73,10 +73,8 @@ const AuthCallback = () => {
 
                             // Set role-specific flags
                             if (userData.user_roles === 'Admin' || userData.user_roles === 'admin') {
-                                console.log("Admin user detected, setting admin flag");
-                                sessionStorage.setItem('admin_login_success', 'true');
-
-                                // Small delay to ensure flags are set before navigation
+                                console.log("Admin user detected, redirecting to admin page.");
+                                // Small delay to ensure state is properly set
                                 setTimeout(() => {
                                     sessionStorage.removeItem('login_in_progress');
                                     navigate("/admin", { replace: true });

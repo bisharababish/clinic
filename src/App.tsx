@@ -48,24 +48,16 @@ function HomeRoute() {
     }
 
     const userRole = user.role?.toLowerCase();
-    const adminLoginSuccess = sessionStorage.getItem('admin_login_success');
+    const defaultRoute = getDefaultRouteForRole(userRole);
 
-    // Handle admin role
-    if (userRole === 'admin' && adminLoginSuccess === 'true') {
-      navigate('/admin', { replace: true });
+    // If the user is on the root path and their default route is not root, redirect them.
+    // This prevents redirect loops if the default route is '/' and the user is already there.
+    if (location.pathname === '/' && defaultRoute !== '/') {
+      console.log(`User ${userRole} at home, redirecting to: ${defaultRoute}`);
+      navigate(defaultRoute, { replace: true });
       return;
     }
 
-    // Handle other roles
-    if (userRole === 'lab') {
-      navigate('/labs', { replace: true });
-      return;
-    }
-
-    if (userRole === 'xray' || userRole === 'x ray') {
-      navigate('/xray', { replace: true });
-      return;
-    }
   }, [user, navigate]);
 
   if (!user) {

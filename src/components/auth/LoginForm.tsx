@@ -190,7 +190,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           // Clear login in progress flag after a short delay
           setTimeout(() => {
             sessionStorage.removeItem('login_in_progress');
-            window.location.href = finalRedirectPath;
+            navigate(finalRedirectPath, { replace: true });
           }, 100);
         } else {
           // Handle other roles
@@ -214,7 +214,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           // Clear login in progress flag after a short delay
           setTimeout(() => {
             sessionStorage.removeItem('login_in_progress');
-            window.location.href = redirectPath;
+            navigate(redirectPath, { replace: true });
           }, 100);
         }
       } else {
