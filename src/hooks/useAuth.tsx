@@ -199,14 +199,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log('Database lookup result:', userData ? 'Found' : 'Not found');
 
             // Handle admin special case
+            // Handle admin special case
             if (userData && userData.role === 'admin') {
                 console.log('Admin user detected');
 
-                // Set special flag for admin session
-                sessionStorage.setItem('admin_login_success', 'true');
-
-                // Cache user profile for faster access
+                // Cache user profile for faster access (using localStorage instead of sessionStorage)
                 localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
+                localStorage.setItem('admin_authenticated', 'true'); // Use localStorage instead of sessionStorage
                 setUser(userData);
 
                 return userData;
@@ -395,6 +394,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await supabase.auth.signOut();
             // Clear user data
             localStorage.removeItem('clinic_user_profile');
+            localStorage.removeItem('admin_authenticated'); // Clear admin flag
             sessionStorage.removeItem('login_in_progress');
             setUser(null);
         } catch (error) {
@@ -402,7 +402,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             throw error;
         }
     };
-
     return (
         <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
             {children}
