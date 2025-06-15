@@ -4,23 +4,29 @@ services:
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    not_found_path: /index.html
 
     routes:
       - type: rewrite
         source: /api/*
         destination: /api/:splat
+        status: 200
       - type: rewrite
         source: /assets/*
         destination: /assets/:splat
+        status: 200
       - type: rewrite
         source: /build/*
         destination: /build/:splat
+        status: 200
       - type: rewrite
         source: /favicon.ico
         destination: /favicon.ico
+        status: 200
       - type: rewrite
         source: /*
         destination: /index.html
+        status: 200
 
     headers:
       - path: /*
