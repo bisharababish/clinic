@@ -54,6 +54,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     // Function to safely update user state and cache
     const updateUserState = (userData: User | null) => {
@@ -107,6 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     if (mounted) {
                         updateUserState(null);
                         setIsLoading(false);
+                        setIsInitialized(true);
                     }
                     return;
                 }
@@ -129,6 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             } finally {
                 if (mounted) {
                     setIsLoading(false);
+                    setIsInitialized(true);
                 }
             }
         };
@@ -198,6 +201,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Handle admin special case
             if (userData && userData.role === 'admin') {
                 console.log('Admin user detected');
+
+                // Set special flag for admin session
+                sessionStorage.setItem('admin_login_success', 'true');
 
                 // Cache user profile for faster access
                 localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
@@ -303,9 +309,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 email,
                 password,
                 options: {
-                    emailRedirectTo: process.env.NODE_ENV === 'production'
-                        ? 'https://bethlehemmedcenter.com/auth/callback'
-                        : `${window.location.origin}/auth/callback`
+                    emailRedirectTo: `${window.location.origin}/auth/callback`
                 }
             });
 
@@ -392,8 +396,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Clear user data
             localStorage.removeItem('clinic_user_profile');
             sessionStorage.removeItem('login_in_progress');
-            localStorage.removeItem('admin_authenticated'); // Add this line for cleanup
-
             setUser(null);
         } catch (error) {
             console.error('Error logging out:', error);

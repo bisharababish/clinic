@@ -300,11 +300,86 @@ const AdminDashboard = () => {
             }
 
             setUsers(data);
+
+            if (searchQuery.trim() === '') {
+                setFilteredUsers(data);
+            } else {
+                const query = searchQuery.toLowerCase();
+                const filtered = data.filter(user =>
+                    (user.user_email && user.user_email.toLowerCase().includes(query)) ||
+                    (user.english_username_a && user.english_username_a.toLowerCase().includes(query)) ||
+                    (user.english_username_d && user.english_username_d.toLowerCase().includes(query)) ||
+                    (user.user_roles && user.user_roles.toLowerCase().includes(query))
+                );
+                setFilteredUsers(filtered);
+            }
+
+            // Set up real-time subscription
+            const subscription = supabase
+                .channel('userinfo-changes')
+                .on('postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'userinfo'
+                    },
+                    (payload) => {
+                        console.log('Real-time INSERT event received:', payload);
+                        const newUser = payload.new as UserInfo;
+                        setUsers(prev => [newUser, ...prev]);
+
+                        if (searchQuery.trim() === '' ||
+                            (newUser.user_email && newUser.user_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (newUser.english_username_a && newUser.english_username_a.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (newUser.english_username_d && newUser.english_username_d.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (newUser.user_roles && newUser.user_roles.toLowerCase().includes(searchQuery.toLowerCase()))) {
+                            setFilteredUsers(prev => [newUser, ...prev]);
+                        }
+                    })
+                .on('postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'userinfo'
+                    },
+                    (payload) => {
+                        console.log('Real-time UPDATE event received:', payload);
+                        const updatedUser = payload.new as UserInfo;
+                        setUsers(prev => prev.map(user =>
+                            user.userid === updatedUser.userid ? updatedUser : user
+                        ));
+                        setFilteredUsers(prev => prev.map(user =>
+                            user.userid === updatedUser.userid ? updatedUser : user
+                        ));
+                    })
+                .on('postgres_changes',
+                    {
+                        event: 'DELETE',
+                        schema: 'public',
+                        table: 'userinfo'
+                    },
+                    (payload) => {
+                        console.log('Real-time DELETE event received:', payload);
+                        if (payload.old && payload.old.userid) {
+                            const deletedUserId = payload.old.userid;
+                            console.log(`Removing user ${deletedUserId} from state due to real-time DELETE`);
+                            setUsers(prev => prev.filter(user => user.userid !== deletedUserId));
+                            setFilteredUsers(prev => prev.filter(user => user.userid !== deletedUserId));
+                        }
+                    })
+                .subscribe((status) => {
+                    console.log('Subscription status:', status);
+                });
+
+            return () => {
+                console.log('Cleaning up subscription');
+                supabase.removeChannel(subscription);
+            };
         } catch (error) {
             console.error('Error loading users:', error);
             toast({
                 title: t('common.error'),
-                description: t('admin.errorLoadingUsers') || 'Failed to load users',
+                description: t('admin.failedToLoadUsers') || 'Failed to load users',
                 variant: "destructive",
             });
             setUsers([]);
@@ -482,7 +557,7 @@ const AdminDashboard = () => {
 
                 <div className="space-y-4 mt-6">
                     <Button
-                        onClick={() => navigate(0)}
+                        onClick={() => window.location.reload()}
                         className="w-full"
                     >
                         {t('admin.reloadPage') || 'Reload Page'}
@@ -531,10 +606,7 @@ const AdminDashboard = () => {
                 </div>
             ) : (
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                    <TabsList className={`grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap md:justify-center w-full gap-1 h-auto p-1`} dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
-                        {/* For Arabic: Keep original order for mobile RTL grid, reverse will be handled by dir="rtl" */}
-                        {/* For Desktop: flex-row-reverse will handle the order */}
-
+                    <TabsList className={`flex flex-wrap justify-center w-full ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         {/* Overview tab first */}
                         {canViewOverviewTab && (
                             <TabsTrigger value="overview">{t('admin.overview') || 'Overview'}</TabsTrigger>

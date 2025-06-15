@@ -251,15 +251,12 @@ function App() {
               }
             />
 
-            {/* 404 Page */}
-            <Route path="/404" element={<NotFound />} />
-
             {/* Catch all route - redirect to user's default route based on role */}
             <Route
               path="*"
               element={
                 <ProtectedRoute>
-                  <Navigate to="/404" replace />
+                  <DefaultRedirect />
                 </ProtectedRoute>
               }
             />

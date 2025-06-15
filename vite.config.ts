@@ -23,10 +23,8 @@ export default defineConfig({
         manualChunks: undefined,
       },
     },
-    // Ensure all files are properly copied
+    // Ensure _redirects file is copied to dist
     copyPublicDir: true,
-    // Add source maps for better debugging
-    sourcemap: true,
   },
   base: '/',
   // This ensures the _redirects file is properly handled
