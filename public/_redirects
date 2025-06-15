@@ -8,3 +8,6 @@
 /assets/*  /assets/:splat  200
 /build/*  /build/:splat  200
 /favicon.ico  /favicon.ico  200
+
+# Force HTTPS
+http://bethlehemmedcenter.com/*  https://bethlehemmedcenter.com/:splat  301!

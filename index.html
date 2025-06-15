@@ -14,11 +14,21 @@
     <script>
       // Handle client-side routing for SPA
       (function() {
-        // If this is a direct navigation to a route (not the home page)
-        if (window.location.pathname !== '/') {
-          // Store the intended path
-          sessionStorage.setItem('redirect-path', window.location.pathname + window.location.search);
+        var path = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        
+        // Store the full URL for redirection after React loads
+        if (path !== '/') {
+          sessionStorage.setItem('redirect-path', path + search + hash);
         }
+        
+        // Handle 404s and redirects
+        window.addEventListener('error', function(e) {
+          if (e.message.includes('Failed to load resource: the server responded with a status of 404')) {
+            window.location.href = '/';
+          }
+        });
       })();
     </script>
   </head>
@@ -32,11 +42,11 @@
     <script>
       window.addEventListener('load', function() {
         // Check if we have a stored redirect path
-        const redirectPath = sessionStorage.getItem('redirect-path');
+        var redirectPath = sessionStorage.getItem('redirect-path');
         if (redirectPath) {
           sessionStorage.removeItem('redirect-path');
           // Let React Router handle the navigation
-          setTimeout(() => {
+          setTimeout(function() {
             if (window.history && window.history.pushState) {
               window.history.replaceState(null, '', redirectPath);
               // Trigger a popstate event to let React Router know about the change
