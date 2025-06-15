@@ -116,7 +116,7 @@ export default function ResetPassword() {
                 } catch (signOutError) {
                     console.error("Error during sign out:", signOutError);
                 } finally {
-                    navigate("/auth", { replace: true });
+                    window.location.href = "/auth";
                 }
             }, 1500);
 

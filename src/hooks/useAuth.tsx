@@ -14,7 +14,6 @@ interface User {
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
-    isInitialized: boolean;
     login: (email: string, password: string) => Promise<User>;
     signup: (userData: SignupData) => Promise<void>;
     logout: () => Promise<void>;
@@ -55,7 +54,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isInitialized, setIsInitialized] = useState(false);
 
     // Function to safely update user state and cache
     const updateUserState = (userData: User | null) => {
@@ -109,7 +107,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     if (mounted) {
                         updateUserState(null);
                         setIsLoading(false);
-                        setIsInitialized(true);
                     }
                     return;
                 }
@@ -132,7 +129,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             } finally {
                 if (mounted) {
                     setIsLoading(false);
-                    setIsInitialized(true);
                 }
             }
         };
@@ -406,7 +402,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, isInitialized, login, signup, logout }}>
+        <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
             {children}
         </AuthContext.Provider>
     );

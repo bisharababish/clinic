@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Lock, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "../../lib/supabase";
-import { useNavigate } from "react-router-dom";
 
 const AdminLoginButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,7 +15,6 @@ const AdminLoginButton: React.FC = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   // Check if admin is already logged in
   useEffect(() => {
@@ -129,7 +127,7 @@ const AdminLoginButton: React.FC = () => {
       setIsOpen(false);
 
       // Redirect to admin page after successful login
-      navigate("/admin", { replace: true });
+      window.location.href = "/admin";
       return true;
 
     } catch (err) {
