@@ -172,93 +172,63 @@ const LoginForm: React.FC<LoginFormProps> = ({
         }
 
         if (userRole === 'admin') {
+          // Set admin login success flag
+          sessionStorage.setItem('admin_login_success', 'true');
+
           toast({
             title: t("auth.adminLogin") || "Admin Login",
             description: t("auth.secureAdminAccess") || "Secure admin access granted"
           });
-        } else if (userRole === 'lab') {
-          toast({
-            title: t("common.login") || "Login Successful",
-            description: toastMessage + " Redirecting to Labs..."
-          });
-        } else if (userRole === 'xray' || userRole === 'x ray') {
-          toast({
-            title: t("common.login") || "Login Successful",
-            description: toastMessage + " Redirecting to X-Ray..."
-          });
+
+          // Get the stored redirect path or use default admin path
+          const storedRedirect = sessionStorage.getItem('redirectAfterLogin');
+          const finalRedirectPath = storedRedirect || '/admin';
+
+          // Clear stored redirect
+          sessionStorage.removeItem('redirectAfterLogin');
+
+          // Clear login in progress flag after a short delay
+          setTimeout(() => {
+            sessionStorage.removeItem('login_in_progress');
+            window.location.href = finalRedirectPath;
+          }, 100);
         } else {
-          toast({
-            title: t("common.login") || "Login Successful",
-            description: toastMessage
-          });
-        }
-
-        // Use role-based redirect with a small delay
-        setTimeout(() => {
-          sessionStorage.removeItem('login_in_progress');
-
-          // Call callback if provided
-          if (onLoginSuccess) {
-            onLoginSuccess(userRole);
+          // Handle other roles
+          if (userRole === 'lab') {
+            toast({
+              title: t("common.login") || "Login Successful",
+              description: toastMessage + " Redirecting to Labs..."
+            });
+          } else if (userRole === 'xray' || userRole === 'x ray') {
+            toast({
+              title: t("common.login") || "Login Successful",
+              description: toastMessage + " Redirecting to X-Ray..."
+            });
+          } else {
+            toast({
+              title: t("common.login") || "Login Successful",
+              description: toastMessage
+            });
           }
 
-          // Navigate to role-specific route
-          console.log(`Navigating to: ${redirectPath}`);
-          navigate(redirectPath, { replace: true });
-        }, 1000); // Increased delay to show toast
-
-        return;
-      }
-
-      // If bypass didn't work, try the hook method (fallback)
-      console.log("Bypass login failed, trying hook method...");
-
-      const userData = await login(email, password);
-
-      if (userData && userData.role) {
-        const redirectPath = getRoleBasedRedirect(userData.role);
-        console.log(`Hook login successful for ${userData.role}, redirecting to: ${redirectPath}`);
-
-        // Show success message
+          // Clear login in progress flag after a short delay
+          setTimeout(() => {
+            sessionStorage.removeItem('login_in_progress');
+            window.location.href = redirectPath;
+          }, 100);
+        }
+      } else {
         toast({
-          title: t("common.login") || "Login Successful",
-          description: `${t("auth.welcomeBack") || "Welcome back"}, ${userData.name}!`
+          title: t("auth.loginFailed") || "Login Failed",
+          description: t("auth.invalidCredentials") || "Invalid email or password",
+          variant: "destructive",
         });
-
-        setTimeout(() => {
-          sessionStorage.removeItem('login_in_progress');
-
-          if (onLoginSuccess) {
-            onLoginSuccess(userData.role);
-          }
-
-          navigate(redirectPath, { replace: true });
-        }, 1000);
-
-        return;
       }
-
-      // If we get here, login failed
-      throw new Error("Login failed - no user data returned");
-
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Login error:", error);
-      sessionStorage.removeItem('login_in_progress');
-
-      let errorMessage = t("auth.missingCredentials") || "Login failed";
-
-      if (typeof error === "object" && error !== null && "message" in error && typeof (error as { message?: string }).message === "string") {
-        const errMsg = (error as { message: string }).message;
-        if (errMsg.includes("Invalid login credentials")) {
-          errorMessage = t("auth.invalidCredentials") || "Invalid email or password";
-        } else {
-          errorMessage = errMsg;
-        }
-      }
-
       toast({
-        title: t("common.login") || "Login Failed",
-        description: errorMessage,
+        title: t("auth.loginFailed") || "Login Failed",
+        description: t("auth.unexpectedError") || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {

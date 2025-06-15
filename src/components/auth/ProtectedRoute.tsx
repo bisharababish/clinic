@@ -1,6 +1,6 @@
 // components/auth/ProtectedRoute.tsx
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 interface ProtectedRouteProps {
@@ -16,6 +16,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check for admin login success flag
+    const adminLoginSuccess = sessionStorage.getItem('admin_login_success');
+    const loginInProgress = sessionStorage.getItem('login_in_progress');
+
+    if (adminLoginSuccess === 'true' && !loginInProgress) {
+      // Clear the flag to prevent redirect loops
+      sessionStorage.removeItem('admin_login_success');
+    }
+  }, []);
 
   // Show loading spinner while authentication is being checked
   if (isLoading) {
@@ -31,6 +43,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // If user is not authenticated, redirect to login
   if (!user) {
+    // Store the attempted URL for redirect after login
+    sessionStorage.setItem('redirectAfterLogin', location.pathname);
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
@@ -57,7 +71,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (!hasPermission) {
     // Log for debugging
     console.warn(`Access denied for user role "${userRole}" to route requiring roles: [${allowedRoles.join(', ')}]`);
-    return <Navigate to="/404" replace />;
+    return <Navigate to={fallbackPath} replace />;
   }
 
   // User is authenticated and has permission, render the protected component

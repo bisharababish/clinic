@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
 import { HeaderOnlyLayout } from "./components/layout/HeaderOnlyLayout";
@@ -39,25 +39,39 @@ const PageLoader = () => (
 // Home Route with Role-Based Redirect
 function HomeRoute() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth', { replace: true });
+      return;
+    }
+
+    const userRole = user.role?.toLowerCase();
+    const adminLoginSuccess = sessionStorage.getItem('admin_login_success');
+
+    // Handle admin role
+    if (userRole === 'admin' && adminLoginSuccess === 'true') {
+      navigate('/admin', { replace: true });
+      return;
+    }
+
+    // Handle other roles
+    if (userRole === 'lab') {
+      navigate('/labs', { replace: true });
+      return;
+    }
+
+    if (userRole === 'xray' || userRole === 'x ray') {
+      navigate('/xray', { replace: true });
+      return;
+    }
+  }, [user, navigate]);
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return null;
   }
 
-  const userRole = user.role?.toLowerCase();
-
-  // ✅ FIXED: Redirect lab and x-ray users to their specific sections
-  if (userRole === 'lab') {
-    console.log('Lab user accessing home - redirecting to /labs');
-    return <Navigate to="/labs" replace />;
-  }
-
-  if (userRole === 'xray' || userRole === 'x ray') {
-    console.log('X-ray user accessing home - redirecting to /xray');
-    return <Navigate to="/xray" replace />;
-  }
-
-  // ✅ Allow other roles (including doctors) to access home page
   return (
     <MainLayout>
       <Index />
@@ -131,8 +145,6 @@ function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Protected routes with MainLayout */}
-
-            {/* Home - ✅ FIXED: Now accessible to doctors, lab and x-ray users get redirected */}
             <Route
               path="/"
               element={
@@ -239,9 +251,8 @@ function App() {
             />
 
             {/* Admin Dashboard - accessible to admin and secretary */}
-            {/* Secretary will be limited to appointments tab only within the dashboard */}
             <Route
-              path="/admin"
+              path="/admin/*"
               element={
                 <ProtectedRoute allowedRoles={["admin", "secretary"]}>
                   <HeaderOnlyLayout>
