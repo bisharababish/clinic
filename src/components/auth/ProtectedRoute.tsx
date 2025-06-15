@@ -57,7 +57,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (!hasPermission) {
     // Log for debugging
     console.warn(`Access denied for user role "${userRole}" to route requiring roles: [${allowedRoles.join(', ')}]`);
-    return <Navigate to={fallbackPath} replace />;
+    return <Navigate to="/404" replace />;
   }
 
   // User is authenticated and has permission, render the protected component
