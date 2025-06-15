@@ -14,11 +14,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   allowedRoles = [],
   fallbackPath = '/'
 }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isInitialized } = useAuth();
   const location = useLocation();
 
-  // Show loading spinner while authentication is being checked
-  if (isLoading) {
+  // Show loading spinner while authentication is being checked OR not yet initialized
+  if (isLoading || !isInitialized) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

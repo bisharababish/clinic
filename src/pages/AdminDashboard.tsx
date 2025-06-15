@@ -482,7 +482,7 @@ const AdminDashboard = () => {
 
                 <div className="space-y-4 mt-6">
                     <Button
-                        onClick={() => window.location.reload()}
+                        onClick={() => navigate(0)}
                         className="w-full"
                     >
                         {t('admin.reloadPage') || 'Reload Page'}

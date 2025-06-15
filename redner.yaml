@@ -4,7 +4,6 @@ services:
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
-
     routes:
       - type: rewrite
         source: /api/*
@@ -21,7 +20,6 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-
     headers:
       - path: /*
         name: Cache-Control
@@ -40,4 +38,4 @@ services:
         value: DENY
       - path: /*
         name: X-XSS-Protection
-        value: "1; mode=block"
+        value: "1; mode=block" 

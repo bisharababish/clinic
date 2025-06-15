@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
 import { getDefaultRouteForRole } from "./lib/rolePermissions";
 import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
+import { useNavigate } from "react-router-dom";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -38,7 +39,11 @@ const PageLoader = () => (
 
 // Home Route with Role-Based Redirect
 function HomeRoute() {
-  const { user } = useAuth();
+  const { user, isLoading, isInitialized } = useAuth();
+
+  if (isLoading || !isInitialized) {
+    return <PageLoader />;
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -67,7 +72,11 @@ function HomeRoute() {
 
 // Default Redirect Component for unknown routes
 function DefaultRedirect() {
-  const { user } = useAuth();
+  const { user, isLoading, isInitialized } = useAuth();
+
+  if (isLoading || !isInitialized) {
+    return <PageLoader />;
+  }
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -81,6 +90,7 @@ function DefaultRedirect() {
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -110,7 +120,7 @@ function App() {
         <div className="text-center p-4 bg-red-50 rounded-lg">
           <p className="text-red-600 mb-4">{initError}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => navigate(0)}
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
           >
             Refresh Page
