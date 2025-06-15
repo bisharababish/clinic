@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { getDefaultRouteForRole } from "../lib/rolePermissions";
+import "./styles/lab.css"
 
 const Labs = () => {
   const { t, i18n } = useTranslation();
@@ -63,29 +64,28 @@ const Labs = () => {
   // Loading state while checking user
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="labs-loading-container">
+        <div className="labs-loading-content">
+          <div className="labs-loading-spinner"></div>
+          <p className="labs-loading-text">Loading...</p>
         </div>
       </div>
     );
   }
-
   // Access denied for non-lab users
   // Access denied for non-lab and non-admin users
   const userRole = user.role?.toLowerCase();
   if (userRole !== 'lab' && userRole !== 'admin') {
     return (
-      <div className="p-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h2 className="text-lg font-semibold text-red-800">Access Restricted</h2>
-          <p className="text-red-600">
+      <div className="labs-access-denied">
+        <div className="labs-access-denied-card">
+          <h2 className="labs-access-denied-title">Access Restricted</h2>
+          <p className="labs-access-denied-text">
             This page is only accessible to Lab and Admin users. Your role: {user.role}
           </p>
           <button
             onClick={() => navigate(getDefaultRouteForRole(user.role))}
-            className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            className="labs-access-denied-button labs-touch-target"
           >
             Go to Your Dashboard
           </button>
@@ -93,43 +93,44 @@ const Labs = () => {
       </div>
     );
   }
-
   return (
-    <div className={`${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`labs-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Main Content */}
-      <main className="flex-1 p-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto py-8">
-          <h1 className={`text-2xl font-bold mb-6 ${isRTL ? 'text-left' : 'text-left'}`}>
+      <main className="labs-main">
+        <div className="labs-content-wrapper">
+          <h1 className={`labs-title ${isRTL ? 'rtl' : 'ltr'}`}>
             {t('labs.title') || 'Laboratory Management'}
           </h1>
 
           {isSaved && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6" dir={isRTL ? 'rtl' : 'ltr'}>
-              <p className={`text-green-800 ${isRTL ? 'text-left' : 'text-left'}`}>
+            <div className="labs-success-notification" dir={isRTL ? 'rtl' : 'ltr'}>
+              <p className={`labs-success-text ${isRTL ? 'rtl' : 'ltr'}`}>
                 {t('labs.saveSuccess') || 'Lab results saved successfully!'}
               </p>
             </div>
           )}
 
-          <div className="bg-white border rounded-lg shadow-sm">
-            <div className="border-b p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-              <h2 className={`text-lg font-semibold ${isRTL ? 'text-left' : 'text-left'}`}>
+          <div className="labs-form-card">
+            <div className="labs-form-header" dir={isRTL ? 'rtl' : 'ltr'}>
+              <h2 className={`labs-form-title ${isRTL ? 'rtl' : 'ltr'}`}>
                 {t('labs.labTestInformation') || 'Lab Test Information'}
               </h2>
             </div>
-            <div className="p-6" dir={isRTL ? 'rtl' : 'ltr'}>
-              <form onSubmit={handleSubmit}>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="patientName" className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+            <div className="labs-form-content" dir={isRTL ? 'rtl' : 'ltr'}>
+              <form onSubmit={handleSubmit} className="labs-form">
+                <div className="labs-form-fields">
+                  <div className="labs-form-grid">
+
+                    {/* Patient Name field */}
+                    <div className="labs-form-field">
+                      <label htmlFor="patientName" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
                         {t('labs.patientName') || 'Patient Name'}
                       </label>
                       <input
                         id="patientName"
                         name="patientName"
                         type="text"
-                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : 'text-left'}`}
+                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                         value={labData.patientName}
                         onChange={handleChange}
                         placeholder={t('labs.patientNamePlaceholder') || 'Enter patient name'}
@@ -137,15 +138,16 @@ const Labs = () => {
                       />
                     </div>
 
-                    <div>
-                      <label htmlFor="patientId" className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                    {/* Patient ID field */}
+                    <div className="labs-form-field">
+                      <label htmlFor="patientId" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
                         {t('labs.patientId') || 'Patient ID'}
                       </label>
                       <input
                         id="patientId"
                         name="patientId"
                         type="text"
-                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : 'text-left'}`}
+                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                         value={labData.patientId}
                         onChange={handleChange}
                         placeholder={t('labs.patientIdPlaceholder') || 'Enter patient ID'}
@@ -153,45 +155,48 @@ const Labs = () => {
                       />
                     </div>
 
-                    <div>
-                      <label htmlFor="dateOfBirth" className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                    {/* Date of Birth field */}
+                    <div className="labs-form-field">
+                      <label htmlFor="dateOfBirth" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
                         {t('labs.dateOfBirth') || 'Date of Birth'}
                       </label>
                       <input
                         id="dateOfBirth"
                         name="dateOfBirth"
                         type="date"
-                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : 'text-left'}`}
+                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                         value={labData.dateOfBirth}
                         onChange={handleChange}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
                     </div>
 
-                    <div>
-                      <label htmlFor="testDate" className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                    {/* Test Date field */}
+                    <div className="labs-form-field">
+                      <label htmlFor="testDate" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
                         {t('labs.testDate') || 'Test Date'}
                       </label>
                       <input
                         id="testDate"
                         name="testDate"
                         type="date"
-                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : 'text-left'}`}
+                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                         value={labData.testDate}
                         onChange={handleChange}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label htmlFor="testType" className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                    {/* Test Type field (full width) */}
+                    <div className="labs-form-field labs-form-field-full">
+                      <label htmlFor="testType" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
                         {t('labs.testType') || 'Test Type'}
                       </label>
                       <input
                         id="testType"
                         name="testType"
                         type="text"
-                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : 'text-left'}`}
+                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                         value={labData.testType}
                         onChange={handleChange}
                         placeholder={t('labs.testTypePlaceholder') || 'Enter test type'}
@@ -199,15 +204,16 @@ const Labs = () => {
                       />
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label htmlFor="testResults" className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                    {/* Test Results field (full width textarea) */}
+                    <div className="labs-form-field labs-form-field-full">
+                      <label htmlFor="testResults" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
                         {t('labs.testResults') || 'Test Results'}
                       </label>
                       <textarea
                         id="testResults"
                         name="testResults"
                         rows={4}
-                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : 'text-left'}`}
+                        className={`labs-form-textarea labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                         value={labData.testResults}
                         onChange={handleChange}
                         placeholder={t('labs.testResultsPlaceholder') || 'Enter test results'}
@@ -215,31 +221,35 @@ const Labs = () => {
                       />
                     </div>
 
-                    <div className="md:col-span-2">
-                      <label htmlFor="doctorNotes" className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                    {/* Doctor Notes field (full width textarea) */}
+                    <div className="labs-form-field labs-form-field-full">
+                      <label htmlFor="doctorNotes" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
                         {t('labs.doctorNotes') || 'Doctor Notes'}
                       </label>
                       <textarea
                         id="doctorNotes"
                         name="doctorNotes"
                         rows={3}
-                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : 'text-left'}`}
+                        className={`labs-form-textarea labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                         value={labData.doctorNotes}
                         onChange={handleChange}
                         placeholder={t('labs.doctorNotesPlaceholder') || 'Enter doctor notes'}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
                     </div>
+
                   </div>
 
-                  <div className="relative mt-6 w-full h-12">
+                  {/* Submit button */}
+                  <div className="labs-submit-container">
                     <button
                       type="submit"
-                      className={`absolute px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 ${isRTL ? 'left-0' : 'right-0'}`}
+                      className={`labs-submit-button labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                     >
                       {t('labs.saveLabResults') || 'Save Lab Results'}
                     </button>
                   </div>
+
                 </div>
               </form>
             </div>

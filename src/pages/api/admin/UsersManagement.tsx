@@ -15,9 +15,9 @@ import {
     Search
 } from "lucide-react";
 import { UserRole } from "../../../hooks/useAuth";
-import UserRoleBadge from '../../../components/UserRoleBadge';
+import UserRoleBadge from '../../../components/auth/UserRoleBadge';
 import { useTranslation } from 'react-i18next';
-
+import "../../styles/usersmanagement.css"
 interface UserInfo {
     user_id: string; // uuid/text primary key
     userid: number;
@@ -344,25 +344,10 @@ const UsersManagement = () => {
                     email: userToDelete.user_email
                 }),
                 action: (
-                    <div style={{
-                        display: 'flex',
-                        gap: 6,
-                        flexDirection: isRTL ? 'row-reverse' : 'row',
-                        marginTop: '12px',
-                        width: '100%',
-                        justifyContent: 'flex-end'
-                    }}>
+                    <div className={`confirmation-actions ${isRTL ? 'rtl' : ''}`}>
+
                         <button
-                            style={{
-                                background: '#dc2626',
-                                color: 'white',
-                                borderRadius: 4,
-                                padding: '4px 12px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '500'
-                            }}
+                            className="confirm-button"
                             onClick={() => {
                                 confirmed = true;
                                 dismiss?.();
@@ -372,16 +357,7 @@ const UsersManagement = () => {
                             {t('usersManagement.confirm')}
                         </button>
                         <button
-                            style={{
-                                background: '#6b7280',
-                                color: 'white',
-                                borderRadius: 4,
-                                padding: '4px 12px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                                fontWeight: '500'
-                            }}
+                            className="cancel-button"
                             onClick={() => {
                                 confirmed = false;
                                 dismiss?.();
@@ -733,20 +709,20 @@ const UsersManagement = () => {
 
     // Main render
     return (
-        <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
-            <div className="w-full lg:w-2/3 space-y-6">
+        <div className={`users-management-container ${isRTL ? 'rtl' : ''}`}>
+            <div className="users-list-section">
                 <Card>
                     <CardHeader>
-                        <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`card-header-top ${isRTL ? 'rtl' : ''}`}>
                             <CardTitle>{t('usersManagement.title')}</CardTitle>
-                            <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                                <div className="relative">
-                                    <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                            <div className={`header-actions ${isRTL ? 'rtl' : ''}`}>
+                                <div className="search-container">
+                                    <Search className={`search-icon ${isRTL ? 'rtl' : 'ltr'}`} />
                                     <Input
                                         placeholder={t('usersManagement.searchPlaceholder')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className={`${isRTL ? 'pr-10 pl-3' : 'pl-10'} w-[250px]`}
+                                        className={`search-input ${isRTL ? 'rtl' : ''} w-[250px]`}
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     />
                                 </div>
@@ -777,14 +753,14 @@ const UsersManagement = () => {
                         ) : (
                             <div className="space-y-4">
                                 {filteredUsers.map((u) => (
-                                    <div key={u.userid} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-                                        <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`}>
+                                    <div key={u.userid} className={`user-item ${isRTL ? 'rtl' : ''}`}>
+                                        <div className={`user-info ${isRTL ? 'rtl' : ''}`}>
                                             <h3 className="font-medium">{getUserDisplayName(u)}</h3>
                                             <div className="text-sm text-gray-500">{u.user_email}</div>
                                             {u.id_number && (
                                                 <div className="text-sm text-gray-500">{t('usersManagement.id')}: {u.id_number}</div>
                                             )}
-                                            <div className={`mt-1 flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-2`}>
+                                            <div className={`user-meta ${isRTL ? 'rtl' : ''}`}>
                                                 <UserRoleBadge role={u.user_roles} />
                                                 {u.user_phonenumber && (
                                                     <span className="text-xs text-gray-500">
@@ -793,7 +769,7 @@ const UsersManagement = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 ${isRTL ? 'sm:flex-row-reverse sm:space-x-reverse' : ''}`}>
+                                        <div className={`user-actions ${isRTL ? 'rtl' : ''}`}>
                                             <Button variant="outline" size="sm" onClick={() => handleEditUser(u.userid)}>
                                                 <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                 {t('common.edit')}
@@ -822,7 +798,7 @@ const UsersManagement = () => {
                 </Card>
             </div>
 
-            <div className="w-full lg:w-1/3">
+            <div className="form-section">
                 <Card>
                     <CardHeader>
                         <CardTitle className={isRTL ? 'text-left' : ''}
@@ -837,7 +813,7 @@ const UsersManagement = () => {
                     <CardContent>
                         <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                             <div>
-                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                <div className="form-grid">
                                     {/* First Row */}
                                     <div>
                                         <Label htmlFor="english_username_a" className="text-xs">
@@ -910,7 +886,7 @@ const UsersManagement = () => {
                                 <div>
                                     {/* Arabic Names Section - ALWAYS RTL regardless of interface language */}
                                     <div className="arabic-names-container" dir="rtl" style={{ direction: 'rtl' }}>
-                                        <div className="grid grid-cols-2 gap-2 mt-2">
+                                        <div className="form-grid">
                                             {/* Row 1: First Name (right) | Second Name (left) in RTL layout */}
                                             <div>
                                                 <Label htmlFor="arabic_username_a" className="text-xs " dir="rtl">
@@ -1024,7 +1000,7 @@ const UsersManagement = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="two-column-grid">
                                 <div className="space-y-2">
                                     <Label htmlFor="date_of_birth">{t('auth.dateOfBirth')}</Label>
                                     <Input
@@ -1123,7 +1099,7 @@ const UsersManagement = () => {
                             </div>
                         </form>
                     </CardContent>
-                    <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <CardFooter className={`card-footer ${isRTL ? 'rtl' : ''} ${userFormMode === "create" ? 'create-mode' : ''}`}>
                         {userFormMode === "edit" && (
                             <Button
                                 type="button"

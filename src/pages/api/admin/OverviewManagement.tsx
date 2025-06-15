@@ -325,7 +325,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                             labelLine={false}
                                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
                                                 const RADIAN = Math.PI / 180;
-                                                const radius = outerRadius + 15;
+                                                const radius = outerRadius + 25;
                                                 const x = cx + radius * Math.cos(-midAngle * RADIAN);
                                                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -408,11 +408,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                             {(() => {
                                 const roleCards = [
                                     // Patients
-                                    <div key="patients" className="flex items-center p-3 rounded-lg border bg-blue-50 hover:shadow-sm transition-shadow">
-                                        <div className={`h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <div key="patients" className={`flex items-center p-3 rounded-lg border bg-blue-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mx-3">
                                             <Users className="h-5 w-5 text-blue-600" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             <p className="font-medium text-blue-800">{t('admin.patients')}</p>
                                             <p className="text-sm text-blue-600">
                                                 {users.filter(u => u.user_roles?.toLowerCase() === 'patient').length} {t('admin.users')}
@@ -425,11 +425,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                     </div>,
 
                                     // Doctors
-                                    <div key="doctors" className="flex items-center p-3 rounded-lg border bg-green-50 hover:shadow-sm transition-shadow">
-                                        <div className={`h-10 w-10 rounded-full bg-green-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <div key="doctors" className={`flex items-center p-3 rounded-lg border bg-green-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mx-3">
                                             <Stethoscope className="h-5 w-5 text-green-600" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             <p className="font-medium text-green-800">{t('admin.doctors')}</p>
                                             <p className="text-sm text-green-600">
                                                 {users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length} {t('admin.users')}
@@ -442,11 +442,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                     </div>,
 
                                     // Secretaries
-                                    <div key="secretaries" className="flex items-center p-3 rounded-lg border bg-purple-50 hover:shadow-sm transition-shadow">
-                                        <div className={`h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <div key="secretaries" className={`flex items-center p-3 rounded-lg border bg-purple-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mx-3">
                                             <FileText className="h-5 w-5 text-purple-600" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             <p className="font-medium text-purple-800">{t('admin.secretaries')}</p>
                                             <p className="text-sm text-purple-600">
                                                 {users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length} {t('admin.users')}
@@ -459,11 +459,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                     </div>,
 
                                     // Nurses
-                                    <div key="nurses" className="flex items-center p-3 rounded-lg border bg-pink-50 hover:shadow-sm transition-shadow">
-                                        <div className={`h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <div key="nurses" className={`flex items-center p-3 rounded-lg border bg-pink-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center mx-3">
                                             <Activity className="h-5 w-5 text-pink-600" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             <p className="font-medium text-pink-800">{t('admin.nurses')}</p>
                                             <p className="text-sm text-pink-600">
                                                 {users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length} {t('admin.users')}
@@ -476,11 +476,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                     </div>,
 
                                     // Administrators
-                                    <div key="administrators" className="flex items-center p-3 rounded-lg border bg-red-50 hover:shadow-sm transition-shadow">
-                                        <div className={`h-10 w-10 rounded-full bg-red-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <div key="administrators" className={`flex items-center p-3 rounded-lg border bg-red-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center mx-3">
                                             <Shield className="h-5 w-5 text-red-600" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             <p className="font-medium text-red-800">{t('admin.administrators')}</p>
                                             <p className="text-sm text-red-600">
                                                 {users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length} {t('admin.users')}
@@ -493,11 +493,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                     </div>,
 
                                     // Lab Technicians
-                                    <div key="lab" className="flex items-center p-3 rounded-lg border bg-yellow-50 hover:shadow-sm transition-shadow">
-                                        <div className={`h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <div key="lab" className={`flex items-center p-3 rounded-lg border bg-yellow-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mx-3">
                                             <Database className="h-5 w-5 text-yellow-600" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             <p className="font-medium text-yellow-800">{t('admin.labTechnicians')}</p>
                                             <p className="text-sm text-yellow-600">
                                                 {users.filter(u => u.user_roles?.toLowerCase() === 'lab').length} {t('admin.users')}
@@ -510,11 +510,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                     </div>,
 
                                     // X-ray Technicians
-                                    <div key="xray" className="flex items-center p-3 rounded-lg border bg-teal-50 hover:shadow-sm transition-shadow">
-                                        <div className={`h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center ${isRTL ? 'ml-3' : 'mr-3'}`}>
+                                    <div key="xray" className={`flex items-center p-3 rounded-lg border bg-teal-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center mx-3">
                                             <Layers className="h-5 w-5 text-teal-600" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
                                             <p className="font-medium text-teal-800">{t('admin.xrayTechnicians')}</p>
                                             <p className="text-sm text-teal-600">
                                                 {users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length} {t('admin.users')}
@@ -528,7 +528,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                 ];
 
                                 // Reverse the array for Arabic (RTL)
-                                return isRTL ? roleCards.reverse() : roleCards;
+                                return roleCards;
                             })()}
                         </div>
                     </CardContent>

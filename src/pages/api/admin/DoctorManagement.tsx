@@ -20,7 +20,7 @@ import {
     Calendar,
     AlertTriangle
 } from "lucide-react";
-
+import "../../styles/doctormanagement.css"
 interface DoctorInfo {
     id: string;
     name: string;
@@ -580,14 +580,15 @@ const DoctorManagement = () => {
     };
 
     return (
-        <div className={`space-y-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-            <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
+        <div className={`doctor-management-container space-y-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className={`doctor-main-layout flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
                 {/* Doctors List */}
-                <div className="w-full lg:w-2/3">
+                <div className="doctor-list-section w-full lg:w-2/3">
                     <Card>
                         <CardHeader>
-                            <div className={`flex justify-between items-start`}>
-                                <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+
+                            <div className={`doctor-header-section flex justify-between items-start`}>
+                                <div className={`doctor-header-title flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                                     <CardTitle className={isRTL ? 'text-left' : 'text-left'}>
                                         {t('doctorManagement.doctorsManagement')}
                                     </CardTitle>
@@ -595,26 +596,27 @@ const DoctorManagement = () => {
                                         {t('doctorManagement.description')}
                                     </CardDescription>
                                 </div>
-                                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''} flex-shrink-0`}>
-                                    <div className="relative">
-                                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                                <div className={`doctor-header-actions flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''} flex-shrink-0`}>
+                                    <div className="relative w-full md:w-auto">
+                                        <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10`} />
                                         <Input
                                             placeholder={t('doctorManagement.searchDoctors')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className={`${isRTL ? 'pr-10 pl-3 text-right placeholder:text-right' : 'pl-10 text-left placeholder:text-left'} w-[250px]`}
+                                            className={`doctor-search-input ${isRTL ? 'pr-10 pl-3' : 'pl-10 pr-3'} w-full md:w-[250px]`}
                                             dir={isRTL ? 'rtl' : 'ltr'}
-                                            style={isRTL ? { textAlign: 'right' } : {}}
                                         />
                                     </div>
-                                    <Button variant="outline" size="sm" onClick={loadDoctors} disabled={isLoading}>
-                                        <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
-                                        {t('common.refresh')}
-                                    </Button>
-                                    <Button size="sm" onClick={resetDoctorForm}>
-                                        <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                        {t('doctorManagement.addDoctor')}
-                                    </Button>
+                                    <div className="doctor-action-buttons flex gap-2">
+                                        <Button variant="outline" size="sm" onClick={loadDoctors} disabled={isLoading}>
+                                            <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
+                                            <span className="hidden sm:inline">{t('common.refresh')}</span>
+                                        </Button>
+                                        <Button size="sm" onClick={resetDoctorForm}>
+                                            <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                            <span className="hidden sm:inline">{t('doctorManagement.addDoctor')}</span>
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -632,12 +634,12 @@ const DoctorManagement = () => {
                         <CardContent>
                             <div className="space-y-4">
                                 {filteredDoctors.map((doctor) => (
-                                    <div key={doctor.id} className={`flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className={isRTL ? 'text-right' : ''}>
+                                    <div key={doctor.id} className={`doctor-card flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="doctor-card-info">
                                             <h3 className="font-medium">{doctor.name}</h3>
                                             <div className="text-sm text-gray-500">{doctor.specialty}</div>
                                             <div className="text-sm text-gray-500">{getClinicNameById(doctor.clinic_id)}</div>
-                                            <div className={`mt-1 flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                                            <div className={`doctor-card-status mt-1 flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                                 {isRTL ? (
                                                     <>
                                                         <span className="text-sm font-medium">₪{doctor.price}</span>
@@ -661,7 +663,7 @@ const DoctorManagement = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className={`flex ${isRTL ? 'flex-row-reverse gap-2' : 'gap-2'}`}>
+                                        <div className={`doctor-card-actions flex ${isRTL ? 'flex-row-reverse gap-2' : 'gap-2'}`}>
                                             <Button variant="outline" size="sm" onClick={() => handleManageAvailability(doctor.id)}>
                                                 <Clock className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                 {t('doctorManagement.hours')}
@@ -694,7 +696,7 @@ const DoctorManagement = () => {
                 </div>
 
                 {/* Doctor Form */}
-                <div className="w-full lg:w-1/3">
+                <div className="doctor-form-section w-full lg:w-1/3">
                     <Card>
                         <CardHeader>
                             <CardTitle className={isRTL ? 'text-left' : ''}>
@@ -707,7 +709,7 @@ const DoctorManagement = () => {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleDoctorSubmit} id="doctorForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
+                            <form onSubmit={handleDoctorSubmit} id="doctorForm" className="doctor-form space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                                 <div className="space-y-2">
                                     <Label htmlFor="name" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.doctorName')}
@@ -719,7 +721,7 @@ const DoctorManagement = () => {
                                         onChange={handleDoctorInputChange}
                                         placeholder={t('doctorManagement.doctorNamePlaceholder')}
                                         required
-                                        className={isRTL ? 'text-left' : ''}
+                                        className=""
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     />
                                 </div>
@@ -793,8 +795,9 @@ const DoctorManagement = () => {
                                         name="phone"
                                         value={doctorFormData.phone}
                                         onChange={handleDoctorInputChange}
-                                        placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
-                                        className={isRTL ? 'text-left' : ''}
+                                        placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"}
+                                        dir={isRTL ? "rtl" : "ltr"}
+                                        className=""
                                     />
                                 </div>
 
@@ -851,7 +854,7 @@ const DoctorManagement = () => {
                                 </div>
                             </form>
                         </CardContent>
-                        <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <CardFooter className={`doctor-form-footer flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {doctorFormMode === "edit" && (
                                 <Button
                                     type="button"
@@ -880,8 +883,9 @@ const DoctorManagement = () => {
             </div>
 
             {/* Availability Dialog */}
+            {/* Availability Dialog */}
             <Dialog open={showAvailabilityDialog} onOpenChange={setShowAvailabilityDialog}>
-                <DialogContent className="max-w-3xl" dir={isRTL ? 'rtl' : 'ltr'}>
+                <DialogContent className={`doctor-availability-dialog max-w-3xl ${isRTL ? 'rtl [&>button]:left-4 [&>button]:right-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader className={isRTL ? 'text-left' : ''}>
                         <DialogTitle>{t('doctorManagement.manageAvailability')}</DialogTitle>
                         <DialogDescription>
@@ -902,13 +906,13 @@ const DoctorManagement = () => {
                                         if (daySlots.length === 0) return null;
 
                                         return (
-                                            <div key={weekday.en} className="border rounded-md p-4">
+                                            <div key={weekday.en} className="doctor-day-slots border rounded-md p-4">
                                                 <h4 className={`font-medium mb-2 ${isRTL ? 'text-left' : ''}`}>
                                                     {isRTL ? weekday.ar : weekday.en}
                                                 </h4>
                                                 <div className="space-y-2">
                                                     {daySlots.map(slot => (
-                                                        <div key={slot.id} className={`flex items-center justify-between bg-gray-50 p-2 rounded ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                        <div key={slot.id} className={`doctor-slot-item flex items-center justify-between bg-gray-50 p-2 rounded ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                             <span>
                                                                 {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                                             </span>
@@ -938,7 +942,7 @@ const DoctorManagement = () => {
                             <h3 className={`text-lg font-medium mb-3 ${isRTL ? 'text-left' : ''}`}>
                                 {t('doctorManagement.addNewSlot')}
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="doctor-availability-grid grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <Label htmlFor="day" className={isRTL ? 'text-left block' : ''}>
                                         {t('doctorManagement.day')}
@@ -990,7 +994,7 @@ const DoctorManagement = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-4">
+                            <div className="doctor-availability-actions mt-4">
                                 <Button
                                     onClick={handleAddAvailabilitySlot}
                                     disabled={isLoading || !newSlot.day || !newSlot.start_time || !newSlot.end_time}
@@ -1010,10 +1014,11 @@ const DoctorManagement = () => {
             </Dialog>
 
             {/* Delete Confirmation Dialog */}
+            {/* Delete Confirmation Dialog */}
             <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                <DialogContent className="sm:max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+                <DialogContent className={`doctor-delete-dialog sm:max-w-md ${isRTL ? 'rtl [&>button]:left-4 [&>button]:right-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader className={isRTL ? 'text-left' : ''}>
-                        <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                             <AlertTriangle className="h-5 w-5 text-red-500" />
                             {t('doctorManagement.confirmDeletion')}
                         </DialogTitle>
@@ -1026,7 +1031,7 @@ const DoctorManagement = () => {
                             {t('doctorManagement.permanentRemoval')}
                         </p>
                     </div>
-                    <DialogFooter className={`sm:justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <DialogFooter className={`doctor-delete-footer sm:justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <DialogClose asChild>
                             <Button variant="outline">{t('common.cancel')}</Button>
                         </DialogClose>

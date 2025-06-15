@@ -4,12 +4,21 @@ import { useContext } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
+import { TermsOfUseModal, PrivacyPolicyModal, useLegalModals } from "../modals/LegalModals";
+
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
-
+  const {
+    termsOpen,
+    privacyOpen,
+    openTerms,
+    closeTerms,
+    openPrivacy,
+    closePrivacy
+  } = useLegalModals();
   return (
     <footer className="w-full bg-gradient-to-b from-background to-muted/10 border-t shadow-sm" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="container mx-auto py-12 px-4">
@@ -41,33 +50,24 @@ const Footer: React.FC = () => {
                 {t("footer.quickLinks")}
               </h3>
               <div className="flex flex-col space-y-4">
-                <a
-                  href="#"
-                  className="group/link relative text-sm text-primary/85 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl bg-white/40 hover:bg-white/60 border border-primary/25 hover:border-primary/35 transform hover:translate-x-2 hover:shadow-md"
-                >
-                  <span className="relative z-10">
-                    {t("navbar.aboutUs")}
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/15 to-transparent rounded-xl scale-x-0 group-hover/link:scale-x-100 transition-transform duration-300 origin-left"></div>
-                </a>
-                <a
-                  href="#"
-                  className="group/link relative text-sm text-primary/85 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl bg-white/40 hover:bg-white/60 border border-primary/25 hover:border-primary/35 transform hover:translate-x-2 hover:shadow-md"
+                <button
+                  onClick={openTerms}
+                  className="group/link relative text-sm text-primary/85 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl bg-white/40 hover:bg-white/60 border border-primary/25 hover:border-primary/35 transform hover:translate-x-2 hover:shadow-md text-left"
                 >
                   <span className="relative z-10">
                     {t("footer.termsOfUse")}
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/15 to-transparent rounded-xl scale-x-0 group-hover/link:scale-x-100 transition-transform duration-300 origin-left"></div>
-                </a>
-                <a
-                  href="#"
-                  className="group/link relative text-sm text-primary/85 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl bg-white/40 hover:bg-white/60 border border-primary/25 hover:border-primary/35 transform hover:translate-x-2 hover:shadow-md"
+                </button>
+                <button
+                  onClick={openPrivacy}
+                  className="group/link relative text-sm text-primary/85 hover:text-primary transition-all duration-300 font-medium px-4 py-2 rounded-xl bg-white/40 hover:bg-white/60 border border-primary/25 hover:border-primary/35 transform hover:translate-x-2 hover:shadow-md text-left"
                 >
                   <span className="relative z-10">
                     {t("footer.privacyPolicy")}
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/15 to-transparent rounded-xl scale-x-0 group-hover/link:scale-x-100 transition-transform duration-300 origin-left"></div>
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -159,8 +159,13 @@ const Footer: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-    </footer>
+        
+        {/* Legal Modals */}
+        <TermsOfUseModal isOpen={termsOpen} onClose={closeTerms} />
+        <PrivacyPolicyModal isOpen={privacyOpen} onClose={closePrivacy} />
+      
+    </div>
+    </footer >
   );
 };
 

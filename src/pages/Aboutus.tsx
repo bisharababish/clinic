@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "@/components/contexts/LanguageContext";
+import "./styles/aboutus.css";
 
 const AboutUs = () => {
     const { t } = useTranslation();
@@ -40,79 +41,40 @@ const AboutUs = () => {
     };
 
     return (
-        <div
-            className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8"
-            dir={isRTL ? 'rtl' : 'ltr'}
-            style={{
-                fontFamily: isRTL ? '"Noto Sans Arabic", "Cairo", "Segoe UI", Tahoma, Arial, sans-serif' : 'inherit'
-            }}
-        >
+        <div className={`about-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+
             {/* Header Section */}
-            <div className={`mb-12 ${isRTL ? 'text-right' : 'text-center'}`}>
-                <h1
-                    className="text-4xl font-bold text-gray-900 mb-6"
-                    style={{
-                        textAlign: isRTL ? 'right' : 'center',
-                        direction: isRTL ? 'rtl' : 'ltr'
-                    }}
-                >
+            <div className={`about-header ${isRTL ? 'rtl' : 'ltr'}`}>
+                <h1 className={`about-title ${isRTL ? 'rtl' : 'ltr'}`}>
                     {t('aboutUs.title')}
                 </h1>
-                <p
-                    className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed"
-                    style={{
-                        textAlign: isRTL ? 'right' : 'center',
-                        direction: isRTL ? 'rtl' : 'ltr',
-                        lineHeight: isRTL ? '2.0' : '1.6',
-                        // Fix for Arabic subtitle spacing
-                        marginLeft: isRTL ? '0' : 'auto',
-                        marginRight: isRTL ? '0' : 'auto'
-                    }}
-                >
+                <p className={`about-subtitle ${isRTL ? 'rtl' : 'ltr'}`}>
                     {t('aboutUs.subtitle')}
                 </p>
             </div>
 
             {/* Main Content Grid */}
-            <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 ${isRTL ? 'lg:grid-flow-col-dense' : ''}`}>
+            <div className={`about-main-grid ${isRTL ? 'rtl' : 'ltr'}`}>
 
                 {/* Information Section */}
-                <div className={`space-y-8 ${isRTL ? 'lg:order-2' : 'lg:order-1'}`}>
+                <div className={`about-info-section ${isRTL ? 'rtl' : 'ltr'}`}>
 
                     {/* Our Story Card */}
-                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <Card className="about-card card-animate"
+                    >
                         <CardHeader>
-                            <CardTitle
-                                className="text-2xl font-bold"
-                                style={{
-                                    textAlign: isRTL ? 'right' : 'left',
-                                    direction: isRTL ? 'rtl' : 'ltr'
-                                }}
-                            >
+                            <CardTitle className={`about-card-title ${isRTL ? 'rtl' : 'ltr'}`}>
+
                                 {t('aboutUs.ourStory')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <p
-                                className="text-gray-700"
-                                style={{
-                                    textAlign: isRTL ? 'right' : 'left',
-                                    direction: isRTL ? 'rtl' : 'ltr',
-                                    lineHeight: isRTL ? '2.2' : '1.7',
-                                    fontSize: isRTL ? '16px' : '15px'
-                                }}
-                            >
+                            <p className={`about-text-content ${isRTL ? 'rtl' : 'ltr'}`}>
+
                                 {t('aboutUs.ourStoryContent1')}
                             </p>
-                            <p
-                                className="text-gray-700"
-                                style={{
-                                    textAlign: isRTL ? 'right' : 'left',
-                                    direction: isRTL ? 'rtl' : 'ltr',
-                                    lineHeight: isRTL ? '2.2' : '1.7',
-                                    fontSize: isRTL ? '16px' : '15px'
-                                }}
-                            >
+                            <p className={`about-text-content ${isRTL ? 'rtl' : 'ltr'}`}>
+
                                 {t('aboutUs.ourStoryContent2')}
                             </p>
                         </CardContent>
@@ -121,13 +83,8 @@ const AboutUs = () => {
                     {/* Our Team Card */}
                     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                         <CardHeader>
-                            <CardTitle
-                                className="text-2xl font-bold"
-                                style={{
-                                    textAlign: isRTL ? 'right' : 'left',
-                                    direction: isRTL ? 'rtl' : 'ltr'
-                                }}
-                            >
+                            <CardTitle className={`about-card-title ${isRTL ? 'rtl' : 'ltr'}`}>
+
                                 {t('aboutUs.ourTeam')}
                             </CardTitle>
                         </CardHeader>
@@ -201,26 +158,14 @@ const AboutUs = () => {
                     {/* Our Facility Card */}
                     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                         <CardHeader>
-                            <CardTitle
-                                className="text-2xl font-bold"
-                                style={{
-                                    textAlign: isRTL ? 'right' : 'left',
-                                    direction: isRTL ? 'rtl' : 'ltr'
-                                }}
-                            >
+                            <CardTitle className={`about-card-title ${isRTL ? 'rtl' : 'ltr'}`}>
+
                                 {t('aboutUs.ourFacility')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p
-                                className="text-gray-700 mb-6"
-                                style={{
-                                    textAlign: isRTL ? 'right' : 'left',
-                                    direction: isRTL ? 'rtl' : 'ltr',
-                                    lineHeight: isRTL ? '2.2' : '1.7',
-                                    fontSize: isRTL ? '16px' : '15px'
-                                }}
-                            >
+                            <p className={`about-text-content ${isRTL ? 'rtl' : 'ltr'}`}>
+
                                 {t('aboutUs.facilityIntro')}
                             </p>
 
@@ -301,16 +246,11 @@ const AboutUs = () => {
                 </div>
 
                 {/* Contact Section */}
-                <div className={`${isRTL ? 'lg:order-1' : 'lg:order-2'}`}>
-                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 h-fit sticky top-8">
+                <div className={`about-contact-section ${isRTL ? 'rtl' : 'ltr'}`}>
+                    <Card className="about-card contact-card">
                         <CardHeader>
-                            <CardTitle
-                                className="text-2xl font-bold"
-                                style={{
-                                    textAlign: isRTL ? 'right' : 'left',
-                                    direction: isRTL ? 'rtl' : 'ltr'
-                                }}
-                            >
+                            <CardTitle className={`about-card-title ${isRTL ? 'rtl' : 'ltr'}`}>
+
                                 {t('aboutUs.getInTouch')}
                             </CardTitle>
                         </CardHeader>
@@ -398,15 +338,11 @@ const AboutUs = () => {
                                         {t('aboutUs.sendMessage')}
                                     </h3>
 
-                                    <form onSubmit={handleSubmit} className="space-y-6">
+                                    <form onSubmit={handleSubmit} className="contact-form">
 
                                         {/* Name Field */}
-                                        <div>
-                                            <label
-                                                htmlFor="name"
-                                                className="block text-sm font-semibold text-gray-700 mb-2"
-                                                style={{ textAlign: isRTL ? 'right' : 'left' }}
-                                            >
+                                        <div className="form-field">
+                                            <label htmlFor="name" className={`form-label ${isRTL ? 'rtl' : 'ltr'}`}>
                                                 {t('common.name')}
                                             </label>
                                             <Input
@@ -416,13 +352,7 @@ const AboutUs = () => {
                                                 value={formData.name}
                                                 onChange={handleChange}
                                                 required
-                                                className="w-full transition-all duration-200"
-                                                style={{
-                                                    textAlign: isRTL ? 'right' : 'left',
-                                                    direction: isRTL ? 'rtl' : 'ltr',
-                                                    fontFamily: isRTL ? '"Noto Sans Arabic", "Cairo", Arial, sans-serif' : 'inherit',
-                                                    fontSize: isRTL ? '15px' : '14px'
-                                                }}
+                                                className={`form-input touch-target ${isRTL ? 'rtl' : 'ltr'}`}
                                             />
                                         </div>
 
@@ -506,7 +436,7 @@ const AboutUs = () => {
                                         {/* Submit Button */}
                                         <Button
                                             type="submit"
-                                            className="w-full py-3 text-lg font-semibold transition-all duration-200 hover:shadow-lg"
+                                            className="submit-button touch-target"
                                         >
                                             {t('aboutUs.sendMessageBtn')}
                                         </Button>

@@ -22,7 +22,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-
+import "../../styles/patienthealthtab.css"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -604,7 +604,7 @@ const PatientHealthForm: React.FC<{
             <>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
-                        <Button className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Button className={`patient-health-touchable flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {mode === 'edit' ? (
                                 <>
                                     <Edit className="h-4 w-4" />
@@ -618,10 +618,9 @@ const PatientHealthForm: React.FC<{
                             )}
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className={`max-w-6xl max-h-[90vh] overflow-y-auto ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
-                        <DialogHeader className="relative">
-
-                            <DialogTitle className={`${isRTL ? 'text-left pr-8' : 'text-left'}`}>
+                    <DialogContent className={`patient-health-dialog max-w-6xl max-h-[90vh] overflow-y-auto ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
+                        <DialogHeader className="patient-health-dialog-header relative">
+                            <DialogTitle className={`patient-health-dialog-title ${isRTL ? 'text-left pr-8' : 'text-left'}`}>
                                 {mode === 'edit' ? t('patientHealth.patientHealthInformation') : t('patientHealth.patientHealthInformation')}
                             </DialogTitle>
                             <DialogDescription className={`${isRTL ? 'text-left' : 'text-left'}`}>
@@ -629,11 +628,11 @@ const PatientHealthForm: React.FC<{
                             </DialogDescription>
                         </DialogHeader>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="patient-health-form space-y-6">
                             {/* Patient Selection - Only show in create mode */}
                             {mode !== 'edit' && !selectedPatient && (
-                                <Card>
-                                    <CardHeader>
+                                <Card className="patient-health-card">
+                                    <CardHeader className="card-header">
                                         <CardTitle className={`flex items-center justify-between ${isRTL ? 'text-left' : ''}`}>
                                             {isRTL ? (
                                                 <>
@@ -646,7 +645,7 @@ const PatientHealthForm: React.FC<{
                                                         onClick={() => setShowCreatePatientForm(true)}
                                                         variant="outline"
                                                         size="sm"
-                                                        className="flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
+                                                        className="patient-health-touchable flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
                                                     >
                                                         <UserPlus className="h-4 w-4" />
                                                         {t('patientHealth.createNewPatient')}
@@ -663,7 +662,7 @@ const PatientHealthForm: React.FC<{
                                                         onClick={() => setShowCreatePatientForm(true)}
                                                         variant="outline"
                                                         size="sm"
-                                                        className="flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
+                                                        className="patient-health-touchable flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
                                                     >
                                                         <UserPlus className="h-4 w-4" />
                                                         {t('patientHealth.createNewPatient')}
@@ -672,28 +671,28 @@ const PatientHealthForm: React.FC<{
                                             )}
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className={`space-y-4 ${isRTL ? 'text-left' : ''}`}>
+                                    <CardContent className={`card-content space-y-4 ${isRTL ? 'text-left' : ''}`}>
                                         <div className="relative">
                                             <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-gray-400`} />
                                             <Input
                                                 placeholder={t('patientHealth.searchPlaceholderr')}
                                                 value={patientSearch}
                                                 onChange={(e) => setPatientSearch(e.target.value)}
-                                                className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
+                                                className={`patient-health-touchable ${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
                                             />
                                         </div>
 
-                                        <ScrollArea className="max-h-48">
+                                        <ScrollArea className="patient-health-scroll max-h-48">
                                             <div className="space-y-2">
                                                 {filteredPatients.length === 0 ? (
-                                                    <div className={`text-center py-4 text-gray-500 ${isRTL ? 'text-left' : ''}`}>
+                                                    <div className={`patient-health-empty text-center py-4 text-gray-500 ${isRTL ? 'text-left' : ''}`}>
                                                         {t('patientHealth.noRecordsFound')}
                                                     </div>
                                                 ) : (
                                                     filteredPatients.map((patient) => (
                                                         <div
                                                             key={patient.userid}
-                                                            className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? 'text-left' : ''}`}
+                                                            className={`patient-selection-item p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? 'text-left' : ''}`}
                                                             onClick={() => handlePatientSelect(patient)}
                                                         >
                                                             <div className="font-medium">
@@ -704,7 +703,7 @@ const PatientHealthForm: React.FC<{
                                                                 <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                                     <span>{t('patientHealth.idNumber')}: {patient.userid}</span>
                                                                     {patient.health_data && (
-                                                                        <Badge variant="secondary" className="text-xs">
+                                                                        <Badge variant="secondary" className="patient-health-badge text-xs">
                                                                             <Database className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                             {t('patientHealth.withHealthData')}
                                                                         </Badge>
@@ -723,15 +722,15 @@ const PatientHealthForm: React.FC<{
                             {/* Selected Patient Info & Health Form */}
                             {selectedPatient && (
                                 <>
-                                    <Card>
-                                        <CardHeader>
+                                    <Card className="patient-health-card">
+                                        <CardHeader className="card-header">
                                             <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                                                 <User className="h-4 w-4 " />
                                                 {t('patientHealth.patientInformation')}
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right" dir="rtl">
+                                        <CardContent className="card-content">
+                                            <div className="patient-info-display grid grid-cols-1 md:grid-cols-2 gap-4 text-right" dir="rtl">
                                                 <div>
                                                     <div className="font-medium text-left">
                                                         {selectedPatient.english_username_a} {selectedPatient.english_username_d}
@@ -759,13 +758,13 @@ const PatientHealthForm: React.FC<{
                                     </Card>
 
                                     {/* Physical Measurements */}
-                                    <Card>
-                                        <CardHeader>
+                                    <Card className="patient-health-card">
+                                        <CardHeader className="card-header">
                                             <CardTitle className={isRTL ? 'text-left' : ''}>
                                                 {t('patientHealth.physicalMeasurements')}
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${isRTL ? 'text-left' : ''}`}>
+                                        <CardContent className={`card-content grid grid-cols-1 md:grid-cols-3 gap-4 ${isRTL ? 'text-left' : ''}`}>
                                             <div>
                                                 <Label htmlFor="weight">{t('patientHealth.weight')}</Label>
                                                 <Input
@@ -778,7 +777,7 @@ const PatientHealthForm: React.FC<{
                                                         weight_kg: e.target.value ? parseFloat(e.target.value) : undefined
                                                     }))}
                                                     placeholder={t('patientHealth.weight')}
-                                                    className="text-left"
+                                                    className="patient-health-touchable text-left"
                                                     dir="rtl"
                                                 />
                                             </div>
@@ -794,7 +793,7 @@ const PatientHealthForm: React.FC<{
                                                         height_cm: e.target.value ? parseFloat(e.target.value) : undefined
                                                     }))}
                                                     placeholder={t('patientHealth.height')}
-                                                    className={isRTL ? 'text-left' : ''}
+                                                    className={`patient-health-touchable ${isRTL ? 'text-left' : ''}`}
                                                 />
                                             </div>
                                             <div>
@@ -806,7 +805,7 @@ const PatientHealthForm: React.FC<{
                                                         blood_type: value
                                                     }))}
                                                 >
-                                                    <SelectTrigger className={isRTL ? 'text-right flex-row-reverse' : ''}>
+                                                    <SelectTrigger className={`patient-health-touchable ${isRTL ? 'text-right flex-row-reverse' : ''}`}>
                                                         <SelectValue placeholder={t('patientHealth.bloodType')} />
                                                     </SelectTrigger>
                                                     <SelectContent className={isRTL ? 'text-right [&>div]:text-right' : ''}>
@@ -834,25 +833,26 @@ const PatientHealthForm: React.FC<{
                                                         <SelectItem value="O-" className={isRTL ? 'text-right justify-end' : ''}>
                                                             {isRTL ? 'و-' : 'O-'}
                                                         </SelectItem>
-                                                    </SelectContent>                                                </Select>
+                                                    </SelectContent>
+                                                </Select>
                                             </div>
                                         </CardContent>
                                     </Card>
 
                                     {/* Health Conditions */}
-                                    <Card>
-                                        <CardHeader>
+                                    <Card className="patient-health-card">
+                                        <CardHeader className="card-header">
                                             <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-right justify-end' : ''}`}>
                                                 <Heart className="h-4 w-4" />
                                                 {t('patientHealth.healthConditions')}
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <div className="grid grid-cols-1 gap-3">
+                                        <CardContent className="card-content space-y-4">
+                                            <div className="health-conditions-grid grid grid-cols-1 gap-3">
                                                 {commonDiseases.map(condition => {
                                                     const isChecked = formData[condition.key as keyof PatientHealthData] as boolean;
                                                     return (
-                                                        <div key={condition.key} className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-3 border rounded-lg transition-colors ${isChecked ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}>
+                                                        <div key={condition.key} className={`health-condition-item flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-3 border rounded-lg transition-colors ${isChecked ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}>
                                                             <Label htmlFor={condition.key} className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'} flex-1 cursor-pointer`}>
                                                                 {i18n.language === 'ar' ? condition.ar : condition.en}
                                                             </Label>
@@ -860,7 +860,7 @@ const PatientHealthForm: React.FC<{
                                                                 id={condition.key}
                                                                 checked={isChecked}
                                                                 onCheckedChange={(checked) => handleConditionChange(condition.key, checked as boolean)}
-                                                                className={isRTL ? 'ml-3' : 'mr-3'}
+                                                                className={`patient-health-touchable ${isRTL ? 'ml-3' : 'mr-3'}`}
                                                             />
                                                         </div>
                                                     );
@@ -870,20 +870,20 @@ const PatientHealthForm: React.FC<{
                                     </Card>
 
                                     {/* Medications */}
-                                    <Card>
-                                        <CardHeader>
+                                    <Card className="patient-health-card">
+                                        <CardHeader className="card-header">
                                             <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-left justify-end' : ''}`}>
                                                 <Pill className="h-4 w-4" />
                                                 {t('patientHealth.medications')}
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent className={`space-y-6 ${isRTL ? 'text-left' : ''}`}>
+                                        <CardContent className={`card-content medications-section space-y-6 ${isRTL ? 'text-left' : ''}`}>
                                             {Object.entries(formData.medications).map(([category, meds]) => (
-                                                <div key={category} className="space-y-2">
+                                                <div key={category} className="medication-category space-y-2">
                                                     <Label className="capitalize font-medium">
                                                         {t(`home.medicineCategories.${category}`)}
                                                     </Label>
-                                                    <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                    <div className={`patient-health-medication-input flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                         <Input
                                                             placeholder={t('patientHealth.addMedication')}
                                                             value={newMedications[category as keyof typeof newMedications]}
@@ -897,26 +897,26 @@ const PatientHealthForm: React.FC<{
                                                                     addMedication(category as keyof typeof newMedications);
                                                                 }
                                                             }}
-                                                            className={isRTL ? 'text-left' : ''}
+                                                            className={`patient-health-touchable ${isRTL ? 'text-left' : ''}`}
                                                         />
                                                         <Button
                                                             type="button"
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => addMedication(category as keyof typeof newMedications)}
-                                                            className={isRTL ? 'flex-row-reverse' : ''}
+                                                            className={`patient-health-touchable ${isRTL ? 'flex-row-reverse' : ''}`}
                                                         >
                                                             <Plus className="h-4 w-4" />
                                                         </Button>
                                                     </div>
-                                                    <div className={`flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                    <div className={`medication-tags flex flex-wrap gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                         {meds.map((med, index) => (
-                                                            <Badge key={index} variant="secondary" className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                            <Badge key={index} variant="secondary" className={`medication-tag flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                                 {med}
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => removeMedication(category as keyof typeof formData.medications, index)}
-                                                                    className={`${isRTL ? 'mr-1' : 'ml-1'} hover:text-red-600`}
+                                                                    className={`patient-health-touchable ${isRTL ? 'mr-1' : 'ml-1'} hover:text-red-600`}
                                                                 >
                                                                     <X className="h-3 w-3" />
                                                                 </button>
@@ -932,8 +932,8 @@ const PatientHealthForm: React.FC<{
 
                             {/* Form Actions */}
                             {selectedPatient && (
-                                <div className={`flex gap-2 pt-4 border-t ${isRTL ? 'float-right' : 'float-left'}`}>
-                                    <Button type="submit" disabled={isSaving}>
+                                <div className={`patient-health-actions flex gap-2 pt-4 border-t ${isRTL ? 'float-right' : 'float-left'}`}>
+                                    <Button type="submit" disabled={isSaving} className="patient-health-touchable">
                                         {isSaving ? (
                                             <>
                                                 <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -946,7 +946,7 @@ const PatientHealthForm: React.FC<{
                                             </>
                                         )}
                                     </Button>
-                                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                                    <Button type="button" variant="outline" onClick={() => setIsOpen(false)} className="patient-health-touchable">
                                         {t('patientHealth.cancel')}
                                     </Button>
                                 </div>
@@ -957,9 +957,9 @@ const PatientHealthForm: React.FC<{
 
                 {/* Create Patient Dialog */}
                 <Dialog open={showCreatePatientForm} onOpenChange={setShowCreatePatientForm}>
-                    <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
-                        <DialogHeader className={isRTL ? 'text-right' : ''}>
-                            <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`} style={isRTL ? { float: 'right' } : {}}>
+                    <DialogContent className={`patient-health-dialog max-w-4xl max-h-[90vh] overflow-y-auto ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
+                        <DialogHeader className={`patient-health-dialog-header ${isRTL ? 'text-right' : ''}`}>
+                            <DialogTitle className={`patient-health-dialog-title flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`} style={isRTL ? { float: 'right' } : {}}>
                                 <UserPlus className="h-5 w-5" />
                                 {t('patientHealth.createNewPatient')}
                             </DialogTitle>
@@ -968,7 +968,7 @@ const PatientHealthForm: React.FC<{
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="create-patient-form grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* English Name Fields */}
                             <div className="space-y-4">
                                 <h4 className="font-medium text-gray-700">{t('patientHealth.englishName')}</h4>
@@ -982,6 +982,7 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             required
                                             placeholder={t('patientHealth.first')}
+                                            className="patient-health-touchable"
                                         />
                                     </div>
                                     <div>
@@ -992,6 +993,7 @@ const PatientHealthForm: React.FC<{
                                             value={createPatientForm.english_username_b}
                                             onChange={handleCreatePatientFormChange}
                                             placeholder={t('patientHealth.second')}
+                                            className="patient-health-touchable"
                                         />
                                     </div>
                                     <div>
@@ -1002,6 +1004,7 @@ const PatientHealthForm: React.FC<{
                                             value={createPatientForm.english_username_c}
                                             onChange={handleCreatePatientFormChange}
                                             placeholder={t('patientHealth.third')}
+                                            className="patient-health-touchable"
                                         />
                                     </div>
                                     <div>
@@ -1013,6 +1016,7 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             required
                                             placeholder={t('patientHealth.last')}
+                                            className="patient-health-touchable"
                                         />
                                     </div>
                                 </div>
@@ -1030,7 +1034,7 @@ const PatientHealthForm: React.FC<{
                                             value={createPatientForm.arabic_username_a}
                                             onChange={handleCreatePatientFormChange}
                                             required
-                                            className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
+                                            className={`patient-health-touchable ${isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}`}
                                             placeholder={t('patientHealth.first')}
                                         />
                                     </div>
@@ -1041,7 +1045,7 @@ const PatientHealthForm: React.FC<{
                                             name="arabic_username_b"
                                             value={createPatientForm.arabic_username_b}
                                             onChange={handleCreatePatientFormChange}
-                                            className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
+                                            className={`patient-health-touchable ${isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}`}
                                             placeholder={t('patientHealth.second')}
                                         />
                                     </div>
@@ -1052,7 +1056,7 @@ const PatientHealthForm: React.FC<{
                                             name="arabic_username_c"
                                             value={createPatientForm.arabic_username_c}
                                             onChange={handleCreatePatientFormChange}
-                                            className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
+                                            className={`patient-health-touchable ${isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}`}
                                             placeholder={t('patientHealth.third')}
                                         />
                                     </div>
@@ -1064,7 +1068,7 @@ const PatientHealthForm: React.FC<{
                                             value={createPatientForm.arabic_username_d}
                                             onChange={handleCreatePatientFormChange}
                                             required
-                                            className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
+                                            className={`patient-health-touchable ${isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}`}
                                             placeholder={t('patientHealth.last')}
                                         />
                                     </div>
@@ -1085,7 +1089,7 @@ const PatientHealthForm: React.FC<{
                                             type="email"
                                             value={createPatientForm.user_email}
                                             onChange={handleCreatePatientFormChange}
-                                            className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
+                                            className={`patient-health-touchable ${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
                                             required
                                             placeholder={t('doctorManagement.emailPlaceholder')}
                                         />
@@ -1102,7 +1106,7 @@ const PatientHealthForm: React.FC<{
                                             type="tel"
                                             value={createPatientForm.user_phonenumber}
                                             onChange={handleCreatePatientFormChange}
-                                            className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
+                                            className={`patient-health-touchable ${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
                                             required
                                             placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
                                         />
@@ -1118,7 +1122,7 @@ const PatientHealthForm: React.FC<{
                                             name="id_number"
                                             value={createPatientForm.id_number}
                                             onChange={handleCreatePatientFormChange}
-                                            className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
+                                            className={`patient-health-touchable ${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
                                             required
                                             placeholder={t('auth.yourIDNumber')}
                                         />
@@ -1140,7 +1144,7 @@ const PatientHealthForm: React.FC<{
                                             type="date"
                                             value={createPatientForm.date_of_birth}
                                             onChange={handleCreatePatientFormChange}
-                                            className={`${isRTL ? 'pr-12 text-left' : 'pl-12'}`}
+                                            className={`patient-health-touchable ${isRTL ? 'pr-12 text-left' : 'pl-12'}`}
                                             required
                                         />
                                     </div>
@@ -1153,12 +1157,12 @@ const PatientHealthForm: React.FC<{
                                         onValueChange={(value) => setCreatePatientForm(prev => ({ ...prev, gender_user: value }))}
                                         className={`flex gap-4 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}
                                     >
-                                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse gap-2' : 'space-x-2'}`}>
-                                            <RadioGroupItem value="male" id="create_male" />
+                                        <div className={`checkbox-item flex items-center ${isRTL ? 'flex-row-reverse gap-2' : 'space-x-2'}`}>
+                                            <RadioGroupItem value="male" id="create_male" className="patient-health-touchable" />
                                             <Label htmlFor="create_male">{t('patientHealth.male')}</Label>
                                         </div>
-                                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse gap-2' : 'space-x-2'}`}>
-                                            <RadioGroupItem value="female" id="create_female" />
+                                        <div className={`checkbox-item flex items-center ${isRTL ? 'flex-row-reverse gap-2' : 'space-x-2'}`}>
+                                            <RadioGroupItem value="female" id="create_female" className="patient-health-touchable" />
                                             <Label htmlFor="create_female">{t('patientHealth.female')}</Label>
                                         </div>
                                     </RadioGroup>
@@ -1174,12 +1178,12 @@ const PatientHealthForm: React.FC<{
                                             type={showPassword ? "text" : "password"}
                                             value={createPatientForm.user_password}
                                             onChange={handleCreatePatientFormChange}
-                                            className={`${isRTL ? 'pr-10 pl-10 text-left' : 'pl-10 pr-10'}`}
+                                            className={`patient-health-touchable ${isRTL ? 'pr-10 pl-10 text-left' : 'pl-10 pr-10'}`}
                                             placeholder={t('patientHealth.leaveEmptyForAutoGeneration')}
                                         />
                                         <button
                                             type="button"
-                                            className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 h-4 w-4 text-muted-foreground`}
+                                            className={`patient-health-touchable absolute ${isRTL ? 'left-3' : 'right-3'} top-3 h-4 w-4 text-muted-foreground`}
                                             onClick={() => setShowPassword(!showPassword)}
                                         >
                                             {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
@@ -1190,11 +1194,11 @@ const PatientHealthForm: React.FC<{
                         </div>
 
                         {/* Form Actions */}
-                        <div className={`flex gap-4 mt-8 pt-6 border-t ${isRTL ? 'justify-start' : 'justify-start'}`}>
+                        <div className={`patient-health-buttons flex gap-4 mt-8 pt-6 border-t ${isRTL ? 'justify-start' : 'justify-start'}`}>
                             <Button
                                 onClick={createNewPatient}
                                 disabled={isCreatingPatient}
-                                className="bg-green-600 hover:bg-green-700"
+                                className="patient-health-touchable bg-green-600 hover:bg-green-700"
                             >
                                 {isCreatingPatient ? (
                                     <>
@@ -1212,6 +1216,7 @@ const PatientHealthForm: React.FC<{
                                 variant="outline"
                                 onClick={() => setShowCreatePatientForm(false)}
                                 disabled={isCreatingPatient}
+                                className="patient-health-touchable"
                             >
                                 {t('patientHealth.cancel')}
                             </Button>
@@ -1432,7 +1437,7 @@ const PatientHealthManagement: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-8">
+            <div className="patient-health-loading flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mr-2" />
                 <span className="text-gray-600">{t('patientHealth.loadingRecords') || 'Loading patient records...'}</span>
             </div>
@@ -1440,15 +1445,15 @@ const PatientHealthManagement: React.FC = () => {
     }
 
     return (
-        <Card>
-            <CardHeader>
+        <Card className="patient-health-card">
+            <CardHeader className="card-header">
                 <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-left' : ''}`}>
                     <Database className="h-5 w-5" />
                     {t('patientHealth.title') || 'Patient Health Management'}
                 </CardTitle>
 
                 {/* Action buttons and search */}
-                <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`patient-health-search-controls flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-4 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className="relative flex-1 max-w-sm">
                             <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-gray-400`} />
@@ -1456,12 +1461,12 @@ const PatientHealthManagement: React.FC = () => {
                                 placeholder={t('patientHealth.searchPlaceholder') || 'Search patients...'}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className={`${isRTL ? 'pr-10 text-left placeholder:text-right' : 'pl-10'}`}
+                                className={`patient-health-touchable ${isRTL ? 'pr-10 text-left placeholder:text-right' : 'pl-10'}`}
                             />
                         </div>
 
                         <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as 'all' | 'with_data' | 'without_data')}>
-                            <SelectTrigger className={`w-48 ${isRTL ? 'text-right flex-row-reverse' : ''}`}>
+                            <SelectTrigger className={`patient-health-touchable w-48 ${isRTL ? 'text-right flex-row-reverse' : ''}`}>
                                 <Filter className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                 <SelectValue />
                             </SelectTrigger>
@@ -1479,10 +1484,10 @@ const PatientHealthManagement: React.FC = () => {
                         </Select>
                     </div>
 
-                    <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`patient-health-buttons flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         {isRTL ? (
                             <>
-                                <Button onClick={fetchAllData} variant="outline" size="sm" className="flex items-center gap-2">
+                                <Button onClick={fetchAllData} variant="outline" size="sm" className="patient-health-touchable flex items-center gap-2">
                                     <RefreshCw className="h-4 w-4" />
                                     {t('patientHealth.refresh')}
                                 </Button>
@@ -1501,7 +1506,7 @@ const PatientHealthManagement: React.FC = () => {
                                     allPatients={allPatients}
                                     onPatientCreated={handlePatientCreated}
                                 />
-                                <Button onClick={fetchAllData} variant="outline" size="sm" className="flex items-center gap-2">
+                                <Button onClick={fetchAllData} variant="outline" size="sm" className="patient-health-touchable flex items-center gap-2">
                                     <RefreshCw className="h-4 w-4" />
                                     {t('patientHealth.refresh')}
                                 </Button>
@@ -1510,22 +1515,22 @@ const PatientHealthManagement: React.FC = () => {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="card-content">
                 {/* Summary Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className={`bg-blue-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
+                <div className="patient-health-stats grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className={`patient-health-summary bg-blue-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
                         <h3 className="text-sm font-medium text-blue-800 text-left">
                             {t('patientHealth.totalPatients') || 'Total Patients'}
                         </h3>
                         <p className="text-2xl font-bold text-blue-600 text-left">{allPatients.length}</p>
                     </div>
-                    <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="patient-health-summary bg-green-50 p-4 rounded-lg">
                         <h3 className="text-sm font-medium text-green-800 text-left">
                             {t('patientHealth.withHealthData') || 'With Health Data'}
                         </h3>
                         <p className="text-2xl font-bold text-green-600 text-left">{records.length}</p>
                     </div>
-                    <div className="bg-orange-50 p-4 rounded-lg">
+                    <div className="patient-health-summary bg-orange-50 p-4 rounded-lg">
                         <h3 className="text-sm font-medium text-orange-800 text-left">
                             {t('patientHealth.withConditions') || 'With Conditions'}
                         </h3>
@@ -1533,7 +1538,7 @@ const PatientHealthManagement: React.FC = () => {
                             {records.filter(r => calculateDiseaseCount(r) > 0).length}
                         </p>
                     </div>
-                    <div className="bg-purple-50 p-4 rounded-lg">
+                    <div className="patient-health-summary bg-purple-50 p-4 rounded-lg">
                         <h3 className="text-sm font-medium text-purple-800 text-left" >
                             {t('patientHealth.onMedications') || 'On Medications'}
                         </h3>
@@ -1544,7 +1549,7 @@ const PatientHealthManagement: React.FC = () => {
                 </div>
 
                 {/* Records Table */}
-                <div className="border rounded-lg overflow-hidden">
+                <div className="patient-health-table border rounded-lg overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50">
@@ -1593,7 +1598,7 @@ const PatientHealthManagement: React.FC = () => {
                                                     <div className={`space-y-2 ${isRTL ? 'text-right' : ''}`}>
                                                         {/* BMI */}
                                                         {record.weight_kg && record.height_cm && (
-                                                            <div className={`text-sm ${isRTL ? 'text-right' : ''}`}>
+                                                            <div className={`text-sm ${isRTL ? 'text-left' : ''}`}>
                                                                 <span className="font-medium">{isRTL ? 'مؤشر كتلة الجسم:' : 'BMI:'}</span> {
                                                                     ((record.weight_kg / Math.pow(record.height_cm / 100, 2))).toFixed(1)
                                                                 }
@@ -1601,7 +1606,7 @@ const PatientHealthManagement: React.FC = () => {
                                                         )}
                                                         {/* Blood Type */}
                                                         {record.blood_type && (
-                                                            <div className={`text-sm ${isRTL ? 'text-right' : ''}`}>
+                                                            <div className={`text-sm ${isRTL ? 'text-left' : ''}`}>
                                                                 <span className="font-medium">{isRTL ? 'فصيلة الدم:' : 'Blood:'}</span> {
                                                                     isRTL ? (
                                                                         record.blood_type === 'A+' ? '+أ' :
@@ -1620,11 +1625,11 @@ const PatientHealthManagement: React.FC = () => {
 
                                                         {/* Conditions and Medications */}
                                                         <div className={`flex gap-2 flex-wrap ${isRTL ? 'justify-end' : ''}`}>
-                                                            <Badge variant="outline" className={`text-xs flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                            <Badge variant="outline" className={`patient-health-badge text-xs flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                                 <Heart className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                 {isRTL ? `حالات مرضية ${calculateDiseaseCount(record)}` : `${calculateDiseaseCount(record)} conditions`}
                                                             </Badge>
-                                                            <Badge variant="outline" className={`text-xs flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                            <Badge variant="outline" className={`patient-health-badge text-xs flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                                                                 <Pill className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                 {isRTL ? `أدوية ${calculateMedicationCount(record)}` : `${calculateMedicationCount(record)} medications`}
                                                             </Badge>
@@ -1632,7 +1637,7 @@ const PatientHealthManagement: React.FC = () => {
                                                     </div>
                                                 ) : (
                                                     <div className="text-center py-2">
-                                                        <Badge variant="outline" className="text-xs text-gray-500">
+                                                        <Badge variant="outline" className="patient-health-badge text-xs text-gray-500">
                                                             No Health Data
                                                         </Badge>
                                                     </div>
@@ -1645,47 +1650,56 @@ const PatientHealthManagement: React.FC = () => {
                                                         {/* Created By */}
                                                         {record.created_by_name && (
                                                             <div className="space-y-1">
-                                                                <div className={`text-xs font-medium text-gray-700 ${isRTL ? 'text-right' : ''}`}>
-                                                                    {isRTL ? 'تم إنشاؤه بواسطة:' : 'Created by:'}
+                                                                <div className={`text-xs font-medium text-gray-700 ${isRTL ? 'text-left' : 'text-left'}`}>
+                                                                    {t('patientHealth.createdBy')}
                                                                 </div>
-                                                                <div className={`text-sm font-medium text-gray-900 ${isRTL ? 'text-left' : ''}`}>
+                                                                <div className={`text-sm font-medium text-gray-900 ${isRTL ? 'text-left' : 'text-left'}`}>
                                                                     {record.created_by_name}
                                                                 </div>
-                                                                <Badge className={`text-xs ${getRoleColor(record.created_by_role)} ${isRTL ? 'block text-left' : ''}`}>
-                                                                    {isRTL ? (record.created_by_role === 'Admin' ? 'مدير' : record.created_by_role === 'Patient' ? 'مريض' : record.created_by_role) : (record.created_by_role || 'Patient')}
-                                                                </Badge>
-                                                                <div className={`text-xs text-gray-500 ${isRTL ? 'text-left' : ''}`}>
-                                                                    {new Date(record.created_at || '').toLocaleDateString()}
+                                                                <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                                                                    <Badge className={`patient-health-badge text-xs ${getRoleColor(record.created_by_role)}`}>
+                                                                        {t(`roles.${(record.created_by_role || 'patient').toLowerCase()}`)}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className={`text-xs text-gray-500 ${isRTL ? 'text-left' : 'text-left'}`}>
+                                                                    {new Date(record.created_at || '').toLocaleDateString(
+                                                                        i18n.language === 'ar' ? 'ar-EG' : 'en-US'
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         )}
 
-                                                        {/* Updated By */}
+                                                        {/* Updated By - Fixed RTL Compatible */}
                                                         {record.updated_by_name && record.updated_by_name !== record.created_by_name && (
-                                                            <div className="space-y-1 pt-2 border-t border-gray-100">
-                                                                <div className="text-xs font-medium text-gray-700">Last updated by:</div>
-                                                                <div className="text-sm font-medium text-gray-900">
+                                                            <div className={`space-y-1 pt-2 border-t border-gray-100 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                                <div className={`text-xs font-medium text-gray-700 ${isRTL ? 'text-left' : 'text-left'}`}>
+                                                                    {t('patientHealth.lastUpdatedBy')}
+                                                                </div>
+                                                                <div className={`text-sm font-medium text-gray-900 ${isRTL ? 'text-left' : 'text-left'}`}>
                                                                     {record.updated_by_name}
                                                                 </div>
-                                                                <Badge className={`text-xs ${getRoleColor(record.updated_by_role)}`}>
-                                                                    {record.updated_by_role || 'Patient'}
-                                                                </Badge>
-                                                                <div className="text-xs text-gray-500">
-                                                                    {new Date(record.updated_at || '').toLocaleDateString()}
+                                                                <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                                                                    <Badge className={`patient-health-badge text-xs ${getRoleColor(record.updated_by_role)}`}>
+                                                                        {t(`roles.${(record.updated_by_role || 'patient').toLowerCase()}`)}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className={`text-xs text-gray-500 ${isRTL ? 'text-left' : 'text-left'}`}>
+                                                                    {new Date(record.updated_at || '').toLocaleDateString(
+                                                                        i18n.language === 'ar' ? 'ar-EG' : 'en-US'
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         )}
                                                     </div>
                                                 ) : (
                                                     <div className="text-center py-2 text-gray-500 text-sm">
-                                                        No health record created
+                                                        {t('patientHealth.noHealthRecordCreated')}
                                                     </div>
                                                 )}
                                             </td>
-
                                             {/* Actions Column */}
                                             <td className="px-4 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-2">
+                                                <div className="patient-health-actions flex items-center gap-2">
                                                     {record.id ? (
                                                         <>
                                                             {/* Edit Button */}
@@ -1702,7 +1716,7 @@ const PatientHealthManagement: React.FC = () => {
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
-                                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                        className="patient-health-touchable text-red-600 hover:text-red-700 hover:bg-red-50"
                                                                     >
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </Button>
@@ -1716,10 +1730,10 @@ const PatientHealthManagement: React.FC = () => {
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogCancel className="patient-health-touchable">Cancel</AlertDialogCancel>
                                                                         <AlertDialogAction
                                                                             onClick={() => handleDeleteRecord(record.patient_id)}
-                                                                            className="bg-red-600 hover:bg-red-700"
+                                                                            className="patient-health-touchable bg-red-600 hover:bg-red-700"
                                                                         >
                                                                             Delete
                                                                         </AlertDialogAction>
@@ -1748,7 +1762,7 @@ const PatientHealthManagement: React.FC = () => {
 
                 {/* Empty State */}
                 {filteredRecords.length === 0 && (
-                    <div className={`text-center py-12 ${isRTL ? 'text-left' : ''}`}>
+                    <div className={`patient-health-empty text-center py-12 ${isRTL ? 'text-left' : ''}`}>
                         <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">
                             {searchTerm || filterStatus !== 'all'

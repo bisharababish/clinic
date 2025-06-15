@@ -50,9 +50,80 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
 
+        // Restrict English name fields to English letters only
+        if (name.startsWith('english_username_') && !isEnglishOnly(value)) {
+            toast({
+                title: t("auth.invalidInput"),
+                description: t("auth.englishNamesOnly"),
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Restrict Arabic name fields to Arabic letters only
+        if (name.startsWith('arabic_username_') && !isArabicOnly(value)) {
+            toast({
+                title: t("auth.invalidInput"),
+                description: t("auth.arabicNamesOnly"),
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Restrict ID number to exactly 9 digits
+        if (name === 'id_number') {
+            if (!isNumbersOnly(value) || value.length > 9) {
+                if (!isNumbersOnly(value)) {
+                    toast({
+                        title: t("auth.invalidInput"),
+                        description: t("auth.idNumbersOnly"),
+                        variant: "destructive",
+                    });
+                }
+                return;
+            }
+        }
+
+        // Handle phone number with +970 prefix
+        if (name === 'phoneNumber') {
+            let cleanValue = value.replace(/\D/g, ''); // Remove all non-digits
+
+            // If user starts typing without +970, add it
+            if (cleanValue && !value.startsWith('+970')) {
+                if (cleanValue.startsWith('970')) {
+                    cleanValue = cleanValue.substring(3); // Remove 970 if they typed it
+                }
+                setFormData(prev => ({ ...prev, [name]: `+970${cleanValue}` }));
+                return;
+            }
+
+            // If they have +970, ensure the rest is max 9 digits
+            if (value.startsWith('+970')) {
+                const restOfNumber = cleanValue.substring(3);
+                if (restOfNumber.length > 9) return; // Don't allow more than 9 digits after +970
+                setFormData(prev => ({ ...prev, [name]: `+970${restOfNumber}` }));
+                return;
+            }
+        }
+
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+    // Add these validation functions after your useState declarations
+    const isEnglishOnly = (text: string) => /^[a-zA-Z\s]*$/.test(text);
+    const isArabicOnly = (text: string) => /^[\u0600-\u06FF\s]*$/.test(text);
+    const isNumbersOnly = (text: string) => /^[0-9]*$/.test(text);
+
+    const calculateAge = (birthDate: string) => {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    };
     const validateForm = () => {
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,33 +136,75 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             return false;
         }
 
-        // Phone validation (numbers only)
-        const phoneRegex = /^[0-9]+$/;
+        // Enhanced password validation
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            toast({
+                title: t("auth.weakPassword"),
+                description: t("auth.strongPasswordRequired"),
+                variant: "destructive",
+            });
+            return false;
+        }
+
+        // Palestinian phone validation (+970 + 9 digits)
+        const phoneRegex = /^\+970[0-9]{9}$/;
         if (!phoneRegex.test(formData.phoneNumber)) {
             toast({
                 title: t("auth.invalidPhone"),
-                description: t("auth.phoneNumbersOnly"),
+                description: t("auth.palestinianPhoneFormat"),
                 variant: "destructive",
             });
             return false;
         }
 
-        // Password strength
-        if (formData.password.length < 6) {
-            toast({
-                title: t("auth.weakPassword"),
-                description: t("auth.passwordLength"),
-                variant: "destructive",
-            });
-            return false;
+        // Age validation (minimum 16 years old)
+        if (formData.dateOfBirth) {
+            const age = calculateAge(formData.dateOfBirth);
+            if (age < 16) {
+                toast({
+                    title: t("auth.ageTooYoung"),
+                    description: t("auth.mustBe16OrOlder"),
+                    variant: "destructive",
+                });
+                return false;
+            }
+            if (age > 120) {
+                toast({
+                    title: t("auth.invalidAge"),
+                    description: "Please enter a valid date of birth",
+                    variant: "destructive",
+                });
+                return false;
+            }
         }
 
-        // Check if required name fields are filled (at least first and last name)
+        // Check if required name fields are filled and contain only appropriate characters
         if (!formData.english_username_a || !formData.english_username_d ||
             !formData.arabic_username_a || !formData.arabic_username_d) {
             toast({
                 title: t("auth.missingNameInfo"),
                 description: t("auth.fillRequiredNames"),
+                variant: "destructive",
+            });
+            return false;
+        }
+
+        // Validate English names contain only English letters
+        if (!isEnglishOnly(formData.english_username_a) || !isEnglishOnly(formData.english_username_d)) {
+            toast({
+                title: t("auth.invalidInput"),
+                description: t("auth.englishLettersOnly"),
+                variant: "destructive",
+            });
+            return false;
+        }
+
+        // Validate Arabic names contain only Arabic letters
+        if (!isArabicOnly(formData.arabic_username_a) || !isArabicOnly(formData.arabic_username_d)) {
+            toast({
+                title: t("auth.invalidInput"),
+                description: t("auth.arabicLettersOnly"),
                 variant: "destructive",
             });
             return false;
@@ -107,10 +220,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             return false;
         }
 
+        // Palestinian ID validation (exactly 9 digits)
         if (!/^\d{9}$/.test(formData.id_number)) {
             toast({
                 title: t("auth.invalidID"),
-                description: t("auth.validIDRequired"),
+                description: t("auth.palestinianIdFormat"),
                 variant: "destructive",
             });
             return false;
@@ -637,7 +751,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             className={isRTL ? 'pr-10' : 'pl-10'}
                             required
                             placeholder={t("auth.yourIDNumber")}
-
+                            maxLength={9}
                         />
                     </div>
                 </div>

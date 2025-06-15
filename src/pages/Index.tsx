@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import "./styles/index.css";
 import {
   EyeIcon,
   EyeOffIcon,
@@ -1086,15 +1087,14 @@ const Index = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`index-flex-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* NEW: Patient Sidebar - Only visible to nurses, doctors, and admins */}
       {canSearchPatients() && (
         <>
           {/* Sidebar Toggle Button - Fixed Position */}
           <Button
             onClick={() => setShowPatientSidebar(!showPatientSidebar)}
-            className={`fixed ${isRTL ? 'right-0' : 'left-0'} z-50 bg-blue-600 hover:bg-blue-700 text-white shadow-lg`}
-            style={{ top: '103px' }}
+            className={` patient-list ${isRTL ? 'rtl' : 'ltr'}`}
             size="sm"
           >
             <List className="h-4 w-4" />
@@ -1106,9 +1106,7 @@ const Index = () => {
           </Button>
 
           {/* Sidebar */}
-          <div className={`${showPatientSidebar ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'} 
-  fixed ${isRTL ? 'right-0' : 'left-0'} z-40 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out`}
-            style={{ top: '140px', bottom: '0' }}>
+          <div className={`patient-sidebar ${isRTL ? 'rtl' : 'ltr'} ${showPatientSidebar ? 'show' : ''}`}>
             {/* Sidebar Header */}
             <div className="p-4 border-b bg-blue-50">
               <div className="flex items-center justify-between mb-3">
@@ -1187,67 +1185,137 @@ const Index = () => {
                           <div className="space-y-2">
                             {/* Patient Name */}
                             <div>
-                              <p className="font-medium text-sm text-gray-900">
-                                {patient.english_username_a} {patient.english_username_d}
-                              </p>
-                              {patient.arabic_username_a && (
-                                <p className="text-xs text-gray-600" dir="rtl">
-                                  {patient.arabic_username_a} {patient.arabic_username_d}
+                              {patient.arabic_username_a ? (
+                                <>
+                                  <p className="font-medium text-sm text-gray-900 text-left" dir="ltr" style={{ fontFamily: 'Arial, sans-serif' }}>
+                                    {patient.arabic_username_a} {patient.arabic_username_d}
+                                  </p>
+                                  <p className="text-xs text-gray-600 text-left" dir="ltr">
+                                    {patient.english_username_a} {patient.english_username_d}
+                                  </p>
+                                </>
+                              ) : (
+                                <p className="font-medium text-sm text-gray-900 text-left" dir="ltr">
+                                  {patient.english_username_a} {patient.english_username_d}
                                 </p>
                               )}
                             </div>
 
                             {/* Patient Info */}
                             <div className="space-y-1">
-                              <div className="flex items-center gap-1 text-xs text-gray-600">
-                                <Mail className="h-3 w-3" />
-                                <span className="truncate">{patient.user_email}</span>
+                              <div className={`flex items-center gap-1 text-xs text-gray-600 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                                {isRTL ? (
+                                  <>
+                                    <span className="truncate" dir="ltr">{patient.user_email}</span>
+                                    <Mail className="h-3 w-3" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <Mail className="h-3 w-3" />
+                                    <span className="truncate" dir="ltr">{patient.user_email}</span>
+                                  </>
+                                )}
                               </div>
 
                               {patient.id_number && (
-                                <div className="flex items-center gap-1 text-xs text-gray-600">
-                                  <CreditCard className="h-3 w-3" />
-                                  <span>{patient.id_number}</span>
+                                <div className={`flex items-center gap-1 text-xs text-gray-600 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                                  {isRTL ? (
+                                    <>
+                                      <CreditCard className="h-3 w-3" />
+                                      <span dir="ltr">{patient.id_number}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CreditCard className="h-3 w-3" />
+                                      <span>{patient.id_number}</span>
+                                    </>
+                                  )}
                                 </div>
                               )}
-
                               {patient.user_phonenumber && (
-                                <div className="flex items-center gap-1 text-xs text-gray-600">
-                                  <Phone className="h-3 w-3" />
-                                  <span>{patient.user_phonenumber}</span>
+                                <div className={`flex items-center gap-1 text-xs text-gray-600 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                                  {isRTL ? (
+                                    <>
+                                      <Phone className="h-3 w-3" />
+                                      <span dir="ltr">{patient.user_phonenumber}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Phone className="h-3 w-3" />
+                                      <span>{patient.user_phonenumber}</span>
+                                    </>
+                                  )}
                                 </div>
                               )}
                             </div>
 
                             {/* Health Status Indicator */}
                             <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                              {patient.health_data ? (
-                                <Badge variant="secondary" className="text-xs">
-                                  <Database className="h-3 w-3 mr-1" />
-                                  {isRTL ? "بيانات متوفرة" : "Has Data"}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-xs">
-                                  {isRTL ? "لا توجد بيانات" : "No Data"}
-                                </Badge>
-                              )}
+                              {isRTL ? (
+                                <>
+                                  {/* Quick Stats - Left side in Arabic */}
+                                  {patient.health_data && (
+                                    <div className="flex gap-1 text-xs">
+                                      {(() => {
+                                        const stats = calculatePatientStats(patient.health_data);
+                                        return (
+                                          <>
+                                            <span className="text-orange-600">{stats.diseaseCount}C</span>
+                                            <span className="text-green-600">{stats.medicationCount}M</span>
+                                            {stats.bmi && <span className="text-blue-600">{stats.bmi}</span>}
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
 
-                              {/* Quick Stats */}
-                              {patient.health_data && (
-                                <div className="flex gap-1 text-xs">
-                                  {(() => {
-                                    const stats = calculatePatientStats(patient.health_data);
-                                    return (
-                                      <>
-                                        <span className="text-orange-600">{stats.diseaseCount}C</span>
-                                        <span className="text-green-600">{stats.medicationCount}M</span>
-                                        {stats.bmi && <span className="text-blue-600">{stats.bmi}</span>}
-                                      </>
-                                    );
-                                  })()}
-                                </div>
+                                  {/* Badge - Right side in Arabic */}
+                                  {patient.health_data ? (
+                                    <Badge variant="secondary" className="text-xs">
+                                      <Database className="h-3 w-3 mr-1" />
+                                      <span dir="rtl" className="text-right">بيانات متوفرة</span>
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs">
+                                      <span dir="rtl" className="text-right">لا توجد بيانات</span>
+                                    </Badge>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {/* Badge - Left side in English */}
+                                  {patient.health_data ? (
+                                    <Badge variant="secondary" className="text-xs">
+                                      <Database className="h-3 w-3 mr-1" />
+                                      Has Data
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-xs">
+                                      No Data
+                                    </Badge>
+                                  )}
+
+                                  {/* Quick Stats - Right side in English */}
+                                  {patient.health_data && (
+                                    <div className="flex gap-1 text-xs">
+                                      {(() => {
+                                        const stats = calculatePatientStats(patient.health_data);
+                                        return (
+                                          <>
+                                            <span className="text-orange-600">{stats.diseaseCount}C</span>
+                                            <span className="text-green-600">{stats.medicationCount}M</span>
+                                            {stats.bmi && <span className="text-blue-600">{stats.bmi}</span>}
+                                          </>
+                                        );
+                                      })()}
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
+
+
+
                           </div>
                         </CardContent>
                       </Card>
@@ -1261,7 +1329,7 @@ const Index = () => {
           {/* Sidebar Overlay */}
           {showPatientSidebar && (
             <div
-              className="fixed inset-0 bg-black bg-opacity-25 z-30"
+              className="sidebar-overlay"
               onClick={() => setShowPatientSidebar(false)}
             />
           )}
@@ -1269,10 +1337,10 @@ const Index = () => {
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 ${canSearchPatients() && showPatientSidebar ? (isRTL ? 'mr-80' : 'ml-80') : ''} transition-all duration-300`} style={{ marginTop: '0' }}>
-        <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
+      <div className={`main-content ${canSearchPatients() && showPatientSidebar ? (isRTL ? 'with-sidebar-rtl' : 'with-sidebar-ltr') : ''}`}>
+        <div className="main-content-inner space-y-4 md:space-y-8">
           {/* Notification Alert - visible to all */}
-          <Alert variant="default" className={`bg-blue-50 border-blue-200 ${isRTL ? 'mb-12' : 'mb-8'}`}>
+          <Alert variant="default" className={`alert-responsive ${isRTL ? 'rtl' : ''} bg-blue-50 border-blue-200`}>
             <AlertDescription className={isRTL ? 'py-4 px-2' : 'py-2'}>
               <span className="font-medium">{t("home.reminder")}:</span> {t("home.reservationRequired")}
               <Button variant="link" className={`h-auto p-0 ${isRTL ? 'mr-3' : 'ml-2'}`} asChild>
@@ -1290,7 +1358,7 @@ const Index = () => {
               </h2>
 
               {/* Search Input */}
-              <div className="flex gap-4 mb-6">
+              <div className="search-controls">
                 <div className="flex-1">
                   <Input
                     type="text"
@@ -1356,7 +1424,7 @@ const Index = () => {
                     {isRTL ? "نتائج البحث" : "Search Results"} ({searchResults.length})
                   </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="search-results-grid">
                     {searchResults.map((patient) => (
                       <Card
                         key={patient.userid}
@@ -1731,7 +1799,7 @@ const Index = () => {
                   </div>
 
                   {/* Form Actions */}
-                  <div className="flex justify-end gap-4 mt-8 pt-6 border-t">
+                  <div className="flex justify-end gap-4 mt-8 pt-6 border-t flex-row-reverse">
                     <Button
                       variant="outline"
                       onClick={() => {

@@ -110,6 +110,19 @@ const enTranslations = {
         registrationSuccess: 'Registration Successful',
         welcomeToClinic: 'Welcome to our clinic portal!',
         registrationFailed: 'Registration Failed',
+        invalidInput: "Invalid Input",
+        englishNamesOnly: "English names can only contain English letters",
+        arabicNamesOnly: "Arabic names can only contain Arabic letters",
+        idNumbersOnly: "ID number can only contain numbers",
+        strongPasswordRequired: "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
+        palestinianPhoneFormat: "Phone number must be +970 followed by 9 digits",
+        ageTooYoung: "Age Too Young",
+        mustBe16OrOlder: "You must be at least 16 years old to register",
+        invalidAge: "Invalid Age",
+        invalidDateOfBirth: "Please enter a valid date of birth",
+        palestinianIdFormat: "Palestinian ID must be exactly 9 digits",
+        englishLettersOnly: "English names can only contain English letters",
+        arabicLettersOnly: "Arabic names can only contain Arabic letters"
     },
     clinics: {
         // Page title and alerts
@@ -822,7 +835,7 @@ const enTranslations = {
     },
     patientHealth: {
         title: 'Patient Health Management',
-        searchPlaceholder: 'Search patients...',
+        searchPlaceholder: 'Search for...',
         searchPlaceholderr: 'Search patients...',
 
         refresh: 'Refresh',
@@ -1177,7 +1190,7 @@ const arTranslations = {
     },
     patientHealth: {
         title: 'إدارة صحة المرضى',
-        searchPlaceholder: '...البحث عن المرضى ',
+        searchPlaceholder: '...البحث عن  ',
         searchPlaceholderr: 'البحث عن المرضى...',
         refresh: 'تحديث',
         totalPatients: 'إجمالي المرضى',
@@ -1236,8 +1249,8 @@ const arTranslations = {
         female: 'أنثى',
         conditions: 'حالات',
         noHealthData: 'لا توجد بيانات صحية',
-        createdBy: 'تم الإنشاء بواسطة:',
-        lastUpdatedBy: 'آخر تحديث بواسطة:',
+        createdBy: ':تم الإنشاء بواسطة',
+        lastUpdatedBy: ':آخر تحديث بواسطة',
         noHealthRecordCreated: 'لم يتم إنشاء سجل صحي',
         deleteHealthRecord: 'حذف السجل الصحي',
         confirmDeleteHealthRecord: 'هل أنت متأكد من حذف السجل الصحي لـ {{name}}؟ لا يمكن التراجع عن هذا الإجراء.',
@@ -1341,6 +1354,19 @@ const arTranslations = {
         registrationSuccess: 'تم التسجيل بنجاح',
         welcomeToClinic: 'مرحبًا بك في بوابة العيادة!',
         registrationFailed: 'فشل التسجيل',
+        invalidInput: "إدخال غير صحيح",
+        englishNamesOnly: "الأسماء الإنجليزية يجب أن تحتوي على أحرف إنجليزية فقط",
+        arabicNamesOnly: "الأسماء العربية يجب أن تحتوي على أحرف عربية فقط",
+        idNumbersOnly: "رقم الهوية يجب أن يحتوي على أرقام فقط",
+        strongPasswordRequired: "كلمة المرور يجب أن تكون 8 أحرف على الأقل مع أحرف كبيرة وصغيرة ورقم ورمز خاص",
+        palestinianPhoneFormat: "رقم الهاتف يجب أن يكون 970+ متبوعاً بـ 9 أرقام",
+        ageTooYoung: "العمر صغير جداً",
+        mustBe16OrOlder: "يجب أن تكون 16 سنة أو أكبر للتسجيل",
+        invalidAge: "عمر غير صحيح",
+        invalidDateOfBirth: "يرجى إدخال تاريخ ميلاد صحيح",
+        palestinianIdFormat: "الرقم الوطني الفلسطيني يجب أن يكون 9 أرقام بالضبط",
+        englishLettersOnly: "الأسماء الإنجليزية يجب أن تحتوي على أحرف إنجليزية فقط",
+        arabicLettersOnly: "الأسماء العربية يجب أن تحتوي على أحرف عربية فقط"
     },
     clinics: {
         // Page title and alerts

@@ -17,6 +17,7 @@ import {
     RefreshCw,
     Search
 } from "lucide-react";
+import "../../styles/clinicmanagement.css"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -799,46 +800,53 @@ const ClinicManagement = () => {
 
     // Main render
     return (
-        <div className={`space-y-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className={`clinic-management-container ${isRTL ? 'rtl' : ''}`}>
             <Tabs
                 value={activeTab}
                 onValueChange={(value) => setActiveTab(value as "clinics" | "categories")}
                 className="w-full"
             >
-                <TabsList className={`flex ${isRTL ? "justify-end" : "justify-start"}`}>
+                <TabsList className={`clinic-tabs-list ${isRTL ? "rtl" : ""}`}>
                     <TabsTrigger value="clinics">{t('clinicManagement.clinics')}</TabsTrigger>
                     <TabsTrigger value="categories">{t('clinicManagement.categories')}</TabsTrigger>
                 </TabsList>
 
                 {/* CLINICS TAB */}
                 <TabsContent value="clinics" className="space-y-6">
-                    <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
+                    <div className={`clinic-main-content ${isRTL ? 'rtl' : ''}`}>
                         {/* Clinics List */}
-                        <div className="w-full lg:w-2/3">
+                        <div className="clinic-list-section">
                             <Card>
                                 <CardHeader>
                                     <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                                         <CardTitle className={isRTL ? 'text-left' : 'text-left'}>
                                             {t('clinicManagement.clinicsManagement')}
-                                        </CardTitle>                                        <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                                            <div className="relative">
-                                                <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                                        </CardTitle>
+                                        <div className={`clinic-header-actions ${isRTL ? 'rtl' : ''}`}>
+                                            <div className="clinic-search-container">
+                                                <Search className={`clinic-search-icon ${isRTL ? 'rtl' : 'ltr'}`} />
                                                 <Input
                                                     placeholder={t('clinicManagement.searchClinics')}
                                                     value={searchQuery}
                                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className={`${isRTL ? 'pr-10 pl-3 text-left' : 'pl-10'} w-[250px]`}
+                                                    className={`clinic-search-input ${isRTL ? 'rtl' : ''}`}
                                                     dir={isRTL ? 'rtl' : 'ltr'}
+                                                    style={{
+                                                        textAlign: isRTL ? 'right' : 'left',
+                                                        direction: isRTL ? 'rtl' : 'ltr'
+                                                    }}
                                                 />
                                             </div>
-                                            <Button variant="outline" size="sm" onClick={loadClinics} disabled={isLoading}>
-                                                <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
-                                                {t('common.refresh')}
-                                            </Button>
-                                            <Button size="sm" onClick={resetClinicForm}>
-                                                <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                                {t('clinicManagement.addClinic')}
-                                            </Button>
+                                            <div className="clinic-action-buttons">
+                                                <Button variant="outline" size="sm" onClick={loadClinics} disabled={isLoading}>
+                                                    <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
+                                                    {t('common.refresh')}
+                                                </Button>
+                                                <Button size="sm" onClick={resetClinicForm}>
+                                                    <Plus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                                    {t('clinicManagement.addClinic')}
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
                                     <CardDescription className={isRTL ? 'text-left' : 'text-left'}>
@@ -859,7 +867,7 @@ const ClinicManagement = () => {
                                 <CardContent>
                                     <div className="space-y-4">
                                         {filteredClinics.map((clinic) => (
-                                            <div key={clinic.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                                            <div key={clinic.id} className={`clinic-item ${isRTL ? 'rtl' : ''}`}>
                                                 <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
                                                     <h3 className="font-medium">{clinic.name}</h3>
                                                     <div className="text-sm text-gray-500 capitalize">
@@ -906,7 +914,7 @@ const ClinicManagement = () => {
                         </div>
 
                         {/* Clinic Form */}
-                        <div className="w-full lg:w-1/3">
+                        <div className="clinic-form-section">
                             <Card>
                                 <CardHeader>
                                     <CardTitle className={isRTL ? 'text-left' : ''}>
@@ -919,7 +927,7 @@ const ClinicManagement = () => {
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
-                                    <form onSubmit={handleClinicSubmit} id="clinicForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
+                                    <form onSubmit={handleClinicSubmit} id="clinicForm" className={`clinic-form ${isRTL ? 'rtl' : ''}`}>
                                         <div className="space-y-2">
                                             <Label htmlFor="name" className={isRTL ? 'text-left block' : ''}>
                                                 {t('clinicManagement.clinicName')}
@@ -1021,7 +1029,7 @@ const ClinicManagement = () => {
                                         </div>
                                     </form>
                                 </CardContent>
-                                <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <CardFooter className={`clinic-card-footer ${isRTL ? 'rtl' : ''} ${clinicFormMode === "create" ? 'create-mode' : ''}`}>
                                     {clinicFormMode === "edit" && (
                                         <Button
                                             type="button"
@@ -1057,7 +1065,7 @@ const ClinicManagement = () => {
                         <div className="w-full lg:w-2/3">
                             <Card>
                                 <CardHeader>
-                                    <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`clinic-card-header-top ${isRTL ? 'rtl' : ''}`}>
                                         <CardTitle>{t('clinicManagement.clinicCategories')}</CardTitle>
                                         <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
                                             <Button variant="outline" size="sm" onClick={loadCategories} disabled={isLoading}>
@@ -1078,7 +1086,7 @@ const ClinicManagement = () => {
                                     <div className="space-y-4">
                                         {categories.map((category) => (
                                             <div key={category.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-                                                <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+                                                <div className={`clinic-item-info ${isRTL ? 'rtl' : ''}`}>
                                                     <h3 className="font-medium">{category.name}</h3>
                                                     <div className="mt-1" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${category.is_active
@@ -1089,7 +1097,7 @@ const ClinicManagement = () => {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 ${isRTL ? 'sm:flex-row-reverse sm:space-x-reverse' : ''}`}>
+                                                <div className={`clinic-item-actions ${isRTL ? 'rtl' : ''}`}>
                                                     <Button variant="outline" size="sm" onClick={() => handleEditCategory(category.id)}>
                                                         <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                         {t('common.edit')}
@@ -1151,7 +1159,7 @@ const ClinicManagement = () => {
                                     </form>
                                 </CardContent>
                                 <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    {categoryFormMode === "edit" && (
+                                    {categoryFormMode === "edit" && !isRTL && (
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -1173,6 +1181,15 @@ const ClinicManagement = () => {
                                                 : t('clinicManagement.updateCategory')
                                         }
                                     </Button>
+                                    {categoryFormMode === "edit" && isRTL && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={resetCategoryForm}
+                                        >
+                                            {t('common.cancel')}
+                                        </Button>
+                                    )}
                                 </CardFooter>
                             </Card>
                         </div>

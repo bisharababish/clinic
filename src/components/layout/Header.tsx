@@ -291,27 +291,27 @@ export function Header() {
         }
     };
 
-    const getRoleDotClass = (role: string) => {
-        switch (role?.toLowerCase()) {
-            case "admin":
-                return "bg-red-500";
-            case "doctor":
-                return "bg-blue-500";
-            case "secretary":
-                return "bg-purple-500";
-            case "nurse":
-                return "bg-teal-500";
-            case "lab":
-                return "bg-amber-500";
-            case "x ray":
-            case "xray":
-                return "bg-indigo-500";
-            case "patient":
-                return "bg-emerald-500";
-            default:
-                return "bg-green-500";
-        }
-    };
+    // const getRoleDotClass = (role: string) => {
+    //     switch (role?.toLowerCase()) {
+    //         case "admin":
+    //             return "bg-red-500";
+    //         case "doctor":
+    //             return "bg-blue-500";
+    //         case "secretary":
+    //             return "bg-purple-500";
+    //         case "nurse":
+    //             return "bg-teal-500";
+    //         case "lab":
+    //             return "bg-amber-500";
+    //         case "x ray":
+    //         case "xray":
+    //             return "bg-indigo-500";
+    //         case "patient":
+    //             return "bg-emerald-500";
+    //         default:
+    //             return "bg-green-500";
+    //     }
+    // };
 
     return (
         <header className="sticky top-0 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200/60 z-50" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -427,18 +427,15 @@ export function Header() {
                         {/* Desktop Role Badge and Auth Button */}
                         <div className="hidden lg:flex items-center gap-3">
                             {effectiveRole && isAuthenticated && (
-                                <div className="relative">
-                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${getRoleBadgeClass(effectiveRole)}`}>
-                                        <div className={`w-2 h-2 rounded-full ${isRTL ? 'ml-2' : 'mr-2'} ${getRoleDotClass(effectiveRole)}`}></div>
-                                        {getRoleDisplayName(effectiveRole)}
-                                        {/* Show restricted access indicator for lab and x-ray users */}
-                                        {(isLab || isXRay) && (
-                                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs opacity-70`}>
-                                                ({isLab ? (t('navbar.labs') || 'Labs') : (t('navbar.xray') || 'X-Ray')} only)
-                                            </span>
-                                        )}
-                                    </span>
-                                </div>
+                                <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${getRoleBadgeClass(effectiveRole)}`}>
+                                    {getRoleDisplayName(effectiveRole)}
+                                    {/* Show restricted access indicator for lab and x-ray users */}
+                                    {(isLab || isXRay) && (
+                                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs opacity-70`}>
+                                            ({isLab ? (t('navbar.labs') || 'Labs') : (t('navbar.xray') || 'X-Ray')} only)
+                                        </span>
+                                    )}
+                                </span>
                             )}
 
                             {isAuthenticated ? (
@@ -546,7 +543,7 @@ export function Header() {
                                     {(isLab || isXRay) && (
                                         <div className="px-3 py-2 text-xs text-gray-600 bg-gray-50 rounded-md border mb-2">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${getRoleDotClass(effectiveRole)}`}></div>
+                                                <div className={`w-2 h-2 rounded-full ${(effectiveRole)}`}></div>
                                                 <span>
                                                     Restricted Access: {isLab ? (t('navbar.labs') || 'Labs') : (t('navbar.xray') || 'X-Ray')} only
                                                 </span>
@@ -600,18 +597,19 @@ export function Header() {
                                     )}
 
                                     {/* Show regular labs/xray only for non-doctor roles in mobile */}
+                                    {/* With this fixed version: */}
                                     {canViewLabs && !isDoctor && (
-                                        <Button
-                                            variant="ghost"
-                                            className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                console.log('Labs clicked - closing menu and navigating');
-                                                setIsMobileMenuOpen(false);
-                                                navigate('/labs');
-                                            }}
-                                        >
-                                            <span className="font-medium">{t('navbar.labs') || 'Labs'}</span>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                            <Link
+                                                to="/labs"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/labs');
+                                                }}
+                                                className="font-medium"
+                                            >
+                                                {t('navbar.labs') || 'Labs'}
+                                            </Link>
                                         </Button>
                                     )}
 

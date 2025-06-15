@@ -1,0 +1,402 @@
+/* AppointmentsManagement Mobile Responsiveness CSS */
+
+/* Mobile-first approach for better touch interaction */
+@media (max-width: 768px) {
+
+    /* Header section improvements */
+    .appointments-header {
+        gap: 1rem;
+    }
+
+    .appointments-header .title-section {
+        margin-bottom: 1rem;
+    }
+
+    .appointments-header .actions-section {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .appointments-header .actions-section button {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+        /* Touch-friendly minimum height */
+    }
+
+    /* Tabs improvements */
+    .appointments-tabs .tab-list {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .appointments-tabs .tab-trigger {
+        flex: 1;
+        min-height: 44px;
+        font-size: 0.875rem;
+    }
+
+    /* Filters section mobile improvements */
+    .appointments-filters {
+        padding: 1rem;
+    }
+
+    .appointments-filters .search-section {
+        margin-bottom: 1rem;
+    }
+
+    .appointments-filters .search-input {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .appointments-filters .filter-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .appointments-filters .filter-select {
+        min-height: 44px;
+    }
+
+    .appointments-filters .custom-date-inputs {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .appointments-filters .custom-date-inputs input {
+        min-height: 44px;
+    }
+
+    /* Table mobile improvements */
+    .appointments-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -1rem;
+        /* Allow table to use full width */
+        padding: 0 1rem;
+    }
+
+    .appointments-table {
+        min-width: 800px;
+        /* Ensure table doesn't compress too much */
+    }
+
+    .appointments-table th,
+    .appointments-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .appointments-table .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .appointments-table .action-buttons button {
+        min-height: 36px;
+        min-width: 36px;
+    }
+
+    /* Pagination mobile improvements */
+    .appointments-pagination {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .appointments-pagination .pagination-info {
+        text-align: center;
+        order: 1;
+    }
+
+    .appointments-pagination .pagination-controls {
+        order: 2;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .appointments-pagination .pagination-controls button {
+        min-height: 44px;
+        min-width: 44px;
+        font-size: 0.875rem;
+    }
+
+    .appointments-pagination .items-per-page {
+        order: 3;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .appointments-pagination .items-per-page select {
+        min-height: 44px;
+    }
+
+    /* Calendar view mobile improvements */
+    .appointments-calendar .calendar-card {
+        margin: 0 -0.5rem;
+    }
+
+    .appointments-calendar .calendar-table {
+        font-size: 0.875rem;
+    }
+
+    .appointments-calendar .calendar-table th,
+    .appointments-calendar .calendar-table td {
+        padding: 0.5rem 0.25rem;
+    }
+
+    /* Stats view mobile improvements */
+    .appointments-stats .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .appointments-stats .chart-container {
+        height: 250px;
+        /* Reduced height for mobile */
+    }
+
+    .appointments-stats .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Dialog/Modal mobile improvements */
+    .appointments-dialog {
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .appointments-dialog .dialog-content {
+        max-width: calc(100vw - 2rem);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .appointments-dialog .dialog-header {
+        padding: 1.5rem 1.5rem 1rem;
+    }
+
+    .appointments-dialog .dialog-body {
+        padding: 0 1.5rem;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .appointments-dialog .dialog-footer {
+        padding: 1rem 1.5rem 1.5rem;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .appointments-dialog .dialog-footer button {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    /* Form elements mobile improvements */
+    .appointments-form .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .appointments-form .form-input,
+    .appointments-form .form-select,
+    .appointments-form .form-textarea {
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevents zoom on iOS */
+    }
+
+    .appointments-form .form-textarea {
+        min-height: 120px;
+    }
+
+    /* Patient selection mobile improvements */
+    .appointments-form .patient-search {
+        margin-bottom: 0.5rem;
+    }
+
+    .appointments-form .patient-list {
+        max-height: 200px;
+    }
+
+    .appointments-form .patient-item {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        cursor: pointer;
+        min-height: 60px;
+    }
+
+    .appointments-form .patient-item:active {
+        background-color: #f3f4f6;
+    }
+
+    /* Day and time selection mobile improvements */
+    .appointments-form .day-grid {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .appointments-form .day-button {
+        min-height: 44px;
+        font-size: 0.875rem;
+    }
+
+    .appointments-form .time-grid {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .appointments-form .time-button {
+        min-height: 44px;
+        font-size: 0.875rem;
+    }
+
+    /* Badge improvements for mobile */
+    .appointments-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        display: inline-block;
+        text-align: center;
+        min-width: 60px;
+    }
+
+    /* Search and filter reset button */
+    .appointments-filters .reset-button {
+        width: 100%;
+        min-height: 44px;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Tablet improvements (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .appointments-header .actions-section {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .appointments-filters .filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .appointments-stats .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .appointments-stats .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .appointments-form .form-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .appointments-form .day-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+
+    .appointments-form .time-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Desktop improvements (1024px+) */
+@media (min-width: 1024px) {
+    .appointments-filters .filter-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .appointments-stats .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .appointments-form .day-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+
+    .appointments-form .time-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* RTL specific mobile improvements */
+[dir="rtl"] .appointments-table-container {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+}
+
+[dir="rtl"] .appointments-pagination .pagination-controls {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .appointments-form .patient-item {
+    text-align: right;
+}
+
+/* Touch improvements for all screen sizes */
+.appointments-clickable {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+}
+
+/* Ensure charts are responsive */
+.appointments-chart-container {
+    width: 100%;
+    height: 300px;
+}
+
+@media (max-width: 768px) {
+    .appointments-chart-container {
+        height: 250px;
+    }
+}
+
+/* Loading state improvements */
+.appointments-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+/* Empty state improvements */
+.appointments-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+@media (max-width: 768px) {
+    .appointments-empty {
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .appointments-animation {
+        animation: none;
+        transition: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .appointments-badge {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Focus improvements for keyboard navigation */
+.appointments-focusable:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
