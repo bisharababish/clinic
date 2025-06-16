@@ -357,7 +357,6 @@ export function Header() {
                                 <span className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">
                                     {t('common.clinicName') || 'Bethlehem Med Center'}
                                 </span>
-
                             </div>
                         </Link>
                     </div>
