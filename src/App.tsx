@@ -244,16 +244,6 @@ function App() {
 
             {/* Admin Dashboard - accessible to admin and secretary */}
             <Route
-              path="/admin"
-              element={
-                <ProtectedRoute allowedRoles={["admin", "secretary"]}>
-                  <HeaderOnlyLayout>
-                    <AdminDashboard />
-                  </HeaderOnlyLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/admin/*"
               element={
                 <ProtectedRoute allowedRoles={["admin", "secretary"]}>
