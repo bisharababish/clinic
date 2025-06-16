@@ -58,8 +58,8 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      {/* Language Switcher - Top Right Corner */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-12 md:right-6 z-50">
+      {/* Language Switcher - RTL Safe Positioning */}
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-6 z-50">
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: -10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -71,7 +71,7 @@ const Auth: React.FC = () => {
             showText={true}
             size="sm"
             variant="outline"
-            className="bg-white/90 backdrop-blur-md border-gray-200/60 hover:bg-white hover:border-gray-300 hover:shadow-lg transition-all duration-300 font-semibold shadow-md text-xs sm:text-sm"
+            className="bg-white/95 backdrop-blur-md border-gray-200/60 hover:bg-white hover:border-gray-300 hover:shadow-lg transition-all duration-300 font-semibold shadow-md w-12 h-8 sm:w-14 sm:h-10 md:w-auto md:h-auto rounded-md flex items-center justify-center text-xs sm:text-sm font-bold px-2 sm:px-3"
           />
         </motion.div>
       </div>
