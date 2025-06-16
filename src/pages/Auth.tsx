@@ -59,7 +59,7 @@ const Auth: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Language Switcher - Top Right Corner */}
-      <div className="absolute top-14 right-12 z-50">
+      <div className="absolute top-6 right-6 z-50">
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: -10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
