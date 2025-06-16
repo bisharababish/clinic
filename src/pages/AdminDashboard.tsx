@@ -184,6 +184,23 @@ const AdminDashboard = () => {
                     return;
                 }
 
+                // Verify admin status in both session and local storage
+                const adminLoginSuccess = sessionStorage.getItem('admin_login_success');
+                const cachedUser = localStorage.getItem('clinic_user_profile');
+
+                if (currentUserRole === 'admin' && (!adminLoginSuccess || !cachedUser)) {
+                    // If admin role but missing auth flags, set them
+                    sessionStorage.setItem('admin_login_success', 'true');
+                    if (!cachedUser && user) {
+                        localStorage.setItem('clinic_user_profile', JSON.stringify({
+                            id: user.id,
+                            email: user.email,
+                            name: user.name,
+                            role: 'admin'
+                        }));
+                    }
+                }
+
                 // Set role flags
                 setIsAdmin(currentUserRole === 'admin');
                 setIsSecretary(currentUserRole === 'secretary');

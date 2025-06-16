@@ -119,6 +119,29 @@ const LoginForm: React.FC<LoginFormProps> = ({
           if (role === 'admin' || userData.user_roles === 'Admin') {
             console.log("Setting admin_login_success flag");
             sessionStorage.setItem('admin_login_success', 'true');
+            localStorage.setItem('clinic_user_profile', JSON.stringify({
+              id: userData.userid.toString(),
+              email: userData.user_email,
+              name: userData.english_username_a,
+              role: 'admin'
+            }));
+
+            toast({
+              title: t("auth.adminLogin") || "Admin Login",
+              description: t("auth.secureAdminAccess") || "Secure admin access granted"
+            });
+
+            // Get the stored redirect path or use default admin path
+            const storedRedirect = sessionStorage.getItem('redirectAfterLogin');
+            const finalRedirectPath = storedRedirect || '/admin';
+
+            // Clear stored redirect
+            sessionStorage.removeItem('redirectAfterLogin');
+
+            // Clear login in progress flag and navigate
+            sessionStorage.removeItem('login_in_progress');
+            navigate(finalRedirectPath, { replace: true });
+            return;
           }
 
           return {
@@ -174,6 +197,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
         if (userRole === 'admin') {
           // Set admin login success flag
           sessionStorage.setItem('admin_login_success', 'true');
+          localStorage.setItem('clinic_user_profile', JSON.stringify({
+            id: userData.userid.toString(),
+            email: userData.user_email,
+            name: userData.english_username_a,
+            role: 'admin'
+          }));
 
           toast({
             title: t("auth.adminLogin") || "Admin Login",
@@ -187,11 +216,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
           // Clear stored redirect
           sessionStorage.removeItem('redirectAfterLogin');
 
-          // Clear login in progress flag after a short delay
-          setTimeout(() => {
-            sessionStorage.removeItem('login_in_progress');
-            navigate(finalRedirectPath, { replace: true });
-          }, 100);
+          // Clear login in progress flag and navigate
+          sessionStorage.removeItem('login_in_progress');
+          navigate(finalRedirectPath, { replace: true });
+          return;
         } else {
           // Handle other roles
           if (userRole === 'lab') {
