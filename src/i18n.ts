@@ -486,6 +486,19 @@ const enTranslations = {
         userCreated: 'User Created',
         userUpdated: 'User Updated',
         userDeleted: 'User Deleted',
+
+        validationErrors: "Validation Errors",
+        englishFirstNameInvalid: "First name must contain only English letters and spaces.",
+        englishSecondNameInvalid: "Second name must contain only English letters and spaces.",
+        englishThirdNameInvalid: "Third name must contain only English letters and spaces.",
+        englishLastNameInvalid: "Last name must contain only English letters and spaces.",
+        arabicFirstNameInvalid: "Arabic first name must contain only Arabic letters and spaces.",
+        arabicSecondNameInvalid: "Arabic second name must contain only Arabic letters and spaces.",
+        arabicThirdNameInvalid: "Arabic third name must contain only Arabic letters and spaces.",
+        arabicLastNameInvalid: "Arabic last name must contain only Arabic letters and spaces.",
+        palestinianIdInvalid: "ID number must be exactly 9 digits.",
+        palestinianPhoneInvalid: "Phone number must start with +970 followed by 9 digits.",
+        ageMinimum: "User must be at least 16 years old."
     },
     clinicManagement: {
         // Main titles
@@ -714,6 +727,7 @@ const enTranslations = {
         loadingDoctors: 'Loading doctors...',
         loadingClinics: 'Loading clinics...',
         loadingSlots: 'Loading availability slots...',
+        phoneRequired: "Phone number is required."
     },
     forgotpassowrd: {
         // Add these to the existing auth section
@@ -1699,6 +1713,19 @@ const arTranslations = {
         userCreated: 'تم إنشاء مستخدم',
         userUpdated: 'تم تحديث مستخدم',
         userDeleted: 'تم حذف مستخدم',
+
+        validationErrors: "أخطاء في التحقق",
+        englishFirstNameInvalid: "الاسم الأول يجب أن يحتوي على أحرف إنجليزية ومسافات فقط.",
+        englishSecondNameInvalid: "الاسم الثاني يجب أن يحتوي على أحرف إنجليزية ومسافات فقط.",
+        englishThirdNameInvalid: "الاسم الثالث يجب أن يحتوي على أحرف إنجليزية ومسافات فقط.",
+        englishLastNameInvalid: "اسم العائلة يجب أن يحتوي على أحرف إنجليزية ومسافات فقط.",
+        arabicFirstNameInvalid: "الاسم الأول بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
+        arabicSecondNameInvalid: "الاسم الثاني بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
+        arabicThirdNameInvalid: "الاسم الثالث بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
+        arabicLastNameInvalid: "اسم العائلة بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
+        palestinianIdInvalid: "رقم الهوية يجب أن يكون 9 أرقام بالضبط.",
+        palestinianPhoneInvalid: "رقم الهاتف يجب أن يبدأ بـ +970 متبوعاً بـ 9 أرقام.",
+        ageMinimum: "يجب أن يكون عمر المستخدم 16 سنة على الأقل."
     },
     clinicManagement: {
         // Main titles
@@ -1927,6 +1954,7 @@ const arTranslations = {
         loadingDoctors: 'جارٍ تحميل الأطباء...',
         loadingClinics: 'جارٍ تحميل العيادات...',
         loadingSlots: 'جارٍ تحميل فترات التوفر...',
+        phoneRequired: "رقم الهاتف مطلوب."
     },
     home: {
         reminder: 'تذكير',

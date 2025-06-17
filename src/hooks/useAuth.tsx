@@ -1,14 +1,14 @@
-// src/hooks/useAuth.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
-export type UserRole = 'admin' | 'doctor' | 'secretary' | 'patient';
+export type UserRole = 'admin' | 'doctor' | 'secretary' | 'patient' | 'x ray' | 'xray' | 'x-ray' | 'lab' | 'nurse';
 
 interface User {
     id: string;
     email: string;
     name: string;
     role: UserRole;
+    full_name?: string;
 }
 
 interface AuthContextType {
@@ -66,6 +66,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(userData);
     };
 
+    // Function to normalize role names for X-ray variations
+    const normalizeRole = (role: string): UserRole => {
+        const normalizedRole = role?.toLowerCase()?.trim();
+
+        // Handle X-ray role variations
+        if (normalizedRole === 'xray' || normalizedRole === 'x-ray' || normalizedRole === 'x ray') {
+            return 'x ray';
+        }
+
+        // Handle other roles
+        const validRoles: UserRole[] = ['admin', 'doctor', 'secretary', 'patient', 'x ray', 'lab', 'nurse'];
+        return validRoles.includes(normalizedRole as UserRole) ? normalizedRole as UserRole : 'patient';
+    };
+
     // Function to fetch user data from database
     const fetchUserData = async (email: string) => {
         try {
@@ -81,11 +95,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (userData) {
+                const normalizedRole = normalizeRole(userData.user_roles || 'patient');
+                const fullName = userData.english_username_a || userData.user_email;
+
                 return {
                     id: userData.userid.toString(),
                     email: userData.user_email,
-                    name: userData.english_username_a,
-                    role: (userData.user_roles || 'patient').toLowerCase() as UserRole
+                    name: fullName,
+                    role: normalizedRole,
+                    full_name: fullName
                 };
             }
             return null;
@@ -220,17 +238,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
                 return userData;
             }
+
             // 3. If user doesn't exist in database, create profile automatically
             if (!userData) {
                 console.log('User profile not found, creating one...');
 
                 const currentTimestamp = new Date().toISOString();
 
-                // Create new profile
+                // Create new profile with default patient role
                 const { data: insertData, error: createError } = await supabase
                     .from('userinfo')
                     .insert({
-                        user_roles: 'Patient',
+                        user_roles: 'patient',
                         arabic_username_a: email,
                         arabic_username_b: email,
                         arabic_username_c: email,
@@ -260,11 +279,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 console.log('New profile created successfully');
+                const normalizedRole = normalizeRole(insertData[0].user_roles);
+                const fullName = insertData[0].english_username_a;
+
                 const userObj: User = {
                     id: insertData[0].userid.toString(),
                     email: insertData[0].user_email,
-                    name: insertData[0].english_username_a,
-                    role: insertData[0].user_roles.toLowerCase() as UserRole
+                    name: fullName,
+                    role: normalizedRole,
+                    full_name: fullName
                 };
 
                 // Cache user profile for faster access
@@ -337,9 +360,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log("Creating user profile in database");
             const currentTimestamp = new Date().toISOString();
 
+            // Normalize the role
+            const normalizedRole = normalizeRole(userData.user_roles || 'patient');
+
             // Prepare insert data - handle both formats of input data
             const insertData = {
-                user_roles: userData.user_roles || 'Patient',
+                user_roles: normalizedRole,
 
                 // Handle separate name fields (preferred)
                 english_username_a: userData.english_username_a || userData.englishName || email,
@@ -378,11 +404,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
             if (userInsertData && userInsertData.length > 0) {
+                const normalizedRole = normalizeRole(userInsertData[0].user_roles);
+                const fullName = userInsertData[0].english_username_a;
+
                 const userObj: User = {
                     id: userInsertData[0].userid.toString(),
                     email: userInsertData[0].user_email,
-                    name: userInsertData[0].english_username_a,
-                    role: userInsertData[0].user_roles.toLowerCase() as UserRole
+                    name: fullName,
+                    role: normalizedRole,
+                    full_name: fullName
                 };
 
                 // Cache user profile
@@ -405,6 +435,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Clear user data
             localStorage.removeItem('clinic_user_profile');
             sessionStorage.removeItem('login_in_progress');
+            sessionStorage.removeItem('admin_login_success');
             setUser(null);
         } catch (error) {
             console.error('Error logging out:', error);

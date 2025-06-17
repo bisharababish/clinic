@@ -120,7 +120,10 @@ const DoctorManagement = () => {
             setFilteredDoctors(filtered);
         }
     }, [searchQuery, doctors]);
-
+    const validatePhoneNumber = (phoneNumber: string): boolean => {
+        const phoneRegex = /^\+970\d{9}$/;
+        return phoneRegex.test(phoneNumber);
+    };
     // Load clinics from database
     const loadClinics = async () => {
         try {
@@ -225,6 +228,28 @@ const DoctorManagement = () => {
     // Doctor form handlers
     const handleDoctorInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+
+        // Handle phone number formatting
+        if (name === 'phone') {
+            let cleanValue = value.replace(/\D/g, ''); // Remove non-digits
+
+            if (!value.startsWith('+970')) {
+                if (cleanValue.startsWith('970')) {
+                    cleanValue = cleanValue.substring(3); // Remove leading 970
+                }
+                setDoctorFormData(prev => ({ ...prev, [name]: `+970${cleanValue}` }));
+                return;
+            }
+
+            if (value.startsWith('+970')) {
+                const restOfNumber = cleanValue.substring(3);
+                if (restOfNumber.length > 9) return; // Max 9 digits after +970
+                setDoctorFormData(prev => ({ ...prev, [name]: `+970${restOfNumber}` }));
+                return;
+            }
+        }
+
+        // Default handling for other fields
         setDoctorFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -332,9 +357,21 @@ const DoctorManagement = () => {
 
     const handleDoctorSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-
+        // Validate phone number
+        if (doctorFormData.phone && !validatePhoneNumber(doctorFormData.phone)) {
+            toast({
+                title: t("auth.invalidPhone"),
+                description: t("auth.palestinianPhoneFormat"),
+                variant: "destructive",
+            });
+            return;
+        }
         // Validate doctor form
-        if (!doctorFormData.name.trim() || !doctorFormData.specialty.trim() || !doctorFormData.clinic_id || !doctorFormData.email.trim()) {
+        if (!doctorFormData.name.trim() ||
+            !doctorFormData.specialty.trim() ||
+            !doctorFormData.clinic_id ||
+            !doctorFormData.email.trim() ||
+            !doctorFormData.phone.trim()) {
             toast({
                 title: t('doctorManagement.validationError'),
                 description: t('doctorManagement.fillAllFields'),
@@ -793,11 +830,13 @@ const DoctorManagement = () => {
                                     <Input
                                         id="phone"
                                         name="phone"
+                                        type="tel"
                                         value={doctorFormData.phone}
                                         onChange={handleDoctorInputChange}
                                         placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"}
                                         dir={isRTL ? "rtl" : "ltr"}
-                                        className=""
+                                        required
+
                                     />
                                 </div>
 
