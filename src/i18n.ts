@@ -239,19 +239,73 @@ const enTranslations = {
         address: 'Wadi Musalam St. - Najib Nasser Building',
         city: 'Bethlehem, Palestine',
     },
-    xray: {
-        title: 'X-Ray Image Upload',
-        uploadXrayImage: 'Upload X-Ray Image',
-        dragAndDrop: 'Drag and drop your X-Ray image here',
-        or: 'or',
-        browseFiles: 'Browse Files',
-        supportedFormats: 'Supported formats: JPG, PNG, PDF, DICOM',
-        fileSelected: 'File selected',
-        mb: 'MB',
-        removeFile: 'Remove File',
-        saveXray: 'Save X-Ray',
-        saveSuccess: 'X-Ray image saved successfully!',
+
+    "xray": {
+        // Page titles and descriptions
+        "pageTitle": "X-Ray Image Upload System",
+        "pageDescription": "Securely upload and manage medical X-ray images",
+        "title": "X-Ray Image Upload",
+        "uploadXrayImage": "Upload X-Ray Image",
+
+        // Patient Information
+        "patientInformation": "Patient Information",
+        "patientName": "Patient Name",
+        "patientNamePlaceholder": "Enter patient name",
+        "patientId": "Patient ID",
+        "patientIdPlaceholder": "Enter patient ID",
+        "dateOfBirth": "Date of Birth",
+        "bodyPart": "Imaged Body Part",
+        "selectBodyPart": "Select body part",
+        "requestingDoctor": "Requesting Doctor",
+        "doctorNamePlaceholder": "Enter doctor’s name",
+        "clinicalIndication": "Clinical Indication",
+        "indicationPlaceholder": "Enter the reason or clinical indication for the X-ray...",
+
+        // Body parts
+        "bodyParts": {
+            "chest": "Chest",
+            "knee": "Knee",
+            "spine": "Spine",
+            "hand": "Hand",
+            "foot": "Foot",
+            "skull": "Skull",
+            "pelvis": "Pelvis",
+            "shoulder": "Shoulder",
+            "elbow": "Elbow",
+            "wrist": "Wrist"
+        },
+
+        // File upload
+        "dragAndDrop": "Drag and drop the X-ray image here",
+        "orClickToBrowse": "or click to browse files",
+        "supportedFormats": "Supported formats: JPEG, PNG, TIFF, PDF, DICOM (Max 50MB)",
+        "fileSelected": "File selected",
+        "mb": "MB",
+        "removeFile": "Remove file",
+        "fileRemoved": "File removed",
+
+        // Validation and error messages
+        "invalidFileType": "Please select a valid image file (JPEG, PNG, TIFF, PDF, or DICOM)",
+        "fileTooLarge": "File size must be less than 50MB",
+        "fillRequiredFields": "Please fill in all required fields and upload an image",
+        "uploadError": "An error occurred while uploading the X-ray image. Please try again.",
+
+        // Success messages
+        "saveXray": "Save X-Ray",
+        "saveXrayRecord": "Save X-Ray Record",
+        "saveSuccess": "X-ray image saved successfully!",
+        "uploadSuccess": "X-ray image uploaded successfully",
+
+        // Upload progress
+        "uploading": "Uploading...",
+        "uploadingXray": "Uploading X-ray image...",
+        "processing": "Processing...",
+
+        // Security notice
+        "securityNotice": "🔒 All uploaded files are encrypted and comply with medical data protection standards"
     },
+
+
     admin: {
         // Main Dashboard
         title: 'Admin Dashboard',
@@ -2060,17 +2114,68 @@ const arTranslations = {
         contactPhone: '(02) 274-2345'
     },
     xray: {
+        // Page titles and descriptions
+        pageTitle: 'نظام رفع صور الأشعة',
+        pageDescription: 'رفع وإدارة صور الأشعة الطبية بأمان',
         title: 'رفع صور الأشعة',
         uploadXrayImage: 'رفع صورة الأشعة',
+
+        // Patient Information
+        patientInformation: 'معلومات المريض',
+        patientName: 'اسم المريض',
+        patientNamePlaceholder: 'أدخل اسم المريض',
+        patientId: 'رقم المريض',
+        patientIdPlaceholder: 'أدخل رقم المريض',
+        dateOfBirth: 'تاريخ الميلاد',
+        bodyPart: 'العضو المصوَّر',
+        selectBodyPart: 'اختر العضو المصوَّر',
+        requestingDoctor: 'الطبيب الطالب',
+        doctorNamePlaceholder: 'أدخل اسم الطبيب',
+        clinicalIndication: 'المؤشر السريري',
+        indicationPlaceholder: 'أدخل السبب أو المؤشر السريري للأشعة...',
+
+        // Body parts
+        bodyParts: {
+            chest: 'الصدر',
+            knee: 'الركبة',
+            spine: 'العمود الفقري',
+            hand: 'اليد',
+            foot: 'القدم',
+            skull: 'الجمجمة',
+            pelvis: 'الحوض',
+            shoulder: 'الكتف',
+            elbow: 'الكوع',
+            wrist: 'المعصم'
+        },
+
+        // File upload
         dragAndDrop: 'اسحب وأفلت صورة الأشعة هنا',
-        or: 'أو',
-        browseFiles: 'تصفح الملفات',
-        supportedFormats: 'الأنواع المدعومة: JPG، PNG، PDF، DICOM',
+        orClickToBrowse: 'أو انقر لتصفح الملفات',
+        supportedFormats: 'الأنواع المدعومة: JPEG، PNG، TIFF، PDF، DICOM (بحد أقصى 50 ميجابايت)',
         fileSelected: 'تم اختيار الملف',
         mb: 'ميجابايت',
         removeFile: 'إزالة الملف',
+        fileRemoved: 'تمت إزالة الملف',
+
+        // Validation and error messages
+        invalidFileType: 'يرجى اختيار ملف صورة صحيح (JPEG، PNG، TIFF، PDF، أو DICOM)',
+        fileTooLarge: 'يجب أن يكون حجم الملف أقل من 50 ميجابايت',
+        fillRequiredFields: 'يرجى تعبئة جميع الحقول المطلوبة ورفع صورة',
+        uploadError: 'حدث خطأ أثناء رفع صورة الأشعة. يرجى المحاولة مرة أخرى.',
+
+        // Success messages
         saveXray: 'حفظ الأشعة',
+        saveXrayRecord: 'حفظ سجل الأشعة',
         saveSuccess: 'تم حفظ صورة الأشعة بنجاح!',
+        uploadSuccess: 'تم رفع صورة الأشعة بنجاح',
+
+        // Upload progress
+        uploading: 'جارٍ الرفع...',
+        uploadingXray: 'جاري رفع صورة الأشعة...',
+        processing: 'جارٍ المعالجة',
+
+        // Security notice
+        securityNotice: '🔒 جميع الملفات المرفوعة مشفرة ومتوافقة مع معايير حماية البيانات الطبية',
     },
     appointmentsManagement: {
         // Main titles and descriptions

@@ -4,7 +4,8 @@ import { Search, Image, Calendar, User, Filter, Download, Eye, ZoomIn, ZoomOut, 
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 
-// Type definitions
+// Type definitions 
+
 interface XRayImage {
     id: string;
     patientName: string;

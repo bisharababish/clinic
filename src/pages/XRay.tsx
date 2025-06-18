@@ -1,23 +1,26 @@
 import React, { useState, useRef } from "react";
-import { useTranslation } from 'react-i18next';
-import "./styles/xray.css"
+import { useTranslation } from "react-i18next";
+import { Upload, CheckCircle, AlertCircle, FileX, User, Calendar, Stethoscope, Camera, X } from "lucide-react";
+
 const XRay = () => {
-  const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
+  const { t } = useTranslation();
 
   const [patientInfo, setPatientInfo] = useState({
     patientName: "",
     patientId: "",
-    dateOfExam: "",
+    dateOfBirth: "",
     bodyPart: "",
+    indication: "",
     requestingDoctor: ""
   });
 
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const fileInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState('');
   const [announcement, setAnnouncement] = useState('');
+  const fileInputRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,24 +28,34 @@ const XRay = () => {
       ...prev,
       [name]: value
     }));
-
     if (isSaved) setIsSaved(false);
+    if (error) setError('');
   };
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      triggerFileInput();
-    }
-  }; const handleFileChange = (e) => {
+
+  const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
   };
 
   const handleFile = (selectedFile) => {
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/tiff', 'application/pdf', 'application/dicom'];
+    if (!validTypes.includes(selectedFile.type) && !selectedFile.name.toLowerCase().endsWith('.dcm')) {
+      setError(t('xray.invalidFileType'));
+      return;
+    }
+
+    // Validate file size (max 50MB)
+    if (selectedFile.size > 50 * 1024 * 1024) {
+      setError(t('xray.fileTooLarge'));
+      return;
+    }
+
     setFile(selectedFile);
     setAnnouncement(`${t('xray.fileSelected')}: ${selectedFile.name}`);
     if (isSaved) setIsSaved(false);
+    if (error) setError('');
   };
 
   const handleDragOver = (e) => {
@@ -50,14 +63,14 @@ const XRay = () => {
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
+  const handleDragLeave = (e) => {
+    e.preventDefault();
     setIsDragging(false);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFile(e.dataTransfer.files[0]);
     }
@@ -67,135 +80,329 @@ const XRay = () => {
     fileInputRef.current.click();
   };
 
-  const handleSave = () => {
-    console.log("X-Ray data saved:", { file });
-    setIsSaved(true);
-    // In a real app, you would upload this to a server
+  const handleSave = async () => {
+    // Validation
+    if (!patientInfo.patientName || !patientInfo.patientId || !patientInfo.bodyPart || !file) {
+      setError(t('xray.fillRequiredFields'));
+      return;
+    }
+
+    setIsUploading(true);
+    setError('');
+
+    try {
+      // Simulate upload process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      setIsSaved(true);
+      setAnnouncement(t('xray.uploadSuccess'));
+
+      // Reset form after success
+      setTimeout(() => {
+        setPatientInfo({
+          patientName: "",
+          patientId: "",
+          dateOfBirth: "",
+          bodyPart: "",
+          indication: "",
+          requestingDoctor: ""
+        });
+        setFile(null);
+        setIsSaved(false);
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error uploading X-ray:', error);
+      setError(t('xray.uploadError'));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
+  const removeFile = () => {
+    setFile(null);
+    setAnnouncement(t('xray.fileRemoved'));
+    if (error) setError('');
+  };
+
+  const isFormValid = patientInfo.patientName && patientInfo.patientId && patientInfo.bodyPart && file;
+
   return (
-    <div className={`xray-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Main Content */}
-      <main className="xray-main">
-        <div className="xray-content-wrapper">
-          <h1 className={`xray-title ${isRTL ? 'rtl' : 'ltr'}`}>
-            {t('xray.title')}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4 md:p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <div className="bg-blue-600 p-3 rounded-full">
+              <Camera className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            {t('xray.pageTitle')}
           </h1>
+          <p className="text-gray-600 text-lg">
+            {t('xray.pageDescription')}
+          </p>
+        </div>
 
-          {isSaved && (
-            <div className="xray-success-notification" dir={isRTL ? 'rtl' : 'ltr'}>
-              <p className={`xray-success-text ${isRTL ? 'rtl' : 'ltr'}`}>
-                {t('xray.saveSuccess')}
-              </p>
-            </div>
-          )}
-          {announcement && (
-            <div className="xray-screen-reader-only" aria-live="polite">
-              {announcement}
-            </div>
-          )}
-          <div className="xray-upload-container">
-            {/* X-Ray Upload */}
-            <div className="xray-upload-card">
-              <div className="xray-upload-header" dir={isRTL ? 'rtl' : 'ltr'}>
-                <h2 className={`xray-upload-title ${isRTL ? 'rtl' : 'ltr'}`}>
-                  {t('xray.uploadXrayImage')}
-                </h2>
+        {/* Status Messages */}
+        {isSaved && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center animate-pulse">
+            <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+            <span className="text-green-800 font-medium">{t('xray.saveSuccess')}</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+            <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+            <span className="text-red-800">{error}</span>
+          </div>
+        )}
+
+        {announcement && (
+          <div className="sr-only" aria-live="polite">
+            {announcement}
+          </div>
+        )}
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Patient Information */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
+              <div className="flex items-center text-white">
+                <User className="w-6 h-6 mr-3" />
+                <h2 className="text-xl font-semibold">{t('xray.patientInformation')}</h2>
               </div>
-              <div className="xray-upload-content" dir={isRTL ? 'rtl' : 'ltr'}>
-                <div
-                  className={`xray-dropzone xray-touch-target ${isDragging ? 'dragging' : ''} ${isRTL ? 'rtl' : 'ltr'}`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={triggerFileInput}
-                  onKeyDown={handleKeyDown}  
-                  dir={isRTL ? 'rtl' : 'ltr'}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={t('xray.uploadXrayImage')}
-                >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="xray-file-input"
-                    accept="image/*,.pdf,.dcm"
-                    aria-label={t('xray.browseFiles')}
-                  />
+            </div>
 
-                  {file ? (
-                    <div className="xray-file-selected">
-                      <div className="xray-file-icon-container">
-                        <svg className="xray-file-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                      </div>
-                      <div className="xray-file-status">
-                        {t('xray.fileSelected')}
-                      </div>
-                      <div className="xray-file-name">
-                        {file.name}
-                      </div>
-                      <div className="xray-file-size">
-                        {(file.size / (1024 * 1024)).toFixed(2)} {t('xray.mb')}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="xray-empty-state">
-                      <div className="xray-empty-icon-container">
-                        <svg className="xray-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                        </svg>
-                      </div>
-                      <div className="xray-empty-title">
-                        {t('xray.dragAndDrop')}
-                      </div>
-                      <div className="xray-empty-subtitle">
-                        {t('xray.or')}
-                      </div>
-                      <div className="xray-browse-button-container">
-                        <button
-                          className="xray-browse-button xray-touch-target"
-                          type="button"
-                        >
-                          {t('xray.browseFiles')}
-                        </button>
-                      </div>
-                      <div className="xray-supported-formats">
-                        {t('xray.supportedFormats')}
-                      </div>
-                    </div>
-                  )}
+            <div className="p-6 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('xray.patientName')}
+                  </label>
+                  <input
+                    type="text"
+                    name="patientName"
+                    value={patientInfo.patientName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder={t('xray.patientNamePlaceholder')}
+                    required
+                  />
                 </div>
 
-                {file && (
-                  <div className="xray-remove-container">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('xray.patientId')}
+                  </label>
+                  <input
+                    type="text"
+                    name="patientId"
+                    value={patientInfo.patientId}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder={t('xray.patientIdPlaceholder')}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('xray.dateOfBirth')}
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={patientInfo.dateOfBirth}
+                      onChange={handleChange}
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('xray.bodyPart')}
+                  </label>
+                  <select
+                    name="bodyPart"
+                    value={patientInfo.bodyPart}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    required
+                  >
+                    <option value="">{t('xray.selectBodyPart')}</option>
+                    <option value="chest">{t('xray.bodyParts.chest')}</option>
+                    <option value="knee">{t('xray.bodyParts.knee')}</option>
+                    <option value="spine">{t('xray.bodyParts.spine')}</option>
+                    <option value="hand">{t('xray.bodyParts.hand')}</option>
+                    <option value="foot">{t('xray.bodyParts.foot')}</option>
+                    <option value="skull">{t('xray.bodyParts.skull')}</option>
+                    <option value="pelvis">{t('xray.bodyParts.pelvis')}</option>
+                    <option value="shoulder">{t('xray.bodyParts.shoulder')}</option>
+                    <option value="elbow">{t('xray.bodyParts.elbow')}</option>
+                    <option value="wrist">{t('xray.bodyParts.wrist')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('xray.requestingDoctor')}
+                </label>
+                <div className="relative">
+                  <Stethoscope className="absolute left-4 top-4 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    name="requestingDoctor"
+                    value={patientInfo.requestingDoctor}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    placeholder={t('xray.doctorNamePlaceholder')}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('xray.clinicalIndication')}
+                </label>
+                <textarea
+                  name="indication"
+                  value={patientInfo.indication}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                  placeholder={t('xray.indicationPlaceholder')}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* File Upload */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-green-600 to-green-700 p-6">
+              <div className="flex items-center text-white">
+                <Upload className="w-6 h-6 mr-3" />
+                <h2 className="text-xl font-semibold">{t('xray.uploadXrayImage')}</h2>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer hover:bg-gray-50 ${isDragging
+                  ? 'border-blue-500 bg-blue-50'
+                  : file
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-gray-300'
+                  }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={triggerFileInput}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    triggerFileInput();
+                  }
+                }}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*,.pdf,.dcm"
+                />
+
+                {file ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center">
+                      <CheckCircle className="w-16 h-16 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-medium text-green-700">{t('xray.fileSelected')}</p>
+                      <p className="text-gray-600 mt-1 break-all">{file.name}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {(file.size / (1024 * 1024)).toFixed(2)} {t('xray.mb')}
+                      </p>
+                    </div>
                     <button
-                      className="xray-remove-button xray-touch-target"
-                      onClick={() => setFile(null)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeFile();
+                      }}
+                      className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200"
                     >
+                      <X className="w-4 h-4 mr-2" />
                       {t('xray.removeFile')}
                     </button>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center">
+                      <Upload className={`w-16 h-16 ${isDragging ? 'text-blue-500' : 'text-gray-400'}`} />
+                    </div>
+                    <div>
+                      <p className="text-lg font-medium text-gray-700">
+                        {t('xray.dragAndDrop')}
+                      </p>
+                      <p className="text-gray-500 mt-1">{t('xray.orClickToBrowse')}</p>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {t('xray.supportedFormats')}
+                    </div>
+                  </div>
                 )}
               </div>
+
+              {/* Upload Progress */}
+              {isUploading && (
+                <div className="mt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">{t('xray.uploading')}</span>
+                    <span className="text-sm text-gray-500">{t('xray.processing')}</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-
-          <div className="xray-save-container">
-            <button
-              onClick={handleSave}
-              disabled={!file}
-              className={`xray-save-button xray-touch-target ${!file ? 'disabled' : 'enabled'}`}
-              aria-label={t('xray.saveXray')}
-            >
-              {t('xray.saveXray')}
-            </button>
-          </div>
-
         </div>
-      </main>
+
+        {/* Save Button */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={handleSave}
+            disabled={!isFormValid || isUploading}
+            className={`px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${isFormValid && !isUploading
+              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            {isUploading ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                {t('xray.uploadingXray')}
+              </div>
+            ) : (
+              t('xray.saveXrayRecord')
+            )}
+          </button>
+        </div>
+
+
+      </div>
     </div>
   );
 };

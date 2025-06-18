@@ -429,11 +429,7 @@ export function Header() {
                                 <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${getRoleBadgeClass(effectiveRole)}`}>
                                     {getRoleDisplayName(effectiveRole)}
                                     {/* Show restricted access indicator for lab and x-ray users */}
-                                    {(isLab || isXRay) && (
-                                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-xs opacity-70`}>
-                                            ({isLab ? (t('navbar.labs') || 'Labs') : (t('navbar.xray') || 'X-Ray')} only)
-                                        </span>
-                                    )}
+
                                 </span>
                             )}
 
