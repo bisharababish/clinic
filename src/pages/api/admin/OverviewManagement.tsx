@@ -343,8 +343,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                                     </text>
                                                 );
                                             }}
-                                            outerRadius={140}
-                                            innerRadius={80}
+                                            outerRadius={110}
+                                            innerRadius={50}
                                             paddingAngle={5}
                                             dataKey="count"
                                             isAnimationActive={true}
