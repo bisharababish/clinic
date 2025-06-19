@@ -52,9 +52,6 @@ const UsersManagement = () => {
     const [users, setUsers] = useState<UserInfo[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<UserInfo[]>([]);
 
-    const isEnglishOnly = (text: string) => /^[a-zA-Z\s]*$/.test(text);
-    const isArabicOnly = (text: string) => /^[\u0600-\u06FF\s]*$/.test(text);
-    const isNumbersOnly = (text: string) => /^[0-9]*$/.test(text);
     // Form state for users
     const [userFormMode, setUserFormMode] = useState<"create" | "edit">("create");
     const [selectedUser, setSelectedUser] = useState<number | null>(null);
@@ -99,90 +96,6 @@ const UsersManagement = () => {
         }
     }, [searchQuery, users]);
 
-    const calculateAge = (birthDate: string): number => {
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--;
-        }
-        return age;
-    };
-    const validateForm = () => {
-        const { english_username_a, english_username_d, arabic_username_a, arabic_username_d } = userFormData;
-       
-        const age = calculateAge(userFormData.date_of_birth);
-        if (age < 16) {
-            toast({
-                title: t("auth.ageTooYoung"),
-                description: t("auth.mustBe16OrOlder"),
-                variant: "destructive",
-            });
-            return false;
-        }
-        if (age > 120) {
-            toast({
-                title: t("auth.invalidAge"),
-                description: t("auth.pleaseEnterValidDOB"),
-                variant: "destructive",
-            });
-            return false;
-        }
-        // Validate English names
-        if (!isEnglishOnly(english_username_a.trim()) || !isEnglishOnly(english_username_d.trim())) {
-            toast({
-                title: t("auth.invalidInput"),
-                description: t("auth.englishLettersOnly"),
-                variant: "destructive",
-            });
-            return false;
-        }
-
-        // Validate Arabic names
-        if (!isArabicOnly(arabic_username_a.trim()) || !isArabicOnly(arabic_username_d.trim())) {
-            toast({
-                title: t("auth.invalidInput"),
-                description: t("auth.arabicLettersOnly"),
-                variant: "destructive",
-            });
-            return false;
-        }
-
-        // Palestinian ID validation (exactly 9 digits)
-        if (!/^\d{9}$/.test(userFormData.id_number)) {
-            toast({
-                title: t("auth.invalidID"),
-                description: t("auth.palestinianIdFormat"),
-                variant: "destructive",
-            });
-            return false;
-        }
-
-        // Palestinian phone validation (+970 + 9 digits)
-        const phoneRegex = /^\+970[0-9]{9}$/;
-        if (!phoneRegex.test(userFormData.user_phonenumber)) {
-            toast({
-                title: t("auth.invalidPhone"),
-                description: t("auth.palestinianPhoneFormat"),
-                variant: "destructive",
-            });
-            return false;
-        }
-
-        // Enhanced password validation
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        if (!passwordRegex.test(userFormData.user_password)) {
-            toast({
-                title: t("auth.weakPassword"),
-                description: t("auth.strongPasswordRequired"),
-                variant: "destructive",
-            });
-            return false;
-        }
-
-        return true;
-    };
     // Load users from database
     const loadUsers = async () => {
         console.log('Loading users with forced refresh...');
@@ -326,59 +239,6 @@ const UsersManagement = () => {
     // User form handlers
     const handleUserInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-
-        // Restrict English name fields to English letters only
-        if (name.startsWith('english_username_') && !isEnglishOnly(value)) {
-            toast({
-                title: t("auth.invalidInput"),
-                description: t("auth.englishNamesOnly"),
-                variant: "destructive",
-            });
-            return;
-        }
-
-        // Restrict Arabic name fields to Arabic letters only
-        if (name.startsWith('arabic_username_') && !isArabicOnly(value)) {
-            toast({
-                title: t("auth.invalidInput"),
-                description: t("auth.arabicNamesOnly"),
-                variant: "destructive",
-            });
-            return;
-        }
-
-        // Restrict ID number to exactly 9 digits
-        if (name === 'id_number' && (!isNumbersOnly(value) || value.length > 9)) {
-            if (!isNumbersOnly(value)) {
-                toast({
-                    title: t("auth.invalidInput"),
-                    description: t("auth.idNumbersOnly"),
-                    variant: "destructive",
-                });
-            }
-            return;
-        }
-
-        // Handle phone number with +970 prefix
-        if (name === 'user_phonenumber') {
-            let cleanValue = value.replace(/\D/g, ''); // Remove all non-digits
-
-            if (!value.startsWith('+970')) {
-                if (cleanValue.startsWith('970')) {
-                    cleanValue = cleanValue.substring(3); // Remove 970 if they typed it
-                }
-                setUserFormData(prev => ({ ...prev, [name]: `+970${cleanValue}` }));
-                return;
-            }
-
-            if (value.startsWith('+970')) {
-                const restOfNumber = cleanValue.substring(3);
-                if (restOfNumber.length > 9) return; // Max 9 digits after +970
-                setUserFormData(prev => ({ ...prev, [name]: `+970${restOfNumber}` }));
-                return;
-            }
-        }
-
         setUserFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -617,8 +477,6 @@ const UsersManagement = () => {
         event.preventDefault();
 
         if (userFormMode === "create") {
-            if (!validateForm()) return;
-
             try {
                 setIsLoading(true);
                 console.log("Creating new user with data:", userFormData);
@@ -1152,8 +1010,6 @@ const UsersManagement = () => {
                                         value={userFormData.date_of_birth}
                                         onChange={handleUserInputChange}
                                         dir="ltr"
-                                        max={new Date().toISOString().split('T')[0]} // Prevents future dates
-
                                     />
                                 </div>
 

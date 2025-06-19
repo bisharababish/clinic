@@ -12,103 +12,106 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from '../lib/supabase';
+import i18n from '../i18n';
 
 // Clickable Skeleton Component
 const ClickableSkeleton = ({ selectedBodyPart, onBodyPartSelect }) => {
+  const { t } = useTranslation();
   const [hoveredPart, setHoveredPart] = useState(null);
 
   const bodyParts = {
     skull: {
       path: "M200,40 Q160,20 120,40 Q100,60 100,100 Q100,140 130,160 Q170,170 200,170 Q230,170 270,160 Q300,140 300,100 Q300,60 280,40 Q240,20 200,40 Z",
       center: { x: 200, y: 100 },
-      label: "Skull"
+      label: t('xray.bodyParts.skull') || "Skull"
     },
     shoulder_left: {
       path: "M120,180 Q90,170 70,190 Q60,210 70,230 Q90,240 120,230 Q130,210 120,180 Z",
       center: { x: 95, y: 205 },
-      label: "Left Shoulder"
+      label: i18n.language === 'ar' ? 'الكتف الأيسر' : "Left Shoulder"
     },
     shoulder_right: {
       path: "M280,180 Q310,170 330,190 Q340,210 330,230 Q310,240 280,230 Q270,210 280,180 Z",
       center: { x: 305, y: 205 },
-      label: "Right Shoulder"
+      label: i18n.language === 'ar' ? 'الكتف الأيمن' : "Right Shoulder"
     },
     chest: {
       path: "M140,180 Q130,170 130,200 Q130,250 140,280 Q200,290 260,280 Q270,250 270,200 Q270,170 260,180 Q200,185 140,180 Z",
       center: { x: 200, y: 230 },
-      label: "Chest"
+      label: t('xray.bodyParts.chest') || "Chest"
     },
     elbow_left: {
       path: "M80,260 Q60,250 50,270 Q50,290 60,300 Q80,310 90,290 Q90,270 80,260 Z",
       center: { x: 70, y: 280 },
-      label: "Left Elbow"
+      label: i18n.language === 'ar' ? 'الكوع الأيسر' : "Left Elbow"
     },
     elbow_right: {
       path: "M320,260 Q340,250 350,270 Q350,290 340,300 Q320,310 310,290 Q310,270 320,260 Z",
       center: { x: 330, y: 280 },
-      label: "Right Elbow"
+      label: i18n.language === 'ar' ? 'الكوع الأيمن' : "Right Elbow"
     },
     hand_left: {
       path: "M40,340 Q20,330 15,350 Q15,370 25,380 Q45,390 55,370 Q55,350 40,340 Z",
       center: { x: 35, y: 360 },
-      label: "Left Hand"
+      label: i18n.language === 'ar' ? 'اليد اليسرى' : "Left Hand"
     },
     hand_right: {
       path: "M360,340 Q380,330 385,350 Q385,370 375,380 Q355,390 345,370 Q345,350 360,340 Z",
       center: { x: 365, y: 360 },
-      label: "Right Hand"
+      label: i18n.language === 'ar' ? 'اليد اليمنى' : "Right Hand"
     },
     spine: {
       path: "M190,180 Q185,180 185,450 Q185,460 195,460 Q205,460 205,450 Q205,180 200,180 Q195,180 190,180 Z",
       center: { x: 195, y: 320 },
-      label: "Spine"
+      label: t('xray.bodyParts.spine') || "Spine"
     },
     pelvis: {
       path: "M150,440 Q140,430 140,460 Q140,480 160,490 Q200,495 240,490 Q260,480 260,460 Q260,430 250,440 Q200,445 150,440 Z",
       center: { x: 200, y: 465 },
-      label: "Pelvis"
+      label: t('xray.bodyParts.pelvis') || "Pelvis"
     },
     hip_left: {
       path: "M140,460 Q120,450 110,470 Q110,490 120,500 Q140,510 150,490 Q150,470 140,460 Z",
       center: { x: 130, y: 480 },
-      label: "Left Hip"
+      label: i18n.language === 'ar' ? 'الورك الأيسر' : "Left Hip"
     },
     hip_right: {
       path: "M260,460 Q280,450 290,470 Q290,490 280,500 Q260,510 250,490 Q250,470 260,460 Z",
       center: { x: 270, y: 480 },
-      label: "Right Hip"
+      label: i18n.language === 'ar' ? 'الورك الأيمن' : "Right Hip"
     },
     knee_left: {
       path: "M130,580 Q110,570 105,590 Q105,610 115,620 Q135,630 145,610 Q145,590 130,580 Z",
       center: { x: 125, y: 600 },
-      label: "Left Knee"
+      label: i18n.language === 'ar' ? 'الركبة اليسرى' : "Left Knee"
     },
     knee_right: {
       path: "M270,580 Q290,570 295,590 Q295,610 285,620 Q265,630 255,610 Q255,590 270,580 Z",
       center: { x: 275, y: 600 },
-      label: "Right Knee"
+      label: i18n.language === 'ar' ? 'الركبة اليمنى' : "Right Knee"
     },
     ankle_left: {
       path: "M125,720 Q105,710 100,730 Q100,750 110,760 Q130,770 140,750 Q140,730 125,720 Z",
       center: { x: 120, y: 740 },
-      label: "Left Ankle"
+      label: i18n.language === 'ar' ? 'الكاحل الأيسر' : "Left Ankle"
     },
     ankle_right: {
       path: "M275,720 Q295,710 300,730 Q300,750 290,760 Q270,770 260,750 Q260,730 275,720 Z",
       center: { x: 280, y: 740 },
-      label: "Right Ankle"
+      label: i18n.language === 'ar' ? 'الكاحل الأيمن' : "Right Ankle"
     },
     foot_left: {
       path: "M90,760 Q70,750 60,770 Q60,790 80,800 Q120,810 140,790 Q140,770 120,760 Q105,755 90,760 Z",
       center: { x: 100, y: 780 },
-      label: "Left Foot"
+      label: i18n.language === 'ar' ? 'القدم اليسرى' : "Left Foot"
     },
     foot_right: {
       path: "M310,760 Q330,750 340,770 Q340,790 320,800 Q280,810 260,790 Q260,770 280,760 Q295,755 310,760 Z",
       center: { x: 300, y: 780 },
-      label: "Right Foot"
+      label: i18n.language === 'ar' ? 'القدم اليمنى' : "Right Foot"
     }
   };
+
 
   // Map skeleton parts to form values
   const getFormValue = (skeletonPart) => {
@@ -148,7 +151,7 @@ const ClickableSkeleton = ({ selectedBodyPart, onBodyPartSelect }) => {
   return (
     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
       <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
-        Click on body part to select
+        {i18n.language === 'ar' ? 'انقر على جزء الجسم للاختيار' : 'Click on body part to select'}
       </h3>
       <div className="flex justify-center">
         <svg
@@ -215,7 +218,7 @@ const ClickableSkeleton = ({ selectedBodyPart, onBodyPartSelect }) => {
       {selectedBodyPart && (
         <div className="mt-4 text-center">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-            Selected: {selectedBodyPart.charAt(0).toUpperCase() + selectedBodyPart.slice(1)}
+            {i18n.language === 'ar' ? 'المختار: ' : 'Selected: '}{t(`xray.bodyParts.${selectedBodyPart}`) || selectedBodyPart.charAt(0).toUpperCase() + selectedBodyPart.slice(1)}
           </span>
         </div>
       )}
@@ -407,17 +410,17 @@ const XRay = () => {
   const handleSave = async () => {
     // Validation
     if (!selectedPatient) {
-      setError("Please select a patient");
+      setError(t('xray.fillRequiredFields') || "Please select a patient");
       return;
     }
 
     if (!file) {
-      setError("Please select an X-ray image");
+      setError(t('xray.fillRequiredFields') || "Please select an X-ray image");
       return;
     }
 
     if (!formFields.bodyPart) {
-      setError("Please select a body part");
+      setError(t('xray.fillRequiredFields') || "Please select a body part");
       return;
     }
 
@@ -589,10 +592,10 @@ const XRay = () => {
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            X-Ray Upload System
+            {t('xray.pageTitle') || 'X-Ray Image Upload System'}
           </h1>
           <p className="text-gray-600 text-lg">
-            Upload and manage X-ray images with patient information
+            {t('xray.pageDescription') || 'Securely upload and manage medical X-ray images'}
           </p>
         </div>
 
@@ -600,7 +603,7 @@ const XRay = () => {
         {isSaved && (
           <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
             <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
-            <span className="text-green-800 font-medium">X-ray saved successfully!</span>
+            <span className="text-green-800 font-medium">{t('xray.saveSuccess') || 'X-ray saved successfully!'}</span>
           </div>
         )}
 
@@ -624,17 +627,16 @@ const XRay = () => {
             <div className="bg-gradient-to-r from-black to-blue-700 p-6">
               <div className="flex items-center text-white">
                 <User className="w-6 h-6 mr-3" />
-                <h2 className="text-xl font-semibold">Patient Information</h2>
-              </div>
+                <h2 className="text-xl font-semibold">{t('xray.patientInformation') || 'Patient Information'}</h2>              </div>
             </div>
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Patient
+                  {t('xray.selectPatient') || 'Select Patient'}
                 </label>
                 <input
                   type="text"
-                  placeholder="Search patients..."
+                  placeholder={t('xray.searchPatientPlaceholder') || 'Search patients...'}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={searchTerm}
                   onChange={handleSearch}
@@ -649,7 +651,7 @@ const XRay = () => {
                   }}
                   value={selectedPatient?.userid || ""}
                 >
-                  <option value="">Choose a patient...</option>
+                  <option value="">{t('xray.selectPatientOption') || 'Choose a patient...'}</option>
                   {patients
                     .filter((p) =>
                       `${p.english_username_a} ${p.english_username_d}`
@@ -683,11 +685,11 @@ const XRay = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Requesting Doctor
+                  {t('xray.requestingDoctor') || 'Requesting Doctor'}
                 </label>
                 <input
                   type="text"
-                  placeholder="Search doctors..."
+                  placeholder={t('xray.searchDoctorPlaceholder') || 'Search doctors...'}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={doctorSearchTerm}
                   onChange={handleDoctorSearch}
@@ -705,7 +707,7 @@ const XRay = () => {
                   }}
                   value={selectedDoctor?.userid || ""}
                 >
-                  <option value="">Choose a doctor...</option>
+                  <option value="">{t('xray.selectDoctorOption') || 'Choose a doctor...'}</option>
                   {doctors
                     .filter((d) =>
                       `${d.english_username_a} ${d.english_username_d}`
@@ -722,7 +724,7 @@ const XRay = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Clinical Indication
+                  {t('xray.clinicalIndication') || 'Clinical Indication'}
                 </label>
                 <textarea
                   name="indication"
@@ -730,7 +732,7 @@ const XRay = () => {
                   onChange={handleChange}
                   rows={3}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  placeholder="Enter clinical indication..."
+                  placeholder={t('xray.indicationPlaceholder') || 'Enter clinical indication...'}
                 />
               </div>
             </div>
@@ -741,8 +743,7 @@ const XRay = () => {
             <div className="bg-gradient-to-r from-black to-blue-700 p-6">
               <div className="flex items-center text-white">
                 <Stethoscope className="w-6 h-6 mr-3" />
-                <h2 className="text-xl font-semibold">Body Part Selection</h2>
-              </div>
+                <h2 className="text-xl font-semibold">{t('xray.bodyPart') || 'Body Part Selection'}</h2>              </div>
             </div>
             <div className="p-6">
               {/* Clickable Skeleton */}
@@ -762,19 +763,19 @@ const XRay = () => {
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Select body part...</option>
-                  <option value="chest">Chest</option>
-                  <option value="knee">Knee</option>
-                  <option value="spine">Spine</option>
-                  <option value="hand">Hand</option>
-                  <option value="foot">Foot</option>
-                  <option value="skull">Skull</option>
-                  <option value="pelvis">Pelvis</option>
-                  <option value="shoulder">Shoulder</option>
-                  <option value="elbow">Elbow</option>
-                  <option value="wrist">Wrist</option>
-                  <option value="ankle">Ankle</option>
-                  <option value="hip">Hip</option>
+                  <option value="">{t('xray.selectBodyPart') || 'Select body part...'}</option>
+                  <option value="chest">{t('xray.bodyParts.chest') || 'Chest'}</option>
+                  <option value="knee">{t('xray.bodyParts.knee') || 'Knee'}</option>
+                  <option value="spine">{t('xray.bodyParts.spine') || 'Spine'}</option>
+                  <option value="hand">{t('xray.bodyParts.hand') || 'Hand'}</option>
+                  <option value="foot">{t('xray.bodyParts.foot') || 'Foot'}</option>
+                  <option value="skull">{t('xray.bodyParts.skull') || 'Skull'}</option>
+                  <option value="pelvis">{t('xray.bodyParts.pelvis') || 'Pelvis'}</option>
+                  <option value="shoulder">{t('xray.bodyParts.shoulder') || 'Shoulder'}</option>
+                  <option value="elbow">{t('xray.bodyParts.elbow') || 'Elbow'}</option>
+                  <option value="wrist">{t('xray.bodyParts.wrist') || 'Wrist'}</option>
+                  <option value="ankle">{t('xray.bodyParts.ankle') || 'Ankle'}</option>
+                  <option value="hip">{t('xray.bodyParts.hip') || 'Hip'}</option>
                 </select>
               </div>
             </div>
@@ -785,7 +786,7 @@ const XRay = () => {
             <div className="bg-gradient-to-r from-black to-blue-700 p-6">
               <div className="flex items-center text-white">
                 <Upload className="w-6 h-6 mr-3" />
-                <h2 className="text-xl font-semibold">Upload X-ray Image</h2>
+                <h2 className="text-xl font-semibold">{t('xray.uploadXrayImage') || 'Upload X-ray Image'}</h2>
               </div>
             </div>
             <div className="p-6">
@@ -811,7 +812,7 @@ const XRay = () => {
                       <CheckCircle className="w-16 h-16 text-green-500" />
                     </div>
                     <div>
-                      <p className="text-lg font-medium text-green-700">File Selected</p>
+                      <p className="text-lg font-medium text-green-700">{t('xray.fileSelected') || 'File Selected'}</p>
                       <p className="text-gray-600 mt-1 break-all">{file.name}</p>
                       <p className="text-sm text-gray-500 mt-1">
                         {(file.size / (1024 * 1024)).toFixed(2)} MB
@@ -825,7 +826,7 @@ const XRay = () => {
                       className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
                     >
                       <X className="w-4 h-4 mr-2" />
-                      Remove File
+                      {t('xray.removeFile') || 'Remove File'}
                     </button>
                   </div>
                 ) : (
@@ -835,12 +836,12 @@ const XRay = () => {
                     </div>
                     <div>
                       <p className="text-lg font-medium text-gray-700">
-                        Drag and drop your X-ray image
+                        {t('xray.dragAndDrop') || 'Drag and drop your X-ray image'}
                       </p>
-                      <p className="text-gray-500 mt-1">or click to browse</p>
+                      <p className="text-gray-500 mt-1">{t('xray.orClickToBrowse') || 'or click to browse'}</p>
                     </div>
                     <div className="text-sm text-gray-500">
-                      Supported formats: JPEG, PNG (Max 10MB)
+                      {t('xray.supportedFormats') || 'Supported formats: JPEG, PNG (Max 10MB)'}
                     </div>
                   </div>
                 )}
@@ -875,10 +876,10 @@ const XRay = () => {
             {isUploading ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                Uploading X-ray...
+                {t('xray.uploadingXray') || 'Uploading X-ray...'}
               </div>
             ) : (
-              "Save X-ray Record"
+              t('xray.saveXrayRecord') || 'Save X-ray Record'
             )}
           </button>
         </div>

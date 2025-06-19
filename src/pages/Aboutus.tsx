@@ -45,10 +45,10 @@ const AboutUs = () => {
 
             {/* Header Section */}
             <div className={`about-header ${isRTL ? 'rtl' : 'ltr'}`}>
-                <h1 className={`about-title ${isRTL ? 'rtl' : 'ltr'}`}>
+                <h1 className={`about-title ${isRTL ? 'ltr' : 'ltr'}`}>
                     {t('aboutUs.title')}
                 </h1>
-                <p className={`about-subtitle ${isRTL ? 'rtl' : 'ltr'}`}>
+                <p className={`about-subtitle ${isRTL ? 'ltr' : 'ltr'}`}>
                     {t('aboutUs.subtitle')}
                 </p>
             </div>

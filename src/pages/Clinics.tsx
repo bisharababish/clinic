@@ -253,13 +253,13 @@ const Clinics = () => {
                             onClick={() => handleViewClinic(clinic)}
                             dir={isRTL ? "rtl" : "ltr"}
                         >
-                            <h3 className="clinic-card-title">
+                            <h3 className={`clinic-card-title ${isRTL ? 'text-left' : 'text-left'}`}>
                                 {clinic.name}
                             </h3>
-                            <p className="clinic-card-category">
+                            <p className={`clinic-card-category ${isRTL ? 'text-left' : 'text-left'}`}>
                                 {clinic.category}
                             </p>
-                            <p className="clinic-card-doctors">
+                            <p className={`clinic-card-doctors ${isRTL ? 'text-left' : 'text-left'}`}>
                                 {clinic.doctors.length} {clinic.doctors.length === 1 ? t('clinics.availableDoctor') : t('clinics.availableDoctors')}
                             </p>
                         </div>

@@ -606,30 +606,34 @@ const AdminDashboard = () => {
                 </div>
             ) : (
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                    <TabsList className={`flex flex-wrap justify-center w-full ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <TabsList className={`flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         {/* Overview tab first */}
                         {canViewOverviewTab && (
-                            <TabsTrigger value="overview">{t('admin.overview') || 'Overview'}</TabsTrigger>
+                            <TabsTrigger value="overview" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">{t('admin.overview') || 'Overview'}</TabsTrigger>
                         )}
                         {/* Users tab second */}
                         {canViewUsersTab && (
-                            <TabsTrigger value="users">{t('admin.users') || 'Users'}</TabsTrigger>
+                            <TabsTrigger value="users" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">{t('admin.users') || 'Users'}</TabsTrigger>
                         )}
                         {/* Clinics tab third */}
                         {canViewClinicsTab && (
-                            <TabsTrigger value="clinics">{t('admin.clinics') || 'Clinics'}</TabsTrigger>
+                            <TabsTrigger value="clinics" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">{t('admin.clinics') || 'Clinics'}</TabsTrigger>
                         )}
                         {/* Doctors tab fourth */}
                         {canViewDoctorsTab && (
-                            <TabsTrigger value="doctors">{t('admin.doctors') || 'Doctors'}</TabsTrigger>
+                            <TabsTrigger value="doctors" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">{t('admin.doctors') || 'Doctors'}</TabsTrigger>
                         )}
-                        {/* Patient Health tab fifth */}
+                        {/* Patient Health tab fifth - shortened to "Health" */}
                         {canViewPatientHealthTab && (
-                            <TabsTrigger value="patient-health">{t('admin.patientHealth') || 'Patient Health'}</TabsTrigger>
+                            <TabsTrigger value="patient-health" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'الصحة' : 'Health'}
+                            </TabsTrigger>
                         )}
-                        {/* Appointments tab last */}
+                        {/* Appointments tab last - shortened to "Appts" */}
                         {canViewAppointmentsTab && (
-                            <TabsTrigger value="appointments">{t('admin.appointments') || 'Appointments'}</TabsTrigger>
+                            <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'المواعيد' : 'Appts'}
+                            </TabsTrigger>
                         )}
                     </TabsList>
 

@@ -1779,7 +1779,7 @@ const arTranslations = {
         returnToHome: 'العودة للرئيسية',
         // Add these lines to the existing admin section  
 
-        patientHealth: "السجلات الصحية للمرضى",
+        patientHealth: "السجلات الصحية ",
 
         secretaryDashboard: 'لوحة تحكم السكرتير',
         dashboard: 'لوحة التحكم',
