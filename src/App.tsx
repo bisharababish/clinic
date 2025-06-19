@@ -175,9 +175,9 @@ function App() {
               path="/payment"
               element={
                 <ProtectedRoute allowedRoles={["admin", "secretary", "patient"]}>
-                  <MainLayout>
+                  <HeaderOnlyLayout>
                     <Payment />
-                  </MainLayout>
+                  </HeaderOnlyLayout>
                 </ProtectedRoute>
               }
             />

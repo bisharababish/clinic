@@ -1,61 +1,379 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Upload, CheckCircle, AlertCircle, FileX, User, Calendar, Stethoscope, Camera, X } from "lucide-react";
+import {
+  Upload,
+  CheckCircle,
+  AlertCircle,
+  FileX,
+  User,
+  Calendar,
+  Stethoscope,
+  Camera,
+  X,
+} from "lucide-react";
+import { supabase } from '../lib/supabase';
+
+// Clickable Skeleton Component
+const ClickableSkeleton = ({ selectedBodyPart, onBodyPartSelect }) => {
+  const [hoveredPart, setHoveredPart] = useState(null);
+
+  const bodyParts = {
+    skull: {
+      path: "M200,40 Q160,20 120,40 Q100,60 100,100 Q100,140 130,160 Q170,170 200,170 Q230,170 270,160 Q300,140 300,100 Q300,60 280,40 Q240,20 200,40 Z",
+      center: { x: 200, y: 100 },
+      label: "Skull"
+    },
+    shoulder_left: {
+      path: "M120,180 Q90,170 70,190 Q60,210 70,230 Q90,240 120,230 Q130,210 120,180 Z",
+      center: { x: 95, y: 205 },
+      label: "Left Shoulder"
+    },
+    shoulder_right: {
+      path: "M280,180 Q310,170 330,190 Q340,210 330,230 Q310,240 280,230 Q270,210 280,180 Z",
+      center: { x: 305, y: 205 },
+      label: "Right Shoulder"
+    },
+    chest: {
+      path: "M140,180 Q130,170 130,200 Q130,250 140,280 Q200,290 260,280 Q270,250 270,200 Q270,170 260,180 Q200,185 140,180 Z",
+      center: { x: 200, y: 230 },
+      label: "Chest"
+    },
+    elbow_left: {
+      path: "M80,260 Q60,250 50,270 Q50,290 60,300 Q80,310 90,290 Q90,270 80,260 Z",
+      center: { x: 70, y: 280 },
+      label: "Left Elbow"
+    },
+    elbow_right: {
+      path: "M320,260 Q340,250 350,270 Q350,290 340,300 Q320,310 310,290 Q310,270 320,260 Z",
+      center: { x: 330, y: 280 },
+      label: "Right Elbow"
+    },
+    hand_left: {
+      path: "M40,340 Q20,330 15,350 Q15,370 25,380 Q45,390 55,370 Q55,350 40,340 Z",
+      center: { x: 35, y: 360 },
+      label: "Left Hand"
+    },
+    hand_right: {
+      path: "M360,340 Q380,330 385,350 Q385,370 375,380 Q355,390 345,370 Q345,350 360,340 Z",
+      center: { x: 365, y: 360 },
+      label: "Right Hand"
+    },
+    spine: {
+      path: "M190,180 Q185,180 185,450 Q185,460 195,460 Q205,460 205,450 Q205,180 200,180 Q195,180 190,180 Z",
+      center: { x: 195, y: 320 },
+      label: "Spine"
+    },
+    pelvis: {
+      path: "M150,440 Q140,430 140,460 Q140,480 160,490 Q200,495 240,490 Q260,480 260,460 Q260,430 250,440 Q200,445 150,440 Z",
+      center: { x: 200, y: 465 },
+      label: "Pelvis"
+    },
+    hip_left: {
+      path: "M140,460 Q120,450 110,470 Q110,490 120,500 Q140,510 150,490 Q150,470 140,460 Z",
+      center: { x: 130, y: 480 },
+      label: "Left Hip"
+    },
+    hip_right: {
+      path: "M260,460 Q280,450 290,470 Q290,490 280,500 Q260,510 250,490 Q250,470 260,460 Z",
+      center: { x: 270, y: 480 },
+      label: "Right Hip"
+    },
+    knee_left: {
+      path: "M130,580 Q110,570 105,590 Q105,610 115,620 Q135,630 145,610 Q145,590 130,580 Z",
+      center: { x: 125, y: 600 },
+      label: "Left Knee"
+    },
+    knee_right: {
+      path: "M270,580 Q290,570 295,590 Q295,610 285,620 Q265,630 255,610 Q255,590 270,580 Z",
+      center: { x: 275, y: 600 },
+      label: "Right Knee"
+    },
+    ankle_left: {
+      path: "M125,720 Q105,710 100,730 Q100,750 110,760 Q130,770 140,750 Q140,730 125,720 Z",
+      center: { x: 120, y: 740 },
+      label: "Left Ankle"
+    },
+    ankle_right: {
+      path: "M275,720 Q295,710 300,730 Q300,750 290,760 Q270,770 260,750 Q260,730 275,720 Z",
+      center: { x: 280, y: 740 },
+      label: "Right Ankle"
+    },
+    foot_left: {
+      path: "M90,760 Q70,750 60,770 Q60,790 80,800 Q120,810 140,790 Q140,770 120,760 Q105,755 90,760 Z",
+      center: { x: 100, y: 780 },
+      label: "Left Foot"
+    },
+    foot_right: {
+      path: "M310,760 Q330,750 340,770 Q340,790 320,800 Q280,810 260,790 Q260,770 280,760 Q295,755 310,760 Z",
+      center: { x: 300, y: 780 },
+      label: "Right Foot"
+    }
+  };
+
+  // Map skeleton parts to form values
+  const getFormValue = (skeletonPart) => {
+    const mapping = {
+      skull: "skull",
+      chest: "chest",
+      spine: "spine",
+      pelvis: "pelvis",
+      shoulder_left: "shoulder",
+      shoulder_right: "shoulder",
+      elbow_left: "elbow",
+      elbow_right: "elbow",
+      hand_left: "hand",
+      hand_right: "hand",
+      hip_left: "hip",
+      hip_right: "hip",
+      knee_left: "knee",
+      knee_right: "knee",
+      ankle_left: "ankle",
+      ankle_right: "ankle",
+      foot_left: "foot",
+      foot_right: "foot"
+    };
+    return mapping[skeletonPart] || skeletonPart;
+  };
+
+  const handlePartClick = (partKey) => {
+    const formValue = getFormValue(partKey);
+    onBodyPartSelect(formValue);
+  };
+
+  const isPartSelected = (partKey) => {
+    const formValue = getFormValue(partKey);
+    return selectedBodyPart === formValue;
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+      <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
+        Click on body part to select
+      </h3>
+      <div className="flex justify-center">
+        <svg
+          width="400"
+          height="820"
+          viewBox="0 0 400 820"
+          className="max-w-full h-auto"
+        >
+          {/* Body outline (non-clickable) */}
+          <path
+            d="M200,170 Q170,175 150,200 Q140,240 145,280 Q150,440 155,500 Q160,520 140,540 Q130,580 125,620 Q120,720 120,740 Q115,760 100,780 M200,170 Q230,175 250,200 Q260,240 255,280 Q250,440 245,500 Q240,520 260,540 Q270,580 275,620 Q280,720 280,740 Q285,760 300,780"
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth="3"
+            strokeDasharray="5,5"
+          />
+
+          {/* Arms */}
+          <path
+            d="M150,200 Q120,210 90,240 Q70,270 50,300 Q30,330 20,360 M250,200 Q280,210 310,240 Q330,270 350,300 Q370,330 380,360"
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth="3"
+            strokeDasharray="5,5"
+          />
+
+          {/* Legs */}
+          <path
+            d="M155,500 Q150,540 145,580 Q140,620 135,660 Q130,700 125,740 Q120,780 100,800 M245,500 Q250,540 255,580 Q260,620 265,660 Q270,700 275,740 Q280,780 300,800"
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth="3"
+            strokeDasharray="5,5"
+          />
+
+          {/* Clickable body parts */}
+          {Object.entries(bodyParts).map(([partKey, part]) => (
+            <g key={partKey}>
+              <path
+                d={part.path}
+                fill={isPartSelected(partKey) ? "#3b82f6" : hoveredPart === partKey ? "#60a5fa" : "#f3f4f6"}
+                stroke={isPartSelected(partKey) ? "#1d4ed8" : "#9ca3af"}
+                strokeWidth="2"
+                className="cursor-pointer transition-all duration-200"
+                onMouseEnter={() => setHoveredPart(partKey)}
+                onMouseLeave={() => setHoveredPart(null)}
+                onClick={() => handlePartClick(partKey)}
+              />
+              {(hoveredPart === partKey || isPartSelected(partKey)) && (
+                <text
+                  x={part.center.x}
+                  y={part.center.y - 15}
+                  textAnchor="middle"
+                  className="fill-gray-700 text-xs font-medium pointer-events-none"
+                  style={{ fontSize: '12px' }}
+                >
+                  {part.label}
+                </text>
+              )}
+            </g>
+          ))}
+        </svg>
+      </div>
+      {selectedBodyPart && (
+        <div className="mt-4 text-center">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+            Selected: {selectedBodyPart.charAt(0).toUpperCase() + selectedBodyPart.slice(1)}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const XRay = () => {
   const { t } = useTranslation();
-
-  const [patientInfo, setPatientInfo] = useState({
-    patientName: "",
-    patientId: "",
-    dateOfBirth: "",
-    bodyPart: "",
-    indication: "",
-    requestingDoctor: ""
-  });
-
+  const [patients, setPatients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState(null);
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState('');
-  const [announcement, setAnnouncement] = useState('');
+  const [error, setError] = useState("");
+  const [announcement, setAnnouncement] = useState("");
+
+  const [doctors, setDoctors] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
+
+  // Form state for body part, doctor, etc.
+  const [formFields, setFormFields] = useState({
+    bodyPart: "",
+    requestingDoctor: "",
+    indication: "",
+  });
+
   const fileInputRef = useRef(null);
+
+  const getImageUrl = (imagePath) => {
+    const { data } = supabase.storage
+      .from("xray-images")
+      .getPublicUrl(imagePath);
+    return data.publicUrl;
+  };
+
+  // Check auth status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log("Current user:", user);
+      if (!user) {
+        setError("Please log in to upload X-ray images");
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Fetch patients on load
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("userinfo")
+          .select("userid, english_username_a, english_username_d, date_of_birth")
+          .eq("user_roles", "Patient");
+
+        if (error) {
+          console.error("Error fetching patients:", error);
+          throw error;
+        }
+
+        console.log("Fetched patients:", data);
+        setPatients(data || []);
+      } catch (err) {
+        console.error("Error fetching patients:", err.message);
+        setError(`Failed to load patients: ${err.message}`);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
+  // Fetch doctors on load
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("userinfo")
+          .select("userid, english_username_a, english_username_d")
+          .eq("user_roles", "Doctor");
+
+        if (error) {
+          console.error("Error fetching doctors:", error);
+          throw error;
+        }
+
+        console.log("Fetched doctors:", data);
+        setDoctors(data || []);
+      } catch (err) {
+        console.error("Error fetching doctors:", err.message);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
+
+  const handleDoctorSearch = (e) => {
+    setDoctorSearchTerm(e.target.value);
+  };
+
+  const handleSelectDoctor = (doctor) => {
+    console.log("Selected doctor:", doctor);
+    setSelectedDoctor(doctor);
+    setFormFields((prev) => ({
+      ...prev,
+      requestingDoctor: `${doctor.english_username_a} ${doctor.english_username_d}`,
+    }));
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSelectPatient = (patient) => {
+    console.log("Selected patient:", patient);
+    setSelectedPatient(patient);
+    setFormFields((prev) => ({
+      ...prev,
+      patientName: `${patient.english_username_a} ${patient.english_username_d}`,
+    }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPatientInfo(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    if (isSaved) setIsSaved(false);
-    if (error) setError('');
+    setFormFields((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle body part selection from skeleton
+  const handleBodyPartSelect = (bodyPart) => {
+    setFormFields((prev) => ({ ...prev, bodyPart }));
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files[0]) {
       handleFile(e.target.files[0]);
     }
   };
 
   const handleFile = (selectedFile) => {
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/tiff', 'application/pdf', 'application/dicom'];
-    if (!validTypes.includes(selectedFile.type) && !selectedFile.name.toLowerCase().endsWith('.dcm')) {
-      setError(t('xray.invalidFileType'));
+    const validTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!validTypes.includes(selectedFile.type)) {
+      setError("Invalid file type. Please select a JPEG or PNG image.");
       return;
     }
 
-    // Validate file size (max 50MB)
-    if (selectedFile.size > 50 * 1024 * 1024) {
-      setError(t('xray.fileTooLarge'));
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setError("File too large. Please select a file smaller than 10MB.");
       return;
     }
 
     setFile(selectedFile);
-    setAnnouncement(`${t('xray.fileSelected')}: ${selectedFile.name}`);
+    setAnnouncement(`File selected: ${selectedFile.name}`);
     if (isSaved) setIsSaved(false);
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleDragOver = (e) => {
@@ -80,56 +398,189 @@ const XRay = () => {
     fileInputRef.current.click();
   };
 
+  const removeFile = () => {
+    setFile(null);
+    setAnnouncement("File removed");
+    if (error) setError("");
+  };
+
   const handleSave = async () => {
     // Validation
-    if (!patientInfo.patientName || !patientInfo.patientId || !patientInfo.bodyPart || !file) {
-      setError(t('xray.fillRequiredFields'));
+    if (!selectedPatient) {
+      setError("Please select a patient");
+      return;
+    }
+
+    if (!file) {
+      setError("Please select an X-ray image");
+      return;
+    }
+
+    if (!formFields.bodyPart) {
+      setError("Please select a body part");
       return;
     }
 
     setIsUploading(true);
-    setError('');
+    setError("");
+    setAnnouncement("");
 
     try {
-      // Simulate upload process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log("=== STARTING X-RAY UPLOAD ===");
 
-      setIsSaved(true);
-      setAnnouncement(t('xray.uploadSuccess'));
+      // 1. Check authentication
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log("Auth check:", { hasUser: !!user, authError });
 
-      // Reset form after success
-      setTimeout(() => {
-        setPatientInfo({
-          patientName: "",
-          patientId: "",
-          dateOfBirth: "",
-          bodyPart: "",
-          indication: "",
-          requestingDoctor: ""
+      if (authError) {
+        throw new Error(`Authentication error: ${authError.message}`);
+      }
+
+      if (!user) {
+        throw new Error("User not authenticated. Please log in.");
+      }
+
+      // 2. Upload file to storage
+      console.log("Uploading file to storage...");
+      const timestamp = Date.now();
+      const fileExtension = file.name.split('.').pop();
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.]/g, '_');
+      const filePath = `xrays/${timestamp}-${cleanFileName}`;
+
+      console.log("File path:", filePath);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("xray-images")
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
         });
+
+      console.log("Upload result:", { uploadData, uploadError });
+
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        throw new Error(`File upload failed: ${uploadError.message}`);
+      }
+
+      console.log("✅ File uploaded successfully");
+
+      // 3. Test database connection first
+      console.log("Testing database connection...");
+      const { data: testData, error: testError } = await supabase
+        .from("xray_images")
+        .select("id")
+        .limit(1);
+
+      console.log("Database connection test:", { testData, testError });
+
+      if (testError) {
+        throw new Error(`Database connection failed: ${testError.message}`);
+      }
+
+      // 4. Prepare database record
+      console.log("Preparing database record...");
+      console.log("Selected patient data:", selectedPatient);
+      console.log("Form fields:", formFields);
+
+      const insertData: {
+        patient_id: number;
+        body_part: string;
+        image_url: string;
+        patient_name?: string;
+        date_of_birth?: string;
+        indication?: string;
+        requesting_doctor?: string;
+      } = {
+        patient_id: parseInt(selectedPatient.userid),
+        body_part: formFields.bodyPart.trim(),
+        image_url: filePath
+      };
+
+      // Add optional fields if they exist
+      if (selectedPatient.english_username_a && selectedPatient.english_username_d) {
+        insertData.patient_name = `${selectedPatient.english_username_a.trim()} ${selectedPatient.english_username_d.trim()}`;
+      }
+
+      if (selectedPatient.date_of_birth) {
+        insertData.date_of_birth = selectedPatient.date_of_birth;
+      }
+
+      if (formFields.indication && formFields.indication.trim()) {
+        insertData.indication = formFields.indication.trim();
+      }
+
+      if (formFields.requestingDoctor && formFields.requestingDoctor.trim()) {
+        insertData.requesting_doctor = formFields.requestingDoctor.trim();
+      }
+
+      console.log("Final insert data:", insertData);
+
+      // 5. Insert into database with detailed error logging
+      console.log("Inserting into database...");
+      const { data: dbData, error: dbError } = await supabase
+        .from("xray_images")
+        .insert(insertData)
+        .select();
+
+      console.log("Database insert result:", { dbData, dbError });
+
+      if (dbError) {
+        console.error("Database error details:", {
+          message: dbError.message,
+          details: dbError.details,
+          hint: dbError.hint,
+          code: dbError.code
+        });
+
+        // Delete uploaded file if database insert fails
+        console.log("Deleting uploaded file due to database error...");
+        await supabase.storage
+          .from("xray-images")
+          .remove([filePath]);
+
+        throw new Error(`Database error: ${dbError.message} (Code: ${dbError.code})`);
+      }
+
+      if (!dbData || dbData.length === 0) {
+        console.error("No data returned from database insert");
+        // Delete uploaded file if no data returned
+        await supabase.storage
+          .from("xray-images")
+          .remove([filePath]);
+
+        throw new Error("Failed to save X-ray record - no data returned");
+      }
+
+      console.log("✅ Successfully saved X-ray record:", dbData[0]);
+
+      // Success!
+      setIsSaved(true);
+      setAnnouncement("X-ray uploaded and saved successfully!");
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setSelectedPatient(null);
+        setSelectedDoctor(null);
         setFile(null);
+        setFormFields({ bodyPart: "", requestingDoctor: "", indication: "" });
         setIsSaved(false);
+        setAnnouncement("");
+        setDoctorSearchTerm("");
+        setSearchTerm("");
       }, 3000);
 
-    } catch (error) {
-      console.error('Error uploading X-ray:', error);
-      setError(t('xray.uploadError'));
+    } catch (err) {
+      console.error("=== UPLOAD ERROR ===", err);
+      setError(err.message || "An unexpected error occurred");
     } finally {
       setIsUploading(false);
     }
   };
 
-  const removeFile = () => {
-    setFile(null);
-    setAnnouncement(t('xray.fileRemoved'));
-    if (error) setError('');
-  };
-
-  const isFormValid = patientInfo.patientName && patientInfo.patientId && patientInfo.bodyPart && file;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4 md:p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
@@ -138,201 +589,232 @@ const XRay = () => {
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            {t('xray.pageTitle')}
+            X-Ray Upload System
           </h1>
           <p className="text-gray-600 text-lg">
-            {t('xray.pageDescription')}
+            Upload and manage X-ray images with patient information
           </p>
         </div>
 
         {/* Status Messages */}
         {isSaved && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center animate-pulse">
-            <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-            <span className="text-green-800 font-medium">{t('xray.saveSuccess')}</span>
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
+            <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
+            <span className="text-green-800 font-medium">X-ray saved successfully!</span>
           </div>
         )}
 
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+            <AlertCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0" />
             <span className="text-red-800">{error}</span>
           </div>
         )}
 
-        {announcement && (
-          <div className="sr-only" aria-live="polite">
-            {announcement}
+        {announcement && !error && !isSaved && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center">
+            <CheckCircle className="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" />
+            <span className="text-blue-800">{announcement}</span>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Patient Information */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
+            <div className="bg-gradient-to-r from-black to-blue-700 p-6">
               <div className="flex items-center text-white">
                 <User className="w-6 h-6 mr-3" />
-                <h2 className="text-xl font-semibold">{t('xray.patientInformation')}</h2>
+                <h2 className="text-xl font-semibold">Patient Information</h2>
               </div>
             </div>
-
             <div className="p-6 space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('xray.patientName')}
-                  </label>
-                  <input
-                    type="text"
-                    name="patientName"
-                    value={patientInfo.patientName}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder={t('xray.patientNamePlaceholder')}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('xray.patientId')}
-                  </label>
-                  <input
-                    type="text"
-                    name="patientId"
-                    value={patientInfo.patientId}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder={t('xray.patientIdPlaceholder')}
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Patient
+                </label>
+                <input
+                  type="text"
+                  placeholder="Search patients..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
+                <select
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(e) => {
+                    const patient = patients.find(p => p.userid === parseInt(e.target.value));
+                    if (patient) {
+                      handleSelectPatient(patient);
+                    }
+                  }}
+                  value={selectedPatient?.userid || ""}
+                >
+                  <option value="">Choose a patient...</option>
+                  {patients
+                    .filter((p) =>
+                      `${p.english_username_a} ${p.english_username_d}`
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase())
+                    )
+                    .map((p) => (
+                      <option key={p.userid} value={p.userid}>
+                        {`${p.english_username_a} ${p.english_username_d}`} (ID: {p.userid})
+                      </option>
+                    ))}
+                </select>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('xray.dateOfBirth')}
+                    Date of Birth
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                       type="date"
-                      name="dateOfBirth"
-                      value={patientInfo.dateOfBirth}
-                      onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+                      value={selectedPatient?.date_of_birth || ""}
+                      disabled
                     />
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('xray.bodyPart')}
-                  </label>
-                  <select
-                    name="bodyPart"
-                    value={patientInfo.bodyPart}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    required
-                  >
-                    <option value="">{t('xray.selectBodyPart')}</option>
-                    <option value="chest">{t('xray.bodyParts.chest')}</option>
-                    <option value="knee">{t('xray.bodyParts.knee')}</option>
-                    <option value="spine">{t('xray.bodyParts.spine')}</option>
-                    <option value="hand">{t('xray.bodyParts.hand')}</option>
-                    <option value="foot">{t('xray.bodyParts.foot')}</option>
-                    <option value="skull">{t('xray.bodyParts.skull')}</option>
-                    <option value="pelvis">{t('xray.bodyParts.pelvis')}</option>
-                    <option value="shoulder">{t('xray.bodyParts.shoulder')}</option>
-                    <option value="elbow">{t('xray.bodyParts.elbow')}</option>
-                    <option value="wrist">{t('xray.bodyParts.wrist')}</option>
-                  </select>
-                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('xray.requestingDoctor')}
+                  Requesting Doctor
                 </label>
-                <div className="relative">
-                  <Stethoscope className="absolute left-4 top-4 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    name="requestingDoctor"
-                    value={patientInfo.requestingDoctor}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder={t('xray.doctorNamePlaceholder')}
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="Search doctors..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={doctorSearchTerm}
+                  onChange={handleDoctorSearch}
+                />
+                <select
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(e) => {
+                    const doctor = doctors.find(d => d.userid === parseInt(e.target.value));
+                    if (doctor) {
+                      handleSelectDoctor(doctor);
+                    } else if (e.target.value === "") {
+                      setSelectedDoctor(null);
+                      setFormFields(prev => ({ ...prev, requestingDoctor: "" }));
+                    }
+                  }}
+                  value={selectedDoctor?.userid || ""}
+                >
+                  <option value="">Choose a doctor...</option>
+                  {doctors
+                    .filter((d) =>
+                      `${d.english_username_a} ${d.english_username_d}`
+                        .toLowerCase()
+                        .includes(doctorSearchTerm.toLowerCase())
+                    )
+                    .map((d) => (
+                      <option key={d.userid} value={d.userid}>
+                        Dr. {`${d.english_username_a} ${d.english_username_d}`} (ID: {d.userid})
+                      </option>
+                    ))}
+                </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('xray.clinicalIndication')}
+                  Clinical Indication
                 </label>
                 <textarea
                   name="indication"
-                  value={patientInfo.indication}
+                  value={formFields.indication}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                  placeholder={t('xray.indicationPlaceholder')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  placeholder="Enter clinical indication..."
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Body Part Selection with Skeleton */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-black to-blue-700 p-6">
+              <div className="flex items-center text-white">
+                <Stethoscope className="w-6 h-6 mr-3" />
+                <h2 className="text-xl font-semibold">Body Part Selection</h2>
+              </div>
+            </div>
+            <div className="p-6">
+              {/* Clickable Skeleton */}
+              <ClickableSkeleton
+                selectedBodyPart={formFields.bodyPart}
+                onBodyPartSelect={handleBodyPartSelect}
+              />
+
+              {/* Traditional Dropdown as backup */}
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Or select from dropdown:
+                </label>
+                <select
+                  name="bodyPart"
+                  value={formFields.bodyPart}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select body part...</option>
+                  <option value="chest">Chest</option>
+                  <option value="knee">Knee</option>
+                  <option value="spine">Spine</option>
+                  <option value="hand">Hand</option>
+                  <option value="foot">Foot</option>
+                  <option value="skull">Skull</option>
+                  <option value="pelvis">Pelvis</option>
+                  <option value="shoulder">Shoulder</option>
+                  <option value="elbow">Elbow</option>
+                  <option value="wrist">Wrist</option>
+                  <option value="ankle">Ankle</option>
+                  <option value="hip">Hip</option>
+                </select>
               </div>
             </div>
           </div>
 
           {/* File Upload */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-green-600 to-green-700 p-6">
+            <div className="bg-gradient-to-r from-black to-blue-700 p-6">
               <div className="flex items-center text-white">
                 <Upload className="w-6 h-6 mr-3" />
-                <h2 className="text-xl font-semibold">{t('xray.uploadXrayImage')}</h2>
+                <h2 className="text-xl font-semibold">Upload X-ray Image</h2>
               </div>
             </div>
-
             <div className="p-6">
               <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer hover:bg-gray-50 ${isDragging
-                  ? 'border-blue-500 bg-blue-50'
-                  : file
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-300'
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer hover:bg-gray-50 ${isDragging ? "border-blue-500 bg-blue-50" :
+                  file ? "border-green-500 bg-green-50" : "border-gray-300"
                   }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 onClick={triggerFileInput}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    triggerFileInput();
-                  }
-                }}
               >
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   className="hidden"
-                  accept="image/*,.pdf,.dcm"
+                  accept="image/jpeg,image/png,image/jpg"
                 />
-
                 {file ? (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-center">
+                    <div className="flex justify-center">
                       <CheckCircle className="w-16 h-16 text-green-500" />
                     </div>
                     <div>
-                      <p className="text-lg font-medium text-green-700">{t('xray.fileSelected')}</p>
+                      <p className="text-lg font-medium text-green-700">File Selected</p>
                       <p className="text-gray-600 mt-1 break-all">{file.name}</p>
                       <p className="text-sm text-gray-500 mt-1">
-                        {(file.size / (1024 * 1024)).toFixed(2)} {t('xray.mb')}
+                        {(file.size / (1024 * 1024)).toFixed(2)} MB
                       </p>
                     </div>
                     <button
@@ -340,25 +822,25 @@ const XRay = () => {
                         e.stopPropagation();
                         removeFile();
                       }}
-                      className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors duration-200"
+                      className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
                     >
                       <X className="w-4 h-4 mr-2" />
-                      {t('xray.removeFile')}
+                      Remove File
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-center">
-                      <Upload className={`w-16 h-16 ${isDragging ? 'text-blue-500' : 'text-gray-400'}`} />
+                    <div className="flex justify-center">
+                      <Upload className={`w-16 h-16 ${isDragging ? "text-blue-500" : "text-gray-400"}`} />
                     </div>
                     <div>
                       <p className="text-lg font-medium text-gray-700">
-                        {t('xray.dragAndDrop')}
+                        Drag and drop your X-ray image
                       </p>
-                      <p className="text-gray-500 mt-1">{t('xray.orClickToBrowse')}</p>
+                      <p className="text-gray-500 mt-1">or click to browse</p>
                     </div>
                     <div className="text-sm text-gray-500">
-                      {t('xray.supportedFormats')}
+                      Supported formats: JPEG, PNG (Max 10MB)
                     </div>
                   </div>
                 )}
@@ -367,12 +849,12 @@ const XRay = () => {
               {/* Upload Progress */}
               {isUploading && (
                 <div className="mt-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">{t('xray.uploading')}</span>
-                    <span className="text-sm text-gray-500">{t('xray.processing')}</span>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">Uploading...</span>
+                    <span className="text-sm text-gray-500">Processing</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                    <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: "100%" }}></div>
                   </div>
                 </div>
               )}
@@ -384,24 +866,22 @@ const XRay = () => {
         <div className="mt-8 text-center">
           <button
             onClick={handleSave}
-            disabled={!isFormValid || isUploading}
-            className={`px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${isFormValid && !isUploading
-              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-800'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            disabled={!selectedPatient || !file || !formFields.bodyPart || isUploading}
+            className={`px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${selectedPatient && file && formFields.bodyPart && !isUploading
+              ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
           >
             {isUploading ? (
-              <div className="flex items-center">
+              <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                {t('xray.uploadingXray')}
+                Uploading X-ray...
               </div>
             ) : (
-              t('xray.saveXrayRecord')
+              "Save X-ray Record"
             )}
           </button>
         </div>
-
-
       </div>
     </div>
   );

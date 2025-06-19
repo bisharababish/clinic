@@ -1,32 +1,37 @@
-// DoctorXRayPage.tsx - Clean UI without mock data
+// DoctorXRayPage.tsx - With Database Integration
 import React, { useState, useEffect } from 'react';
 import { Search, Image, Calendar, User, Filter, Download, Eye, ZoomIn, ZoomOut, RotateCw, AlertCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../lib/supabase';
 
-// Type definitions 
-
+// Type definitions matching your database structure
 interface XRayImage {
-    id: string;
-    patientName: string;
-    patientId: string;
-    dateOfBirth: string;
-    xrayDate: string;
-    bodyPart: string;
+    id: number;
+    patient_id: number;
+    patient_name: string;
+    date_of_birth: string;
+    body_part: string;
     indication: string;
-    imageUrl: string;
-    findings: string;
-    impression: string;
-    radiologist: string;
-    status: string;
-    createdAt: string;
+    requesting_doctor: string;
+    image_url: string;
+    created_at: string;
+    // Additional display fields
+    imageUrl?: string;
+    patientName?: string;
+    patientId?: string;
+    xrayDate?: string;
+    radiologist?: string;
+    status?: string;
+    findings?: string;
+    impression?: string;
 }
 
 const DoctorXRayPage: React.FC = () => {
     const { user } = useAuth();
     const { t } = useTranslation();
     const [xrayImages, setXrayImages] = useState<XRayImage[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [selectedImage, setSelectedImage] = useState<XRayImage | null>(null);
@@ -35,25 +40,108 @@ const DoctorXRayPage: React.FC = () => {
     const [imageZoom, setImageZoom] = useState<number>(100);
     const [imageRotation, setImageRotation] = useState<number>(0);
 
-    // Initialize empty state
+    // Fetch X-ray images from database
     useEffect(() => {
-        // Check if user is authenticated and is a doctor
-        if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
-            setError('Access denied. Only doctors and administrators can view X-ray images.');
-            return;
-        }
+        const fetchXrayImages = async () => {
+            try {
+                // Check if user is authenticated and is a doctor
+                if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
+                    setError(t('admin.accessDenied') || 'Access denied. Only doctors and administrators can view X-ray images.');
+                    setLoading(false);
+                    return;
+                }
 
-        // Set empty results (ready for database integration)
-        setXrayImages([]);
-    }, [user]);
+                setLoading(true);
+                console.log('Fetching X-ray images...');
+
+                // Fetch X-ray images from your database
+                const { data: xrayData, error: xrayError } = await supabase
+                    .from('xray_images') // Make sure this matches your table name
+                    .select(`
+                        id,
+                        patient_id,
+                        patient_name,
+                        date_of_birth,
+                        body_part,
+                        indication,
+                        requesting_doctor,
+                        image_url,
+                        created_at
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (xrayError) {
+                    console.error('Error fetching X-ray images:', xrayError);
+                    throw new Error(xrayError.message);
+                }
+
+                console.log('Raw X-ray data:', xrayData);
+
+                if (xrayData && xrayData.length > 0) {
+                    // Transform the data to match the component interface
+                    const transformedData: XRayImage[] = xrayData.map(item => {
+                        // Get the full image URL from Supabase storage
+                        const imageUrl = getImageUrl(item.image_url);
+
+                        return {
+                            ...item,
+                            // Map database fields to component fields
+                            imageUrl,
+                            patientName: item.patient_name,
+                            patientId: item.patient_id.toString(),
+                            xrayDate: item.created_at,
+                            radiologist: item.requesting_doctor || 'Unknown',
+                            status: 'Completed', // Default status
+                            findings: item.indication || '',
+                            impression: ''
+                        };
+                    });
+
+                    console.log('Transformed X-ray data:', transformedData);
+                    setXrayImages(transformedData);
+                } else {
+                    setXrayImages([]);
+                }
+
+            } catch (err) {
+                console.error('Error in fetchXrayImages:', err);
+                setError(err instanceof Error ? err.message : 'Failed to load X-ray images');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchXrayImages();
+    }, [user, t]);
+
+    // Helper function to get image URL from Supabase storage
+    const getImageUrl = (imagePath: string): string => {
+        if (!imagePath) return '';
+
+        try {
+            const { data } = supabase.storage
+                .from('xray-images')
+                .getPublicUrl(imagePath);
+
+            return data.publicUrl;
+        } catch (error) {
+            console.error('Error getting image URL:', error);
+            return '';
+        }
+    };
 
     // Filter images based on search and filters
     const filteredImages: XRayImage[] = xrayImages.filter(image => {
-        const matchesSearch = image.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            image.patientId.includes(searchTerm) ||
-            image.bodyPart.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesDate = !filterDate || image.xrayDate.includes(filterDate);
-        const matchesBodyPart = !filterBodyPart || image.bodyPart.toLowerCase().includes(filterBodyPart.toLowerCase());
+        const matchesSearch =
+            (image.patient_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (image.patient_id || '').toString().includes(searchTerm) ||
+            (image.body_part || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesDate = !filterDate ||
+            (image.created_at && image.created_at.includes(filterDate));
+
+        const matchesBodyPart = !filterBodyPart ||
+            (image.body_part && image.body_part.toLowerCase().includes(filterBodyPart.toLowerCase()));
 
         return matchesSearch && matchesDate && matchesBodyPart;
     });
@@ -66,18 +154,50 @@ const DoctorXRayPage: React.FC = () => {
 
     const handleDownloadImage = async (image: XRayImage): Promise<void> => {
         try {
-            if (image.imageUrl) {
-                const link = document.createElement('a');
-                link.href = image.imageUrl;
-                link.download = `xray_${image.patientName}_${image.xrayDate}_${image.bodyPart}.jpg`;
-                link.target = '_blank';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+            if (!image.imageUrl) {
+                alert(t('doctorPages.noImageUrl') || 'No image URL available');
+                return;
             }
+
+            // Show loading state
+            console.log('Starting download for:', image.imageUrl);
+
+            // Fetch the image as a blob
+            const response = await fetch(image.imageUrl);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const blob = await response.blob();
+
+            // Create object URL from blob
+            const blobUrl = window.URL.createObjectURL(blob);
+
+            // Create download link
+            const link = document.createElement('a');
+            link.href = blobUrl;
+
+            // Create filename with proper extension
+            const fileExtension = image.imageUrl.split('.').pop()?.toLowerCase() || 'jpg';
+            const fileName = `xray_${image.patient_name.replace(/\s+/g, '_')}_${image.body_part}_${new Date(image.created_at).toLocaleDateString().replace(/\//g, '-')}.${fileExtension}`;
+
+            link.download = fileName;
+            link.style.display = 'none';
+
+            // Add to DOM, click, and remove
+            document.body.appendChild(link);
+            link.click();
+
+            // Clean up
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+
+            console.log('Download completed successfully');
+
         } catch (error) {
             console.error('Error downloading image:', error);
-            alert('Failed to download image');
+            alert(t('doctorPages.downloadFailed') || 'Failed to download image. Please try again.');
         }
     };
 
@@ -93,13 +213,48 @@ const DoctorXRayPage: React.FC = () => {
         setImageRotation(prev => (prev + 90) % 360);
     };
 
-    const handleRefresh = (): void => {
-        // Ready for database refresh implementation
+    const handleRefresh = async (): Promise<void> => {
         setLoading(true);
-        setTimeout(() => {
-            setXrayImages([]);
+        setError(null);
+
+        try {
+            const { data: xrayData, error: xrayError } = await supabase
+                .from('xray_images')
+                .select(`
+                    id,
+                    patient_id,
+                    patient_name,
+                    date_of_birth,
+                    body_part,
+                    indication,
+                    requesting_doctor,
+                    image_url,
+                    created_at
+                `)
+                .order('created_at', { ascending: false });
+
+            if (xrayError) throw new Error(xrayError.message);
+
+            if (xrayData) {
+                const transformedData: XRayImage[] = xrayData.map(item => ({
+                    ...item,
+                    imageUrl: getImageUrl(item.image_url),
+                    patientName: item.patient_name,
+                    patientId: item.patient_id.toString(),
+                    xrayDate: item.created_at,
+                    radiologist: item.requesting_doctor || 'Unknown',
+                    status: 'Completed',
+                    findings: item.indication || '',
+                    impression: ''
+                }));
+
+                setXrayImages(transformedData);
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to refresh data');
+        } finally {
             setLoading(false);
-        }, 500);
+        }
     };
 
     if (loading) {
@@ -183,13 +338,28 @@ const DoctorXRayPage: React.FC = () => {
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
                                 <option value="">{t('doctorPages.allBodyParts') || 'All Body Parts'}</option>
-                                <option value="chest">{t('doctorPages.chest') || 'Chest'}</option>
-                                <option value="knee">{t('doctorPages.knee') || 'Knee'}</option>
-                                <option value="spine">{t('doctorPages.spine') || 'Spine'}</option>
-                                <option value="hand">{t('doctorPages.hand') || 'Hand'}</option>
-                                <option value="foot">{t('doctorPages.foot') || 'Foot'}</option>
-                                <option value="skull">{t('doctorPages.skull') || 'Skull'}</option>
+                                <option value="chest">{t('xray.bodyParts.chest') || 'Chest'}</option>
+                                <option value="knee">{t('xray.bodyParts.knee') || 'Knee'}</option>
+                                <option value="spine">{t('xray.bodyParts.spine') || 'Spine'}</option>
+                                <option value="hand">{t('xray.bodyParts.hand') || 'Hand'}</option>
+                                <option value="foot">{t('xray.bodyParts.foot') || 'Foot'}</option>
+                                <option value="skull">{t('xray.bodyParts.skull') || 'Skull'}</option>
+                                <option value="pelvis">{t('xray.bodyParts.pelvis') || 'Pelvis'}</option>
+                                <option value="shoulder">{t('xray.bodyParts.shoulder') || 'Shoulder'}</option>
+                                <option value="elbow">{t('xray.bodyParts.elbow') || 'Elbow'}</option>
+                                <option value="wrist">{t('xray.bodyParts.wrist') || 'Wrist'}</option>
+                                <option value="ankle">{t('xray.bodyParts.ankle') || 'Ankle'}</option>
+                                <option value="hip">{t('xray.bodyParts.hip') || 'Hip'}</option>
                             </select>
+                        </div>
+                        <div className="relative">
+                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <input
+                                type="date"
+                                value={filterDate}
+                                onChange={(e) => setFilterDate(e.target.value)}
+                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-600">
@@ -207,7 +377,7 @@ const DoctorXRayPage: React.FC = () => {
                             <div className="aspect-square bg-gray-900 relative">
                                 <img
                                     src={image.imageUrl}
-                                    alt={`${image.bodyPart} X-ray for ${image.patientName}`}
+                                    alt={`${image.body_part} X-ray for ${image.patient_name}`}
                                     className="w-full h-full object-contain"
                                     onError={(e) => {
                                         const target = e.target as HTMLImageElement;
@@ -215,13 +385,8 @@ const DoctorXRayPage: React.FC = () => {
                                     }}
                                 />
                                 <div className="absolute top-2 right-2">
-                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${image.status === 'Normal' || image.status === 'Completed'
-                                        ? 'bg-green-100 text-green-800'
-                                        : image.status === 'Abnormal'
-                                            ? 'bg-red-100 text-red-800'
-                                            : 'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                        {image.status}
+                                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                        {t('admin.completed') || 'Completed'}
                                     </span>
                                 </div>
                             </div>
@@ -230,21 +395,21 @@ const DoctorXRayPage: React.FC = () => {
                             <div className="p-4">
                                 <div className="flex items-start justify-between mb-2">
                                     <div>
-                                        <h3 className="font-medium text-gray-900">{image.patientName}</h3>
-                                        <p className="text-sm text-gray-500">{t('usersManagement.id') || 'ID'}: {image.patientId}</p>
+                                        <h3 className="font-medium text-gray-900">{image.patient_name}</h3>
+                                        <p className="text-sm text-gray-500">{t('usersManagement.id') || 'ID'}: {image.patient_id}</p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-1 text-sm text-gray-600 mb-4">
-                                    <p><span className="font-medium">{t('doctorPages.bodyPart') || 'Body Part'}:</span> {image.bodyPart}</p>
-                                    <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(image.xrayDate).toLocaleDateString()}</p>
-                                    <p><span className="font-medium">{t('doctorPages.radiologist') || 'Radiologist'}:</span> {image.radiologist}</p>
+                                    <p><span className="font-medium">{t('xray.bodyPart') || 'Body Part'}:</span> {image.body_part}</p>
+                                    <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(image.created_at).toLocaleDateString()}</p>
+                                    <p><span className="font-medium">{t('xray.requestingDoctor') || 'Requesting Doctor'}:</span> {image.requesting_doctor || 'N/A'}</p>
                                 </div>
 
                                 {image.indication && (
                                     <div className="mb-4">
                                         <p className="text-sm text-gray-600">
-                                            <span className="font-medium">{t('doctorPages.clinicalIndication') || 'Clinical Indication'}:</span> {image.indication}
+                                            <span className="font-medium">{t('xray.clinicalIndication') || 'Clinical Indication'}:</span> {image.indication}
                                         </p>
                                     </div>
                                 )}
@@ -274,7 +439,12 @@ const DoctorXRayPage: React.FC = () => {
                 {filteredImages.length === 0 && !loading && (
                     <div className="text-center py-12">
                         <Image className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">{t('doctorPages.noXrayImagesFound') || 'No X-ray images found'}</p>
+                        <p className="text-gray-500 text-lg">{t('doctorPages.noXrayImagesFound') || 'No X-ray images found matching your criteria.'}</p>
+                        <p className="text-gray-400 text-sm mt-2">
+                            {xrayImages.length === 0
+                                ? 'No X-ray images have been uploaded yet.'
+                                : 'Try adjusting your search or filter criteria.'}
+                        </p>
                     </div>
                 )}
             </div>
@@ -287,10 +457,10 @@ const DoctorXRayPage: React.FC = () => {
                         <div className="p-4 border-b flex items-center justify-between">
                             <div>
                                 <h2 className="text-lg font-bold text-gray-900">
-                                    {selectedImage.bodyPart} X-Ray - {selectedImage.patientName}
+                                    {selectedImage.body_part} X-Ray - {selectedImage.patient_name}
                                 </h2>
                                 <p className="text-sm text-gray-500">
-                                    {t('common.date') || 'Date'}: {new Date(selectedImage.xrayDate).toLocaleDateString()} | {t('usersManagement.id') || 'ID'}: {selectedImage.patientId}
+                                    {t('common.date') || 'Date'}: {new Date(selectedImage.created_at).toLocaleDateString()} | {t('usersManagement.id') || 'ID'}: {selectedImage.patient_id}
                                 </p>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -335,7 +505,7 @@ const DoctorXRayPage: React.FC = () => {
                             <div className="flex-1 bg-black flex items-center justify-center overflow-auto">
                                 <img
                                     src={selectedImage.imageUrl}
-                                    alt={`${selectedImage.bodyPart} X-ray`}
+                                    alt={`${selectedImage.body_part} X-ray`}
                                     className="max-w-none transition-transform duration-200"
                                     style={{
                                         transform: `scale(${imageZoom / 100}) rotate(${imageRotation}deg)`,
@@ -351,28 +521,23 @@ const DoctorXRayPage: React.FC = () => {
                             <div className="w-80 bg-gray-50 border-l overflow-y-auto">
                                 <div className="p-4 space-y-4">
                                     <div>
-                                        <h3 className="font-medium text-gray-900 mb-2">{t('doctorPages.patientInformation') || 'Patient Information'}</h3>
+                                        <h3 className="font-medium text-gray-900 mb-2">{t('xray.patientInformation') || 'Patient Information'}</h3>
                                         <div className="space-y-1 text-sm">
-                                            <p><span className="font-medium">{t('common.name') || 'Name'}:</span> {selectedImage.patientName}</p>
-                                            <p><span className="font-medium">{t('usersManagement.id') || 'ID'}:</span> {selectedImage.patientId}</p>
-                                            <p><span className="font-medium">{t('auth.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.dateOfBirth}</p>
+                                            <p><span className="font-medium">{t('common.name') || 'Name'}:</span> {selectedImage.patient_name}</p>
+                                            <p><span className="font-medium">{t('usersManagement.id') || 'ID'}:</span> {selectedImage.patient_id}</p>
+                                            <p><span className="font-medium">{t('xray.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.date_of_birth || 'N/A'}</p>
                                         </div>
                                     </div>
 
                                     <div>
                                         <h3 className="font-medium text-gray-900 mb-2">{t('doctorPages.examInformation') || 'Exam Information'}</h3>
                                         <div className="space-y-1 text-sm">
-                                            <p><span className="font-medium">{t('doctorPages.bodyPart') || 'Body Part'}:</span> {selectedImage.bodyPart}</p>
-                                            <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(selectedImage.xrayDate).toLocaleDateString()}</p>
-                                            <p><span className="font-medium">{t('doctorPages.radiologist') || 'Radiologist'}:</span> {selectedImage.radiologist}</p>
+                                            <p><span className="font-medium">{t('xray.bodyPart') || 'Body Part'}:</span> {selectedImage.body_part}</p>
+                                            <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(selectedImage.created_at).toLocaleDateString()}</p>
+                                            <p><span className="font-medium">{t('xray.requestingDoctor') || 'Requesting Doctor'}:</span> {selectedImage.requesting_doctor || 'N/A'}</p>
                                             <p><span className="font-medium">{t('common.status') || 'Status'}:</span>
-                                                <span className={`ml-2 px-2 py-1 text-xs rounded ${selectedImage.status === 'Normal' || selectedImage.status === 'Completed'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : selectedImage.status === 'Abnormal'
-                                                        ? 'bg-red-100 text-red-800'
-                                                        : 'bg-yellow-100 text-yellow-800'
-                                                    }`}>
-                                                    {selectedImage.status}
+                                                <span className="ml-2 px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+                                                    {t('admin.completed') || 'Completed'}
                                                 </span>
                                             </p>
                                         </div>
@@ -380,27 +545,9 @@ const DoctorXRayPage: React.FC = () => {
 
                                     {selectedImage.indication && (
                                         <div>
-                                            <h3 className="font-medium text-gray-900 mb-2">{t('doctorPages.clinicalIndication') || 'Clinical Indication'}</h3>
+                                            <h3 className="font-medium text-gray-900 mb-2">{t('xray.clinicalIndication') || 'Clinical Indication'}</h3>
                                             <p className="text-sm text-gray-700 bg-white p-3 rounded border">
                                                 {selectedImage.indication}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {selectedImage.findings && (
-                                        <div>
-                                            <h3 className="font-medium text-gray-900 mb-2">{t('doctorPages.findings') || 'Findings'}</h3>
-                                            <p className="text-sm text-gray-700 bg-white p-3 rounded border">
-                                                {selectedImage.findings}
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {selectedImage.impression && (
-                                        <div>
-                                            <h3 className="font-medium text-gray-900 mb-2">{t('doctorPages.impression') || 'Impression'}</h3>
-                                            <p className="text-sm text-gray-700 bg-blue-50 p-3 rounded border border-blue-200">
-                                                {selectedImage.impression}
                                             </p>
                                         </div>
                                     )}

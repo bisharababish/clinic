@@ -179,6 +179,8 @@ const enTranslations = {
     },
     doctorPages: {
         // Lab Results Page
+        downloadFailed: "Failed to download image. Please try again.",
+        noImageUrl: "No image URL available",
         labResults: 'Laboratory Results',
         labResultsDesc: 'View and manage patient lab test results',
         viewLabResults: 'View Lab Results',
@@ -228,7 +230,115 @@ const enTranslations = {
         normal: 'Normal',
         abnormal: 'Abnormal',
     },
+    // Add these to your existing enTranslations and arTranslations objects in i18n.ts
 
+    // English translations (add to enTranslations object)
+    payment: {
+        // Security alert
+        selectedClinic: 'Selected Clinic',
+        selectedDoctor: 'Selected Doctor',
+        selectedSpecialty: 'Selected Specialty',
+        selectedDay: 'Selected Day',
+        selectedTime: 'Selected Time',
+        securePayment: 'Secure Payment',
+        allTransactionsEncrypted: 'All transactions are encrypted and secure.',
+        clinicName: "Selected Clinic",
+        doctorName: "Selected Doctor",
+        specialtyselect: "Selected Specialty",
+        appointmentDay: "Selected Day",
+        appointmentTime: "Selected Time",
+
+        // Appointment summary
+        appointmentSummary: 'Appointment Summary',
+        reviewAppointmentDetails: 'Please review your appointment details',
+        clinic: 'Clinic',
+        doctor: 'Doctor',
+        specialty: 'Specialty',
+        day: 'Day',
+        time: 'Time',
+        totalAmount: 'Total Amount',
+
+        // Payment method selection
+        paymentMethod: 'Payment Method',
+        choosePaymentMethod: 'Choose your preferred payment method',
+        creditCard: 'Credit Card',
+        paypal: 'PayPal',
+        insurance: 'Insurance',
+        cash: 'Cash',
+
+        // Credit card form
+        cardNumber: 'Card Number',
+        nameOnCard: 'Name on Card',
+        cardNamePlaceholder: 'John Doe',
+        expiryDate: 'Expiry Date',
+        cvv: 'CVV',
+        payNow: 'Pay Now',
+        processing: 'Processing...',
+
+        // PayPal
+        continueWithPaypal: 'Continue with PayPal to complete payment',
+        payWithPaypal: 'Pay with PayPal',
+
+        // Insurance
+        insuranceProvider: 'Insurance Provider',
+        selectInsuranceProvider: 'Select your insurance provider',
+        policyNumber: 'Policy Number',
+        policyNumberPlaceholder: 'Policy number',
+        memberID: 'Member ID',
+        memberIDPlaceholder: 'Member ID',
+        verifyingInsurance: 'Verifying Insurance...',
+        submitInsurance: 'Submit Insurance',
+        other: 'Other',
+
+        // Cash payment
+        cashPaymentInformation: 'Cash Payment Information',
+        cashPaymentNote: 'Please note that by selecting cash payment, you agree to bring the exact amount (₪{{price}}) to your appointment.',
+        paymentAtReception: 'Payment must be made at the clinic reception before your appointment',
+        onlyCashShekel: 'Only cash in Israeli Shekels (₪) is accepted',
+        receiptProvided: 'A receipt will be provided after payment',
+        failureToPayMayReschedule: 'Failure to bring payment may result in rescheduling your appointment',
+        agreeToTerms: 'I understand and agree to the cash payment terms',
+        confirmCashPayment: 'Confirm Cash Payment',
+
+        // Footer
+        back: 'Back',
+        dataProtected: 'Your data is protected',
+    },
+    "paymentSuccess": {
+        "paymentSuccessful": "Payment Successful",
+        "paypalProcessedSuccessfully": "Your PayPal payment has been processed successfully.",
+        "paymentError": "Payment Error",
+        "paymentProcessingFailed": "Payment processing failed",
+        "processingPayPalPayment": "Processing PayPal Payment",
+        "pleaseWaitConfirming": "Please wait while we confirm your payment...",
+        "paymentFailed": "Payment Failed",
+        "errorProcessingPayment": "An error occurred while processing your payment",
+        "tryAgain": "Try Again",
+        "backToClinics": "Back to Clinics",
+        "paymentSuccessfulTitle": "Payment Successful!",
+        "appointmentConfirmedAndPaid": "Your appointment has been confirmed and paid for.",
+        "appointmentDetails": "Appointment Details",
+        "clinic": "Clinic",
+        "doctor": "Doctor",
+        "date": "Date",
+        "time": "Time",
+        "amountPaid": "Amount Paid",
+        "paymentMethod": "Payment Method",
+        "paypal": "PayPal",
+        "transactionId": "Transaction ID",
+        "viewMyAppointments": "View My Appointments",
+        "bookAnotherAppointment": "Book Another Appointment"
+    },
+    "paymentCancel": {
+        "paymentCancelled": "Payment Cancelled",
+        "paypalCancelledNoCharges": "Your PayPal payment was cancelled. No charges were made.",
+        "paymentCancelledTitle": "Payment Cancelled",
+        "cancelledPaymentDescription": "You cancelled the PayPal payment process. No charges were made to your account.",
+        "appointmentNotConfirmed": "Your appointment has not been confirmed.",
+        "tryDifferentMethodOrBookLater": "You can try a different payment method or book again later.",
+        "tryDifferentPaymentMethod": "Try Different Payment Method",
+        "backToClinics": "Back to Clinics"
+    },
     footer: {
         rights: 'All rights reserved',
         privacyPolicy: 'Privacy Policy',
@@ -260,7 +370,8 @@ const enTranslations = {
         "doctorNamePlaceholder": "Enter doctor’s name",
         "clinicalIndication": "Clinical Indication",
         "indicationPlaceholder": "Enter the reason or clinical indication for the X-ray...",
-
+        "searchDoctorPlaceholder": "Search doctor by name...",
+        "selectDoctorOption": "Select a doctor...",
         // Body parts
         "bodyParts": {
             "chest": "Chest",
@@ -272,7 +383,9 @@ const enTranslations = {
             "pelvis": "Pelvis",
             "shoulder": "Shoulder",
             "elbow": "Elbow",
-            "wrist": "Wrist"
+            "wrist": "Wrist",
+            "ankle": "Ankle",
+            "hip": "Hip"
         },
 
         // File upload
@@ -302,7 +415,10 @@ const enTranslations = {
         "processing": "Processing...",
 
         // Security notice
-        "securityNotice": "🔒 All uploaded files are encrypted and comply with medical data protection standards"
+        "securityNotice": "🔒 All uploaded files are encrypted and comply with medical data protection standards",
+        "selectPatient": "Select Patient",
+        "searchPatientPlaceholder": "Search patient by name...",
+        "selectPatientOption": "Choose a patient..."
     },
 
 
@@ -1256,6 +1372,73 @@ const arTranslations = {
         willReceiveLink: 'ستتلقى رابط إعادة تعيين كلمة المرور',
 
     },
+    payment: {
+        // تنبيه الأمان
+        securePayment: 'دفع آمن',
+        allTransactionsEncrypted: 'جميع المعاملات مشفرة وآمنة.',
+        selectedClinic: 'العيادة المختارة',
+        selectedDoctor: 'الطبيب المختار',
+        selectedSpecialty: 'التخصص المختار',
+        selectedDay: 'اليوم المختار',
+        selectedTime: 'الوقت المختار',
+
+        // Additional missing translations
+        paymentMethod: 'طريقة الدفع',
+        // ملخص الموعد
+        appointmentSummary: 'ملخص الموعد',
+        reviewAppointmentDetails: 'يرجى مراجعة تفاصيل موعدك',
+        clinic: 'العيادة',
+        doctor: 'الطبيب',
+        specialty: 'التخصص',
+        day: 'اليوم',
+        time: 'الوقت',
+        totalAmount: 'المبلغ الإجمالي',
+
+        // اختيار طريقة الدفع
+        choosePaymentMethod: 'اختر طريقة الدفع المفضلة لديك',
+        creditCard: 'بطاقة ائتمان',
+        paypal: 'باي بال',
+        insurance: 'التأمين',
+        cash: 'نقدي',
+
+        // نموذج بطاقة الائتمان
+        cardNumber: 'رقم البطاقة',
+        nameOnCard: 'الاسم على البطاقة',
+        cardNamePlaceholder: 'جون دو',
+        expiryDate: 'تاريخ الانتهاء',
+        cvv: 'الرمز الأمني',
+        payNow: 'ادفع الآن',
+        processing: 'جارٍ المعالجة...',
+
+        // باي بال
+        continueWithPaypal: 'متابعة مع PayPal لإكمال الدفع',
+        payWithPaypal: 'ادفع بـ PayPal',
+
+        // التأمين
+        insuranceProvider: 'مقدم التأمين',
+        selectInsuranceProvider: 'اختر مقدم التأمين الخاص بك',
+        policyNumber: 'رقم البوليصة',
+        policyNumberPlaceholder: 'رقم البوليصة',
+        memberID: 'رقم العضوية',
+        memberIDPlaceholder: 'رقم العضوية',
+        verifyingInsurance: 'جارٍ التحقق من التأمين...',
+        submitInsurance: 'إرسال بيانات التأمين',
+        other: 'أخرى',
+
+        // الدفع النقدي
+        cashPaymentInformation: 'معلومات الدفع النقدي',
+        cashPaymentNote: 'يرجى ملاحظة أنه باختيار الدفع النقدي، فإنك توافق على إحضار المبلغ الدقيق (₪{{price}}) إلى موعدك.',
+        paymentAtReception: 'يجب سداد الدفع في استقبال العيادة قبل موعدك',
+        onlyCashShekel: 'يتم قبول النقد بالشيكل الإسرائيلي (₪) فقط',
+        receiptProvided: 'سيتم تقديم إيصال بعد الدفع',
+        failureToPayMayReschedule: 'عدم إحضار الدفع قد يؤدي إلى إعادة جدولة موعدك',
+        agreeToTerms: 'أفهم وأوافق على شروط الدفع النقدي',
+        confirmCashPayment: 'تأكيد الدفع النقدي',
+
+        // التذييل
+        back: 'العودة',
+        dataProtected: 'بياناتك محمية',
+    },
     patientHealth: {
         title: 'إدارة صحة المرضى',
         searchPlaceholder: '...البحث عن  ',
@@ -1366,6 +1549,41 @@ const arTranslations = {
         doctorNotes: 'ملاحظات الطبيب',
         doctorNotesPlaceholder: 'ملاحظات أو توصيات إضافية',
         saveLabResults: 'حفظ نتائج المختبر'
+    },
+    "paymentSuccess": {
+        "paymentSuccessful": "تم الدفع بنجاح",
+        "paypalProcessedSuccessfully": "تم معالجة دفعتك عبر PayPal بنجاح.",
+        "paymentError": "خطأ في الدفع",
+        "paymentProcessingFailed": "فشل في معالجة الدفع",
+        "processingPayPalPayment": "معالجة دفع PayPal",
+        "pleaseWaitConfirming": "يرجى الانتظار بينما نؤكد دفعتك...",
+        "paymentFailed": "فشل الدفع",
+        "errorProcessingPayment": "حدث خطأ أثناء معالجة دفعتك",
+        "tryAgain": "حاول مرة أخرى",
+        "backToClinics": "العودة إلى العيادات",
+        "paymentSuccessfulTitle": "تم الدفع بنجاح!",
+        "appointmentConfirmedAndPaid": "تم تأكيد موعدك ودفع الرسوم.",
+        "appointmentDetails": "تفاصيل الموعد",
+        "clinic": "العيادة",
+        "doctor": "الطبيب",
+        "date": "التاريخ",
+        "time": "الوقت",
+        "amountPaid": "المبلغ المدفوع",
+        "paymentMethod": "طريقة الدفع",
+        "paypal": "باي بال",
+        "transactionId": "رقم المعاملة",
+        "viewMyAppointments": "عرض مواعيدي",
+        "bookAnotherAppointment": "حجز موعد آخر"
+    },
+    "paymentCancel": {
+        "paymentCancelled": "تم إلغاء الدفع",
+        "paypalCancelledNoCharges": "تم إلغاء دفع PayPal الخاص بك. لم يتم خصم أي رسوم.",
+        "paymentCancelledTitle": "تم إلغاء الدفع",
+        "cancelledPaymentDescription": "لقد ألغيت عملية دفع PayPal. لم يتم خصم أي رسوم من حسابك.",
+        "appointmentNotConfirmed": "لم يتم تأكيد موعدك.",
+        "tryDifferentMethodOrBookLater": "يمكنك تجربة طريقة دفع مختلفة أو الحجز مرة أخرى لاحقاً.",
+        "tryDifferentPaymentMethod": "جرب طريقة دفع مختلفة",
+        "backToClinics": "العودة إلى العيادات"
     },
     auth: {
         welcomeBack: 'مرحبًا بعودتك',
@@ -1491,6 +1709,8 @@ const arTranslations = {
     },
     doctorPages: {
         // Lab Results Page
+        downloadFailed: "فشل في تحميل الصورة. يرجى المحاولة مرة أخرى.",
+        noImageUrl: "لا يوجد رابط للصورة",
         labResults: 'نتائج المختبر',
         labResultsDesc: 'عرض وإدارة نتائج فحوصات المرضى المخبرية',
         viewLabResults: 'عرض نتائج المختبر',
@@ -2145,9 +2365,12 @@ const arTranslations = {
             pelvis: 'الحوض',
             shoulder: 'الكتف',
             elbow: 'الكوع',
-            wrist: 'المعصم'
+            wrist: 'المعصم',
+            ankle: "الكاحل",
+            hip: "الورك"
         },
-
+        "searchDoctorPlaceholder": "ابحث عن الطبيب بالاسم...",
+        "selectDoctorOption": "اختر طبيباً...",
         // File upload
         dragAndDrop: 'اسحب وأفلت صورة الأشعة هنا',
         orClickToBrowse: 'أو انقر لتصفح الملفات',
@@ -2176,6 +2399,9 @@ const arTranslations = {
 
         // Security notice
         securityNotice: '🔒 جميع الملفات المرفوعة مشفرة ومتوافقة مع معايير حماية البيانات الطبية',
+        selectPatient: "اختر المريض",
+        searchPatientPlaceholder: "ابحث عن المريض بالاسم...",
+        selectPatientOption: "اختر مريضًا..."
     },
     appointmentsManagement: {
         // Main titles and descriptions
