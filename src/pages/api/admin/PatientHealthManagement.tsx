@@ -1382,7 +1382,16 @@ const PatientHealthManagement: React.FC = () => {
             supabase.removeChannel(subscription);
         };
     }, []);
-
+    const translateRole = (role?: string) => {
+        const roleTranslations: { [key: string]: string } = {
+            'Admin': 'مدير',
+            'Doctor': 'طبيب',
+            'Nurse': 'ممرض',
+            'Secretary': 'سكرتير',
+            'Patient': 'مريض'
+        };
+        return roleTranslations[role || 'Patient'] || role || 'مريض';
+    };
     // Handle delete record
     const handleDeleteRecord = async (patientId: number) => {
         const success = await deletePatientHealthData(patientId);
@@ -1549,7 +1558,7 @@ const PatientHealthManagement: React.FC = () => {
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-left' : 'text-left'}`}>
+                                    <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-right' : 'text-left'}`}>
                                         {t('patientHealth.patientInfo')}
                                     </th>
                                     <th className={`px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider ${isRTL ? 'text-left' : 'text-left'}`}>
@@ -1593,7 +1602,7 @@ const PatientHealthManagement: React.FC = () => {
                                                     <div className={`space-y-2 ${isRTL ? 'text-right' : ''}`}>
                                                         {/* BMI */}
                                                         {record.weight_kg && record.height_cm && (
-                                                            <div className={`text-sm ${isRTL ? 'text-right' : ''}`}>
+                                                            <div className={`text-sm ${isRTL ? 'text-left' : ''}`}>
                                                                 <span className="font-medium">{isRTL ? 'مؤشر كتلة الجسم:' : 'BMI:'}</span> {
                                                                     ((record.weight_kg / Math.pow(record.height_cm / 100, 2))).toFixed(1)
                                                                 }
@@ -1601,7 +1610,7 @@ const PatientHealthManagement: React.FC = () => {
                                                         )}
                                                         {/* Blood Type */}
                                                         {record.blood_type && (
-                                                            <div className={`text-sm ${isRTL ? 'text-right' : ''}`}>
+                                                            <div className={`text-sm ${isRTL ? 'text-left' : ''}`}>
                                                                 <span className="font-medium">{isRTL ? 'فصيلة الدم:' : 'Blood:'}</span> {
                                                                     isRTL ? (
                                                                         record.blood_type === 'A+' ? '+أ' :
@@ -1645,14 +1654,14 @@ const PatientHealthManagement: React.FC = () => {
                                                         {/* Created By */}
                                                         {record.created_by_name && (
                                                             <div className="space-y-1">
-                                                                <div className={`text-xs font-medium text-gray-700 ${isRTL ? 'text-right' : ''}`}>
-                                                                    {isRTL ? 'تم إنشاؤه بواسطة:' : 'Created by:'}
+                                                                <div className={`text-xs font-medium text-gray-700 ${isRTL ? 'text-left' : ''}`}>
+                                                                    {isRTL ? ':تم إنشاؤه بواسطة' : 'Created by:'}
                                                                 </div>
                                                                 <div className={`text-sm font-medium text-gray-900 ${isRTL ? 'text-left' : ''}`}>
                                                                     {record.created_by_name}
                                                                 </div>
                                                                 <Badge className={`text-xs ${getRoleColor(record.created_by_role)} ${isRTL ? 'block text-left' : ''}`}>
-                                                                    {isRTL ? (record.created_by_role === 'Admin' ? 'مدير' : record.created_by_role === 'Patient' ? 'مريض' : record.created_by_role) : (record.created_by_role || 'Patient')}
+                                                                    {isRTL ? translateRole(record.created_by_role === 'Admin' ? 'مدير' : record.created_by_role === 'Patient' ? 'مريض' : record.created_by_role) : (record.created_by_role || 'Patient')}
                                                                 </Badge>
                                                                 <div className={`text-xs text-gray-500 ${isRTL ? 'text-left' : ''}`}>
                                                                     {new Date(record.created_at || '').toLocaleDateString()}
@@ -1663,14 +1672,18 @@ const PatientHealthManagement: React.FC = () => {
                                                         {/* Updated By */}
                                                         {record.updated_by_name && record.updated_by_name !== record.created_by_name && (
                                                             <div className="space-y-1 pt-2 border-t border-gray-100">
-                                                                <div className="text-xs font-medium text-gray-700">Last updated by:</div>
-                                                                <div className="text-sm font-medium text-gray-900">
+                                                                <div className={`text-xs font-medium text-gray-700 ${isRTL ? 'text-left' : 'text-left'}`}>
+                                                                    {isRTL ? ':آخر تحديث بواسطة' : 'Last updated by:'}
+                                                                </div>
+                                                                <div className={`text-sm font-medium text-gray-900 ${isRTL ? 'text-left' : 'text-left'}`}>
                                                                     {record.updated_by_name}
                                                                 </div>
-                                                                <Badge className={`text-xs ${getRoleColor(record.updated_by_role)}`}>
-                                                                    {record.updated_by_role || 'Patient'}
-                                                                </Badge>
-                                                                <div className="text-xs text-gray-500">
+                                                                <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                                                                    <Badge className={`text-xs ${getRoleColor(record.updated_by_role)} ${isRTL ? 'text-right' : ''}`}>
+                                                                        {isRTL ? translateRole(record.updated_by_role) : (record.updated_by_role || 'Patient')}
+                                                                    </Badge>
+                                                                </div>
+                                                                <div className={`text-xs text-gray-500 ${isRTL ? 'text-left' : 'text-left'}`}>
                                                                     {new Date(record.updated_at || '').toLocaleDateString()}
                                                                 </div>
                                                             </div>
