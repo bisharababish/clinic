@@ -254,6 +254,7 @@ function App() {
               }
             />
 
+
             {/* Catch all route - redirect to user's default route based on role */}
             <Route
               path="*"
