@@ -277,7 +277,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                 <div className="text-sm font-bold text-green-600">{t('admin.allSystemsOperational')}</div>
                             </div>
                         )}
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className={`text-xs text-gray-500 mt-1 ${i18n.language === 'ar' ? 'text-left' : 'text-left'}`}>
                             {t('admin.lastChecked')}: {new Date().toLocaleTimeString()}
                         </p>
                     </CardContent>
