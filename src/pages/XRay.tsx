@@ -755,7 +755,7 @@ const XRay = () => {
               {/* Traditional Dropdown as backup */}
               <div className="mt-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Or select from dropdown:
+                  {t('xray.selectFromDropdown')}
                 </label>
                 <select
                   name="bodyPart"

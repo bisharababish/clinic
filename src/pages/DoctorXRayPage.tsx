@@ -449,113 +449,128 @@ const DoctorXRayPage: React.FC = () => {
                 )}
             </div>
 
+           // Replace your existing Image Viewer Modal section with this mobile-optimized version:
+
             {/* Image Viewer Modal */}
             {selectedImage && (
-                <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] flex flex-col">
+                <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-2 sm:p-4 z-50">
+                    <div className="bg-white rounded-lg w-full h-full sm:max-w-6xl sm:w-full sm:max-h-[95vh] flex flex-col">
                         {/* Header */}
-                        <div className="p-4 border-b flex items-center justify-between">
-                            <div>
-                                <h2 className="text-lg font-bold text-gray-900">
+                        <div className="p-3 sm:p-4 border-b flex items-center justify-between flex-shrink-0">
+                            <div className="min-w-0 flex-1">
+                                <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                                     {selectedImage.body_part} X-Ray - {selectedImage.patient_name}
                                 </h2>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-xs sm:text-sm text-gray-500 truncate">
                                     {t('common.date') || 'Date'}: {new Date(selectedImage.created_at).toLocaleDateString()} | {t('usersManagement.id') || 'ID'}: {selectedImage.patient_id}
                                 </p>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0 ml-2">
                                 {/* Image Controls */}
                                 <button
                                     onClick={handleZoomOut}
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                                    className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-md"
                                     title={t('doctorPages.zoomOut') || 'Zoom Out'}
                                 >
-                                    <ZoomOut className="h-5 w-5" />
+                                    <ZoomOut className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
-                                <span className="text-sm text-gray-600 min-w-[60px] text-center">
+                                <span className="text-xs sm:text-sm text-gray-600 min-w-[45px] sm:min-w-[60px] text-center">
                                     {imageZoom}%
                                 </span>
                                 <button
                                     onClick={handleZoomIn}
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                                    className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-md"
                                     title={t('doctorPages.zoomIn') || 'Zoom In'}
                                 >
-                                    <ZoomIn className="h-5 w-5" />
+                                    <ZoomIn className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
                                 <button
                                     onClick={handleRotate}
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                                    className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-md"
                                     title={t('doctorPages.rotate') || 'Rotate'}
                                 >
-                                    <RotateCw className="h-5 w-5" />
+                                    <RotateCw className="h-4 w-4 sm:h-5 sm:w-5" />
                                 </button>
                                 <button
                                     onClick={() => setSelectedImage(null)}
-                                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+                                    className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-100 rounded-md"
                                     title="Close"
                                 >
-                                    ✕
+                                    <span className="text-lg">✕</span>
                                 </button>
                             </div>
                         </div>
 
-                        {/* Main Content */}
-                        <div className="flex-1 flex overflow-hidden">
+                        {/* Main Content - Mobile: Vertical Stack, Desktop: Horizontal */}
+                        <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
                             {/* Image Display */}
-                            <div className="flex-1 bg-black flex items-center justify-center overflow-auto">
-                                <img
-                                    src={selectedImage.imageUrl}
-                                    alt={`${selectedImage.body_part} X-ray`}
-                                    className="max-w-none transition-transform duration-200"
-                                    style={{
-                                        transform: `scale(${imageZoom / 100}) rotate(${imageRotation}deg)`,
-                                    }}
-                                    onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
-                                    }}
-                                />
+                            <div className="flex-1 bg-black flex items-center justify-center overflow-auto order-1 sm:order-1">
+                                <div className="w-full h-full flex items-center justify-center p-2">
+                                    <img
+                                        src={selectedImage.imageUrl}
+                                        alt={`${selectedImage.body_part} X-ray`}
+                                        className="max-w-full max-h-full object-contain transition-transform duration-200"
+                                        style={{
+                                            transform: `scale(${imageZoom / 100}) rotate(${imageRotation}deg)`,
+                                        }}
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+                                        }}
+                                    />
+                                </div>
                             </div>
 
-                            {/* Side Panel */}
-                            <div className="w-80 bg-gray-50 border-l overflow-y-auto">
-                                <div className="p-4 space-y-4">
+                            {/* Information Panel - Mobile: Bottom Sheet, Desktop: Side Panel */}
+                            <div className="w-full sm:w-80 bg-gray-50 border-t sm:border-t-0 sm:border-l overflow-y-auto order-2 sm:order-2 max-h-[40vh] sm:max-h-none">
+                                <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                                    {/* Patient Information */}
                                     <div>
-                                        <h3 className="font-medium text-gray-900 mb-2">{t('xray.patientInformation') || 'Patient Information'}</h3>
-                                        <div className="space-y-1 text-sm">
+                                        <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">
+                                            {t('xray.patientInformation') || 'Patient Information'}
+                                        </h3>
+                                        <div className="space-y-1 text-xs sm:text-sm">
                                             <p><span className="font-medium">{t('common.name') || 'Name'}:</span> {selectedImage.patient_name}</p>
                                             <p><span className="font-medium">{t('usersManagement.id') || 'ID'}:</span> {selectedImage.patient_id}</p>
                                             <p><span className="font-medium">{t('xray.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.date_of_birth || 'N/A'}</p>
                                         </div>
                                     </div>
 
+                                    {/* Exam Information */}
                                     <div>
-                                        <h3 className="font-medium text-gray-900 mb-2">{t('doctorPages.examInformation') || 'Exam Information'}</h3>
-                                        <div className="space-y-1 text-sm">
+                                        <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">
+                                            {t('doctorPages.examInformation') || 'Exam Information'}
+                                        </h3>
+                                        <div className="space-y-1 text-xs sm:text-sm">
                                             <p><span className="font-medium">{t('xray.bodyPart') || 'Body Part'}:</span> {selectedImage.body_part}</p>
                                             <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(selectedImage.created_at).toLocaleDateString()}</p>
                                             <p><span className="font-medium">{t('xray.requestingDoctor') || 'Requesting Doctor'}:</span> {selectedImage.requesting_doctor || 'N/A'}</p>
-                                            <p><span className="font-medium">{t('common.status') || 'Status'}:</span>
-                                                <span className="ml-2 px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+                                            <p className="flex items-center">
+                                                <span className="font-medium">{t('common.status') || 'Status'}:</span>
+                                                <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-100 text-green-800">
                                                     {t('admin.completed') || 'Completed'}
                                                 </span>
                                             </p>
                                         </div>
                                     </div>
 
+                                    {/* Clinical Indication */}
                                     {selectedImage.indication && (
                                         <div>
-                                            <h3 className="font-medium text-gray-900 mb-2">{t('xray.clinicalIndication') || 'Clinical Indication'}</h3>
-                                            <p className="text-sm text-gray-700 bg-white p-3 rounded border">
+                                            <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">
+                                                {t('xray.clinicalIndication') || 'Clinical Indication'}
+                                            </h3>
+                                            <p className="text-xs sm:text-sm text-gray-700 bg-white p-2 sm:p-3 rounded border">
                                                 {selectedImage.indication}
                                             </p>
                                         </div>
                                     )}
 
+                                    {/* Download Button */}
                                     <div className="pt-2">
                                         <button
                                             onClick={() => handleDownloadImage(selectedImage)}
-                                            className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
+                                            className="w-full bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2 text-sm sm:text-base"
                                         >
                                             <Download className="h-4 w-4" />
                                             {t('doctorPages.downloadImage') || 'Download Image'}

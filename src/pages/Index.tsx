@@ -1362,7 +1362,7 @@ const Index = () => {
                 <div className="flex-1">
                   <Input
                     type="text"
-                    placeholder={isRTL ? "ابحث بالاسم أو البريد الإلكتروني أو رقم الهوية..." : "Search by name, email, or ID number..."}
+                    placeholder={isRTL ? "ابحث ..." : "Search by ..."}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="text-lg"
@@ -1672,7 +1672,7 @@ const Index = () => {
                           {isRTL ? "البريد الإلكتروني" : "Email"}
                         </Label>
                         <div className="relative">
-                          <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                          <Mail className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
                           <Input
                             id="create_email"
                             name="user_email"
@@ -1691,7 +1691,7 @@ const Index = () => {
                           {isRTL ? "رقم الهاتف" : "Phone Number"}
                         </Label>
                         <div className="relative">
-                          <Phone className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                          <Phone className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
                           <Input
                             id="create_phone"
                             name="user_phonenumber"
@@ -1733,14 +1733,15 @@ const Index = () => {
                           {isRTL ? "تاريخ الميلاد" : "Date of Birth"}
                         </Label>
                         <div className="relative">
-                          <Calendar className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4  text-muted-foreground`} />
+                          <Calendar className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
                           <Input
                             id="create_dob"
                             name="date_of_birth"
                             type="date"
                             value={createPatientForm.date_of_birth}
                             onChange={handleCreatePatientFormChange}
-                            className={`${isRTL ? 'pr-12' : 'pl-12'} ${isRTL ? 'text-left' : 'text-left'}`} required
+                            className={`${isRTL ? 'pr-12' : 'pl-3'} ${isRTL ? 'text-left' : 'text-left'}`}
+                            required
                           />
                         </div>
                       </div>
@@ -1783,7 +1784,7 @@ const Index = () => {
                           {isRTL ? "كلمة المرور" : "Password"}
                         </Label>
                         <div className="relative">
-                          <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                          <Lock className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
                           <Input
                             id="create_password"
                             name="user_password"
@@ -1890,17 +1891,17 @@ const Index = () => {
                 <RadioGroup
                   value={patientInfo.bloodType}
                   onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
-                  className={`grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
+                  className={`blood-type-radio-group grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
                 >
                   {(isRTL ?
                     ["O-", "O+", "AB-", "AB+", "B-", "B+", "A-", "A+"] :
                     ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
                   ).map(type => (
-                    <div key={type} className={`flex items-center ${isRTL ? 'flex-row-reverse gap-3' : 'space-x-2'}`}>
-                      <RadioGroupItem value={type} id={type} />
+                    <div key={type} className="blood-type-radio-item flex items-center justify-center">
+                      <RadioGroupItem value={type} id={type} className="blood-type-radio" />
                       <Label
                         htmlFor={type}
-                        className={`${isRTL ? 'text-right' : 'text-left'} font-medium cursor-pointer`}
+                        className="blood-type-label font-medium cursor-pointer"
                         dir={isRTL ? 'rtl' : 'ltr'}
                       >
                         {getBloodTypeDisplay(type)}

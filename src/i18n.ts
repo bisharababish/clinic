@@ -356,6 +356,7 @@ const enTranslations = {
         "pageDescription": "Securely upload and manage medical X-ray images",
         "title": "X-Ray Image Upload",
         "uploadXrayImage": "Upload X-Ray Image",
+        selectFromDropdown: "Or select from dropdown:",
 
         // Patient Information
         "patientInformation": "Patient Information",
@@ -2339,7 +2340,7 @@ const arTranslations = {
         pageDescription: 'رفع وإدارة صور الأشعة الطبية بأمان',
         title: 'رفع صور الأشعة',
         uploadXrayImage: 'رفع صورة الأشعة',
-
+        selectFromDropdown: "أو اختر من القائمة : ",
         // Patient Information
         patientInformation: 'معلومات المريض',
         patientName: 'اسم المريض',
