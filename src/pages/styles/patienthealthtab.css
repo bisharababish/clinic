@@ -291,6 +291,19 @@
         font-size: 16px !important;
         transform: translateZ(0) !important;
     }
+
+    .patient-health-form input::placeholder,
+    .patient-health-form textarea::placeholder {
+        font-size: 1.1em !important;
+        color: #888 !important;
+        opacity: 1 !important;
+        text-align: left !important;
+    }
+
+    [dir="rtl"] .patient-health-form input::placeholder,
+    [dir="rtl"] .patient-health-form textarea::placeholder {
+        text-align: right !important;
+    }
 }
 
 /* Tablet Responsive (768px - 1024px) */
@@ -496,6 +509,7 @@
         height: 2rem !important;
         margin: 0 auto 1rem auto !important;
     }
+
 }
 
 /* Smooth Scrolling for Mobile */
@@ -507,4 +521,5 @@
         scroll-behavior: smooth !important;
         -webkit-overflow-scrolling: touch !important;
     }
+
 }

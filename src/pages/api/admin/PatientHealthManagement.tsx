@@ -62,6 +62,8 @@ import {
     List
 } from 'lucide-react';
 
+import '../../styles/patienthealthtab.css';
+
 // Enhanced Patient interface with health data
 interface PatientWithHealth {
     userid: number;
@@ -618,8 +620,8 @@ const PatientHealthForm: React.FC<{
                             )}
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className={`max-w-6xl max-h-[90vh] overflow-y-auto ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
-                        <DialogHeader className="relative">
+                    <DialogContent className={`max-w-6xl max-h-[90vh] overflow-y-auto patient-health-dialog ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
+                        <DialogHeader className="patient-health-card">
 
                             <DialogTitle className={`${isRTL ? 'text-left pr-8' : 'text-left'}`}>
                                 {mode === 'edit' ? t('patientHealth.patientHealthInformation') : t('patientHealth.patientHealthInformation')}
@@ -629,7 +631,7 @@ const PatientHealthForm: React.FC<{
                             </DialogDescription>
                         </DialogHeader>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6 patient-health-form">
                             {/* Patient Selection - Only show in create mode */}
                             {mode !== 'edit' && !selectedPatient && (
                                 <Card>
@@ -693,7 +695,7 @@ const PatientHealthForm: React.FC<{
                                                     filteredPatients.map((patient) => (
                                                         <div
                                                             key={patient.userid}
-                                                            className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${isRTL ? 'text-left' : ''}`}
+                                                            className={`p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors patient-selection-item ${isRTL ? 'text-left' : ''}`}
                                                             onClick={() => handlePatientSelect(patient)}
                                                         >
                                                             <div className="font-medium">
@@ -731,7 +733,7 @@ const PatientHealthForm: React.FC<{
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right" dir="rtl">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right patient-info-display" dir="rtl">
                                                 <div>
                                                     <div className="font-medium text-left">
                                                         {selectedPatient.english_username_a} {selectedPatient.english_username_d}
@@ -877,7 +879,7 @@ const PatientHealthForm: React.FC<{
                                                 {t('patientHealth.medications')}
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent className={`space-y-6 ${isRTL ? 'text-left' : ''}`}>
+                                        <CardContent className={`space-y-6 ${isRTL ? 'text-left' : ''} medications-section`}>
                                             {Object.entries(formData.medications).map(([category, meds]) => (
                                                 <div key={category} className="space-y-2">
                                                     <Label className="capitalize font-medium">
@@ -932,7 +934,7 @@ const PatientHealthForm: React.FC<{
 
                             {/* Form Actions */}
                             {selectedPatient && (
-                                <div className={`flex gap-2 pt-4 border-t ${isRTL ? 'float-right' : 'float-left'}`}>
+                                <div className={`flex gap-2 patient-health-actions pt-4 border-t ${isRTL ? 'float-right' : 'float-left'}`}>
                                     <Button type="submit" disabled={isSaving}>
                                         {isSaving ? (
                                             <>
@@ -957,7 +959,7 @@ const PatientHealthForm: React.FC<{
 
                 {/* Create Patient Dialog */}
                 <Dialog open={showCreatePatientForm} onOpenChange={setShowCreatePatientForm}>
-                    <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
+                    <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto patient-health-dialog ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
                         <DialogHeader className={isRTL ? 'text-right' : ''}>
                             <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`} style={isRTL ? { float: 'right' } : {}}>
                                 <UserPlus className="h-5 w-5" />
@@ -968,7 +970,7 @@ const PatientHealthForm: React.FC<{
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 create-patient-form">
                             {/* English Name Fields */}
                             <div className="space-y-4">
                                 <h4 className="font-medium text-gray-700">{t('patientHealth.englishName')}</h4>
@@ -1151,7 +1153,7 @@ const PatientHealthForm: React.FC<{
                                     <RadioGroup
                                         value={createPatientForm.gender_user}
                                         onValueChange={(value) => setCreatePatientForm(prev => ({ ...prev, gender_user: value }))}
-                                        className={`flex gap-4 mt-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                                        className={`flex gap-4 mt-2 ${isRTL ? 'flex-row-reverse' : ''} gender-radio-group`}
                                     >
                                         <div className={`flex items-center ${isRTL ? 'flex-row-reverse gap-2' : 'space-x-2'}`}>
                                             <RadioGroupItem value="male" id="create_male" />
@@ -1450,25 +1452,15 @@ const PatientHealthManagement: React.FC = () => {
 
     return (
         <Card>
-            <CardHeader>
+            <CardHeader className="patient-health-card">
                 <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-left' : ''}`}>
                     <Database className="h-5 w-5" />
                     {t('patientHealth.title') || 'Patient Health Management'}
                 </CardTitle>
 
                 {/* Action buttons and search */}
-                <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-4 flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className="relative flex-1 max-w-sm">
-                            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-gray-400`} />
-                            <Input
-                                placeholder={t('patientHealth.searchPlaceholder') || 'Search patients...'}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className={`${isRTL ? 'pr-10 text-left placeholder:text-right' : 'pl-10'}`}
-                            />
-                        </div>
-
+                <div className={`flex items-center justify-between gap-4 patient-health-search-controls flex-col md:flex-row`}>
+                    <div className={`flex flex-col md:flex-row gap-2 flex-1 w-full md:w-auto ${isRTL ? 'items-end md:items-start md:flex-row-reverse' : ''}`}>
                         <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as 'all' | 'with_data' | 'without_data')}>
                             <SelectTrigger className={`w-48 ${isRTL ? 'text-right flex-row-reverse' : ''}`}>
                                 <Filter className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -1486,9 +1478,20 @@ const PatientHealthManagement: React.FC = () => {
                                 </SelectItem>
                             </SelectContent>
                         </Select>
+                        {/* Search input strictly below filter on mobile */}
+                        <div className="w-full md:w-auto">
+                            <div className="relative flex-1 max-w-sm mt-2 md:mt-0">
+                                <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-gray-400`} />
+                                <Input
+                                    placeholder={t('patientHealth.searchPlaceholder') || 'Search patients...'}
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className={`${isRTL ? 'pr-10 text-left placeholder:text-right' : 'pl-10'} w-full`}
+                                />
+                            </div>
+                        </div>
                     </div>
-
-                    <div className={`flex gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex gap-2 patient-health-buttons w-full md:w-auto ${isRTL ? 'flex-row-reverse' : ''}`}>
                         {isRTL ? (
                             <>
                                 <Button onClick={fetchAllData} variant="outline" size="sm" className="flex items-center gap-2">
@@ -1521,7 +1524,7 @@ const PatientHealthManagement: React.FC = () => {
             </CardHeader>
             <CardContent>
                 {/* Summary Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 patient-health-stats">
                     <div className={`bg-blue-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
                         <h3 className="text-sm font-medium text-blue-800 text-left">
                             {t('patientHealth.totalPatients') || 'Total Patients'}
@@ -1553,7 +1556,7 @@ const PatientHealthManagement: React.FC = () => {
                 </div>
 
                 {/* Records Table */}
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border rounded-lg overflow-hidden patient-health-table">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50">
