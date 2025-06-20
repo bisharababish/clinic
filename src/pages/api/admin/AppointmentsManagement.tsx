@@ -1643,8 +1643,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             {/* Header with title and actions */}
             <div className={`appointments-header flex flex-col md:flex-row md:items-center md:justify-between gap-4`}>
                 <div className={`title-section ${isRTL ? 'text-right order-2 md:order-1' : 'text-left order-1'}`}>
-                    <h2 className="text-2xl font-bold tracking-tight">{t('appointmentsManagement.title')}</h2>
-                    <p className="text-muted-foreground">
+                    <h2 className="text-2xl font-bold tracking-tight text-left">{t('appointmentsManagement.title')}</h2>
+                    <p className="text-muted-foreground text-left">
                         {t('appointmentsManagement.description')}
                     </p>
                 </div>
