@@ -113,35 +113,30 @@ const Auth: React.FC = () => {
                     <TabsTrigger value="login">{t('common.login')}</TabsTrigger>
                     <TabsTrigger value="register">{t('common.signup')}</TabsTrigger>
                   </TabsList>
-                  <AnimatePresence mode="wait">
-                    <TabsContent value="login">
-                      <motion.div
-                        key="login"
-                        initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: isRTL ? -20 : 20 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {/* ✅ UPDATED: Pass onLoginSuccess callback to LoginForm */}
-                        <LoginForm
-                          onSwitchToRegister={handleSwitchToRegister}
-                          onSwitchToForgotPassword={handleSwitchToForgotPassword}
-                          onLoginSuccess={handleLoginSuccess}
-                        />
-                      </motion.div>
-                    </TabsContent>
-                    <TabsContent value="register">
-                      <motion.div
-                        key="register"
-                        initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: isRTL ? 20 : -20 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <RegisterForm onSwitchToLogin={handleSwitchToLogin} />
-                      </motion.div>
-                    </TabsContent>
-                  </AnimatePresence>
+                  <TabsContent value="login">
+                    <motion.div
+                      key="login"
+                      initial={{ opacity: 0, x: isRTL ? 20 : -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <LoginForm
+                        onSwitchToRegister={handleSwitchToRegister}
+                        onSwitchToForgotPassword={handleSwitchToForgotPassword}
+                        onLoginSuccess={handleLoginSuccess}
+                      />
+                    </motion.div>
+                  </TabsContent>
+                  <TabsContent value="register">
+                    <motion.div
+                      key="register"
+                      initial={{ opacity: 0, x: isRTL ? -20 : 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <RegisterForm onSwitchToLogin={handleSwitchToLogin} />
+                    </motion.div>
+                  </TabsContent>
                 </Tabs>
               )}
             </AnimatePresence>
