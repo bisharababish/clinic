@@ -677,3 +677,78 @@
         min-height: 2.5rem;
     }
 }
+
+/* Error notification styles */
+.labs-error-notification {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+    .labs-error-notification {
+        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+    }
+}
+
+.labs-error-text {
+    color: #dc2626;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+    .labs-error-text {
+        font-size: 0.9375rem;
+    }
+}
+
+.labs-error-text.rtl {
+    text-align: right;
+    direction: rtl;
+}
+
+/* Read-only input styles */
+.labs-form-input[readonly] {
+    background-color: #f9fafb !important;
+    color: #6b7280 !important;
+    cursor: not-allowed;
+}
+
+/* Disabled input and button styles */
+.labs-form-input:disabled,
+.labs-submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.labs-submit-button:disabled:hover {
+    background-color: #2563eb;
+}
+
+/* Select dropdown styles */
+select.labs-form-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    appearance: none;
+}
+
+select.labs-form-input.rtl {
+    background-position: left 0.5rem center;
+    padding-right: 0.75rem;
+    padding-left: 2.5rem;
+}
+
+/* Help text styles */
+.labs-form-help-text {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+    font-style: italic;
+}

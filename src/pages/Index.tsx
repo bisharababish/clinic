@@ -964,14 +964,29 @@ const Index = () => {
       const medicationData = organizeMedicinesByCategory(selectedMedicines);
 
       // Prepare data to save
+      // Prepare data to save
       const dataToSave = {
         patient_id: parseInt(targetPatientId),
-        weight_kg: patientInfo.weight ? parseFloat(patientInfo.weight) : undefined,
-        height_cm: patientInfo.height ? parseInt(patientInfo.height) : undefined,
-        blood_type: patientInfo.bloodType || undefined,
+        weight_kg: patientInfo.weight ? parseFloat(patientInfo.weight) : null,
+        height_cm: patientInfo.height ? parseInt(patientInfo.height) : null,
+        blood_type: patientInfo.bloodType || null,
         ...diseaseData,
         medications: medicationData,
       };
+
+      // ALSO update the patient's blood type in userinfo table
+      if (patientInfo.bloodType) {
+        const { error: updatePatientError } = await supabase
+          .from('userinfo')
+          .update({
+            blood_type: patientInfo.bloodType
+          })
+          .eq('userid', parseInt(targetPatientId));
+
+        if (updatePatientError) {
+          console.warn('Failed to update patient blood type in userinfo:', updatePatientError);
+        }
+      }
 
       // Save to database using the hook (user tracking is automatic via database trigger)
       const success = await savePatientHealthData(dataToSave);
