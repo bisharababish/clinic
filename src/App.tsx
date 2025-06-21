@@ -5,6 +5,7 @@ import { HeaderOnlyLayout } from "./components/layout/HeaderOnlyLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
+import { getDefaultRouteForRole } from "./lib/rolePermissions";
 import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
 
 // Lazy load components for code splitting
@@ -35,6 +36,54 @@ const PageLoader = () => (
   </div>
 );
 
+// Home Route with Role-Based Redirect
+function HomeRoute() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth', { replace: true });
+      return;
+    }
+
+    const userRole = user.role?.toLowerCase();
+    const defaultRoute = getDefaultRouteForRole(userRole);
+
+    // If the user is on the root path and their default route is not root, redirect them.
+    // This prevents redirect loops if the default route is '/' and the user is already there.
+    if (location.pathname === '/' && defaultRoute !== '/') {
+      console.log(`User ${userRole} at home, redirecting to: ${defaultRoute}`);
+      navigate(defaultRoute, { replace: true });
+      return;
+    }
+
+  }, [user, navigate]);
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <MainLayout>
+      <Index />
+    </MainLayout>
+  );
+}
+
+// Default Redirect Component for unknown routes
+function DefaultRedirect() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  const defaultRoute = getDefaultRouteForRole(user.role);
+  console.log(`Unknown route accessed by ${user.role}, redirecting to: ${defaultRoute}`);
+  return <Navigate to={defaultRoute} replace />;
+}
+
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
@@ -43,7 +92,7 @@ function App() {
     const initializeApp = async () => {
       try {
         // Create default admin and migrate existing users
-        // await createDefaultAdmin();
+        await createDefaultAdmin();
         // Comment this out after first run to avoid unnecessary API calls
         // await migrateExistingUsers();
       } catch (error) {
@@ -87,13 +136,13 @@ function App() {
             <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
 
-            {/* Public homepage */}
+            {/* Protected routes with MainLayout */}
             <Route
               path="/"
               element={
-                <MainLayout>
-                  <Index />
-                </MainLayout>
+                <ProtectedRoute allowedRoles={["admin", "doctor", "secretary", "nurse", "patient"]}>
+                  <HomeRoute />
+                </ProtectedRoute>
               }
             />
 
@@ -205,13 +254,14 @@ function App() {
               }
             />
 
+
             {/* Catch all route - redirect to user's default route based on role */}
             <Route
               path="*"
               element={
-                <MainLayout>
-                  <NotFound />
-                </MainLayout>
+                <ProtectedRoute>
+                  <DefaultRedirect />
+                </ProtectedRoute>
               }
             />
           </Routes>
