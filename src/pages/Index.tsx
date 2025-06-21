@@ -93,47 +93,8 @@ interface PatientCreationForm {
   user_password: string;
 }
 
-// NEW: A public-facing component for non-logged-in users
-const PublicWelcome = () => {
-  const { t } = useTranslation();
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-8 text-center bg-gray-50 dark:bg-gray-900">
-      <Card className="w-full max-w-2xl shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold tracking-tight sm:text-4xl">
-            {t('welcome_to_bethlehem_med_center')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            {t('your_trusted_partner_in_health')}
-          </p>
-          <p className="text-base text-gray-500 dark:text-gray-400">
-            {t('public_welcome_message')}
-          </p>
-          <div className="flex justify-center gap-4 pt-4">
-            <Button asChild>
-              <Link to="/auth">{t('login_or_register')}</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/about">{t('learn_more_about_us')}</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
 const Index = () => {
   const { user } = useAuth();
-
-  // If the user is not logged in, show a public welcome page.
-  if (!user) {
-    return <PublicWelcome />;
-  }
-
-  // All existing logic for logged-in users goes below.
   const userRole = user?.role?.toLowerCase() || "";
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
@@ -1003,29 +964,14 @@ const Index = () => {
       const medicationData = organizeMedicinesByCategory(selectedMedicines);
 
       // Prepare data to save
-      // Prepare data to save
       const dataToSave = {
         patient_id: parseInt(targetPatientId),
-        weight_kg: patientInfo.weight ? parseFloat(patientInfo.weight) : null,
-        height_cm: patientInfo.height ? parseInt(patientInfo.height) : null,
-        blood_type: patientInfo.bloodType || null,
+        weight_kg: patientInfo.weight ? parseFloat(patientInfo.weight) : undefined,
+        height_cm: patientInfo.height ? parseInt(patientInfo.height) : undefined,
+        blood_type: patientInfo.bloodType || undefined,
         ...diseaseData,
         medications: medicationData,
       };
-
-      // ALSO update the patient's blood type in userinfo table
-      if (patientInfo.bloodType) {
-        const { error: updatePatientError } = await supabase
-          .from('userinfo')
-          .update({
-            blood_type: patientInfo.bloodType
-          })
-          .eq('userid', parseInt(targetPatientId));
-
-        if (updatePatientError) {
-          console.warn('Failed to update patient blood type in userinfo:', updatePatientError);
-        }
-      }
 
       // Save to database using the hook (user tracking is automatic via database trigger)
       const success = await savePatientHealthData(dataToSave);
