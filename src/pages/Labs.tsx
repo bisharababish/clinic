@@ -4,9 +4,23 @@ import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { getDefaultRouteForRole } from "../lib/rolePermissions";
 import { supabase } from "../lib/supabase";
-import "./styles/lab.css"
+import { cn } from "../lib/utils";
 
-
+// Import shadcn/ui components
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { Textarea } from "../components/ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface Patient {
   userid: number;
@@ -212,7 +226,7 @@ const Labs = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setLabData(prev => ({
       ...prev,
@@ -240,7 +254,6 @@ const Labs = () => {
       setIsLoading(true);
       setError(null);
 
-      // Get current user's userid from the database
       // Get current user's userid from the database
       let currentUserId = 1; // fallback
       if (user?.email) {
@@ -347,261 +360,235 @@ const Labs = () => {
   // Loading state while checking user
   if (!user) {
     return (
-      <div className="labs-loading-container">
-        <div className="labs-loading-content">
-          <div className="labs-loading-spinner"></div>
-          <p className="labs-loading-text">Loading...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary rounded-full animate-spin border-t-transparent"></div>
+          <p className="mt-4 text-lg text-foreground">{t('loading') || 'Loading...'}</p>
         </div>
       </div>
     );
   }
 
-  // Access denied for non-lab users
+  // Access denied for non-lab/admin users
   const userRole = user.role?.toLowerCase();
   if (userRole !== 'lab' && userRole !== 'admin') {
     return (
-      <div className="labs-access-denied">
-        <div className="labs-access-denied-card">
-          <h2 className="labs-access-denied-title">Access Restricted</h2>
-          <p className="labs-access-denied-text">
-            This page is only accessible to Lab and Admin users. Your role: {user.role}
-          </p>
-          <button
-            onClick={() => navigate(getDefaultRouteForRole(user.role))}
-            className="labs-access-denied-button labs-touch-target"
-          >
-            Go to Your Dashboard
-          </button>
-        </div>
+      <div className="flex items-center justify-center min-h-screen p-4 bg-background sm:p-6 lg:p-8">
+        <Card className="max-w-md w-full bg-destructive/10 border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-6 h-6" />
+              {t('labs.accessRestricted') || 'Access Restricted'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-destructive/90">
+              {t('labs.accessDeniedMessage', { role: user.role }) || `This page is only accessible to Lab and Admin users. Your role: ${user.role}`}
+            </p>
+            <Button
+              onClick={() => navigate(getDefaultRouteForRole(user.role))}
+              className="mt-4 w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('labs.goToDashboard') || 'Go to Your Dashboard'}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className={`labs-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <main className="labs-main">
-        <div className="labs-content-wrapper">
-          <h1 className={`labs-title ${isRTL ? 'rtl' : 'ltr'}`}>
+    <div className={cn("min-h-screen bg-background text-foreground", isRTL ? 'rtl' : 'ltr')} dir={isRTL ? 'rtl' : 'ltr'}>
+      <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {t('labs.title') || 'Laboratory Management'}
           </h1>
 
           {error && (
-            <div className="labs-error-notification" dir={isRTL ? 'rtl' : 'ltr'}>
-              <p className={`labs-error-text ${isRTL ? 'rtl' : 'ltr'}`}>
-                {error}
-              </p>
-            </div>
+            <Alert variant="destructive" className="mt-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{t('error') || 'Error'}</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           {isSaved && (
-            <div className="labs-success-notification" dir={isRTL ? 'rtl' : 'ltr'}>
-              <p className={`labs-success-text ${isRTL ? 'rtl' : 'ltr'}`}>
+            <Alert variant="default" className="mt-6 bg-green-100 border-green-400 text-green-700 dark:bg-green-900/30 dark:border-green-600 dark:text-green-400">
+              <CheckCircle className="h-4 w-4" />
+              <AlertTitle>{t('success') || 'Success'}</AlertTitle>
+              <AlertDescription>
                 {t('labs.saveSuccess') || 'Lab results saved successfully!'}
-              </p>
-            </div>
+              </AlertDescription>
+            </Alert>
           )}
 
-          <div className="labs-form-card">
-            <div className="labs-form-header" dir={isRTL ? 'rtl' : 'ltr'}>
-              <h2 className={`labs-form-title ${isRTL ? 'rtl' : 'ltr'}`}>
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>
                 {t('labs.labTestInformation') || 'Lab Test Information'}
-              </h2>
-            </div>
-            <div className="labs-form-content" dir={isRTL ? 'rtl' : 'ltr'}>
-              <form onSubmit={handleSubmit} className="labs-form">
-                <div className="labs-form-fields">
-                  <div className="labs-form-grid">
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-                    {/* Patient Selection */}
-                    <div className="labs-form-field labs-form-field-full">
-                      <label htmlFor="patientSelect" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'اختر المريض' : 'Select Patient'}
-                      </label>
-                      <select
-                        id="patientSelect"
-                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={selectedPatient?.userid || ""}
-                        onChange={(e) => handlePatientSelect(e.target.value)}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        disabled={isLoading}
-                      >
-                        <option value="">
-                          {isLoading
+                  {/* Patient Selection */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor="patientSelect">
+                      {isRTL ? 'اختر المريض' : 'Select Patient'}
+                    </Label>
+                    <Select
+                      onValueChange={(value) => handlePatientSelect(value)}
+                      value={selectedPatient?.userid.toString() || ""}
+                      disabled={isLoading}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    >
+                      <SelectTrigger id="patientSelect" className="w-full">
+                        <SelectValue placeholder={
+                          isLoading
                             ? (isRTL ? 'جاري تحميل المرضى...' : 'Loading patients...')
                             : (isRTL ? 'اختر مريضاً' : 'Choose a patient')
-                          }
-                        </option>
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
                         {patients.map((patient) => {
                           const displayName = isRTL
                             ? (patient.arabic_username_a || patient.english_username_a)
                             : (patient.english_username_a || patient.arabic_username_a);
 
                           return (
-                            <option key={patient.userid} value={patient.userid}>
+                            <SelectItem key={patient.userid} value={patient.userid.toString()}>
                               {displayName} - {patient.user_email}
-                            </option>
+                            </SelectItem>
                           );
                         })}
-                      </select>
-                    </div>
-
-                    {/* Patient Name (Read-only) */}
-                    <div className="labs-form-field">
-                      <label htmlFor="patientName" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'اسم المريض' : 'Patient Name'}
-                      </label>
-                      <input
-                        id="patientName"
-                        name="patientName"
-                        type="text"
-                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={labData.patientName}
-                        readOnly
-                        placeholder={isRTL ? 'اختر مريضاً أولاً' : 'Select a patient first'}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    {/* Patient Email (Read-only) */}
-                    <div className="labs-form-field">
-                      <label htmlFor="patientEmail" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'البريد الإلكتروني للمريض' : 'Patient Email'}
-                      </label>
-                      <input
-                        id="patientEmail"
-                        name="patientEmail"
-                        type="email"
-                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={labData.patientEmail}
-                        readOnly
-                        placeholder={isRTL ? 'البريد الإلكتروني للمريض' : 'Patient email'}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    {/* Date of Birth (Read-only) */}
-                    <div className="labs-form-field">
-                      <label htmlFor="dateOfBirth" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'تاريخ الميلاد' : 'Date of Birth'}
-                      </label>
-                      <input
-                        id="dateOfBirth"
-                        name="dateOfBirth"
-                        type="date"
-                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={labData.dateOfBirth}
-                        readOnly
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    {/* Blood Type (Read-only) */}
-                    <div className="labs-form-field">
-                      <label htmlFor="bloodType" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'فصيلة الدم' : 'Blood Type'}
-                      </label>
-                      <input
-                        id="bloodType"
-                        name="bloodType"
-                        type="text"
-                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={labData.bloodType}
-                        readOnly
-                        placeholder={labData.bloodType ? "" : (isRTL ? 'فصيلة الدم (إن وجدت)' : 'Blood type (if available)')}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    {/* Test Date */}
-                    <div className="labs-form-field">
-                      <label htmlFor="testDate" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'تاريخ الفحص' : 'Test Date'}
-                      </label>
-                      <input
-                        id="testDate"
-                        name="testDate"
-                        type="date"
-                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={labData.testDate}
-                        onChange={handleChange}
-                        required
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    {/* Test Type */}
-                    <div className="labs-form-field labs-form-field-full">
-                      <label htmlFor="testType" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'نوع الفحص' : 'Test Type'}
-                      </label>
-                      <input
-                        id="testType"
-                        name="testType"
-                        type="text"
-                        className={`labs-form-input labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={labData.testType}
-                        onChange={handleChange}
-                        placeholder={isRTL ? 'أدخل نوع الفحص (مثل: فحص الدم، الأشعة السينية، الرنين المغناطيسي)' : 'Enter test type (e.g., Blood Test, X-Ray, MRI)'}
-                        required
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    {/* Test Results */}
-                    <div className="labs-form-field labs-form-field-full">
-                      <label htmlFor="testResults" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'نتائج الفحص' : 'Test Results'}
-                      </label>
-                      <textarea
-                        id="testResults"
-                        name="testResults"
-                        rows={4}
-                        className={`labs-form-textarea labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={labData.testResults}
-                        onChange={handleChange}
-                        placeholder={isRTL ? 'أدخل نتائج الفحص التفصيلية' : 'Enter detailed test results'}
-                        required
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
-                    {/* Doctor Notes */}
-                    <div className="labs-form-field labs-form-field-full">
-                      <label htmlFor="doctorNotes" className={`labs-form-label ${isRTL ? 'rtl' : 'ltr'}`}>
-                        {isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}
-                      </label>
-                      <textarea
-                        id="doctorNotes"
-                        name="doctorNotes"
-                        rows={3}
-                        className={`labs-form-textarea labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                        value={labData.doctorNotes}
-                        onChange={handleChange}
-                        placeholder={isRTL ? 'أدخل ملاحظات أو توصيات إضافية' : 'Enter additional notes or recommendations'}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                    </div>
-
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  {/* Submit button */}
-                  <div className="labs-submit-container">
-                    <button
-                      type="submit"
-                      className={`labs-submit-button labs-touch-target ${isRTL ? 'rtl' : 'ltr'}`}
-                      disabled={isLoading || !selectedPatient}
-                    >
-                      {isLoading
-                        ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
-                        : (isRTL ? 'حفظ نتائج المختبر' : 'Save Lab Results')
-                      }
-                    </button>
+                  {/* Patient Name (Read-only) */}
+                  <div>
+                    <Label htmlFor="patientName">{isRTL ? 'اسم المريض' : 'Patient Name'}</Label>
+                    <Input
+                      id="patientName"
+                      name="patientName"
+                      type="text"
+                      value={labData.patientName}
+                      readOnly
+                      placeholder={isRTL ? 'اختر مريضاً أولاً' : 'Select a patient first'}
+                    />
                   </div>
 
+                  {/* Patient Email (Read-only) */}
+                  <div>
+                    <Label htmlFor="patientEmail">{isRTL ? 'البريد الإلكتروني للمريض' : 'Patient Email'}</Label>
+                    <Input
+                      id="patientEmail"
+                      name="patientEmail"
+                      type="email"
+                      value={labData.patientEmail}
+                      readOnly
+                      placeholder={isRTL ? 'البريد الإلكتروني للمريض' : 'Patient email'}
+                    />
+                  </div>
+
+                  {/* Date of Birth (Read-only) */}
+                  <div>
+                    <Label htmlFor="dateOfBirth">{isRTL ? 'تاريخ الميلاد' : 'Date of Birth'}</Label>
+                    <Input
+                      id="dateOfBirth"
+                      name="dateOfBirth"
+                      type="date"
+                      value={labData.dateOfBirth}
+                      readOnly
+                    />
+                  </div>
+
+                  {/* Blood Type (Read-only, but maybe editable in future) */}
+                  <div>
+                    <Label htmlFor="bloodType">{isRTL ? 'فصيلة الدم' : 'Blood Type'}</Label>
+                    <Input
+                      id="bloodType"
+                      name="bloodType"
+                      type="text"
+                      value={labData.bloodType}
+                      readOnly
+                      placeholder={labData.bloodType ? "" : (isRTL ? 'فصيلة الدم (إن وجدت)' : 'Blood type (if available)')}
+                    />
+                  </div>
+
+                  {/* Test Date */}
+                  <div>
+                    <Label htmlFor="testDate">{isRTL ? 'تاريخ الفحص' : 'Test Date'}</Label>
+                    <Input
+                      id="testDate"
+                      name="testDate"
+                      type="date"
+                      value={labData.testDate}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  {/* Test Type */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor="testType">{isRTL ? 'نوع الفحص' : 'Test Type'}</Label>
+                    <Input
+                      id="testType"
+                      name="testType"
+                      type="text"
+                      value={labData.testType}
+                      onChange={handleChange}
+                      placeholder={isRTL ? 'أدخل نوع الفحص (مثل: فحص الدم، الأشعة السينية، الرنين المغناطيسي)' : 'Enter test type (e.g., Blood Test, X-Ray, MRI)'}
+                      required
+                    />
+                  </div>
+
+                  {/* Test Results */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor="testResults">{isRTL ? 'نتائج الفحص' : 'Test Results'}</Label>
+                    <Textarea
+                      id="testResults"
+                      name="testResults"
+                      rows={4}
+                      value={labData.testResults}
+                      onChange={(e) => handleChange(e)}
+                      placeholder={isRTL ? 'أدخل نتائج الفحص التفصيلية' : 'Enter detailed test results'}
+                      required
+                    />
+                  </div>
+
+                  {/* Doctor Notes */}
+                  <div className="md:col-span-2">
+                    <Label htmlFor="doctorNotes">{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</Label>
+                    <Textarea
+                      id="doctorNotes"
+                      name="doctorNotes"
+                      rows={3}
+                      value={labData.doctorNotes}
+                      onChange={(e) => handleChange(e)}
+                      placeholder={isRTL ? 'أدخل ملاحظات أو توصيات إضافية' : 'Enter additional notes or recommendations'}
+                    />
+                  </div>
+                </div>
+
+                {/* Submit button */}
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={isLoading || !selectedPatient}
+                    className="w-full sm:w-auto"
+                  >
+                    {isLoading
+                      ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
+                      : (isRTL ? 'حفظ نتائج المختبر' : 'Save Lab Results')
+                    }
+                  </Button>
                 </div>
               </form>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

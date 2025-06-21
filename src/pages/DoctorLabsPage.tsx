@@ -78,7 +78,7 @@ const DoctorLabsPage: React.FC = () => {
             result.patient_id.toString().includes(searchTerm) ||
             result.test_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
             result.patient_email.toLowerCase().includes(searchTerm.toLowerCase());
-        
+
         const matchesDate = !filterDate || result.test_date.includes(filterDate);
         const matchesType = !filterType || result.test_type.toLowerCase().includes(filterType.toLowerCase());
 
@@ -220,10 +220,10 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                 className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                             >
                                 <option value="">{isRTL ? 'جميع أنواع الفحوصات' : 'All Test Types'}</option>
-                                <option value="blood">{isRTL ? 'فحوصات الدم' : 'Blood Tests'}</option>
+                                {/* <option value="blood">{isRTL ? 'فحوصات الدم' : 'Blood Tests'}</option>
                                 <option value="urine">{isRTL ? 'فحوصات البول' : 'Urine Tests'}</option>
                                 <option value="x-ray">{isRTL ? 'الأشعة السينية' : 'X-Ray'}</option>
-                                <option value="mri">{isRTL ? 'الرنين المغناطيسي' : 'MRI'}</option>
+                                <option value="mri">{isRTL ? 'الرنين المغناطيسي' : 'MRI'}</option> */}
                             </select>
                         </div>
                         <div className="flex items-center justify-between">
@@ -240,19 +240,19 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
+                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                                         {isRTL ? 'المريض' : 'Patient'}
                                     </th>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
+                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                                         {isRTL ? 'نوع الفحص' : 'Test Type'}
                                     </th>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
+                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                                         {isRTL ? 'تاريخ الفحص' : 'Test Date'}
                                     </th>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
+                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                                         {isRTL ? 'فصيلة الدم' : 'Blood Type'}
                                     </th>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-right' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
+                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
                                         {isRTL ? 'الإجراءات' : 'Actions'}
                                     </th>
                                 </tr>
