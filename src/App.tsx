@@ -43,7 +43,7 @@ function App() {
     const initializeApp = async () => {
       try {
         // Create default admin and migrate existing users
-        await createDefaultAdmin();
+        // await createDefaultAdmin();
         // Comment this out after first run to avoid unnecessary API calls
         // await migrateExistingUsers();
       } catch (error) {
