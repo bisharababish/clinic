@@ -9,42 +9,9 @@
     <meta name="author" content="CodeFusion" />
     <meta property="og:title" content="Bethlehem Med Center" />
     <meta property="og:type" content="website" />
-    
-    <!-- SPA Routing Fallback Script -->
-    <script>
-      // Handle client-side routing for SPA
-      (function() {
-        // If this is a direct navigation to a route (not the home page)
-        if (window.location.pathname !== '/') {
-          // Store the intended path
-          sessionStorage.setItem('redirect-path', window.location.pathname + window.location.search);
-        }
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>
-    
-    <!-- React App Script -->
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Handle routing after React loads -->
-    <script>
-      window.addEventListener('load', function() {
-        // Check if we have a stored redirect path
-        const redirectPath = sessionStorage.getItem('redirect-path');
-        if (redirectPath) {
-          sessionStorage.removeItem('redirect-path');
-          // Let React Router handle the navigation
-          setTimeout(() => {
-            if (window.history && window.history.pushState) {
-              window.history.replaceState(null, '', redirectPath);
-              // Trigger a popstate event to let React Router know about the change
-              window.dispatchEvent(new PopStateEvent('popstate'));
-            }
-          }, 100);
-        }
-      });
-    </script>
   </body>
 </html>
