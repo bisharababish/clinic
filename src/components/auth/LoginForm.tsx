@@ -278,90 +278,81 @@ const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="space-y-2 text-center">
-        <h2 className="text-3xl font-bold tracking-tight">
-          {t("auth.welcomeBack") || "Welcome Back"}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {t("auth.enterCredentials2") || "Enter your credentials to continue"}
-        </p>
+    <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="w-full">
+        <h2 className={`text-2xl font-bold text-center ${isRTL ? 'text-right' : 'text-left'}`}>{t("auth.welcomeBack")}</h2>
+        <p className={`mt-2 text-center text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>{t("auth.enterCredentialsAccess")}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="space-y-2">
-          <Label htmlFor="email">{t("auth.email")}</Label>
-          <div className="relative">
-            <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 ${isRTL ? 'right-3 left-auto' : ''}`} />
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className={`pl-10 ${isRTL ? 'pr-10 pl-3 text-right' : ''}`}
-              autoComplete="email"
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">{t("auth.password")}</Label>
-            <button
-              type="button"
-              onClick={onSwitchToForgotPassword}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              {t("auth.forgotPassword")}
-            </button>
-          </div>
-          <div className="relative">
-            <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 ${isRTL ? 'right-3 left-auto' : ''}`} />
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className={`pl-10 ${isRTL ? 'pr-10 pl-3 text-right' : ''}`}
-              autoComplete="current-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 ${isRTL ? 'left-3 right-auto' : ''}`}
-            >
-              {showPassword ? (
-                <EyeOffIcon className="h-5 w-5" />
-              ) : (
-                <EyeIcon className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-        </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              <span className="ml-2">{t("auth.loggingIn")}...</span>
+      <div className="w-full mt-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">{t("common.email") || "Email"}</Label>
+            <div className="relative">
+              <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={isRTL ? 'pr-10' : 'pl-10'}
+                placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
+                required
+                disabled={isLoading}
+              />
             </div>
-          ) : (
-            t("auth.login")
-          )}
-        </Button>
-      </form>
+          </div>
 
-      <div className="text-center text-sm">
-        {t("auth.dontHaveAccount") || "Don't have an account?"}{" "}
-        <button
-          type="button"
-          onClick={onSwitchToRegister}
-          className="text-primary font-medium hover:underline"
-          disabled={isLoading}
-        >
-          {t("common.signup") || "Sign up"}
-        </button>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">{t("common.password") || "Password"}</Label>
+              <button
+                type="button"
+                onClick={onSwitchToForgotPassword}
+                className="text-xs text-primary hover:underline"
+                disabled={isLoading}
+              >
+                {t("common.forgotPassword") || "Forgot Password?"}
+              </button>
+            </div>
+            <div className="relative">
+              <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={isRTL ? 'pr-10 pl-10' : 'pl-10 pr-10'}
+                required
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 text-muted-foreground hover:text-foreground`}
+                disabled={isLoading}
+              >
+                {showPassword ? (
+                  <EyeOffIcon className="h-4 w-4" />
+                ) : (
+                  <EyeIcon className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? (t("common.loading") || "Loading...") : (t("common.login") || "Login")}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center text-sm">
+          {t("auth.noAccount")}{" "}
+          <button onClick={onSwitchToRegister} className="font-medium text-primary hover:underline">
+            {t("auth.signUp")}
+          </button>
+        </div>
       </div>
     </div>
   );
