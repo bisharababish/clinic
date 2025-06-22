@@ -133,6 +133,8 @@ export default defineConfig({
   // Define global constants for better SSR handling
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-    // Add any other environment variables you need
-  }
+    'global': 'globalThis',
+  },
+  // Ensure proper handling of environment variables
+  envPrefix: 'VITE_'
 })
