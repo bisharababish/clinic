@@ -15,9 +15,15 @@ export default defineConfig({
   preview: {
     port: 3000,
   },
+  // Add SSR configuration
+  ssr: {
+    noExternal: ['react-router-dom', '@radix-ui', 'lucide-react']
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    // Add target for better browser compatibility
+    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -53,14 +59,14 @@ export default defineConfig({
 
           // Split your application code
           // Admin Dashboard and its components
-          if (id.includes('AdminDashboard') || 
-              id.includes('pages/api/admin/') ||
-              id.includes('OverviewManagement') ||
-              id.includes('UsersManagement') ||
-              id.includes('ClinicManagement') ||
-              id.includes('DoctorManagement') ||
-              id.includes('AppointmentsManagement') ||
-              id.includes('PatientHealthManagement')) {
+          if (id.includes('AdminDashboard') ||
+            id.includes('pages/api/admin/') ||
+            id.includes('OverviewManagement') ||
+            id.includes('UsersManagement') ||
+            id.includes('ClinicManagement') ||
+            id.includes('DoctorManagement') ||
+            id.includes('AppointmentsManagement') ||
+            id.includes('PatientHealthManagement')) {
             return 'admin-dashboard';
           }
 
@@ -75,10 +81,10 @@ export default defineConfig({
           }
 
           // Auth related
-          if (id.includes('pages/Auth') || 
-              id.includes('LoginForm') || 
-              id.includes('RegisterForm') ||
-              id.includes('ForgotPasswordForm')) {
+          if (id.includes('pages/Auth') ||
+            id.includes('LoginForm') ||
+            id.includes('RegisterForm') ||
+            id.includes('ForgotPasswordForm')) {
             return 'auth';
           }
 
@@ -123,5 +129,10 @@ export default defineConfig({
     copyPublicDir: true,
   },
   base: '/',
-  publicDir: 'public'
+  publicDir: 'public',
+  // Define global constants for better SSR handling
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    // Add any other environment variables you need
+  }
 })
