@@ -89,7 +89,7 @@ export const createDefaultAdmin = async () => {
                     gender_user: 'unknown',
                     created_at: currentTimestamp,
                     updated_at: currentTimestamp,
-                    pdated_at: currentTimestamp // Keep this typo if it exists in your schema
+                    pdated_at: currentTimestamp
                 })
                 .select();
 

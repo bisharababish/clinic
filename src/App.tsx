@@ -6,7 +6,6 @@ import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
 import { getDefaultRouteForRole } from "./lib/rolePermissions";
-import { createDefaultAdmin, migrateExistingUsers } from "./lib/migrateUsers";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -91,10 +90,7 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Create default admin and migrate existing users
-        await createDefaultAdmin();
-        // Comment this out after first run to avoid unnecessary API calls
-        // await migrateExistingUsers();
+        // Initialization logic can go here if needed in the future
       } catch (error) {
         console.error('Error initializing app:', error);
         setInitError('Failed to initialize application. Please refresh the page.');
