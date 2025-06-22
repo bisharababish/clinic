@@ -53,14 +53,14 @@ export default defineConfig({
 
           // Split your application code
           // Admin Dashboard and its components
-          if (id.includes('AdminDashboard') ||
-            id.includes('pages/api/admin/') ||
-            id.includes('OverviewManagement') ||
-            id.includes('UsersManagement') ||
-            id.includes('ClinicManagement') ||
-            id.includes('DoctorManagement') ||
-            id.includes('AppointmentsManagement') ||
-            id.includes('PatientHealthManagement')) {
+          if (id.includes('AdminDashboard') || 
+              id.includes('pages/api/admin/') ||
+              id.includes('OverviewManagement') ||
+              id.includes('UsersManagement') ||
+              id.includes('ClinicManagement') ||
+              id.includes('DoctorManagement') ||
+              id.includes('AppointmentsManagement') ||
+              id.includes('PatientHealthManagement')) {
             return 'admin-dashboard';
           }
 
@@ -75,10 +75,10 @@ export default defineConfig({
           }
 
           // Auth related
-          if (id.includes('pages/Auth') ||
-            id.includes('LoginForm') ||
-            id.includes('RegisterForm') ||
-            id.includes('ForgotPasswordForm')) {
+          if (id.includes('pages/Auth') || 
+              id.includes('LoginForm') || 
+              id.includes('RegisterForm') ||
+              id.includes('ForgotPasswordForm')) {
             return 'auth';
           }
 
