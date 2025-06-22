@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 
 export type UserRole = 'admin' | 'doctor' | 'secretary' | 'patient' | 'x ray' | 'xray' | 'x-ray' | 'lab' | 'nurse';
@@ -56,31 +56,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
 
-    // Use refs to track component mount state and prevent memory leaks
-    const mountedRef = useRef(true);
-    const initializingRef = useRef(false);
-
     // Function to safely update user state and cache
-    const updateUserState = useCallback((userData: User | null) => {
-        if (!mountedRef.current) return;
-
-        try {
-            if (userData) {
-                localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
-            } else {
-                localStorage.removeItem('clinic_user_profile');
-            }
-            setUser(userData);
-        } catch (error) {
-            console.error('Error updating user state:', error);
+    const updateUserState = (userData: User | null) => {
+        if (userData) {
+            localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
+        } else {
+            localStorage.removeItem('clinic_user_profile');
         }
-    }, []);
+        setUser(userData);
+    };
 
     // Function to normalize role names for X-ray variations
-    const normalizeRole = useCallback((role: string): UserRole => {
-        if (!role) return 'patient';
-
-        const normalizedRole = role.toLowerCase().trim();
+    const normalizeRole = (role: string): UserRole => {
+        const normalizedRole = role?.toLowerCase()?.trim();
 
         // Handle X-ray role variations
         if (normalizedRole === 'xray' || normalizedRole === 'x-ray' || normalizedRole === 'x ray') {
@@ -90,12 +78,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Handle other roles
         const validRoles: UserRole[] = ['admin', 'doctor', 'secretary', 'patient', 'x ray', 'lab', 'nurse'];
         return validRoles.includes(normalizedRole as UserRole) ? normalizedRole as UserRole : 'patient';
-    }, []);
+    };
 
     // Function to fetch user data from database
-    const fetchUserData = useCallback(async (email: string): Promise<User | null> => {
-        if (!email || !mountedRef.current) return null;
-
+    const fetchUserData = async (email: string) => {
         try {
             const { data: userData, error: userError } = await supabase
                 .from('userinfo')
@@ -108,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 return null;
             }
 
-            if (userData && mountedRef.current) {
+            if (userData) {
                 const normalizedRole = normalizeRole(userData.user_roles || 'patient');
                 const fullName = userData.english_username_a || userData.user_email;
 
@@ -125,96 +111,79 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error("Error in fetchUserData:", error);
             return null;
         }
-    }, [normalizeRole]);
+    };
 
-    // Initialize auth state - Fixed to prevent useLayoutEffect issues
     useEffect(() => {
-        // Prevent multiple initializations
-        if (initializingRef.current || !mountedRef.current) return;
-
-        initializingRef.current = true;
+        let mounted = true;
 
         const initializeAuth = async () => {
             try {
                 console.log("[useAuth] Initializing authentication...");
+                // Check for active session
+                const { data: { session }, error } = await supabase.auth.getSession();
 
-                // Check if we're in browser environment
-                if (typeof window === 'undefined') {
-                    if (mountedRef.current) {
+                if (error) {
+                    console.error("[useAuth] Session error on init:", error);
+                    if (mounted) {
+                        updateUserState(null);
                         setIsLoading(false);
                         setIsInitialized(true);
                     }
                     return;
                 }
 
-                // Check for active session
-                const { data: { session }, error } = await supabase.auth.getSession();
-
-                if (!mountedRef.current) return;
-
-                if (error) {
-                    console.error("[useAuth] Session error on init:", error);
-                    updateUserState(null);
-                    setIsLoading(false);
-                    setIsInitialized(true);
-                    return;
-                }
-
-                if (session?.user?.email) {
+                if (session?.user) {
                     console.log("[useAuth] Session found on init, fetching user data for:", session.user.email);
-                    const userData = await fetchUserData(session.user.email);
-
-                    if (mountedRef.current) {
+                    const userData = await fetchUserData(session.user.email || '');
+                    if (mounted) {
                         console.log("[useAuth] User data fetched on init:", userData);
                         updateUserState(userData);
                     }
                 } else {
                     console.log("[useAuth] No session found on init.");
-                    updateUserState(null);
+                    if (mounted) {
+                        updateUserState(null);
+                    }
                 }
             } catch (error) {
                 console.error("[useAuth] Initialization error:", error);
-                if (mountedRef.current) {
+                if (mounted) {
                     updateUserState(null);
                 }
             } finally {
-                if (mountedRef.current) {
+                if (mounted) {
                     setIsLoading(false);
                     setIsInitialized(true);
-                    initializingRef.current = false;
-                    console.log("[useAuth] Auth initialization complete.");
+                    console.log("[useAuth] Auth initialization complete. isLoading:", false, "user:", user);
                 }
             }
         };
 
-        // Use a small delay to ensure component is fully mounted
-        const timeoutId = setTimeout(initializeAuth, 0);
+        initializeAuth();
 
         // Set up auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                if (!mountedRef.current || !isInitialized) return;
-
-                console.log("[useAuth] Auth state change event:", event, "session:", !!session);
+                if (!mounted) return;
+                console.log("[useAuth] Auth state change event:", event, "session:", session);
 
                 try {
-                    if (session?.user?.email) {
+                    if (session?.user) {
                         console.log("[useAuth] Auth state change - session user found, fetching data for:", session.user.email);
-                        const userData = await fetchUserData(session.user.email);
-
-                        if (mountedRef.current) {
+                        const userData = await fetchUserData(session.user.email || '');
+                        if (mounted) {
                             console.log("[useAuth] Auth state change - user data fetched:", userData);
                             updateUserState(userData);
                         }
                     } else {
                         console.log("[useAuth] Auth state change - no session user.");
-                        if (mountedRef.current) {
+                        if (mounted) {
                             updateUserState(null);
                         }
                     }
                 } catch (error) {
                     console.error("[useAuth] Auth state change error:", error);
-                    if (mountedRef.current) {
+                    if (mounted) {
                         updateUserState(null);
                     }
                 }
@@ -222,22 +191,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         );
 
         return () => {
-            clearTimeout(timeoutId);
+            mounted = false;
             subscription.unsubscribe();
-            initializingRef.current = false;
-        };
-    }, [fetchUserData, updateUserState, isInitialized]);
-
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            mountedRef.current = false;
         };
     }, []);
 
     const login = async (email: string, password: string): Promise<User> => {
-        if (!mountedRef.current) throw new Error('Component unmounted');
-
         setIsLoading(true);
 
         try {
@@ -271,14 +230,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 console.log('Admin user detected');
 
                 // Set special flag for admin session
-                try {
-                    sessionStorage.setItem('admin_login_success', 'true');
-                } catch (e) {
-                    console.warn('Could not set sessionStorage:', e);
-                }
+                sessionStorage.setItem('admin_login_success', 'true');
 
                 // Cache user profile for faster access
-                updateUserState(userData);
+                localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
+                setUser(userData);
+
                 return userData;
             }
 
@@ -333,29 +290,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     full_name: fullName
                 };
 
-                updateUserState(userObj);
+                // Cache user profile for faster access
+                localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
+                setUser(userObj);
+
                 return userObj;
             }
 
             // 4. User exists, return data
             console.log('Existing profile found, login successful');
-            updateUserState(userData);
+            // Cache user profile
+            localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
+            setUser(userData);
+
             return userData;
 
         } catch (error) {
+            setIsLoading(false);
             console.error('Login error:', error);
             throw error;
         } finally {
-            if (mountedRef.current) {
-                setIsLoading(false);
-            }
+            setIsLoading(false);
         }
     };
 
     // Modified to handle both the old and new field formats
     const signup = async (userData: SignupData) => {
-        if (!mountedRef.current) throw new Error('Component unmounted');
-
         setIsLoading(true);
 
         try {
@@ -455,7 +415,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     full_name: fullName
                 };
 
-                updateUserState(userObj);
+                // Cache user profile
+                localStorage.setItem('clinic_user_profile', JSON.stringify(userObj));
             }
 
             console.log('User profile created successfully during signup');
@@ -464,9 +425,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.error('Signup error:', error);
             throw error;
         } finally {
-            if (mountedRef.current) {
-                setIsLoading(false);
-            }
+            setIsLoading(false);
         }
     };
 
@@ -474,34 +433,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
             await supabase.auth.signOut();
             // Clear user data
-            try {
-                localStorage.removeItem('clinic_user_profile');
-                sessionStorage.removeItem('login_in_progress');
-                sessionStorage.removeItem('admin_login_success');
-            } catch (e) {
-                console.warn('Could not clear storage:', e);
-            }
-
-            if (mountedRef.current) {
-                setUser(null);
-            }
+            localStorage.removeItem('clinic_user_profile');
+            sessionStorage.removeItem('login_in_progress');
+            sessionStorage.removeItem('admin_login_success');
+            setUser(null);
         } catch (error) {
             console.error('Error logging out:', error);
             throw error;
         }
     };
-
-    // Don't render children until initialized to prevent useLayoutEffect issues
-    if (!isInitialized) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Initializing...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
