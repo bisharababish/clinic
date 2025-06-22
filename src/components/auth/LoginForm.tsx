@@ -288,65 +288,67 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="space-y-2">
-          <Label htmlFor="email">{t("common.email") || "Email"}</Label>
+          <Label htmlFor="email">{t("auth.email")}</Label>
           <div className="relative">
-            <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+            <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 ${isRTL ? 'right-3 left-auto' : ''}`} />
             <Input
               id="email"
               type="email"
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={isRTL ? 'pr-10' : 'pl-10'}
-              placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
               required
-              disabled={isLoading}
+              className={`pl-10 ${isRTL ? 'pr-10 pl-3 text-right' : ''}`}
+              autoComplete="email"
             />
           </div>
         </div>
-
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">{t("common.password") || "Password"}</Label>
+            <Label htmlFor="password">{t("auth.password")}</Label>
             <button
               type="button"
               onClick={onSwitchToForgotPassword}
-              className="text-xs text-primary hover:underline"
-              disabled={isLoading}
+              className="text-sm text-blue-600 hover:underline"
             >
-              {t("common.forgotPassword") || "Forgot Password?"}
+              {t("auth.forgotPassword")}
             </button>
           </div>
           <div className="relative">
-            <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+            <Lock className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 ${isRTL ? 'right-3 left-auto' : ''}`} />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={isRTL ? 'pr-10 pl-10' : 'pl-10 pr-10'}
               required
-              disabled={isLoading}
+              className={`pl-10 ${isRTL ? 'pr-10 pl-3 text-right' : ''}`}
+              autoComplete="current-password"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 text-muted-foreground hover:text-foreground`}
-              disabled={isLoading}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 ${isRTL ? 'left-3 right-auto' : ''}`}
             >
               {showPassword ? (
-                <EyeOffIcon className="h-4 w-4" />
+                <EyeOffIcon className="h-5 w-5" />
               ) : (
-                <EyeIcon className="h-4 w-4" />
+                <EyeIcon className="h-5 w-5" />
               )}
             </button>
           </div>
         </div>
-
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (t("common.loading") || "Loading...") : (t("common.login") || "Login")}
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <span className="ml-2">{t("auth.loggingIn")}...</span>
+            </div>
+          ) : (
+            t("auth.login")
+          )}
         </Button>
       </form>
 
