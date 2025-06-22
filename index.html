@@ -9,13 +9,6 @@
     <meta name="author" content="CodeFusion" />
     <meta property="og:title" content="Bethlehem Med Center" />
     <meta property="og:type" content="website" />
-    <script>
-      // Prevent useLayoutEffect errors by ensuring global availability
-      window.React = window.React || {};
-      if (typeof window !== 'undefined' && !window.React.useLayoutEffect) {
-        window.React.useLayoutEffect = function() {};
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>

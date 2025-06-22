@@ -15,15 +15,9 @@ export default defineConfig({
   preview: {
     port: 3000,
   },
-  // Add SSR configuration
-  ssr: {
-    noExternal: ['react-router-dom', '@radix-ui', 'lucide-react']
-  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    // Add target for better browser compatibility
-    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -129,12 +123,5 @@ export default defineConfig({
     copyPublicDir: true,
   },
   base: '/',
-  publicDir: 'public',
-  // Define global constants for better SSR handling
-  define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-    'global': 'globalThis',
-  },
-  // Ensure proper handling of environment variables
-  envPrefix: 'VITE_'
+  publicDir: 'public'
 })
