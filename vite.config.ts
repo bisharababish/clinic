@@ -22,6 +22,17 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            // Split largest dependencies into their own chunks
+            if (id.includes('recharts')) {
+              return 'vendor-recharts';
+            }
+            if (id.includes('framer-motion')) {
+              return 'vendor-animation';
+            }
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            // Bundle the rest of the node_modules into a core vendor chunk
             return 'vendor';
           }
         },
