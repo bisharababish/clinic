@@ -4,6 +4,9 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -18,15 +21,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks(id) {
           // Split node_modules into specific vendor chunks
           if (id.includes('node_modules')) {
-            // React core
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
+
             // Router
             if (id.includes('react-router')) {
               return 'router-vendor';
@@ -53,14 +54,14 @@ export default defineConfig({
 
           // Split your application code
           // Admin Dashboard and its components
-          if (id.includes('AdminDashboard') || 
-              id.includes('pages/api/admin/') ||
-              id.includes('OverviewManagement') ||
-              id.includes('UsersManagement') ||
-              id.includes('ClinicManagement') ||
-              id.includes('DoctorManagement') ||
-              id.includes('AppointmentsManagement') ||
-              id.includes('PatientHealthManagement')) {
+          if (id.includes('AdminDashboard') ||
+            id.includes('pages/api/admin/') ||
+            id.includes('OverviewManagement') ||
+            id.includes('UsersManagement') ||
+            id.includes('ClinicManagement') ||
+            id.includes('DoctorManagement') ||
+            id.includes('AppointmentsManagement') ||
+            id.includes('PatientHealthManagement')) {
             return 'admin-dashboard';
           }
 
@@ -75,10 +76,10 @@ export default defineConfig({
           }
 
           // Auth related
-          if (id.includes('pages/Auth') || 
-              id.includes('LoginForm') || 
-              id.includes('RegisterForm') ||
-              id.includes('ForgotPasswordForm')) {
+          if (id.includes('pages/Auth') ||
+            id.includes('LoginForm') ||
+            id.includes('RegisterForm') ||
+            id.includes('ForgotPasswordForm')) {
             return 'auth';
           }
 
