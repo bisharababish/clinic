@@ -9,18 +9,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  define: {
-    // Add this to handle SSR issues
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-  },
-  ssr: {
-    // Add this section to handle SSR properly
-    noExternal: ['react', 'react-dom'],
-  },
-  optimizeDeps: {
-    // Force pre-bundle these dependencies
-    include: ['react', 'react-dom', 'react/jsx-runtime'],
-  },
   server: {
     port: 3000,
   },
