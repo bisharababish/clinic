@@ -158,7 +158,20 @@ const AdminDashboard = () => {
             return 'overview';
         }
     };
+    // Add this useEffect in AdminDashboard.tsx after the other useEffects:
+    useEffect(() => {
+        const handleUsersUpdate = (event: CustomEvent) => {
+            console.log('AdminDashboard: Users updated from global subscription:', event.detail);
+            // Refresh users data
+            loadUsers();
+        };
 
+        window.addEventListener('users-updated', handleUsersUpdate);
+
+        return () => {
+            window.removeEventListener('users-updated', handleUsersUpdate);
+        };
+    }, []);
     // Check admin status and access control
     useEffect(() => {
         const initializeAdminDashboard = async () => {
@@ -256,7 +269,7 @@ const AdminDashboard = () => {
         }
     }, [searchQuery, users]);
 
-    // Data loading functions
+    // Data loading functions// In AdminDashboard.tsx, replace the loadUsers function with this version:
     const loadUsers = async () => {
         console.log(t('admin.loadingUsers') || 'Loading users...');
         try {
@@ -314,67 +327,8 @@ const AdminDashboard = () => {
                 setFilteredUsers(filtered);
             }
 
-            // Set up real-time subscription
-            const subscription = supabase
-                .channel('userinfo-changes')
-                .on('postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'userinfo'
-                    },
-                    (payload) => {
-                        console.log('Real-time INSERT event received:', payload);
-                        const newUser = payload.new as UserInfo;
-                        setUsers(prev => [newUser, ...prev]);
+            // REMOVE ALL SUBSCRIPTION CODE FROM HERE - use global subscriptions instead
 
-                        if (searchQuery.trim() === '' ||
-                            (newUser.user_email && newUser.user_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (newUser.english_username_a && newUser.english_username_a.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (newUser.english_username_d && newUser.english_username_d.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (newUser.user_roles && newUser.user_roles.toLowerCase().includes(searchQuery.toLowerCase()))) {
-                            setFilteredUsers(prev => [newUser, ...prev]);
-                        }
-                    })
-                .on('postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'userinfo'
-                    },
-                    (payload) => {
-                        console.log('Real-time UPDATE event received:', payload);
-                        const updatedUser = payload.new as UserInfo;
-                        setUsers(prev => prev.map(user =>
-                            user.userid === updatedUser.userid ? updatedUser : user
-                        ));
-                        setFilteredUsers(prev => prev.map(user =>
-                            user.userid === updatedUser.userid ? updatedUser : user
-                        ));
-                    })
-                .on('postgres_changes',
-                    {
-                        event: 'DELETE',
-                        schema: 'public',
-                        table: 'userinfo'
-                    },
-                    (payload) => {
-                        console.log('Real-time DELETE event received:', payload);
-                        if (payload.old && payload.old.userid) {
-                            const deletedUserId = payload.old.userid;
-                            console.log(`Removing user ${deletedUserId} from state due to real-time DELETE`);
-                            setUsers(prev => prev.filter(user => user.userid !== deletedUserId));
-                            setFilteredUsers(prev => prev.filter(user => user.userid !== deletedUserId));
-                        }
-                    })
-                .subscribe((status) => {
-                    console.log('Subscription status:', status);
-                });
-
-            return () => {
-                console.log('Cleaning up subscription');
-                supabase.removeChannel(subscription);
-            };
         } catch (error) {
             console.error('Error loading users:', error);
             toast({

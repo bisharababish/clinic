@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
 import { getDefaultRouteForRole } from "./lib/rolePermissions";
+import { supabase } from "./lib/supabase";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -24,7 +25,36 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 // ✅ FIXED: Import the new doctor pages
 const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
+let globalSubscriptions: { [key: string]: ReturnType<typeof supabase.channel> | null } = {};
 
+
+const initializeGlobalSubscriptions = () => {
+  Object.values(globalSubscriptions).forEach(sub => {
+    if (sub) sub.unsubscribe();
+  });
+  globalSubscriptions = {};
+
+  console.log("🔄 Initializing global subscriptions...");
+
+  globalSubscriptions.users = supabase
+    .channel('global-users-changes')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'userinfo' },
+      (payload) => {
+        console.log('Global users change:', payload);
+        window.dispatchEvent(new CustomEvent('users-updated', { detail: payload }));
+      }
+    )
+    .subscribe();
+};
+
+const cleanupGlobalSubscriptions = () => {
+  Object.values(globalSubscriptions).forEach(sub => {
+    if (sub) sub.unsubscribe();
+  });
+  globalSubscriptions = {};
+};
 // Loading component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -36,33 +66,16 @@ const PageLoader = () => (
 );
 
 // Home Route with Role-Based Redirect
+// Home Route with Role-Based Redirect
 function HomeRoute() {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/auth', { replace: true });
-      return;
-    }
-
-    const userRole = user.role?.toLowerCase();
-    const defaultRoute = getDefaultRouteForRole(userRole);
-
-    // If the user is on the root path and their default route is not root, redirect them.
-    // This prevents redirect loops if the default route is '/' and the user is already there.
-    if (location.pathname === '/' && defaultRoute !== '/') {
-      console.log(`User ${userRole} at home, redirecting to: ${defaultRoute}`);
-      navigate(defaultRoute, { replace: true });
-      return;
-    }
-
-  }, [user, navigate]);
-
+  // If no user, don't render anything (ProtectedRoute will handle redirect)
   if (!user) {
     return null;
   }
 
+  // Just render the home page - no redirects here
   return (
     <MainLayout>
       <Index />
@@ -90,7 +103,20 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Initialization logic can go here if needed in the future
+        // Initialize global subscriptions
+        initializeGlobalSubscriptions();
+
+        // Add a timeout to prevent infinite loading
+        setTimeout(() => {
+          if (isInitializing) {
+            console.log("App initialization timeout, proceeding anyway");
+            setIsInitializing(false);
+          }
+        }, 3000); // 3 second max wait
+
+        // Your existing initialization logic
+        await new Promise(resolve => setTimeout(resolve, 100));
+
       } catch (error) {
         console.error('Error initializing app:', error);
         setInitError('Failed to initialize application. Please refresh the page.');
@@ -100,6 +126,11 @@ function App() {
     };
 
     initializeApp();
+
+    // Cleanup on unmount
+    return () => {
+      cleanupGlobalSubscriptions();
+    };
   }, []);
 
   if (isInitializing) {

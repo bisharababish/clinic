@@ -119,8 +119,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const initializeAuth = async () => {
             try {
                 console.log("[useAuth] Initializing authentication...");
-                // Check for active session
-                const { data: { session }, error } = await supabase.auth.getSession();
+
+                // Set a timeout for initialization
+                const timeoutPromise = new Promise<never>((_, reject) => {
+                    setTimeout(() => reject(new Error('Auth initialization timeout')), 5000);
+                });
+
+                const sessionPromise = supabase.auth.getSession();
+
+                const result = await Promise.race([sessionPromise, timeoutPromise]);
+                const { data: { session }, error } = result;
 
                 if (error) {
                     console.error("[useAuth] Session error on init:", error);
@@ -134,10 +142,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
                 if (session?.user) {
                     console.log("[useAuth] Session found on init, fetching user data for:", session.user.email);
-                    const userData = await fetchUserData(session.user.email || '');
-                    if (mounted) {
-                        console.log("[useAuth] User data fetched on init:", userData);
-                        updateUserState(userData);
+
+                    try {
+                        const userData = await fetchUserData(session.user.email || '');
+                        if (mounted) {
+                            console.log("[useAuth] User data fetched on init:", userData);
+                            updateUserState(userData);
+                        }
+                    } catch (fetchError) {
+                        console.error("[useAuth] Error fetching user data on init:", fetchError);
+                        if (mounted) {
+                            // Create fallback user if fetch fails
+                            const fallbackUser: User = {
+                                id: session.user.id,
+                                email: session.user.email || '',
+                                name: session.user.email?.split('@')[0] || 'User',
+                                role: 'patient',
+                                full_name: session.user.email || ''
+                            };
+                            updateUserState(fallbackUser);
+                        }
                     }
                 } else {
                     console.log("[useAuth] No session found on init.");
@@ -154,7 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 if (mounted) {
                     setIsLoading(false);
                     setIsInitialized(true);
-                    console.log("[useAuth] Auth initialization complete. isLoading:", false, "user:", user);
+                    console.log("[useAuth] Auth initialization complete.");
                 }
             }
         };
@@ -165,7 +189,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 if (!mounted) return;
-                console.log("[useAuth] Auth state change event:", event, "session:", session);
+                console.log("[useAuth] Auth state change event:", event);
+
+                // Only handle auth changes after initial load
+                if (!isInitialized) return;
 
                 try {
                     if (session?.user) {
@@ -194,7 +221,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             mounted = false;
             subscription.unsubscribe();
         };
-    }, []);
+    }, [isInitialized]);
 
     const login = async (email: string, password: string): Promise<User> => {
         setIsLoading(true);

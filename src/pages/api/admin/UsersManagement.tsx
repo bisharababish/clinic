@@ -74,10 +74,23 @@ const UsersManagement = () => {
     });
 
     // Load users on mount
+    // Replace the subscription useEffect in UsersManagement with this:
+    useEffect(() => {
+        const handleUsersUpdate = (event: CustomEvent) => {
+            console.log('Users updated from global subscription:', event.detail);
+            // Refresh your users data here
+            loadUsers();
+        };
+
+        window.addEventListener('users-updated', handleUsersUpdate);
+
+        return () => {
+            window.removeEventListener('users-updated', handleUsersUpdate);
+        };
+    }, []);
     useEffect(() => {
         loadUsers();
     }, []);
-
     // Handle search filtering
     useEffect(() => {
         if (searchQuery.trim() === '') {
@@ -96,6 +109,7 @@ const UsersManagement = () => {
         }
     }, [searchQuery, users]);
 
+    // Load users from database
     // Load users from database
     const loadUsers = async () => {
         console.log('Loading users with forced refresh...');
@@ -121,7 +135,6 @@ const UsersManagement = () => {
                 } else {
                     error = result.error;
                     console.warn(`Fetch attempt ${attempt} failed:`, error);
-                    // Wait a bit before retrying
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
             }
@@ -137,8 +150,6 @@ const UsersManagement = () => {
             }
 
             console.log(`Users loaded: ${data.length}`);
-
-            // Replace entire state with fresh data
             setUsers(data);
 
             // Apply search filter if exists
@@ -157,71 +168,8 @@ const UsersManagement = () => {
                 setFilteredUsers(filtered);
             }
 
-            // Set up real-time subscription
-            const subscription = supabase
-                .channel('userinfo-changes')
-                .on('postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'userinfo'
-                    },
-                    (payload) => {
-                        console.log('Real-time INSERT event received:', payload);
-                        const newUser = payload.new as UserInfo;
-                        setUsers(prev => [newUser, ...prev]);
+            // REMOVED ALL SUBSCRIPTION CODE - now handled by global subscriptions
 
-                        // Apply search filter for filtered users
-                        if (searchQuery.trim() === '' ||
-                            (newUser.user_email && newUser.user_email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (newUser.english_username_a && newUser.english_username_a.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (newUser.english_username_d && newUser.english_username_d.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (newUser.arabic_username_a && newUser.arabic_username_a.includes(searchQuery)) ||
-                            (newUser.arabic_username_d && newUser.arabic_username_d.includes(searchQuery)) ||
-                            (newUser.user_roles && newUser.user_roles.toLowerCase().includes(searchQuery.toLowerCase()))) {
-                            setFilteredUsers(prev => [newUser, ...prev]);
-                        }
-                    })
-                .on('postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'userinfo'
-                    },
-                    (payload) => {
-                        console.log('Real-time UPDATE event received:', payload);
-                        const updatedUser = payload.new as UserInfo;
-                        setUsers(prev => prev.map(user =>
-                            user.userid === updatedUser.userid ? updatedUser : user
-                        ));
-                        setFilteredUsers(prev => prev.map(user =>
-                            user.userid === updatedUser.userid ? updatedUser : user
-                        ));
-                    })
-                .on('postgres_changes',
-                    {
-                        event: 'DELETE',
-                        schema: 'public',
-                        table: 'userinfo'
-                    },
-                    (payload) => {
-                        console.log('Real-time DELETE event received:', payload);
-                        if (payload.old && payload.old.userid) {
-                            const deletedUserId = payload.old.userid;
-                            console.log(`Removing user ${deletedUserId} from state due to real-time DELETE`);
-                            setUsers(prev => prev.filter(user => user.userid !== deletedUserId));
-                            setFilteredUsers(prev => prev.filter(user => user.userid !== deletedUserId));
-                        }
-                    })
-                .subscribe((status) => {
-                    console.log('Subscription status:', status);
-                });
-
-            // Return cleanup function
-            return () => {
-                console.log('Cleaning up subscription');
-                supabase.removeChannel(subscription);
-            };
         } catch (error) {
             console.error('Error loading users:', error);
             toast({
@@ -1014,7 +962,7 @@ const UsersManagement = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="gender_user">{t('auth.gender')}</Label>
+                                    <Label>{t('auth.gender')}</Label>  {/* Remove htmlFor since Select doesn't use id */}
                                     <Select
                                         value={userFormData.gender_user}
                                         onValueChange={handleGenderChange}
@@ -1046,7 +994,7 @@ const UsersManagement = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="user_roles">{t('usersManagement.role')}</Label>
+                                <Label>{t('usersManagement.role')}</Label>  {/* Remove htmlFor="user_roles" */}
                                 <Select
                                     value={userFormData.user_roles}
                                     onValueChange={handleUserRoleChange}
