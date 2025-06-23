@@ -1,9 +1,8 @@
 // src/components/contexts/LanguageContext.tsx
 import React, { createContext, useState, useCallback, ReactNode } from 'react';
-import { useEffect } from 'react';
-
 
 import { useTranslation } from 'react-i18next';
+import useIsomorphicLayoutEffect from '../../../src/hooks/useIsomorphicLayoutEffect';
 
 
 export type Language = 'en' | 'ar';
@@ -50,7 +49,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     }, [language, setLanguage]);
 
     // Initialize language from localStorage or browser language
-    useEffect(() => {
+    useIsomorphicLayoutEffect(() => {
         const savedLanguage = localStorage.getItem('language');
         if (savedLanguage === 'en' || savedLanguage === 'ar') {
             setLanguage(savedLanguage as Language);
@@ -58,7 +57,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
             const browserLanguage = navigator.language.startsWith('ar') ? 'ar' : 'en';
             setLanguage(browserLanguage as Language);
         }
-    }, []);
+    }, [setLanguage]);
     return (
         <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, isRTL }}>
             {children}
