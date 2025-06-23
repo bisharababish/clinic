@@ -9,6 +9,10 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Fix for framer-motion and other libraries that check for DOM
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+  },
   server: {
     port: 3000,
   },
@@ -19,6 +23,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     rollupOptions: {
+      external: [],
       output: {
         manualChunks(id) {
           // Split node_modules into specific vendor chunks
@@ -43,9 +48,9 @@ export default defineConfig({
             if (id.includes('i18next') || id.includes('react-i18next')) {
               return 'i18n-vendor';
             }
-            // Animation libraries
+            // Animation libraries - SEPARATE framer-motion
             if (id.includes('framer-motion')) {
-              return 'animation-vendor';
+              return 'framer-motion-vendor';
             }
             // Other vendor libraries
             return 'vendor';
@@ -121,6 +126,14 @@ export default defineConfig({
     // Increase chunk size warning limit since we're optimizing
     chunkSizeWarningLimit: 1000,
     copyPublicDir: true,
+    // Add this to ensure proper environment handling
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+        drop_debugger: true,
+      },
+    },
   },
   base: '/',
   publicDir: 'public'
