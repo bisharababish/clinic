@@ -1,3 +1,11 @@
+if (typeof window === "undefined") {
+    // Polyfill useLayoutEffect for SSR
+    globalThis.useLayoutEffect = function (effect, deps) {
+        // No-op during SSR
+        return;
+    };
+}
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
