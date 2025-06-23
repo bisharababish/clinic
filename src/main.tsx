@@ -1,8 +1,3 @@
-// Replace the current polyfill with this simpler one:
-if (typeof window === "undefined") {
-    globalThis.useLayoutEffect = function () { };
-}
-
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
