@@ -1,9 +1,13 @@
+// Add this at the very top of your main.tsx, before any imports
 if (typeof window === "undefined") {
-    // Polyfill useLayoutEffect for SSR
-    globalThis.useLayoutEffect = function (effect, deps) {
-        // No-op during SSR
-        return;
-    };
+    // More comprehensive polyfill for SSR
+    const { useEffect } = await import('react');
+    const React = await import('react');
+    globalThis.React = React;
+    globalThis.React.useLayoutEffect = useEffect;
+
+    // Also patch it on the global object
+    globalThis.useLayoutEffect = useEffect;
 }
 
 import React from "react";
