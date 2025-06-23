@@ -6,7 +6,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { Menu, X, Lock, Key } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ThemeContext, ThemeContextType } from '../../components/contexts/ThemeContext';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -20,7 +19,6 @@ export function Header() {
     const [effectiveRole, setEffectiveRole] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-    const { theme, toggleTheme } = useContext<ThemeContextType>(ThemeContext);
     const { isRTL } = useContext(LanguageContext);
     const { t } = useTranslation();
 
