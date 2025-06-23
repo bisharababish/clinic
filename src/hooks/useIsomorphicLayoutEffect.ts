@@ -1,16 +1,14 @@
-// hooks/useIsomorphicLayoutEffect.js
+// hooks/useIsomorphicLayoutEffect.ts
 import { useEffect, useLayoutEffect } from "react";
 
-// Always use useEffect during SSR/static export to avoid React warnings
-const isDOM = typeof window !== "undefined" && typeof document !== "undefined";
+// Check if we're in a browser environment
+const canUseDOM = !!(
+    typeof window !== "undefined" &&
+    typeof window.document !== "undefined" &&
+    typeof window.document.createElement !== "undefined"
+);
 
-const useIsomorphicLayoutEffect = isDOM ? useLayoutEffect : useEffect;
-
-if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
-    console.log(
-        `[useIsomorphicLayoutEffect] Using: ${isDOM ? "useLayoutEffect" : "useEffect"}`
-    );
-}
+// Use useLayoutEffect only in browser, useEffect on server/SSR
+const useIsomorphicLayoutEffect = canUseDOM ? useLayoutEffect : useEffect;
 
 export default useIsomorphicLayoutEffect;
