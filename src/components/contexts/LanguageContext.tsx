@@ -1,5 +1,6 @@
 // src/components/contexts/LanguageContext.tsx
-import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useState, useCallback, ReactNode } from 'react';
+
 import { useTranslation } from 'react-i18next';
 import useIsomorphicLayoutEffect from '../../../src/hooks/useIsomorphicLayoutEffect';
 
