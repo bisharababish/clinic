@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { Menu, X, Lock, Key } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+// import { AnimatePresence, motion } from 'framer-motion';
 import { LanguageContext } from '../contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -506,200 +506,190 @@ export function Header() {
             )}
 
             {/* Mobile Menu Overlay */}
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <>
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-                            onClick={closeMobileMenu}
-                            data-mobile-menu
-                        />
+            {isMobileMenuOpen && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+                        onClick={closeMobileMenu}
+                        data-mobile-menu
+                    />
 
-                        {/* Mobile Menu */}
-                        <motion.div
-                            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                            transition={{ duration: 0.2, ease: "easeOut" }}
-                            className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-xl lg:hidden z-50"
-                            dir={isRTL ? 'rtl' : 'ltr'}
-                            data-mobile-menu
-                        >
-                            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                                <nav className="flex flex-col py-4 space-y-1">
-                                    {/* Show restricted access message for lab and x-ray users */}
-                                    {(isLab || isXRay) && (
-                                        <div className="px-3 py-2 text-xs text-gray-600 bg-gray-50 rounded-md border mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${(effectiveRole)}`}></div>
-                                                <span>
-                                                    Restricted Access: {isLab ? (t('navbar.labs') || 'Labs') : (t('navbar.xray') || 'X-Ray')} only
-                                                </span>
-                                            </div>
+                    {/* Mobile Menu */}
+                    <div
+                        className="absolute top-full left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-xl lg:hidden z-50"
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        data-mobile-menu
+                    >
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                            <nav className="flex flex-col py-4 space-y-1">
+                                {/* Show restricted access message for lab and x-ray users */}
+                                {(isLab || isXRay) && (
+                                    <div className="px-3 py-2 text-xs text-gray-600 bg-gray-50 rounded-md border mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${(effectiveRole)}`}></div>
+                                            <span>
+                                                Restricted Access: {isLab ? (t('navbar.labs') || 'Labs') : (t('navbar.xray') || 'X-Ray')} only
+                                            </span>
                                         </div>
-                                    )}
+                                    </div>
+                                )}
 
-                                    {canViewHome && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.home') || 'Home'}
-                                            </Link>
-                                        </Button>
-                                    )}
-
-                                    {canViewClinics && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/clinics"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/clinics');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.clinics') || 'Clinics'}
-                                            </Link>
-                                        </Button>
-                                    )}
-
-                                    {canViewAboutUs && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/about"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/about');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.aboutUs') || 'About Us'}
-                                            </Link>
-                                        </Button>
-                                    )}
-
-                                    {/* Show regular labs/xray only for non-doctor roles in mobile */}
-                                    {/* With this fixed version: */}
-                                    {canViewLabs && !isDoctor && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/labs"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/labs');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.labs') || 'Labs'}
-                                            </Link>
-                                        </Button>
-                                    )}
-
-                                    {canViewXray && !isDoctor && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/xray"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/xray');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.xray') || 'X-Ray'}
-                                            </Link>
-                                        </Button>
-                                    )}
-
-                                    {/* Doctor-specific navigation for mobile */}
-                                    {canViewDoctorLabs && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/doctor/labs"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/doctor/labs');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.doctorLabs') || 'Lab Results'}
-                                            </Link>
-                                        </Button>
-                                    )}
-
-                                    {canViewDoctorXray && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/doctor/xray"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/doctor/xray');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.doctorXRay') || 'X-Ray Images'}
-                                            </Link>
-                                        </Button>
-                                    )}
-
-                                    {canViewAdmin && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
-                                            <Link
-                                                to="/admin"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/admin');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {getDashboardText(effectiveRole || '')}
-                                            </Link>
-                                        </Button>
-                                    )}
-                                    {/*  Add Password Change Button to Mobile Menu */}
-                                    {isAuthenticated && canChangePassword && (
-                                        <Button
-                                            variant="ghost"
-                                            onClick={() => {
-                                                setIsPasswordModalOpen(true);
-                                                setIsMobileMenuOpen(false); // Close mobile menu when opening modal
+                                {canViewHome && (
+                                    <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Link
+                                            to="/"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleMobileNavigation('/');
                                             }}
-                                            className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}
+                                            className="font-medium"
                                         >
-                                            <div className="flex items-center gap-2">
-                                                <Key className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                <span className="font-medium">
-                                                    {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
-                                                </span>
-                                            </div>
-                                        </Button>
-                                    )}
-                                    {/* Add Logout Button to Mobile Menu */}
-                                    {isAuthenticated && (
-                                        <Button
-                                            variant="ghost"
-                                            onClick={handleLogout}
-                                            className={`${isRTL ? 'text-right' : 'text-left'} justify-start text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200`}
+                                            {t('navbar.home') || 'Home'}
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {canViewClinics && (
+                                    <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Link
+                                            to="/clinics"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleMobileNavigation('/clinics');
+                                            }}
+                                            className="font-medium"
                                         >
-                                            <span className="font-medium">{t('common.logout') || 'Logout'}</span>
-                                        </Button>
-                                    )}
-                                </nav>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-        </header>
+                                            {t('navbar.clinics') || 'Clinics'}
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {canViewAboutUs && (
+                                    <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Link
+                                            to="/about"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleMobileNavigation('/about');
+                                            }}
+                                            className="font-medium"
+                                        >
+                                            {t('navbar.aboutUs') || 'About Us'}
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {/* Show regular labs/xray only for non-doctor roles in mobile */}
+                                {/* With this fixed version: */}
+                                {canViewLabs && !isDoctor && (
+                                    <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Link
+                                            to="/labs"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleMobileNavigation('/labs');
+                                            }}
+                                            className="font-medium"
+                                        >
+                                            {t('navbar.labs') || 'Labs'}
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {canViewXray && !isDoctor && (
+                                    <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Link
+                                            to="/xray"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleMobileNavigation('/xray');
+                                            }}
+                                            className="font-medium"
+                                        >
+                                            {t('navbar.xray') || 'X-Ray'}
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {/* Doctor-specific navigation for mobile */}
+                                {canViewDoctorLabs && (
+                                    <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Link
+                                            to="/doctor/labs"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleMobileNavigation('/doctor/labs');
+                                            }}
+                                            className="font-medium"
+                                        >
+                                            {t('navbar.doctorLabs') || 'Lab Results'}
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {canViewDoctorXray && (
+                                    <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Link
+                                            to="/doctor/xray"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleMobileNavigation('/doctor/xray');
+                                            }}
+                                            className="font-medium"
+                                        >
+                                            {t('navbar.doctorXRay') || 'X-Ray Images'}
+                                        </Link>
+                                    </Button>
+                                )}
+
+                                {canViewAdmin && (
+                                    <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
+                                        <Link
+                                            to="/admin"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handleMobileNavigation('/admin');
+                                            }}
+                                            className="font-medium"
+                                        >
+                                            {getDashboardText(effectiveRole || '')}
+                                        </Link>
+                                    </Button>
+                                )}
+                                {/*  Add Password Change Button to Mobile Menu */}
+                                {isAuthenticated && canChangePassword && (
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => {
+                                            setIsPasswordModalOpen(true);
+                                            setIsMobileMenuOpen(false); // Close mobile menu when opening modal
+                                        }}
+                                        className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <Key className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                            <span className="font-medium">
+                                                {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                                            </span>
+                                        </div>
+                                    </Button>
+                                )}
+                                {/* Add Logout Button to Mobile Menu */}
+                                {isAuthenticated && (
+                                    <Button
+                                        variant="ghost"
+                                        onClick={handleLogout}
+                                        className={`${isRTL ? 'text-right' : 'text-left'} justify-start text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200`}
+                                    >
+                                        <span className="font-medium">{t('common.logout') || 'Logout'}</span>
+                                    </Button>
+                                )}
+                            </nav>
+                        </div>
+                    </div>
+                </>
+            )}
+        </header >
     );
 }
