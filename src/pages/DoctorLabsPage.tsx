@@ -4,6 +4,7 @@ import { Search, FileText, Calendar, User, Filter, Download, Eye, AlertCircle } 
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+import { FileUploadService } from '../lib/fileUploadService';
 
 // Type definitions (updated to match your database)
 interface LabResult {
@@ -33,6 +34,9 @@ const DoctorLabsPage: React.FC = () => {
     const [selectedTest, setSelectedTest] = useState<LabResult | null>(null);
     const [filterDate, setFilterDate] = useState<string>('');
     const [filterType, setFilterType] = useState<string>('');
+    const [attachments, setAttachments] = useState<any[]>([]);
+    const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+    const [attachmentsError, setAttachmentsError] = useState<string | null>(null);
 
     // Fetch lab results from database
     const fetchLabResults = async () => {
@@ -85,8 +89,36 @@ const DoctorLabsPage: React.FC = () => {
         return matchesSearch && matchesDate && matchesType;
     });
 
-    const handleViewDetails = (result: LabResult): void => {
+    const handleViewDetails = async (result: LabResult) => {
         setSelectedTest(result);
+        setAttachments([]);
+        setAttachmentsLoading(true);
+        setAttachmentsError(null);
+        console.log('Opening modal for lab_result_id:', result.id);
+        try {
+            let data = await FileUploadService.getLabAttachments(result.id);
+            console.log('Fetched attachments:', data);
+            // Fallback: If no attachments in DB, list from storage
+            if (!data || data.length === 0) {
+                const { data: storageFiles, error: storageError } = await supabase.storage.from('lab-attachments').list(`${result.id}/`);
+                if (storageError) {
+                    setAttachmentsError('Failed to load attachments from storage');
+                } else if (storageFiles && storageFiles.length > 0) {
+                    // Map storage files to attachment-like objects
+                    data = storageFiles.filter(f => f.metadata && f.metadata.mimetype && f.metadata.mimetype.startsWith('image/')).map(f => ({
+                        id: f.id || f.name,
+                        file_name: f.name,
+                        file_path: `${result.id}/${f.name}`,
+                        mime_type: f.metadata.mimetype || 'image/*',
+                    }));
+                }
+            }
+            setAttachments(data);
+        } catch (err) {
+            setAttachmentsError('Failed to load attachments');
+        } finally {
+            setAttachmentsLoading(false);
+        }
     };
 
     const handleDownloadReport = (result: LabResult): void => {
@@ -123,6 +155,24 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
 
     const handleRefresh = (): void => {
         fetchLabResults();
+    };
+
+    // AttachmentImage helper component
+    const AttachmentImage: React.FC<{ filePath: string; fileName: string }> = ({ filePath, fileName }) => {
+        const [url, setUrl] = useState<string | null>(null);
+        useEffect(() => {
+            let isMounted = true;
+            FileUploadService.getFileUrl(filePath).then((signedUrl) => {
+                if (isMounted) setUrl(signedUrl);
+            });
+            return () => { isMounted = false; };
+        }, [filePath]);
+        if (!url) return <div>Loading image...</div>;
+        return (
+            <a href={url} target="_blank" rel="noopener noreferrer">
+                <img src={url} alt={fileName} className="max-w-xs max-h-48 rounded shadow" />
+            </a>
+        );
     };
 
     if (loading) {
@@ -393,6 +443,38 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                     </div>
                                 </div>
                             )}
+
+                            <div className="mb-6">
+                                <h3 className="font-medium text-gray-900 mb-2">
+                                    {isRTL ? 'المرفقات' : 'Attachments'}
+                                </h3>
+                                {attachmentsLoading && <div>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div>}
+                                {attachmentsError && <div className="text-red-500">{attachmentsError}</div>}
+                                {attachments.length === 0 && !attachmentsLoading && (
+                                    <div className="text-gray-500">{isRTL ? 'لا توجد مرفقات' : 'No attachments'}</div>
+                                )}
+                                <div className="flex flex-wrap gap-4">
+                                    {attachments.map((att) => (
+                                        <div key={att.id} className="flex flex-col items-center">
+                                            {att.mime_type.startsWith('image/') ? (
+                                                <AttachmentImage filePath={att.file_path} fileName={att.file_name} />
+                                            ) : (
+                                                <a
+                                                    href="#"
+                                                    onClick={async (e) => {
+                                                        e.preventDefault();
+                                                        const url = await FileUploadService.getFileUrl(att.file_path);
+                                                        window.open(url, '_blank');
+                                                    }}
+                                                    className="text-blue-600 underline"
+                                                >
+                                                    {att.file_name}
+                                                </a>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                         <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3">
                             <button

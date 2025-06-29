@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { getDefaultRouteForRole } from "../lib/rolePermissions";
 import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
+import { FileUploadService, UploadProgress } from "../lib/fileUploadService";
 
 // Import shadcn/ui components
 import { Button } from "../components/ui/button";
@@ -20,7 +21,8 @@ import {
 } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Download, Trash2, File } from "lucide-react";
+import FileUpload from "../components/ui/file-upload";
 
 interface Patient {
   userid: number;
@@ -52,6 +54,17 @@ interface LabResult {
   updated_at?: string;
 }
 
+interface LabAttachment {
+  id: number;
+  lab_result_id: number;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  uploaded_by: number;
+  created_at: string;
+}
+
 const Labs = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -75,6 +88,79 @@ const Labs = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // --- File upload state ---
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [savedLabResultId, setSavedLabResultId] = useState<number | null>(null);
+  const [attachments, setAttachments] = useState<LabAttachment[]>([]);
+
+  // --- File upload handlers ---
+  const handleFilesSelected = (files: File[]) => {
+    setSelectedFiles(prev => [...prev, ...files]);
+    setError(null);
+  };
+  const handleFileRemove = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  const handleUploadProgress = (progress: UploadProgress[]) => {
+    setUploadProgress(progress);
+  };
+  const uploadFiles = async (labResultId: number, currentUserId: number) => {
+    if (selectedFiles.length === 0) return;
+    try {
+      setIsUploading(true);
+      setError(null);
+      const uploadedFiles = await FileUploadService.uploadFiles(
+        selectedFiles,
+        labResultId,
+        handleUploadProgress
+      );
+      await FileUploadService.saveFileMetadata(uploadedFiles, labResultId, currentUserId);
+      setSelectedFiles([]);
+      setUploadProgress([]);
+      await loadAttachments(labResultId);
+    } catch (error) {
+      setError(`Failed to upload files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  const loadAttachments = async (labResultId: number) => {
+    try {
+      const attachmentsData = await FileUploadService.getLabAttachments(labResultId);
+      setAttachments(attachmentsData);
+    } catch (error) { }
+  };
+  const handleDownloadFile = async (attachment: LabAttachment) => {
+    try {
+      const downloadUrl = await FileUploadService.getFileUrl(attachment.file_path);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = attachment.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      setError(`Failed to download file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+  const handleDeleteAttachment = async (attachment: LabAttachment) => {
+    try {
+      await FileUploadService.deleteFile(attachment.id, attachment.file_path);
+      setAttachments(prev => prev.filter(a => a.id !== attachment.id));
+    } catch (error) {
+      setError(`Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   // Role-based access control
   useEffect(() => {
@@ -319,6 +405,13 @@ const Labs = () => {
 
       setIsSaved(true);
       console.log("Lab results saved successfully:", data);
+
+      const newLabResultId = data && data[0] && data[0].id;
+      if (selectedFiles.length > 0 && newLabResultId) {
+        await uploadFiles(newLabResultId, currentUserId);
+        const attachmentsData = await FileUploadService.getLabAttachments(newLabResultId);
+        console.log('Attachments after upload:', attachmentsData);
+      }
 
       // Clear form after successful save
       setTimeout(() => {
@@ -571,6 +664,86 @@ const Labs = () => {
                       placeholder={isRTL ? 'أدخل ملاحظات أو توصيات إضافية' : 'Enter additional notes or recommendations'}
                     />
                   </div>
+
+                  {/* File Upload */}
+                  <div className="md:col-span-2">
+                    <Label>{isRTL ? 'المرفقات' : 'Attachments'}</Label>
+                    <FileUpload
+                      onFilesSelected={handleFilesSelected}
+                      selectedFiles={selectedFiles}
+                      onFileRemove={handleFileRemove}
+                      maxFiles={5}
+                      maxFileSize={10 * 1024 * 1024} // 10MB
+                      disabled={isLoading || isUploading}
+                    />
+                  </div>
+
+                  {/* Upload Progress */}
+                  {uploadProgress.length > 0 && (
+                    <div className="md:col-span-2">
+                      <Label>{isRTL ? 'تقدم التحميل' : 'Upload Progress'}</Label>
+                      <div className="space-y-2">
+                        {uploadProgress.map((progress, index) => (
+                          <div key={index} className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{progress.file.name}</p>
+                              <div className="w-full bg-background rounded-full h-2 mt-1">
+                                <div
+                                  className={`h-2 rounded-full transition-all duration-300 ${progress.status === 'completed' ? 'bg-green-500' : progress.status === 'error' ? 'bg-red-500' : 'bg-primary'}`}
+                                  style={{ width: `${progress.progress}%` }}
+                                />
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {progress.status === 'completed' ? 'Completed' : progress.status === 'error' ? progress.error : `${progress.progress}%`}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Saved Attachments */}
+                  {attachments.length > 0 && (
+                    <div className="md:col-span-2">
+                      <Label>{isRTL ? 'المرفقات المحفوظة' : 'Saved Attachments'}</Label>
+                      <div className="space-y-2">
+                        {attachments.map((attachment) => (
+                          <div key={attachment.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <File className="w-4 h-4" />
+                              <div>
+                                <p className="text-sm font-medium">{attachment.file_name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatFileSize(attachment.file_size)} • {new Date(attachment.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex space-x-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownloadFile(attachment)}
+                                className="text-primary hover:text-primary/80"
+                              >
+                                <Download className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteAttachment(attachment)}
+                                className="text-destructive hover:text-destructive/80"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Submit button */}
