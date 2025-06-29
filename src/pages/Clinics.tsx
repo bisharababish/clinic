@@ -60,67 +60,101 @@ const Clinics = () => {
         try {
             setIsLoading(true);
 
-            // Load categories
-            const { data: categoryData, error: categoryError } = await supabase
-                .from('clinic_categories')
-                .select('*')
-                .eq('is_active', true)
-                .order('name');
-
-            if (categoryError) throw categoryError;
-            setCategories(categoryData || []);
-
-            // Load clinics with active status
-            const { data: clinicData, error: clinicError } = await supabase
-                .from('clinics')
-                .select('*')
-                .eq('is_active', true)
-                .order('name');
-
-            if (clinicError) throw clinicError;
-
-            // Load doctors for each clinic
-            const clinicsWithDoctors: Clinic[] = [];
-
-            for (const clinic of clinicData || []) {
-                const { data: doctorData, error: doctorError } = await supabase
-                    .from('doctors')
+            // Load categories and clinics in parallel
+            const [categoryResult, clinicResult] = await Promise.all([
+                supabase
+                    .from('clinic_categories')
                     .select('*')
-                    .eq('clinic_id', clinic.id)
-                    .eq('is_available', true);
+                    .eq('is_active', true)
+                    .order('name'),
+                supabase
+                    .from('clinics')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('name')
+            ]);
 
-                if (doctorError) throw doctorError;
+            if (categoryResult.error) throw categoryResult.error;
+            if (clinicResult.error) throw clinicResult.error;
 
-                // For each doctor, load their availability
-                const doctorsWithAvailability: Doctor[] = [];
+            setCategories(categoryResult.data || []);
 
-                for (const doctor of doctorData || []) {
-                    const { data: availabilityData, error: availabilityError } = await supabase
-                        .from('doctor_availability')
-                        .select('*')
-                        .eq('doctor_id', doctor.id)
-                        .order('day', { ascending: true })
-                        .order('start_time', { ascending: true });
+            const clinicData = clinicResult.data || [];
+            if (clinicData.length === 0) {
+                setClinics([]);
+                return;
+            }
 
-                    if (availabilityError) throw availabilityError;
+            // Get all clinic IDs
+            const clinicIds = clinicData.map(clinic => clinic.id);
 
-                    doctorsWithAvailability.push({
-                        id: doctor.id,
-                        name: doctor.name,
-                        specialty: doctor.specialty,
-                        price: doctor.price,
-                        availability: availabilityData || []
-                    });
-                }
+            // Load all doctors for all clinics in one query
+            const { data: allDoctors, error: doctorError } = await supabase
+                .from('doctors')
+                .select('*')
+                .in('clinic_id', clinicIds)
+                .eq('is_available', true);
 
-                clinicsWithDoctors.push({
+            if (doctorError) throw doctorError;
+
+            if (!allDoctors || allDoctors.length === 0) {
+                // No doctors available, set clinics without doctors
+                const clinicsWithoutDoctors = clinicData.map(clinic => ({
                     id: clinic.id,
                     name: clinic.name,
                     category: clinic.category,
                     description: clinic.description,
-                    doctors: doctorsWithAvailability
-                });
+                    doctors: []
+                }));
+                setClinics(clinicsWithoutDoctors);
+                return;
             }
+
+            // Get all doctor IDs
+            const doctorIds = allDoctors.map(doctor => doctor.id);
+
+            // Load all availability for all doctors in one query
+            const { data: allAvailability, error: availabilityError } = await supabase
+                .from('doctor_availability')
+                .select('*')
+                .in('doctor_id', doctorIds)
+                .order('day', { ascending: true })
+                .order('start_time', { ascending: true });
+
+            if (availabilityError) throw availabilityError;
+
+            // Group availability by doctor ID
+            const availabilityByDoctor = (allAvailability || []).reduce((acc, slot) => {
+                if (!acc[slot.doctor_id]) {
+                    acc[slot.doctor_id] = [];
+                }
+                acc[slot.doctor_id].push(slot);
+                return acc;
+            }, {} as { [key: string]: AvailabilitySlot[] });
+
+            // Group doctors by clinic ID
+            const doctorsByClinic = allDoctors.reduce((acc, doctor) => {
+                if (!acc[doctor.clinic_id]) {
+                    acc[doctor.clinic_id] = [];
+                }
+                acc[doctor.clinic_id].push({
+                    id: doctor.id,
+                    name: doctor.name,
+                    specialty: doctor.specialty,
+                    price: doctor.price,
+                    availability: availabilityByDoctor[doctor.id] || []
+                });
+                return acc;
+            }, {} as { [key: string]: Doctor[] });
+
+            // Build final clinics array
+            const clinicsWithDoctors = clinicData.map(clinic => ({
+                id: clinic.id,
+                name: clinic.name,
+                category: clinic.category,
+                description: clinic.description,
+                doctors: doctorsByClinic[clinic.id] || []
+            }));
 
             setClinics(clinicsWithDoctors);
         } catch (error) {
