@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { FileUploadService } from '../lib/fileUploadService';
+import jsPDF from 'jspdf';
 
 // Type definitions (updated to match your database)
 interface LabResult {
@@ -121,36 +122,56 @@ const DoctorLabsPage: React.FC = () => {
         }
     };
 
-    const handleDownloadReport = (result: LabResult): void => {
-        const reportContent = `
-${isRTL ? 'تفاصيل الفحص المخبري' : 'Lab Test Details'}
-================
-${isRTL ? 'الاسم' : 'Name'}: ${result.patient_name}
-${isRTL ? 'رقم المريض' : 'Patient ID'}: ${result.patient_id}
-${isRTL ? 'البريد الإلكتروني' : 'Email'}: ${result.patient_email}
-${isRTL ? 'تاريخ الميلاد' : 'Date of Birth'}: ${result.date_of_birth || 'N/A'}
-${isRTL ? 'فصيلة الدم' : 'Blood Type'}: ${result.blood_type || 'N/A'}
-${isRTL ? 'تاريخ الفحص' : 'Test Date'}: ${new Date(result.test_date).toLocaleDateString()}
-${isRTL ? 'نوع الفحص' : 'Test Type'}: ${result.test_type}
+    const handleDownloadReport = async (result: LabResult) => {
+        const doc = new jsPDF();
+        let y = 10;
+        doc.setFontSize(16);
+        doc.text(isRTL ? 'تفاصيل الفحص المخبري' : 'Lab Test Details', 10, y);
+        y += 10;
+        doc.setFontSize(12);
+        doc.text((isRTL ? 'الاسم: ' : 'Name: ') + result.patient_name, 10, y); y += 8;
+        doc.text((isRTL ? 'رقم المريض: ' : 'Patient ID: ') + result.patient_id, 10, y); y += 8;
+        doc.text((isRTL ? 'البريد الإلكتروني: ' : 'Email: ') + result.patient_email, 10, y); y += 8;
+        doc.text((isRTL ? 'تاريخ الميلاد: ' : 'Date of Birth: ') + (result.date_of_birth || 'N/A'), 10, y); y += 8;
+        doc.text((isRTL ? 'فصيلة الدم: ' : 'Blood Type: ') + (result.blood_type || 'N/A'), 10, y); y += 8;
+        doc.text((isRTL ? 'تاريخ الفحص: ' : 'Test Date: ') + new Date(result.test_date).toLocaleDateString(), 10, y); y += 8;
+        doc.text((isRTL ? 'نوع الفحص: ' : 'Test Type: ') + result.test_type, 10, y); y += 8;
+        doc.text((isRTL ? 'تاريخ الإنشاء: ' : 'Created At: ') + new Date(result.created_at).toLocaleString(), 10, y); y += 12;
+        doc.setFontSize(14);
+        doc.text(isRTL ? 'نتائج الفحص:' : 'Test Results:', 10, y); y += 8;
+        doc.setFontSize(12);
+        doc.text(result.test_results, 10, y); y += 12;
+        if (result.doctor_notes) {
+            doc.setFontSize(14);
+            doc.text(isRTL ? 'ملاحظات الطبيب:' : "Doctor's Notes:", 10, y); y += 8;
+            doc.setFontSize(12);
+            doc.text(result.doctor_notes, 10, y); y += 12;
+        }
 
-${isRTL ? 'نتائج الفحص' : 'Test Results'}:
-${result.test_results}
+        // Fetch the first image attachment for this lab result and add it to the PDF
+        try {
+            const attachments = await FileUploadService.getLabAttachments(result.id);
+            const imageAttachment = attachments.find(att => att.mime_type && att.mime_type.startsWith('image/'));
+            if (imageAttachment) {
+                const url = await FileUploadService.getFileUrl(imageAttachment.file_path);
+                // Fetch the image as a data URL
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const imgData = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+                // Add image to PDF (x, y, width, height)
+                doc.addImage(imgData, 'JPEG', 10, y, 60, 60);
+                y += 65;
+            }
+        } catch (e) {
+            // If image fetch fails, just continue and save PDF without image
+        }
 
-${isRTL ? 'ملاحظات الطبيب' : 'Doctor\'s Notes'}:
-${result.doctor_notes || 'No notes provided'}
-
-${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created_at).toLocaleString()}
-        `;
-
-        const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `lab_report_${result.patient_name}_${result.test_date}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        doc.save(`lab_report_${result.patient_name}_${result.test_date}.pdf`);
     };
 
     const handleRefresh = (): void => {
