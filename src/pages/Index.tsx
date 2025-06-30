@@ -75,6 +75,13 @@ interface PatientWithHealthInfo extends PatientSearchResult {
   health_data?: PatientHealthData;
 }
 
+// NEW: Interface for log entries to support dynamic translation
+interface LogEntry {
+  key: string;
+  values?: Record<string, string | number>;
+  timestamp: Date;
+}
+
 // NEW: Interface for patient creation form
 interface PatientCreationForm {
   english_username_a: string;
@@ -177,7 +184,7 @@ const Index = () => {
   const [selectedDiseases, setSelectedDiseases] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedMedicines, setSelectedMedicines] = useState<string[]>([]);
-  const [patientLogs, setPatientLogs] = useState<string[]>([]);
+  const [patientLogs, setPatientLogs] = useState<LogEntry[]>([]);
 
   // NEW: Store complete health data for user tracking display
   const [healthData, setHealthData] = useState<PatientHealthData | null>(null);
@@ -385,8 +392,11 @@ const Index = () => {
       setAllPatients(patientsWithHealth);
 
       // Log the loading activity
-      const logEntry = `${isRTL ? "تم تحميل قائمة جميع المرضى" : "Loaded complete patient list"} (${patientsWithHealth.length} ${isRTL ? "مريض" : "patients"}) ${new Date().toLocaleString()}`;
-      setPatientLogs(prev => [...prev, logEntry]);
+      setPatientLogs(prev => [...prev, {
+        key: 'loadedPatientList',
+        values: { count: patientsWithHealth.length },
+        timestamp: new Date()
+      }]);
 
     } catch (error) {
       console.error('❌ Error loading all patients:', error);
@@ -397,8 +407,11 @@ const Index = () => {
         variant: "destructive",
       });
 
-      const logEntry = `${isRTL ? "خطأ في تحميل قائمة المرضى" : "Error loading patient list"}: ${error instanceof Error ? error.message : 'Unknown error'} ${new Date().toLocaleString()}`;
-      setPatientLogs(prev => [...prev, logEntry]);
+      setPatientLogs(prev => [...prev, {
+        key: 'errorLoadingPatientList',
+        values: { error: error instanceof Error ? error.message : 'Unknown error' },
+        timestamp: new Date()
+      }]);
 
     } finally {
       setIsLoadingPatients(false);
@@ -527,8 +540,16 @@ const Index = () => {
       setAllPatients(prev => [newPatient, ...prev]);
 
       // Log the creation
-      const logEntry = `${isRTL ? "تم إنشاء مريض جديد" : "New patient created"}: ${newPatient.english_username_a} ${newPatient.english_username_d} (ID: ${newPatient.userid}) ${isRTL ? "بواسطة" : "by"} ${user?.name} (${userRole}) ${new Date().toLocaleString()}`;
-      setPatientLogs(prev => [...prev, logEntry]);
+      setPatientLogs(prev => [...prev, {
+        key: 'newPatientCreated',
+        values: {
+          patientName: `${newPatient.english_username_a} ${newPatient.english_username_d}`,
+          patientId: newPatient.userid,
+          user: user?.name || 'Unknown',
+          role: userRole
+        },
+        timestamp: new Date()
+      }]);
 
       // Show success message
       toast({
@@ -572,8 +593,11 @@ const Index = () => {
       });
 
       // Log the error
-      const logEntry = `${isRTL ? "فشل في إنشاء مريض جديد" : "Failed to create new patient"}: ${errorMessage} ${new Date().toLocaleString()}`;
-      setPatientLogs(prev => [...prev, logEntry]);
+      setPatientLogs(prev => [...prev, {
+        key: 'failedToCreatePatient',
+        values: { error: errorMessage },
+        timestamp: new Date()
+      }]);
 
     } finally {
       setIsCreatingPatient(false);
@@ -648,8 +672,11 @@ const Index = () => {
       setSearchResults(patientsWithHealth);
 
       // Log the search activity
-      const logEntry = `${isRTL ? "تم البحث عن المرضى باستخدام" : "Searched for patients using"} "${searchTerm}" - ${isRTL ? "تم العثور على" : "Found"} ${patientsWithHealth.length} ${isRTL ? "مريض/مرضى" : "patient(s)"} ${new Date().toLocaleString()}`;
-      setPatientLogs(prev => [...prev, logEntry]);
+      setPatientLogs(prev => [...prev, {
+        key: 'searchedForPatients',
+        values: { term: searchTerm, count: patientsWithHealth.length },
+        timestamp: new Date()
+      }]);
 
     } catch (error) {
       console.error('❌ Error searching patients:', error);
@@ -723,8 +750,14 @@ const Index = () => {
     }
 
     // Log the selection
-    const logEntry = `${isRTL ? "تم اختيار المريض" : "Selected patient"} ${patient.english_username_a} ${patient.english_username_d} (ID: ${patient.userid}) ${new Date().toLocaleString()}`;
-    setPatientLogs(prev => [...prev, logEntry]);
+    setPatientLogs(prev => [...prev, {
+      key: 'selectedPatient',
+      values: {
+        name: `${patient.english_username_a} ${patient.english_username_d}`,
+        id: patient.userid
+      },
+      timestamp: new Date()
+    }]);
   };
 
   // Load existing patient health data when component mounts (for patients only)
@@ -759,8 +792,7 @@ const Index = () => {
   // UPDATED: Enhanced loadPatientHealthData function with user tracking
   const loadPatientHealthData = async () => {
     if (!user?.id) {
-      const logEntry = `${isRTL ? "خطأ: لا يوجد مستخدم مسجل دخول" : "Error: No user logged in"} ${new Date().toLocaleString()}`;
-      setPatientLogs(prev => [...prev, logEntry]);
+      setPatientLogs(prev => [...prev, { key: 'errorNoUserLoggedIn', timestamp: new Date() }]);
       return;
     }
 
@@ -810,8 +842,16 @@ const Index = () => {
         const updatedBy = data.updated_by_name || data.updated_by_email || 'Unknown';
         const updatedByRole = data.updated_by_role || 'Unknown';
 
-        const logEntry = `${isRTL ? "تم تحميل المعلومات الصحية - تم الإنشاء بواسطة" : "Health information loaded - Created by"} ${createdBy} (${createdByRole}), ${isRTL ? "آخر تحديث بواسطة" : "Last updated by"} ${updatedBy} (${updatedByRole}) ${new Date(data.updated_at || '').toLocaleString()}`;
-        setPatientLogs(prev => [...prev, logEntry]);
+        setPatientLogs(prev => [...prev, {
+          key: 'healthInfoLoaded',
+          values: {
+            createdBy: createdBy,
+            createdByRole: createdByRole,
+            updatedBy: updatedBy,
+            updatedByRole: updatedByRole
+          },
+          timestamp: new Date(data.updated_at || '')
+        }]);
 
       } else {
         setPatientInfo({
@@ -824,8 +864,7 @@ const Index = () => {
         setSelectedMedicines([]);
         setHealthData(null);
 
-        const logEntry = `${isRTL ? "مرحباً بك! يمكنك الآن إدخال معلوماتك الصحية" : "Welcome! You can now enter your health information"} ${new Date().toLocaleString()}`;
-        setPatientLogs(prev => [...prev, logEntry]);
+        setPatientLogs(prev => [...prev, { key: 'welcomeHealthInfo', timestamp: new Date() }]);
       }
 
     } catch (error: unknown) {
@@ -838,8 +877,11 @@ const Index = () => {
           : isRTL
             ? "خطأ غير معروف"
             : "Unknown error";
-      const logEntry = `${isRTL ? "خطأ في تحميل المعلومات الصحية" : "Error loading health information"}: ${errorMessage} ${new Date().toLocaleString()}`;
-      setPatientLogs(prev => [...prev, logEntry]);
+      setPatientLogs(prev => [...prev, {
+        key: 'errorLoadingHealthInfo',
+        values: { error: errorMessage },
+        timestamp: new Date()
+      }]);
     }
   };
 
@@ -999,19 +1041,24 @@ const Index = () => {
           `${selectedPatient.english_username_a} ${selectedPatient.english_username_d}` :
           user?.name || 'Patient';
 
-        const logEntry = `${isRTL ? "تم حفظ المعلومات الصحية لـ" : "Health information saved for"} ${patientName} ${isRTL ? "بواسطة" : "by"} ${currentUser} (${userRole}) ${new Date().toLocaleString()}`;
-        setPatientLogs(prev => [...prev, logEntry]);
+        setPatientLogs(prev => [...prev, {
+          key: 'healthInfoSaved',
+          values: {
+            patientName: patientName,
+            user: currentUser,
+            role: userRole
+          },
+          timestamp: new Date()
+        }]);
       } else {
         // Add error log
-        const logEntry = `${isRTL ? "فشل في حفظ المعلومات الصحية" : "Failed to save health information"} ${new Date().toLocaleString()}`;
-        setPatientLogs(prev => [...prev, logEntry]);
+        setPatientLogs(prev => [...prev, { key: 'failedToSaveHealthInfo', timestamp: new Date() }]);
       }
 
     } catch (error) {
       console.error('Error saving patient health data:', error);
 
-      const logEntry = `${isRTL ? "خطأ في حفظ المعلومات" : "Error saving information"} ${new Date().toLocaleString()}`;
-      setPatientLogs(prev => [...prev, logEntry]);
+      setPatientLogs(prev => [...prev, { key: 'errorSavingInfo', timestamp: new Date() }]);
     }
   };
 
@@ -2065,10 +2112,10 @@ const Index = () => {
                   {patientLogs.length > 0 ? (
                     <div className="space-y-2">
                       {patientLogs.map((log, index) => (
-                        <div key={index} className="flex items-start gap-2">
+                        <div key={index} className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                           <p className={`text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                            {log}
+                            {`${t(`home.logs.${log.key}`, log.values)} ${log.timestamp.toLocaleString()}`}
                           </p>
                         </div>
                       ))}
@@ -2190,7 +2237,7 @@ const Index = () => {
                       )).concat(
                         allMeds.length > 5 ? [(
                           <div key="more" className="text-xs text-gray-600 italic mt-2">
-                            {isRTL ? `+${allMeds.length - 5} أدوية أخرى` : `+${allMeds.length - 5} more medications`}
+                            {t('home.logs.moreMedications', { count: allMeds.length - 5 })}
                           </div>
                         )] : []
                       );
@@ -2230,4 +2277,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Index;        
