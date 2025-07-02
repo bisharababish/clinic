@@ -5,6 +5,7 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
 import { TermsOfUseModal, PrivacyPolicyModal, useLegalModals } from "../modals/LegalModals";
+import { Facebook, Instagram, Twitter, MessageCircle } from "lucide-react";
 
 
 const Footer: React.FC = () => {
@@ -146,6 +147,52 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
+        {/* Social Media Section */}
+        <div className="mt-8 flex flex-col items-center">
+          <h4 className="font-semibold text-primary/85 mb-3 text-lg flex items-center gap-2">
+            <span className="w-2 h-6 bg-gradient-to-b from-primary to-primary/85 rounded-full"></span>
+            {isRTL ? 'تابعنا على وسائل التواصل' : 'Follow us on Social Media'}
+          </h4>
+          <div className="flex gap-6">
+            <a
+              href="https://www.facebook.com/yourclinicpage"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="p-2 rounded-full bg-white/60 hover:bg-primary/10 border border-primary/20 hover:border-primary/40 transition-colors shadow-sm hover:shadow-primary/10"
+            >
+              <Facebook className="w-6 h-6 text-primary/80 hover:text-primary" />
+            </a>
+            <a
+              href="https://www.instagram.com/yourclinicpage"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="p-2 rounded-full bg-white/60 hover:bg-primary/10 border border-primary/20 hover:border-primary/40 transition-colors shadow-sm hover:shadow-primary/10"
+            >
+              <Instagram className="w-6 h-6 text-primary/80 hover:text-primary" />
+            </a>
+            <a
+              href="https://twitter.com/yourclinicpage"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Twitter"
+              className="p-2 rounded-full bg-white/60 hover:bg-primary/10 border border-primary/20 hover:border-primary/40 transition-colors shadow-sm hover:shadow-primary/10"
+            >
+              <Twitter className="w-6 h-6 text-primary/80 hover:text-primary" />
+            </a>
+            <a
+              href="https://wa.me/97222744444"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="WhatsApp"
+              className="p-2 rounded-full bg-white/60 hover:bg-green-100 border border-primary/20 hover:border-green-400 transition-colors shadow-sm hover:shadow-green-200"
+            >
+              <MessageCircle className="w-6 h-6 text-primary/80 hover:text-green-500" />
+            </a>
+          </div>
+        </div>
+
         {/* Copyright Section - Enhanced */}
         <div className="mt-16 pt-8 border-t border-gradient-to-r from-transparent via-muted/50 to-transparent relative">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
@@ -159,14 +206,15 @@ const Footer: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Legal Modals */}
         <TermsOfUseModal isOpen={termsOpen} onClose={closeTerms} />
         <PrivacyPolicyModal isOpen={privacyOpen} onClose={closePrivacy} />
-      
-    </div>
+
+      </div>
     </footer >
   );
 };
 
 export default Footer;
+

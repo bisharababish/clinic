@@ -324,8 +324,7 @@ const AboutUs = () => {
                                             }}
                                         >
                                             <p>{t('aboutUs.mondayFriday')}</p>
-                                            <p>{t('aboutUs.saturday')}</p>
-                                            <p>{t('aboutUs.sunday')}</p>
+
                                         </div>
                                     </div>
                                 </div>

@@ -193,14 +193,16 @@ const Index = () => {
   const commonDiseases = [
     { key: "has_high_blood_pressure", en: "High blood pressure", ar: "ضغط الدم المرتفع" },
     { key: "has_diabetes", en: "Diabetes", ar: "السكري" },
-    { key: "has_cholesterol_hdl", en: "Cholesterol HDL", ar: "الكوليسترول HDL" },
-    { key: "has_cholesterol_ldl", en: "Cholesterol LDL", ar: "الكوليسترول LDL" },
+    { key: "has_cholesterol", en: "Cholesterol", ar: "الكوليسترول" },
     { key: "has_kidney_disease", en: "Kidney Disease", ar: "أمراض الكلى" },
     { key: "has_cancer", en: "Cancer", ar: "السرطان" },
     { key: "has_heart_disease", en: "Heart Disease", ar: "أمراض القلب" },
     { key: "has_asthma", en: "Asthma", ar: "الربو" },
     { key: "has_alzheimer_dementia", en: "Alzheimer/Dementia", ar: "الزهايمر/الخرف" },
   ];
+
+  // Add state for cholesterol type
+  const [cholesterolType, setCholesterolType] = useState<string>("");
 
   const medicineCategories = [
     {
@@ -242,10 +244,10 @@ const Index = () => {
       last: isRTL ? "الأخير (بالإنجليزية)" : "Last"
     },
     arabic: {
-      first: isRTL ? "الأول" : "الأول",
-      second: isRTL ? "الثاني" : "الثاني",
-      third: isRTL ? "الثالث" : "الثالث",
-      last: isRTL ? "الأخير" : "الأخير"
+      first: "الأول",
+      second: "الثاني",
+      third: "الثالث",
+      last: "الأخير"
     }
   };
 
@@ -715,8 +717,15 @@ const Index = () => {
       const diseases: string[] = [];
       if (patient.health_data.has_high_blood_pressure) diseases.push("has_high_blood_pressure");
       if (patient.health_data.has_diabetes) diseases.push("has_diabetes");
-      if (patient.health_data.has_cholesterol_hdl) diseases.push("has_cholesterol_hdl");
-      if (patient.health_data.has_cholesterol_ldl) diseases.push("has_cholesterol_ldl");
+      if (patient.health_data.has_cholesterol_hdl) {
+        diseases.push("has_cholesterol");
+        setCholesterolType("hdl");
+      } else if (patient.health_data.has_cholesterol_ldl) {
+        diseases.push("has_cholesterol");
+        setCholesterolType("ldl");
+      } else {
+        setCholesterolType("");
+      }
       if (patient.health_data.has_kidney_disease) diseases.push("has_kidney_disease");
       if (patient.health_data.has_cancer) diseases.push("has_cancer");
       if (patient.health_data.has_heart_disease) diseases.push("has_heart_disease");
@@ -816,8 +825,15 @@ const Index = () => {
         const diseases: string[] = [];
         if (data.has_high_blood_pressure) diseases.push("has_high_blood_pressure");
         if (data.has_diabetes) diseases.push("has_diabetes");
-        if (data.has_cholesterol_hdl) diseases.push("has_cholesterol_hdl");
-        if (data.has_cholesterol_ldl) diseases.push("has_cholesterol_ldl");
+        if (data.has_cholesterol_hdl) {
+          diseases.push("has_cholesterol");
+          setCholesterolType("hdl");
+        } else if (data.has_cholesterol_ldl) {
+          diseases.push("has_cholesterol");
+          setCholesterolType("ldl");
+        } else {
+          setCholesterolType("");
+        }
         if (data.has_kidney_disease) diseases.push("has_kidney_disease");
         if (data.has_cancer) diseases.push("has_cancer");
         if (data.has_heart_disease) diseases.push("has_heart_disease");
@@ -993,8 +1009,8 @@ const Index = () => {
       const diseaseData = {
         has_high_blood_pressure: selectedDiseases.includes("has_high_blood_pressure"),
         has_diabetes: selectedDiseases.includes("has_diabetes"),
-        has_cholesterol_hdl: selectedDiseases.includes("has_cholesterol_hdl"),
-        has_cholesterol_ldl: selectedDiseases.includes("has_cholesterol_ldl"),
+        has_cholesterol_hdl: selectedDiseases.includes("has_cholesterol") && cholesterolType === "hdl",
+        has_cholesterol_ldl: selectedDiseases.includes("has_cholesterol") && cholesterolType === "ldl",
         has_kidney_disease: selectedDiseases.includes("has_kidney_disease"),
         has_cancer: selectedDiseases.includes("has_cancer"),
         has_heart_disease: selectedDiseases.includes("has_heart_disease"),
@@ -1097,8 +1113,7 @@ const Index = () => {
     const diseaseCount = [
       healthData.has_high_blood_pressure,
       healthData.has_diabetes,
-      healthData.has_cholesterol_hdl,
-      healthData.has_cholesterol_ldl,
+      healthData.has_cholesterol_hdl || healthData.has_cholesterol_ldl,
       healthData.has_kidney_disease,
       healthData.has_cancer,
       healthData.has_heart_disease,
@@ -1653,128 +1668,137 @@ const Index = () => {
                     <div className="space-y-4">
                       <h4 className="font-medium text-gray-700">{isRTL ? "الاسم باللغة العربية" : "Arabic Name"}</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="create_arabic_first" className="text-sm">
-                            {isRTL ? "الأول" : "First"}
-                          </Label>
-                          <Input
-                            id="create_arabic_first"
-                            name="arabic_username_a"
-                            value={createPatientForm.arabic_username_a}
-                            onChange={handleCreatePatientFormChange}
-                            required
-                            dir="rtl"
-                            placeholder={placeholders.arabic.first}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="create_arabic_second" className="text-sm">
-                            {isRTL ? "الثاني" : "Second"}
-                          </Label>
-                          <Input
-                            id="create_arabic_second"
-                            name="arabic_username_b"
-                            value={createPatientForm.arabic_username_b}
-                            onChange={handleCreatePatientFormChange}
-                            dir="rtl"
-                            placeholder={placeholders.arabic.second}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="create_arabic_third" className="text-sm">
-                            {isRTL ? "الثالث" : "Third"}
-                          </Label>
-                          <Input
-                            id="create_arabic_third"
-                            name="arabic_username_c"
-                            value={createPatientForm.arabic_username_c}
-                            onChange={handleCreatePatientFormChange}
-                            dir="rtl"
-                            placeholder={placeholders.arabic.third}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="create_arabic_last" className="text-sm">
-                            {isRTL ? "الأخير" : "Last"}
-                          </Label>
-                          <Input
-                            id="create_arabic_last"
-                            name="arabic_username_d"
-                            value={createPatientForm.arabic_username_d}
-                            onChange={handleCreatePatientFormChange}
-                            required
-                            dir="rtl"
-                            placeholder={placeholders.arabic.last}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-700">{isRTL ? "معلومات الاتصال" : "Contact Information"}</h4>
-
-                      <div>
-                        <Label htmlFor="create_email" className="text-sm">
-                          {isRTL ? "البريد الإلكتروني" : "Email"}
-                        </Label>
-                        <div className="relative">
-                          <Mail className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
-                          <Input
-                            id="create_email"
-                            name="user_email"
-                            type="email"
-                            value={createPatientForm.user_email}
-                            onChange={handleCreatePatientFormChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
-                            required
-                            placeholder={t('usersManagement.emailPlaceholder')}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="create_phone" className="text-sm">
-                          {isRTL ? "رقم الهاتف" : "Phone Number"}
-                        </Label>
-                        <div className="relative">
-                          <Phone className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
-                          <Input
-                            id="create_phone"
-                            name="user_phonenumber"
-                            type="tel"
-                            value={createPatientForm.user_phonenumber}
-                            onChange={handleCreatePatientFormChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
-                            required
-                            placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="create_id_number" className="text-sm">
-                          {isRTL ? "رقم الهوية" : "ID Number"}
-                        </Label>
-                        <div className="relative">
-                          <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
-                          <Input
-                            id="create_id_number"
-                            name="id_number"
-                            value={createPatientForm.id_number}
-                            onChange={handleCreatePatientFormChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
-                            required
-                            placeholder="123456789"
-                          />
-                        </div>
+                        {isRTL ? (
+                          <>
+                            <div>
+                              <Label htmlFor="create_arabic_first" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                الأول
+                              </Label>
+                              <Input
+                                id="create_arabic_first"
+                                name="arabic_username_a"
+                                value={createPatientForm.arabic_username_a}
+                                onChange={handleCreatePatientFormChange}
+                                required
+                                dir="rtl"
+                                className="text-right"
+                                placeholder={placeholders.arabic.first}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="create_arabic_second" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                الثاني
+                              </Label>
+                              <Input
+                                id="create_arabic_second"
+                                name="arabic_username_b"
+                                value={createPatientForm.arabic_username_b}
+                                onChange={handleCreatePatientFormChange}
+                                dir="rtl"
+                                className="text-right"
+                                placeholder={placeholders.arabic.second}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="create_arabic_third" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                الثالث
+                              </Label>
+                              <Input
+                                id="create_arabic_third"
+                                name="arabic_username_c"
+                                value={createPatientForm.arabic_username_c}
+                                onChange={handleCreatePatientFormChange}
+                                dir="rtl"
+                                className="text-right"
+                                placeholder={placeholders.arabic.third}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="create_arabic_last" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                الأخير
+                              </Label>
+                              <Input
+                                id="create_arabic_last"
+                                name="arabic_username_d"
+                                value={createPatientForm.arabic_username_d}
+                                onChange={handleCreatePatientFormChange}
+                                required
+                                dir="rtl"
+                                className="text-right"
+                                placeholder={placeholders.arabic.last}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            {/* First row: Second, First */}
+                            <div>
+                              <Label htmlFor="create_arabic_second" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                الثاني
+                              </Label>
+                              <Input
+                                id="create_arabic_second"
+                                name="arabic_username_b"
+                                value={createPatientForm.arabic_username_b}
+                                onChange={handleCreatePatientFormChange}
+                                dir="rtl"
+                                className="text-right"
+                                placeholder={placeholders.arabic.second}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="create_arabic_first" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                الأول
+                              </Label>
+                              <Input
+                                id="create_arabic_first"
+                                name="arabic_username_a"
+                                value={createPatientForm.arabic_username_a}
+                                onChange={handleCreatePatientFormChange}
+                                required
+                                dir="rtl"
+                                className="text-right"
+                                placeholder={placeholders.arabic.first}
+                              />
+                            </div>
+                            {/* Second row: Last, Third */}
+                            <div>
+                              <Label htmlFor="create_arabic_last" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                الأخير
+                              </Label>
+                              <Input
+                                id="create_arabic_last"
+                                name="arabic_username_d"
+                                value={createPatientForm.arabic_username_d}
+                                onChange={handleCreatePatientFormChange}
+                                required
+                                dir="rtl"
+                                className="text-right"
+                                placeholder={placeholders.arabic.last}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="create_arabic_third" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                الثالث
+                              </Label>
+                              <Input
+                                id="create_arabic_third"
+                                name="arabic_username_c"
+                                value={createPatientForm.arabic_username_c}
+                                onChange={handleCreatePatientFormChange}
+                                dir="rtl"
+                                className="text-right"
+                                placeholder={placeholders.arabic.third}
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
                     {/* Personal Information */}
                     <div className="space-y-4">
                       <h4 className="font-medium text-gray-700">{isRTL ? "المعلومات الشخصية" : "Personal Information"}</h4>
-
                       <div>
                         <Label htmlFor="create_dob" className="text-sm">
                           {isRTL ? "تاريخ الميلاد" : "Date of Birth"}
@@ -1792,7 +1816,6 @@ const Index = () => {
                           />
                         </div>
                       </div>
-
                       <div>
                         <Label className="text-sm">{isRTL ? "الجنس" : "Gender"} </Label>
                         <RadioGroup
@@ -1825,7 +1848,6 @@ const Index = () => {
                           )}
                         </RadioGroup>
                       </div>
-
                       <div style={{ marginTop: '32px' }}>
                         <Label htmlFor="create_password" className="text-sm">
                           {isRTL ? "كلمة المرور" : "Password"}
@@ -1840,6 +1862,64 @@ const Index = () => {
                             onChange={handleCreatePatientFormChange}
                             className={isRTL ? 'pr-10' : 'pl-10'}
                             placeholder={isRTL ? "اتركها فارغة للإنشاء التلقائي" : "Leave empty for auto-generation"}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-700">{isRTL ? "معلومات الاتصال" : "Contact Information"}</h4>
+                      <div>
+                        <Label htmlFor="create_email" className="text-sm">
+                          {isRTL ? "البريد الإلكتروني" : "Email"}
+                        </Label>
+                        <div className="relative">
+                          <Mail className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
+                          <Input
+                            id="create_email"
+                            name="user_email"
+                            type="email"
+                            value={createPatientForm.user_email}
+                            onChange={handleCreatePatientFormChange}
+                            className={isRTL ? 'pr-10' : 'pl-10'}
+                            required
+                            placeholder={t('usersManagement.emailPlaceholder')}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="create_phone" className="text-sm">
+                          {isRTL ? "رقم الهاتف" : "Phone Number"}
+                        </Label>
+                        <div className="relative">
+                          <Phone className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
+                          <Input
+                            id="create_phone"
+                            name="user_phonenumber"
+                            type="tel"
+                            value={createPatientForm.user_phonenumber}
+                            onChange={handleCreatePatientFormChange}
+                            className={isRTL ? 'pr-10' : 'pl-10'}
+                            required
+                            placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="create_id_number" className="text-sm">
+                          {isRTL ? "رقم الهوية" : "ID Number"}
+                        </Label>
+                        <div className="relative">
+                          <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                          <Input
+                            id="create_id_number"
+                            name="id_number"
+                            value={createPatientForm.id_number}
+                            onChange={handleCreatePatientFormChange}
+                            className={isRTL ? 'pr-10' : 'pl-10'}
+                            required
+                            placeholder="123456789"
                           />
                         </div>
                       </div>
@@ -1963,7 +2043,7 @@ const Index = () => {
           {/* Common Diseases - FIXED: Changed to checkboxes for multiple selection */}
           <section className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.commonDiseases")}</h2>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {commonDiseases.map(disease => (
                 <div key={disease.key} className="border rounded-lg hover:bg-gray-50">
                   <label
@@ -1984,6 +2064,31 @@ const Index = () => {
                       {isRTL ? disease.ar : disease.en}
                     </span>
                   </label>
+                  {/* Show radio buttons for cholesterol type if cholesterol is checked */}
+                  {disease.key === 'has_cholesterol' && selectedDiseases.includes('has_cholesterol') && (
+                    <div className="flex flex-col items-start px-4 pb-2">
+                      <label className="flex items-center gap-2 mb-1">
+                        <input
+                          type="radio"
+                          name="cholesterolType"
+                          value="hdl"
+                          checked={cholesterolType === 'hdl'}
+                          onChange={() => setCholesterolType('hdl')}
+                        />
+                        {isRTL ? 'الكوليسترول HDL' : 'Cholesterol HDL'}
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="cholesterolType"
+                          value="ldl"
+                          checked={cholesterolType === 'ldl'}
+                          onChange={() => setCholesterolType('ldl')}
+                        />
+                        {isRTL ? 'الكوليسترول LDL' : 'Cholesterol LDL'}
+                      </label>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

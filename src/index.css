@@ -279,7 +279,7 @@ html[dir="rtl"] .text-left {
 }
 
 html[dir="rtl"] .text-right {
-  text-align: left;
+  text-align: right;
 }
 
 /* Fix spacing in RTL */
