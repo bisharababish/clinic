@@ -51,114 +51,143 @@ const Clinics = () => {
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
         loadData();
     }, []);
 
+    // Helper to add timeout to a promise
+    const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> => {
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                reject(new Error('timeout'));
+            }, ms);
+            promise.then(
+                (val) => {
+                    clearTimeout(timer);
+                    resolve(val);
+                },
+                (err) => {
+                    clearTimeout(timer);
+                    reject(err);
+                }
+            );
+        });
+    };
+
     const loadData = async () => {
+        setLoadError(null);
         try {
             setIsLoading(true);
 
-            // Load categories and clinics in parallel
-            const [categoryResult, clinicResult] = await Promise.all([
-                supabase
-                    .from('clinic_categories')
+            // Wrap all loading logic in a timeout
+            await withTimeout((async () => {
+                // Load categories and clinics in parallel
+                const [categoryResult, clinicResult] = await Promise.all([
+                    supabase
+                        .from('clinic_categories')
+                        .select('*')
+                        .eq('is_active', true)
+                        .order('name'),
+                    supabase
+                        .from('clinics')
+                        .select('*')
+                        .eq('is_active', true)
+                        .order('name')
+                ]);
+
+                if (categoryResult.error) throw categoryResult.error;
+                if (clinicResult.error) throw clinicResult.error;
+
+                setCategories(categoryResult.data || []);
+
+                const clinicData = clinicResult.data || [];
+                if (clinicData.length === 0) {
+                    setClinics([]);
+                    return;
+                }
+
+                // Get all clinic IDs
+                const clinicIds = clinicData.map(clinic => clinic.id);
+
+                // Load all doctors for all clinics in one query
+                const { data: allDoctors, error: doctorError } = await supabase
+                    .from('doctors')
                     .select('*')
-                    .eq('is_active', true)
-                    .order('name'),
-                supabase
-                    .from('clinics')
+                    .in('clinic_id', clinicIds)
+                    .eq('is_available', true);
+
+                if (doctorError) throw doctorError;
+
+                if (!allDoctors || allDoctors.length === 0) {
+                    // No doctors available, set clinics without doctors
+                    const clinicsWithoutDoctors = clinicData.map(clinic => ({
+                        id: clinic.id,
+                        name: clinic.name,
+                        category: clinic.category,
+                        description: clinic.description,
+                        doctors: []
+                    }));
+                    setClinics(clinicsWithoutDoctors);
+                    return;
+                }
+
+                // Get all doctor IDs
+                const doctorIds = allDoctors.map(doctor => doctor.id);
+
+                // Load all availability for all doctors in one query
+                const { data: allAvailability, error: availabilityError } = await supabase
+                    .from('doctor_availability')
                     .select('*')
-                    .eq('is_active', true)
-                    .order('name')
-            ]);
+                    .in('doctor_id', doctorIds)
+                    .order('day', { ascending: true })
+                    .order('start_time', { ascending: true });
 
-            if (categoryResult.error) throw categoryResult.error;
-            if (clinicResult.error) throw clinicResult.error;
+                if (availabilityError) throw availabilityError;
 
-            setCategories(categoryResult.data || []);
+                // Group availability by doctor ID
+                const availabilityByDoctor = (allAvailability || []).reduce((acc, slot) => {
+                    if (!acc[slot.doctor_id]) {
+                        acc[slot.doctor_id] = [];
+                    }
+                    acc[slot.doctor_id].push(slot);
+                    return acc;
+                }, {} as { [key: string]: AvailabilitySlot[] });
 
-            const clinicData = clinicResult.data || [];
-            if (clinicData.length === 0) {
-                setClinics([]);
-                return;
-            }
+                // Group doctors by clinic ID
+                const doctorsByClinic = allDoctors.reduce((acc, doctor) => {
+                    if (!acc[doctor.clinic_id]) {
+                        acc[doctor.clinic_id] = [];
+                    }
+                    acc[doctor.clinic_id].push({
+                        id: doctor.id,
+                        name: doctor.name,
+                        specialty: doctor.specialty,
+                        price: doctor.price,
+                        availability: availabilityByDoctor[doctor.id] || []
+                    });
+                    return acc;
+                }, {} as { [key: string]: Doctor[] });
 
-            // Get all clinic IDs
-            const clinicIds = clinicData.map(clinic => clinic.id);
-
-            // Load all doctors for all clinics in one query
-            const { data: allDoctors, error: doctorError } = await supabase
-                .from('doctors')
-                .select('*')
-                .in('clinic_id', clinicIds)
-                .eq('is_available', true);
-
-            if (doctorError) throw doctorError;
-
-            if (!allDoctors || allDoctors.length === 0) {
-                // No doctors available, set clinics without doctors
-                const clinicsWithoutDoctors = clinicData.map(clinic => ({
+                // Build final clinics array
+                const clinicsWithDoctors = clinicData.map(clinic => ({
                     id: clinic.id,
                     name: clinic.name,
                     category: clinic.category,
                     description: clinic.description,
-                    doctors: []
+                    doctors: doctorsByClinic[clinic.id] || []
                 }));
-                setClinics(clinicsWithoutDoctors);
-                return;
-            }
 
-            // Get all doctor IDs
-            const doctorIds = allDoctors.map(doctor => doctor.id);
-
-            // Load all availability for all doctors in one query
-            const { data: allAvailability, error: availabilityError } = await supabase
-                .from('doctor_availability')
-                .select('*')
-                .in('doctor_id', doctorIds)
-                .order('day', { ascending: true })
-                .order('start_time', { ascending: true });
-
-            if (availabilityError) throw availabilityError;
-
-            // Group availability by doctor ID
-            const availabilityByDoctor = (allAvailability || []).reduce((acc, slot) => {
-                if (!acc[slot.doctor_id]) {
-                    acc[slot.doctor_id] = [];
-                }
-                acc[slot.doctor_id].push(slot);
-                return acc;
-            }, {} as { [key: string]: AvailabilitySlot[] });
-
-            // Group doctors by clinic ID
-            const doctorsByClinic = allDoctors.reduce((acc, doctor) => {
-                if (!acc[doctor.clinic_id]) {
-                    acc[doctor.clinic_id] = [];
-                }
-                acc[doctor.clinic_id].push({
-                    id: doctor.id,
-                    name: doctor.name,
-                    specialty: doctor.specialty,
-                    price: doctor.price,
-                    availability: availabilityByDoctor[doctor.id] || []
-                });
-                return acc;
-            }, {} as { [key: string]: Doctor[] });
-
-            // Build final clinics array
-            const clinicsWithDoctors = clinicData.map(clinic => ({
-                id: clinic.id,
-                name: clinic.name,
-                category: clinic.category,
-                description: clinic.description,
-                doctors: doctorsByClinic[clinic.id] || []
-            }));
-
-            setClinics(clinicsWithDoctors);
-        } catch (error) {
+                setClinics(clinicsWithDoctors);
+            })(), 10000); // 10 seconds timeout
+        } catch (error: any) {
             console.error('Error loading clinic data:', error);
+            if (error.message === 'timeout') {
+                setLoadError(t('clinics.loadingTimeout') || 'Loading timed out. Please try again.');
+            } else {
+                setLoadError(t('clinics.errorDescription') || 'An error occurred while loading clinics.');
+            }
             toast({
                 title: t('clinics.errorTitle'),
                 description: t('clinics.errorDescription'),
@@ -241,6 +270,14 @@ const Clinics = () => {
                 <span className={`loading-text ${isRTL ? 'rtl' : 'ltr'}`}>
                     {t('clinics.loading')}
                 </span>
+                {loadError && (
+                    <div className="loading-error-message">
+                        <p>{loadError}</p>
+                        <Button onClick={loadData} className="retry-button">
+                            {t('clinics.retry') || 'Retry'}
+                        </Button>
+                    </div>
+                )}
             </div>
         );
     }
