@@ -289,28 +289,6 @@ export function Header() {
         }
     };
 
-    // const getRoleDotClass = (role: string) => {
-    //     switch (role?.toLowerCase()) {
-    //         case "admin":
-    //             return "bg-red-500";
-    //         case "doctor":
-    //             return "bg-blue-500";
-    //         case "secretary":
-    //             return "bg-purple-500";
-    //         case "nurse":
-    //             return "bg-teal-500";
-    //         case "lab":
-    //             return "bg-amber-500";
-    //         case "x ray":
-    //         case "xray":
-    //             return "bg-indigo-500";
-    //         case "patient":
-    //             return "bg-emerald-500";
-    //         default:
-    //             return "bg-green-500";
-    //     }
-    // };
-
     return (
         <header className="sticky top-0 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200/60 z-50" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -366,45 +344,36 @@ export function Header() {
                                 <Link to="/" className="font-medium">{t('navbar.home') || 'Home'}</Link>
                             </Button>
                         )}
-
                         {canViewClinics && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/clinics" className="font-medium">{t('navbar.clinics') || 'Clinics'}</Link>
                             </Button>
                         )}
-
                         {canViewAboutUs && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/about" className="font-medium">{t('navbar.aboutUs') || 'About Us'}</Link>
                             </Button>
                         )}
-
-                        {/* Show regular labs/xray only for non-doctor roles */}
                         {canViewLabs && !isDoctor && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/labs" className="font-medium">{t('navbar.labs') || 'Labs'}</Link>
                             </Button>
                         )}
-
-                        {canViewXray && !isDoctor && (
-                            <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
-                                <Link to="/xray" className="font-medium">{t('navbar.xray') || 'X-Ray'}</Link>
-                            </Button>
-                        )}
-
-                        {/* Doctor-specific navigation for desktop */}
                         {canViewDoctorLabs && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/doctor/labs" className="font-medium">{t('navbar.doctorLabs') || 'Lab Results'}</Link>
                             </Button>
                         )}
-
+                        {canViewXray && !isDoctor && (
+                            <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
+                                <Link to="/xray" className="font-medium">{t('navbar.xray') || 'X-Ray'}</Link>
+                            </Button>
+                        )}
                         {canViewDoctorXray && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/doctor/xray" className="font-medium">{t('navbar.doctorXRay') || 'X-Ray Images'}</Link>
                             </Button>
                         )}
-
                         {canViewAdmin && (
                             <Button variant="ghost" size="sm" asChild className={`transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
                                 <Link to="/admin" className="font-medium">
@@ -426,14 +395,11 @@ export function Header() {
                             {effectiveRole && isAuthenticated && (
                                 <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm border transition-all duration-200 hover:shadow-md ${getRoleBadgeClass(effectiveRole)}`}>
                                     {getRoleDisplayName(effectiveRole)}
-                                    {/* Show restricted access indicator for lab and x-ray users */}
-
                                 </span>
                             )}
 
                             {isAuthenticated ? (
                                 <>
-                                    {/* ✅ ADD canChangePassword && condition here */}
                                     {canChangePassword && (
                                         <Button
                                             variant="outline"
@@ -543,7 +509,6 @@ export function Header() {
                                             </div>
                                         </div>
                                     )}
-
                                     {canViewHome && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
                                             <Link
@@ -558,7 +523,6 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-
                                     {canViewClinics && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
                                             <Link
@@ -573,7 +537,6 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-
                                     {canViewAboutUs && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
                                             <Link
@@ -588,9 +551,6 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-
-                                    {/* Show regular labs/xray only for non-doctor roles in mobile */}
-                                    {/* With this fixed version: */}
                                     {canViewLabs && !isDoctor && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
                                             <Link
@@ -605,23 +565,6 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-
-                                    {canViewXray && !isDoctor && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/xray"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/xray');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.xray') || 'X-Ray'}
-                                            </Link>
-                                        </Button>
-                                    )}
-
-                                    {/* Doctor-specific navigation for mobile */}
                                     {canViewDoctorLabs && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
                                             <Link
@@ -636,7 +579,20 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-
+                                    {canViewXray && !isDoctor && (
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                            <Link
+                                                to="/xray"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/xray');
+                                                }}
+                                                className="font-medium"
+                                            >
+                                                {t('navbar.xray') || 'X-Ray'}
+                                            </Link>
+                                        </Button>
+                                    )}
                                     {canViewDoctorXray && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
                                             <Link
@@ -651,7 +607,6 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-
                                     {canViewAdmin && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
                                             <Link
@@ -666,13 +621,12 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
-                                    {/*  Add Password Change Button to Mobile Menu */}
                                     {isAuthenticated && canChangePassword && (
                                         <Button
                                             variant="ghost"
                                             onClick={() => {
                                                 setIsPasswordModalOpen(true);
-                                                setIsMobileMenuOpen(false); // Close mobile menu when opening modal
+                                                setIsMobileMenuOpen(false);
                                             }}
                                             className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}
                                         >
@@ -684,7 +638,6 @@ export function Header() {
                                             </div>
                                         </Button>
                                     )}
-                                    {/* Add Logout Button to Mobile Menu */}
                                     {isAuthenticated && (
                                         <Button
                                             variant="ghost"

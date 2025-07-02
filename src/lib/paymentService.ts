@@ -8,7 +8,7 @@ export interface PaymentData {
     doctorId: string;
     amount: number;
     currency: string;
-    paymentMethod: 'credit_card' | 'paypal' | 'cash' | 'insurance';
+    paymentMethod: 'credit_card' | 'cash';
     description: string;
 }
 
@@ -19,11 +19,6 @@ export interface CreditCardData {
     cvv: string;
     amount: number;
     currency: string;
-}
-
-export interface PayPalOrder {
-    orderId: string;
-    approvalUrl: string;
 }
 
 class PalestinianPaymentService {
@@ -102,111 +97,6 @@ class PalestinianPaymentService {
                 errorMessage: error instanceof Error ? error.message : 'Unknown error',
             });
 
-            throw error;
-        }
-    }
-
-    // Create PayPal Order
-    async createPayPalOrder(paymentData: PaymentData): Promise<PayPalOrder> {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                throw new Error('User not authenticated');
-            }
-
-            // Convert ILS to USD for PayPal (PayPal doesn't support ILS directly)
-            let amount = paymentData.amount;
-            const currency = 'USD';
-
-            if (paymentData.currency === 'ILS') {
-                // Convert ILS to USD (approximate rate - you should use a real conversion API)
-                amount = Math.round((paymentData.amount / 3.7) * 100) / 100; // Rough conversion rate
-            }
-
-            const response = await fetch(`${this.baseUrl}/payments/paypal/create-order`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                    'X-Client-Info': 'bethlehem-med-center'
-                },
-                body: JSON.stringify({
-                    amount: amount,
-                    currency: currency,
-                    description: `Medical appointment - ${paymentData.description}`,
-                    appointmentId: paymentData.appointmentId
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create PayPal order');
-            }
-
-            const result = await response.json();
-
-            // Store the order details temporarily
-            await this.recordPaymentAttempt({
-                appointmentId: paymentData.appointmentId,
-                paymentMethod: 'paypal',
-                amount: paymentData.amount,
-                status: 'pending',
-                errorMessage: `PayPal order created: ${result.orderId}`,
-            });
-
-            return result;
-        } catch (error) {
-            console.error('PayPal order creation failed:', error);
-            throw error;
-        }
-    }
-
-    // Confirm PayPal Payment
-    async confirmPayPalPayment(orderId: string, paymentData: PaymentData): Promise<Record<string, unknown>> {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                throw new Error('User not authenticated');
-            }
-
-            const response = await fetch(`${this.baseUrl}/payments/paypal/capture-order`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                    'X-Client-Info': 'bethlehem-med-center'
-                },
-                body: JSON.stringify({
-                    orderId,
-                    paymentData
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to confirm PayPal payment');
-            }
-
-            const result = await response.json();
-
-            // Record successful PayPal payment
-            if (result.status === 'COMPLETED') {
-                await this.recordPayment({
-                    appointmentId: paymentData.appointmentId,
-                    paymentMethod: 'paypal',
-                    amount: paymentData.amount,
-                    currency: paymentData.currency,
-                    status: 'completed',
-                    transactionId: orderId,
-                    gatewayResponse: result,
-                });
-
-                await this.updateAppointmentPaymentStatus(paymentData.appointmentId, 'paid');
-            }
-
-            return result;
-        } catch (error) {
-            console.error('PayPal payment confirmation failed:', error);
             throw error;
         }
     }
@@ -433,30 +323,6 @@ class PalestinianPaymentService {
             return { success: true, paymentMethod: 'cash', status: 'pending' };
         } catch (error) {
             console.error('Cash payment processing failed:', error);
-            throw error;
-        }
-    }
-
-    // Process insurance payment
-    async processInsurancePayment(
-        paymentData: PaymentData,
-        insuranceData: Record<string, unknown>
-    ): Promise<{ success: boolean; paymentMethod: 'insurance'; status: 'pending' }> {
-        try {
-            await this.recordPayment({
-                appointmentId: paymentData.appointmentId,
-                paymentMethod: 'insurance',
-                amount: paymentData.amount,
-                currency: paymentData.currency,
-                status: 'pending',
-                gatewayResponse: insuranceData,
-            });
-
-            await this.updateAppointmentPaymentStatus(paymentData.appointmentId, 'pending');
-
-            return { success: true, paymentMethod: 'insurance', status: 'pending' };
-        } catch (error) {
-            console.error('Insurance payment processing failed:', error);
             throw error;
         }
     }

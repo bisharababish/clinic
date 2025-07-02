@@ -275,7 +275,7 @@ export const TermsOfUseModal: React.FC<{ isOpen: boolean; onClose: () => void }>
                         </div>
                     </div>
                     <p className="text-gray-700 leading-relaxed">
-                        {isRTL 
+                        {isRTL
                             ? "يرجى قراءة هذه الشروط والأحكام بعناية قبل استخدام خدماتنا. استخدامك لخدماتنا يعني موافقتك على هذه الشروط."
                             : "Please read these Terms of Use carefully before using our services. Your use of our services constitutes your agreement to these terms."
                         }
@@ -598,7 +598,7 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                                     {isRTL ? "التزامنا بالخصوصية" : "Our Privacy Commitment"}
                                 </h4>
                                 <p className="text-blue-800 text-sm">
-                                    {isRTL 
+                                    {isRTL
                                         ? "نحن ملتزمون بحماية خصوصيتك ومعلوماتك الطبية وفقاً لأعلى المعايير الدولية والقوانين المحلية."
                                         : "We are committed to protecting your privacy and medical information according to the highest international standards and local laws."
                                     }
@@ -607,7 +607,7 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                         </div>
                     </div>
                     <p className="text-gray-700 leading-relaxed">
-                        {isRTL 
+                        {isRTL
                             ? "توضح هذه السياسة كيفية جمع واستخدام وحماية معلوماتك الشخصية والطبية. يرجى قراءتها بعناية."
                             : "This policy explains how we collect, use, and protect your personal and medical information. Please read it carefully."
                         }
