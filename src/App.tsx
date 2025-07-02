@@ -8,6 +8,7 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { getDefaultRouteForRole } from "./lib/rolePermissions";
 import { supabase } from "./lib/supabase";
 import React from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -60,7 +61,8 @@ const cleanupGlobalSubscriptions = () => {
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+      <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+      <Skeleton width={120} height={20} className="mx-auto" />
       <p className="mt-4 text-gray-600">Loading...</p>
     </div>
   </div>

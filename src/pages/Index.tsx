@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "@/components/contexts/LanguageContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Enhanced patient info interface for search results
 interface PatientSearchResult {
@@ -1139,7 +1140,9 @@ const Index = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <Skeleton width={32} height={32} circle className="mx-auto mb-4" />
+          <Skeleton width={160} height={20} className="mx-auto mb-2" />
+          <Skeleton width={100} height={16} className="mx-auto" />
           <p className="text-gray-600">
             {isRTL ? "جاري تحميل المعلومات الصحية..." : "Loading health information..."}
           </p>

@@ -18,6 +18,8 @@ import { UserRole } from "../../../hooks/useAuth";
 import UserRoleBadge from '../../../components/auth/UserRoleBadge';
 import { useTranslation } from 'react-i18next';
 import "../../styles/usersmanagement.css"
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface UserInfo {
     user_id: string; // uuid/text primary key
     userid: number;
@@ -656,6 +658,19 @@ const UsersManagement = () => {
     };
 
     // Main render
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
+                    <Skeleton width={120} height={16} className="mx-auto" />
+                    <p className="mt-4 text-gray-600">{t('usersManagement.loading') || 'Loading users...'}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={`users-management-container ${isRTL ? 'rtl' : ''}`}>
             <div className="users-list-section">

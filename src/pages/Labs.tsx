@@ -6,6 +6,7 @@ import { getDefaultRouteForRole } from "../lib/rolePermissions";
 import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 import { FileUploadService, UploadProgress } from "../lib/fileUploadService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Import shadcn/ui components
 import { Button } from "../components/ui/button";
@@ -486,6 +487,19 @@ const Labs = () => {
             </Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+          <Skeleton width={180} height={20} className="mx-auto mb-2" />
+          <Skeleton width={120} height={16} className="mx-auto" />
+          <p className="mt-4 text-gray-600">{t('labs.loadingPatients') || 'Loading patients...'}</p>
+        </div>
       </div>
     );
   }

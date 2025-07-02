@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { FileUploadService } from '../lib/fileUploadService';
 import jsPDF from 'jspdf';
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Type definitions (updated to match your database)
 interface LabResult {
@@ -200,7 +201,9 @@ const DoctorLabsPage: React.FC = () => {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
+                    <Skeleton width={120} height={16} className="mx-auto" />
                     <p className="mt-4 text-gray-600">
                         {isRTL ? 'جاري تحميل نتائج المختبر...' : 'Loading lab results...'}
                     </p>

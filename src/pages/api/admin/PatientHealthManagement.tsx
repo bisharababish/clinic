@@ -63,6 +63,7 @@ import {
 } from 'lucide-react';
 
 import '../../styles/patienthealthtab.css';
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Enhanced Patient interface with health data
 interface PatientWithHealth {
@@ -1443,9 +1444,13 @@ const PatientHealthManagement: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin mr-2" />
-                <span className="text-gray-600">{t('patientHealth.loadingRecords') || 'Loading patient records...'}</span>
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
+                    <Skeleton width={120} height={16} className="mx-auto" />
+                    <p className="mt-4 text-gray-600">{t('patientHealth.loading') || 'Loading patient health data...'}</p>
+                </div>
             </div>
         );
     }

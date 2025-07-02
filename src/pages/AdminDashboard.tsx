@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
+import { Skeleton } from "@/components/ui/skeleton";
 
 // FIXED: Import the complete PatientHealthManagement component
 import PatientHealthManagement from "./api/admin/PatientHealthManagement";
@@ -496,7 +497,9 @@ const AdminDashboard = () => {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
+                    <Skeleton width={120} height={16} className="mx-auto" />
                     <p className="mt-4 text-gray-600">{t('admin.loadingDashboard') || 'Loading dashboard...'}</p>
                 </div>
             </div>

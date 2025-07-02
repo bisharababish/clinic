@@ -4,6 +4,7 @@ import { Search, Image, Calendar, User, Filter, Download, Eye, ZoomIn, ZoomOut, 
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Type definitions matching your database structure
 interface XRayImage {
@@ -261,7 +262,9 @@ const DoctorXRayPage: React.FC = () => {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
+                    <Skeleton width={120} height={16} className="mx-auto" />
                     <p className="mt-4 text-gray-600">{t('doctorPages.loadingXrayImages') || 'Loading X-ray images...'}</p>
                 </div>
             </div>
@@ -449,7 +452,6 @@ const DoctorXRayPage: React.FC = () => {
                 )}
             </div>
 
-           // Replace your existing Image Viewer Modal section with this mobile-optimized version:
 
             {/* Image Viewer Modal */}
             {selectedImage && (

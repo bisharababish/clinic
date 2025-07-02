@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "../lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import "./styles/Clinics.css";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type AvailabilitySlot = {
     id: string;
@@ -266,18 +267,12 @@ const Clinics = () => {
     if (isLoading) {
         return (
             <div className={`loading-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? "rtl" : "ltr"}>
-                <div className="loading-spinner"></div>
-                <span className={`loading-text ${isRTL ? 'rtl' : 'ltr'}`}>
-                    {t('clinics.loading')}
-                </span>
-                {loadError && (
-                    <div className="loading-error-message">
-                        <p>{loadError}</p>
-                        <Button onClick={loadData} className="retry-button">
-                            {t('clinics.retry') || 'Retry'}
-                        </Button>
-                    </div>
-                )}
+                <div className="text-center">
+                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
+                    <Skeleton width={120} height={16} className="mx-auto" />
+                    <p className="mt-4 text-gray-600">{t('clinics.loading') || 'Loading clinics...'}</p>
+                </div>
             </div>
         );
     }
