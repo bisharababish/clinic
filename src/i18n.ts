@@ -653,6 +653,15 @@ const enTranslations = {
         cannotDeleteUserWithAppointments: 'Cannot delete user with existing appointments. Please delete their appointments first.',
         unexpectedError: 'An unexpected error occurred. Please try again.',
 
+        // Real-time name validation errors
+        englishNameErrorTitle: 'English Name Error',
+        englishNameErrorDesc: 'Please enter only English letters (no numbers)',
+        arabicNameErrorTitle: 'Arabic Name Error',
+        arabicNameErrorDesc: 'Please enter only Arabic letters (no numbers)',
+        // Phone validation errors
+        phoneInvalidTitle: 'Invalid Phone Number',
+        phoneInvalidDesc: 'Phone number must start with +970 or +972 and be followed by exactly 9 digits',
+
         // Activity log messages
         userCreated: 'User Created',
         userUpdated: 'User Updated',
@@ -1666,7 +1675,10 @@ const arTranslations = {
         invalidDateOfBirth: "يرجى إدخال تاريخ ميلاد صحيح",
         palestinianIdFormat: "الرقم الوطني الفلسطيني يجب أن يكون 9 أرقام بالضبط",
         englishLettersOnly: "الأسماء الإنجليزية يجب أن تحتوي على أحرف إنجليزية فقط",
-        arabicLettersOnly: "الأسماء العربية يجب أن تحتوي على أحرف عربية فقط"
+        arabicLettersOnly: "الأسماء العربية يجب أن تحتوي على أحرف عربية فقط",
+        // Phone validation errors
+        phoneInvalidTitle: 'رقم هاتف غير صحيح',
+        phoneInvalidDesc: 'يجب أن يبدأ رقم الهاتف بـ +970 أو +972 ويتبعه 9 أرقام فقط'
     },
     clinics: {
         // Page title and alerts
@@ -1996,6 +2008,15 @@ const arTranslations = {
         failedToDeleteUser: 'فشل في حذف المستخدم من قاعدة البيانات.',
         cannotDeleteUserWithAppointments: 'لا يمكن حذف مستخدم لديه مواعيد موجودة. يرجى حذف مواعيده أولاً.',
         unexpectedError: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
+
+        // Real-time name validation errors
+        englishNameErrorTitle: 'خطأ في الاسم الإنجليزي',
+        englishNameErrorDesc: 'يرجى إدخال أحرف إنجليزية فقط بدون أرقام',
+        arabicNameErrorTitle: 'خطأ في الاسم العربي',
+        arabicNameErrorDesc: 'يرجى إدخال أحرف عربية فقط بدون أرقام',
+        // Phone validation errors
+        phoneInvalidTitle: 'رقم هاتف غير صحيح',
+        phoneInvalidDesc: 'يجب أن يبدأ رقم الهاتف بـ +970 أو +972 ويتبعه 9 أرقام فقط',
 
         // Activity log messages
         userCreated: 'تم إنشاء مستخدم',

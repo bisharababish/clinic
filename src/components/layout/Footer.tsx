@@ -194,16 +194,44 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Copyright Section - Enhanced */}
-        <div className="mt-16 pt-8 border-t border-gradient-to-r from-transparent via-muted/50 to-transparent relative">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"></div>
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-muted/30 border border-muted/40">
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-              <p className="text-sm font-medium text-muted-foreground">
-                © {currentYear} {t("common.clinicName")}. {t("footer.rights")}.
-              </p>
-              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-            </div>
+        <div className="mt-8 flex flex-col items-center">
+          {/* Developed by Codefusion.me Section */}
+          <div className="developed-by flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mb-8 w-full">
+            <a
+              href="https://codefusion.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-primary/85 hover:text-primary font-medium text-base px-3 py-2 rounded-lg transition-colors hover:bg-primary/10"
+              aria-label="Developed by Codefusion.me"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" strokeWidth="2" /><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" strokeWidth="2" /></svg>
+              <span className="font-semibold">Developed by Codefusion.me</span>
+            </a>
+            <a
+              href="https://instagram.com/codefusionn.ps"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-primary/85 hover:text-pink-600 font-medium text-base px-3 py-2 rounded-lg transition-colors hover:bg-pink-50"
+              aria-label="Instagram Codefusionn.ps"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="2" width="20" height="20" rx="5" strokeWidth="2" /><circle cx="12" cy="12" r="4" strokeWidth="2" /><circle cx="18" cy="6" r="1" /></svg>
+              <span>@codefusionn.ps</span>
+            </a>
+            <a
+              href="tel:+972599203837"
+              className="flex items-center gap-2 text-primary/85 hover:text-green-600 font-medium text-base px-3 py-2 rounded-lg transition-colors hover:bg-green-50"
+              aria-label="Call Codefusion.me"
+            >
+              <Phone className="h-5 w-5 text-green-500" />
+              <span dir="ltr">+972599203837</span>
+            </a>
+          </div>
+          <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-muted/30 border border-muted/40">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+            <p className="text-sm font-medium text-muted-foreground">
+              © {currentYear} {t("common.clinicName")}. {t("footer.rights")}.
+            </p>
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
           </div>
         </div>
 

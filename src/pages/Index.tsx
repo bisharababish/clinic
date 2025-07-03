@@ -252,9 +252,76 @@ const Index = () => {
     }
   };
 
-  // NEW: Handle patient creation form changes
+  // Helper: Regex for English and Arabic letters only (no numbers)
+  const englishNameRegex = /^[A-Za-z\s'-]+$/;
+  const arabicNameRegex = /^[\u0600-\u06FF\s'-]+$/;
+
+  // Helper: Check if date is at least 16 years ago
+  const isAtLeast16YearsOld = (dateString: string) => {
+    const dob = new Date(dateString);
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear();
+    if (age > 16) return true;
+    if (age === 16) {
+      // Check month and day
+      if (
+        today.getMonth() > dob.getMonth() ||
+        (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate())
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // Helper: Regex for phone number validation
+  const phoneRegex = /^(\+970|\+972)\d{9}$/;
+
+  // NEW: Enhanced handleCreatePatientFormChange to restrict input in real-time
   const handleCreatePatientFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    // Restrict English name fields
+    if (name.startsWith('english_username')) {
+      if (value === '' || englishNameRegex.test(value)) {
+        setCreatePatientForm(prev => ({ ...prev, [name]: value }));
+      } else {
+        toast({
+          title: t('usersManagement.englishNameErrorTitle'),
+          description: t('usersManagement.englishNameErrorDesc'),
+          variant: 'destructive',
+        });
+      }
+      return;
+    }
+    // Restrict Arabic name fields
+    if (name.startsWith('arabic_username')) {
+      if (value === '' || arabicNameRegex.test(value)) {
+        setCreatePatientForm(prev => ({ ...prev, [name]: value }));
+      } else {
+        toast({
+          title: t('usersManagement.arabicNameErrorTitle'),
+          description: t('usersManagement.arabicNameErrorDesc'),
+          variant: 'destructive',
+        });
+      }
+      return;
+    }
+    // Restrict phone number field
+    if (name === 'user_phonenumber') {
+      // Allow only +970 or +972 followed by up to 9 digits
+      let sanitized = value.replace(/[^\d+]/g, '');
+      if (!sanitized.startsWith('+970') && !sanitized.startsWith('+972')) {
+        sanitized = '+970';
+      }
+      // Only allow up to 9 digits after the prefix
+      const prefix = sanitized.startsWith('+972') ? '+972' : '+970';
+      let digits = sanitized.slice(prefix.length).replace(/\D/g, '');
+      digits = digits.slice(0, 9);
+      sanitized = prefix + digits;
+      setCreatePatientForm(prev => ({ ...prev, [name]: sanitized }));
+      return;
+    }
+    // Other fields
     setCreatePatientForm(prev => ({ ...prev, [name]: value }));
   };
 
@@ -281,6 +348,18 @@ const Index = () => {
       });
       return false;
     }
+    // Restrict English name fields to English letters only (no numbers)
+    const englishFields = [form.english_username_a, form.english_username_b, form.english_username_c, form.english_username_d];
+    for (const field of englishFields) {
+      if (field && !englishNameRegex.test(field)) {
+        toast({
+          title: isRTL ? "خطأ في الاسم الإنجليزي" : "English Name Error",
+          description: isRTL ? "يرجى إدخال أحرف إنجليزية فقط بدون أرقام" : "Please enter only English letters (no numbers)",
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
 
     // Check required Arabic name fields
     if (!form.arabic_username_a.trim() || !form.arabic_username_d.trim()) {
@@ -290,6 +369,18 @@ const Index = () => {
         variant: "destructive",
       });
       return false;
+    }
+    // Restrict Arabic name fields to Arabic letters only (no numbers)
+    const arabicFields = [form.arabic_username_a, form.arabic_username_b, form.arabic_username_c, form.arabic_username_d];
+    for (const field of arabicFields) {
+      if (field && !arabicNameRegex.test(field)) {
+        toast({
+          title: isRTL ? "خطأ في الاسم العربي" : "Arabic Name Error",
+          description: isRTL ? "يرجى إدخال أحرف عربية فقط بدون أرقام" : "Please enter only Arabic letters (no numbers)",
+          variant: "destructive",
+        });
+        return false;
+      }
     }
 
     // Validate email
@@ -303,31 +394,41 @@ const Index = () => {
       return false;
     }
 
-    // Validate ID number
-    if (!form.id_number.trim() || form.id_number.length < 6) {
-      toast({
-        title: isRTL ? "رقم هوية غير صحيح" : "Invalid ID Number",
-        description: isRTL ? "رقم الهوية يجب أن يكون 6 أرقام على الأقل" : "ID number must be at least 6 characters long",
-        variant: "destructive",
-      });
-      return false;
+    // Validate ID number (optional for secretary)
+    if (!(userRole === 'secretary' && !form.id_number.trim())) {
+      if (!form.id_number.trim() || form.id_number.length < 6) {
+        toast({
+          title: isRTL ? "رقم هوية غير صحيح" : "Invalid ID Number",
+          description: isRTL ? "رقم الهوية يجب أن يكون 6 أرقام على الأقل" : "ID number must be at least 6 characters long",
+          variant: "destructive",
+        });
+        return false;
+      }
     }
 
     // Validate phone number
-    if (!form.user_phonenumber.trim() || form.user_phonenumber.length < 8) {
+    if (!form.user_phonenumber.trim() || !phoneRegex.test(form.user_phonenumber.trim())) {
       toast({
-        title: isRTL ? "رقم هاتف غير صحيح" : "Invalid Phone Number",
-        description: isRTL ? "رقم الهاتف يجب أن يكون 8 أرقام على الأقل" : "Phone number must be at least 8 digits long",
-        variant: "destructive",
+        title: t('usersManagement.phoneInvalidTitle'),
+        description: t('usersManagement.phoneInvalidDesc'),
+        variant: 'destructive',
       });
       return false;
     }
 
-    // Validate date of birth
+    // Validate date of birth (must be at least 16 years old)
     if (!form.date_of_birth) {
       toast({
         title: isRTL ? "تاريخ الميلاد مطلوب" : "Date of Birth Required",
         description: isRTL ? "يرجى إدخال تاريخ الميلاد" : "Please enter date of birth",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!isAtLeast16YearsOld(form.date_of_birth)) {
+      toast({
+        title: isRTL ? "العمر غير كافٍ" : "Age Restriction",
+        description: isRTL ? "يجب أن يكون عمر المريض 16 سنة على الأقل" : "Patient must be at least 16 years old",
         variant: "destructive",
       });
       return false;
@@ -344,6 +445,28 @@ const Index = () => {
     }
 
     return true;
+  };
+
+  // Helper: Generate a random 4-digit number as string
+  const generateRandom4DigitId = () => {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+  };
+
+  // Helper: Ensure the generated ID is unique in the database
+  const getUnique4DigitId = async () => {
+    let unique = false;
+    let id = '';
+    while (!unique) {
+      id = generateRandom4DigitId();
+      const { data: existing, error } = await supabase
+        .from('userinfo')
+        .select('id_number')
+        .eq('id_number', id);
+      if (!error && (!existing || existing.length === 0)) {
+        unique = true;
+      }
+    }
+    return id;
   };
 
   // NEW: Load all patients for sidebar (for nurses)
@@ -430,11 +553,15 @@ const Index = () => {
     try {
       console.log('🏥 Creating new patient account...');
 
-      // First, check if email or ID already exists
+      // First, check if email or ID already exists (skip ID check if secretary and empty)
+      let orQuery = `user_email.eq.${createPatientForm.user_email}`;
+      if (!(userRole === 'secretary' && !createPatientForm.id_number.trim())) {
+        orQuery += `,id_number.eq.${createPatientForm.id_number}`;
+      }
       const { data: existingUsers, error: checkError } = await supabase
         .from('userinfo')
         .select('user_email, id_number')
-        .or(`user_email.eq.${createPatientForm.user_email},id_number.eq.${createPatientForm.id_number}`);
+        .or(orQuery);
 
       if (checkError) {
         throw new Error(`Database check failed: ${checkError.message}`);
@@ -453,7 +580,7 @@ const Index = () => {
           return;
         }
 
-        if (existingId) {
+        if (existingId && !(userRole === 'secretary' && !createPatientForm.id_number.trim())) {
           toast({
             title: isRTL ? "رقم الهوية موجود مسبقاً" : "ID Number Already Exists",
             description: isRTL ? "رقم الهوية هذا مستخدم بالفعل" : "This ID number is already in use",
@@ -486,6 +613,10 @@ const Index = () => {
 
       // Prepare database record
       const currentTimestamp = new Date().toISOString();
+      let idNumberToUse = createPatientForm.id_number.trim();
+      if (userRole === 'secretary' && !idNumberToUse) {
+        idNumberToUse = await getUnique4DigitId();
+      }
       const dbRecord = {
         user_roles: 'Patient',
         english_username_a: createPatientForm.english_username_a.trim(),
@@ -497,7 +628,7 @@ const Index = () => {
         arabic_username_c: createPatientForm.arabic_username_c.trim() || createPatientForm.arabic_username_a.trim(),
         arabic_username_d: createPatientForm.arabic_username_d.trim(),
         user_email: createPatientForm.user_email.toLowerCase().trim(),
-        id_number: createPatientForm.id_number.trim(),
+        id_number: idNumberToUse,
         user_phonenumber: createPatientForm.user_phonenumber.trim(),
         date_of_birth: createPatientForm.date_of_birth,
         gender_user: createPatientForm.gender_user,
@@ -1173,8 +1304,8 @@ const Index = () => {
           {/* Sidebar */}
           <div className={`patient-sidebar ${isRTL ? 'rtl' : 'ltr'} ${showPatientSidebar ? 'show' : ''}`}>
             {/* Sidebar Header */}
-            <div className="p-4 border-b bg-blue-50">
-              <div className="flex items-center justify-between mb-3">
+            <div className="p-4 border-b bg-blue-50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-blue-800 flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   {isRTL ? "قائمة المرضى" : "All Patients"}
@@ -1183,40 +1314,51 @@ const Index = () => {
                   {filteredPatients.length}
                 </Badge>
               </div>
-
-              {/* Sidebar Search Filter */}
-              <div className="relative">
-                <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-2.5 h-4 w-4 text-gray-400`} />
-                <Input
-                  type="text"
-                  placeholder={isRTL ? "فلترة المرضى..." : "Filter patients..."}
-                  value={patientListFilter}
-                  onChange={(e) => setPatientListFilter(e.target.value)}
-                  className={`${isRTL ? 'pr-10' : 'pl-10'} text-sm`}
-                />
-              </div>
-
-              {/* Refresh Button */}
-              <Button
-                onClick={loadAllPatients}
-                disabled={isLoadingPatients}
-                variant="outline"
-                size="sm"
-                className="w-full mt-2 text-xs"
-              >
-                {isLoadingPatients ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                    {isRTL ? "جاري التحميل..." : "Loading..."}
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    {isRTL ? "تحديث القائمة" : "Refresh List"}
-                  </>
-                )}
-              </Button>
+              {/* Sidebar Hide Button - Only show when sidebar is open */}
+              {showPatientSidebar && (
+                <Button
+                  onClick={() => setShowPatientSidebar(false)}
+                  className={`patient-list hide-list-btn ${isRTL ? 'rtl' : 'ltr'}`}
+                  size="sm"
+                >
+                  <X className="h-4 w-4" />
+                  {isRTL ? "إخفاء القائمة" : "Hide List"}
+                </Button>
+              )}
             </div>
+
+            {/* Sidebar Search Filter */}
+            <div className="relative">
+              <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-2.5 h-4 w-4 text-gray-400`} />
+              <Input
+                type="text"
+                placeholder={isRTL ? "فلترة المرضى..." : "Filter patients..."}
+                value={patientListFilter}
+                onChange={(e) => setPatientListFilter(e.target.value)}
+                className={`${isRTL ? 'pr-10' : 'pl-10'} text-sm`}
+              />
+            </div>
+
+            {/* Refresh Button */}
+            <Button
+              onClick={loadAllPatients}
+              disabled={isLoadingPatients}
+              variant="outline"
+              size="sm"
+              className="w-full mt-2 text-xs"
+            >
+              {isLoadingPatients ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  {isRTL ? "جاري التحميل..." : "Loading..."}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  {isRTL ? "تحديث القائمة" : "Refresh List"}
+                </>
+              )}
+            </Button>
 
             {/* Sidebar Content */}
             <ScrollArea className="h-full pb-20">

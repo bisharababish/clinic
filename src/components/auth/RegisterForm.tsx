@@ -85,26 +85,23 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             }
         }
 
-        // Handle phone number with +970 prefix
+        // Handle phone number with +97, then 0 or 2, then 9 digits
         if (name === 'phoneNumber') {
-            let cleanValue = value.replace(/\D/g, ''); // Remove all non-digits
-
-            // If user starts typing without +970, add it
-            if (cleanValue && !value.startsWith('+970')) {
-                if (cleanValue.startsWith('970')) {
-                    cleanValue = cleanValue.substring(3); // Remove 970 if they typed it
-                }
-                setFormData(prev => ({ ...prev, [name]: `+970${cleanValue}` }));
-                return;
+            let sanitized = value.replace(/[^\d+]/g, '');
+            if (!sanitized.startsWith('+97')) {
+                sanitized = '+97';
             }
-
-            // If they have +970, ensure the rest is max 9 digits
-            if (value.startsWith('+970')) {
-                const restOfNumber = cleanValue.substring(3);
-                if (restOfNumber.length > 9) return; // Don't allow more than 9 digits after +970
-                setFormData(prev => ({ ...prev, [name]: `+970${restOfNumber}` }));
-                return;
+            const afterPrefix = sanitized.slice(3, 4);
+            if (afterPrefix !== '0' && afterPrefix !== '2') {
+                sanitized = sanitized.slice(0, 3);
             }
+            if (sanitized.length >= 4) {
+                let digits = sanitized.slice(4).replace(/\D/g, '');
+                digits = digits.slice(0, 9);
+                sanitized = sanitized.slice(0, 4) + digits;
+            }
+            setFormData(prev => ({ ...prev, [name]: sanitized }));
+            return;
         }
 
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -147,12 +144,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             return false;
         }
 
-        // Palestinian phone validation (+970 + 9 digits)
-        const phoneRegex = /^\+970[0-9]{9}$/;
+        // Phone validation (+97, then 0 or 2, then 9 digits)
+        const phoneRegex = /^\+97[02]\d{9}$/;
         if (!phoneRegex.test(formData.phoneNumber)) {
             toast({
                 title: t("auth.invalidPhone"),
-                description: t("auth.palestinianPhoneFormat"),
+                description: t("usersManagement.phoneInvalidDesc"),
                 variant: "destructive",
             });
             return false;
