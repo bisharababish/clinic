@@ -1,10 +1,11 @@
 // pages/api/admin/DoctorCalendarTab.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Calendar, Clock, User, MapPin } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight, Calendar, Clock, User, MapPin, Plus, Eye, TrendingUp, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Doctor {
@@ -46,80 +47,134 @@ interface DoctorCalendarTabProps {
     clinics: Clinic[];
     appointments: Appointment[];
     isLoading: boolean;
+    setActiveTab: (tab: string) => void;
+}
+
+interface DayAppointment {
+    date: number;
+    isCurrentMonth: boolean;
+    fullDate: Date;
+    appointments: Appointment[];
 }
 
 const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
     doctors,
     clinics,
     appointments,
-    isLoading
+    isLoading,
+    setActiveTab
 }) => {
     const { t, i18n } = useTranslation();
     const [selectedDoctor, setSelectedDoctor] = useState<string>('all');
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [calendarView, setCalendarView] = useState<'month' | 'week'>('month');
+    const [selectedDayAppointments, setSelectedDayAppointments] = useState<Appointment[]>([]);
+    const [showDayDialog, setShowDayDialog] = useState(false);
+    const [selectedDateStr, setSelectedDateStr] = useState('');
 
     // Get current month and year
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
 
-    // Generate calendar days
-    const generateCalendarDays = () => {
+    // Memoized filtered appointments based on selected doctor
+    const filteredAppointments = useMemo(() => {
+        if (selectedDoctor === 'all') {
+            return appointments;
+        }
+        return appointments.filter(apt => apt.doctor_id === selectedDoctor);
+    }, [selectedDoctor, appointments]);
+
+    // Memoized today's appointments (all doctors, not filtered)
+    const todayAppointments = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        return appointments.filter(apt => apt.date === today);
+    }, [appointments]);
+
+    // Memoized upcoming appointments (all doctors, not filtered)
+    const upcomingAppointments = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        return appointments
+            .filter(apt => apt.date > today && apt.status === 'scheduled')
+            .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+    }, [appointments]);
+
+    // Memoized doctor statistics
+    const doctorStats = useMemo(() => {
+        const totalDoctors = doctors.length;
+        const availableDoctors = doctors.filter(d => d.isAvailable).length;
+        const totalAppointments = filteredAppointments.length;
+        const scheduledAppointments = filteredAppointments.filter(apt => apt.status === 'scheduled').length;
+        const completedAppointments = filteredAppointments.filter(apt => apt.status === 'completed').length;
+        const totalRevenue = filteredAppointments
+            .filter(apt => apt.payment_status === 'paid')
+            .reduce((sum, apt) => sum + apt.price, 0);
+
+        return {
+            totalDoctors,
+            availableDoctors,
+            totalAppointments,
+            scheduledAppointments,
+            completedAppointments,
+            totalRevenue
+        };
+    }, [doctors, filteredAppointments]);
+
+    // Generate calendar days with appointments
+    const generateCalendarDays = useMemo(() => {
         const firstDay = new Date(currentYear, currentMonth, 1);
         const lastDay = new Date(currentYear, currentMonth + 1, 0);
         const firstDayOfWeek = firstDay.getDay();
         const daysInMonth = lastDay.getDate();
-
-        const days = [];
+        const days: DayAppointment[] = [];
 
         // Add empty cells for days before the first day of the month
         for (let i = 0; i < firstDayOfWeek; i++) {
             const prevMonth = new Date(currentYear, currentMonth, 0);
             const prevDate = prevMonth.getDate() - (firstDayOfWeek - i - 1);
+            const fullDate = new Date(currentYear, currentMonth - 1, prevDate);
+            const dateStr = fullDate.toISOString().split('T')[0];
+            const dayAppointments = filteredAppointments.filter(apt => apt.date === dateStr);
+
             days.push({
                 date: prevDate,
                 isCurrentMonth: false,
-                fullDate: new Date(currentYear, currentMonth - 1, prevDate)
+                fullDate,
+                appointments: dayAppointments
             });
         }
 
         // Add days of the current month
         for (let day = 1; day <= daysInMonth; day++) {
+            const fullDate = new Date(currentYear, currentMonth, day);
+            const dateStr = fullDate.toISOString().split('T')[0];
+            const dayAppointments = filteredAppointments.filter(apt => apt.date === dateStr);
+
             days.push({
                 date: day,
                 isCurrentMonth: true,
-                fullDate: new Date(currentYear, currentMonth, day)
+                fullDate,
+                appointments: dayAppointments
             });
         }
 
         // Add empty cells for days after the last day of the month
         const remainingCells = 42 - days.length; // 6 weeks * 7 days
         for (let i = 1; i <= remainingCells; i++) {
+            const fullDate = new Date(currentYear, currentMonth + 1, i);
+            const dateStr = fullDate.toISOString().split('T')[0];
+            const dayAppointments = filteredAppointments.filter(apt => apt.date === dateStr);
+
             days.push({
                 date: i,
                 isCurrentMonth: false,
-                fullDate: new Date(currentYear, currentMonth + 1, i)
+                fullDate,
+                appointments: dayAppointments
             });
         }
 
         return days;
-    };
+    }, [currentYear, currentMonth, filteredAppointments]);
 
-    // Filter appointments based on selected doctor
-    const getFilteredAppointments = () => {
-        if (selectedDoctor === 'all') {
-            return appointments;
-        }
-        return appointments.filter(apt => apt.doctor_id === selectedDoctor);
-    };
-
-    // Get appointments for a specific date
-    const getAppointmentsForDate = (date: Date) => {
-        const dateStr = date.toISOString().split('T')[0];
-        return getFilteredAppointments().filter(apt => apt.date === dateStr);
-    };
-
-    // Navigate months
+    // Navigation functions
     const goToPreviousMonth = () => {
         setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
     };
@@ -128,34 +183,99 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
         setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
     };
 
-    // Get doctor name by ID
+    const goToToday = () => {
+        setCurrentDate(new Date());
+    };
+
+    // Helper functions
     const getDoctorName = (doctorId: string) => {
         const doctor = doctors.find(d => d.id === doctorId);
         return doctor ? doctor.name : 'Unknown Doctor';
     };
 
-    // Get clinic name by ID
     const getClinicName = (clinicId: string) => {
         const clinic = clinics.find(c => c.id === clinicId);
         return clinic ? clinic.name : 'Unknown Clinic';
     };
 
-    // Get status color
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'scheduled': return 'bg-blue-100 text-blue-800';
-            case 'completed': return 'bg-green-100 text-green-800';
-            case 'cancelled': return 'bg-red-100 text-red-800';
+            case 'scheduled': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+            case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    const getPaymentStatusColor = (status: string) => {
+        switch (status) {
+            case 'paid': return 'bg-green-100 text-green-800';
+            case 'pending': return 'bg-yellow-100 text-yellow-800';
+            case 'refunded': return 'bg-gray-100 text-gray-800';
             default: return 'bg-gray-100 text-gray-800';
         }
     };
 
-    const monthNames = [
-        t('admin.january') || 'January', t('admin.february') || 'February', t('admin.march') || 'March', t('admin.april') || 'April', t('admin.may') || 'May', t('admin.june') || 'June',
-        t('admin.july') || 'July', t('admin.august') || 'August', t('admin.september') || 'September', t('admin.october') || 'October', t('admin.november') || 'November', t('admin.december') || 'December'
-    ];
+    const formatTime = (time: string) => {
+        try {
+            const [hours, minutes] = time.split(':');
+            const date = new Date();
+            date.setHours(parseInt(hours, 10));
+            date.setMinutes(parseInt(minutes, 10));
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return time;
+        }
+    };
 
-    const weekDays = i18n.language === 'ar'
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('he-IL', {
+            style: 'currency',
+            currency: 'ILS',
+            minimumFractionDigits: 0
+        }).format(amount);
+    };
+
+    const handleDayClick = (day: DayAppointment) => {
+        if (day.appointments.length > 0) {
+            setSelectedDayAppointments(day.appointments);
+            setSelectedDateStr(day.fullDate.toLocaleDateString());
+            setShowDayDialog(true);
+        }
+    };
+
+    const handleQuickAction = (action: string) => {
+        switch (action) {
+            case 'schedule':
+                // Open in new tab for scheduling
+                window.open('/admin/schedule-appointment', '_blank');
+                break;
+            case 'doctors':
+                // Switch to doctors tab
+                setActiveTab('doctors');
+                break;
+            case 'clinics':
+                // Switch to clinics tab
+                setActiveTab('clinics');
+                break;
+            case 'appointments':
+                // Switch to appointments tab
+                setActiveTab('appointments');
+                break;
+            default:
+                break;
+        }
+    };
+
+    // Month and day names with proper i18n
+    const monthNames = React.useMemo(() => [
+        t('admin.january') || 'January', t('admin.february') || 'February', t('admin.march') || 'March',
+        t('admin.april') || 'April', t('admin.may') || 'May', t('admin.june') || 'June',
+        t('admin.july') || 'July', t('admin.august') || 'August', t('admin.september') || 'September',
+        t('admin.october') || 'October', t('admin.november') || 'November', t('admin.december') || 'December'
+    ], [i18n.language]);
+
+    const weekDays = React.useMemo(() => i18n.language === 'ar'
         ? [
             t('admin.saturday') || 'السبت',
             t('admin.sunday') || 'الأحد',
@@ -173,12 +293,13 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
             t('admin.thursday') || 'Thu',
             t('admin.friday') || 'Fri',
             t('admin.saturday') || 'Sat',
-        ];
+        ], [i18n.language]);
 
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <span className="ml-2">{t('admin.loadingCalendar') || 'Loading calendar...'}</span>
             </div>
         );
     }
@@ -190,25 +311,27 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                 {i18n.language === 'ar' ? (
                     <>
                         <div className="flex gap-2">
-                            <div className="ml-auto">
-                                <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                                    <SelectTrigger className="w-[200px]">
-                                        <SelectValue placeholder={t('admin.selectDoctor') || 'Select Doctor'} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t('admin.allDoctors') || 'All Doctors'}</SelectItem>
-                                        {doctors.map(doctor => (
-                                            <SelectItem key={doctor.id} value={doctor.id}>
-                                                {doctor.name} - {doctor.specialty}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <Button variant="outline" size="sm" onClick={goToToday}>
+                                <Calendar className="h-4 w-4 ml-2" />
+                                {t('admin.today') || 'Today'}
+                            </Button>
+                            <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder={t('admin.selectDoctor') || 'Select Doctor'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('admin.allDoctors') || 'All Doctors'}</SelectItem>
+                                    {doctors.map(doctor => (
+                                        <SelectItem key={doctor.id} value={doctor.id}>
+                                            {doctor.name} - {doctor.specialty}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div>
                             <h2 className="text-2xl font-bold text-right">{t('admin.doctorCalendar') || 'Doctor Calendar'}</h2>
-                            <p className="text-gray-600 mt-1">
+                            <p className="text-gray-600 mt-1 text-right">
                                 {t('admin.manageAppointmentSchedules') || 'Manage appointment schedules for all doctors'}
                             </p>
                         </div>
@@ -222,21 +345,23 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                             </p>
                         </div>
                         <div className="flex gap-2">
-                            <div>
-                                <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                                    <SelectTrigger className="w-[200px]">
-                                        <SelectValue placeholder={t('admin.selectDoctor') || 'Select Doctor'} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t('admin.allDoctors') || 'All Doctors'}</SelectItem>
-                                        {doctors.map(doctor => (
-                                            <SelectItem key={doctor.id} value={doctor.id}>
-                                                {doctor.name} - {doctor.specialty}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder={t('admin.selectDoctor') || 'Select Doctor'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('admin.allDoctors') || 'All Doctors'}</SelectItem>
+                                    {doctors.map(doctor => (
+                                        <SelectItem key={doctor.id} value={doctor.id}>
+                                            {doctor.name} - {doctor.specialty}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button variant="outline" size="sm" onClick={goToToday}>
+                                <Calendar className="h-4 w-4 mr-2" />
+                                {t('admin.today') || 'Today'}
+                            </Button>
                         </div>
                     </>
                 )}
@@ -271,50 +396,62 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                         ))}
 
                         {/* Calendar days */}
-                        {generateCalendarDays().map((day, index) => {
-                            const dayAppointments = getAppointmentsForDate(day.fullDate);
+                        {generateCalendarDays.map((day, index) => {
                             const isToday = day.fullDate.toDateString() === new Date().toDateString();
+                            const hasAppointments = day.appointments.length > 0;
 
                             return (
                                 <div
                                     key={index}
                                     className={`
-                    min-h-[80px] p-1 border rounded-lg relative
-                    ${day.isCurrentMonth ? 'bg-white' : 'bg-gray-50'}
-                    ${isToday ? 'ring-2 ring-blue-500' : ''}
-                    hover:bg-gray-50 transition-colors
-                  `}
+                                        min-h-[100px] p-1 border rounded-lg relative cursor-pointer transition-all duration-200
+                                        ${day.isCurrentMonth ? 'bg-white' : 'bg-gray-50'}
+                                        ${isToday ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
+                                        ${hasAppointments ? 'hover:bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}
+                                        ${!day.isCurrentMonth ? 'opacity-60' : ''}
+                                    `}
+                                    onClick={() => handleDayClick(day)}
                                 >
                                     <div className={`
-                    text-sm font-medium mb-1
-                    ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
-                    ${isToday ? 'text-blue-600' : ''}
-                  `}>
+                                        text-sm font-medium mb-1
+                                        ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
+                                        ${isToday ? 'text-blue-600 font-bold' : ''}
+                                    `}>
                                         {day.date}
                                     </div>
 
                                     {/* Appointments for this day */}
                                     <div className="space-y-1">
-                                        {dayAppointments.slice(0, 2).map(apt => (
+                                        {day.appointments.slice(0, 3).map(apt => (
                                             <div
                                                 key={apt.id}
                                                 className={`
-                          text-xs p-1 rounded truncate
-                          ${getStatusColor(apt.status)}
-                        `}
-                                                title={`${apt.time} - ${apt.patient_name} ${t('admin.withDoctor')} ${getDoctorName(apt.doctor_id)}`}
+                                                    text-xs p-1 rounded border truncate
+                                                    ${getStatusColor(apt.status)}
+                                                    hover:shadow-sm transition-shadow
+                                                `}
+                                                title={`${formatTime(apt.time)} - ${apt.patient_name} with Dr. ${getDoctorName(apt.doctor_id)}`}
                                             >
-                                                <div className="flex items-center gap-1">
-                                                    <Clock className="h-3 w-3" />
-                                                    <span>{apt.time}</span>
+                                                <div className="flex items-center gap-1 mb-1">
+                                                    <Clock className="h-2 w-2" />
+                                                    <span className="font-medium">{formatTime(apt.time)}</span>
                                                 </div>
-                                                <div className="truncate">{apt.patient_name}</div>
+                                                <div className="truncate font-medium">{apt.patient_name}</div>
+                                                <div className="truncate text-xs opacity-75">
+                                                    Dr. {getDoctorName(apt.doctor_id)}
+                                                </div>
                                             </div>
                                         ))}
 
-                                        {dayAppointments.length > 2 && (
-                                            <div className="text-xs text-gray-500 p-1">
-                                                +{dayAppointments.length - 2} more
+                                        {day.appointments.length > 3 && (
+                                            <div className="text-xs text-blue-600 p-1 font-medium bg-blue-50 rounded border border-blue-200">
+                                                +{day.appointments.length - 3} {t('admin.more') || 'more'}
+                                            </div>
+                                        )}
+
+                                        {day.appointments.length === 0 && day.isCurrentMonth && (
+                                            <div className="text-xs text-gray-400 p-1 text-center opacity-50">
+                                                {t('admin.noAppointments') || 'No appointments'}
                                             </div>
                                         )}
                                     </div>
@@ -325,97 +462,291 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                 </CardContent>
             </Card>
 
-            {/* Appointments Summary */}
+            {/* Summary Cards */}
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                 {/* Today's Appointments */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
+                <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">
                             <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                <Calendar className="h-5 w-5" />
+                                <Calendar className="h-5 w-5 text-blue-600" />
                                 {t('admin.todaysAppointments') || "Today's Appointments"}
                             </div>
                         </CardTitle>
+                        <div className={`text-2xl font-bold text-blue-600 ${i18n.language === 'ar' ? 'text-right' : ''}`}
+                            style={i18n.language === 'ar' ? { direction: 'rtl' } : {}}>
+                            {i18n.language === 'ar' ? <><span>{todayAppointments.length}</span></> : <>{todayAppointments.length}</>}
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        {(() => {
-                            const todayAppointments = getAppointmentsForDate(new Date());
-                            return todayAppointments.length > 0 ? (
-                                <div className="space-y-2">
-                                    {todayAppointments.map(apt => (
-                                        <div key={apt.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                            <div>
-                                                <div className="font-medium text-sm">{apt.patient_name}</div>
-                                                <div className="text-xs text-gray-600">{apt.time}</div>
+                    <CardContent className="pt-0">
+                        {todayAppointments.length > 0 ? (
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {todayAppointments.slice(0, 4).map(apt => (
+                                    <div key={apt.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                        <div>
+                                            <div className="font-medium text-sm">{apt.patient_name}</div>
+                                            <div className="text-xs text-gray-600">
+                                                {formatTime(apt.time)} • Dr. {getDoctorName(apt.doctor_id)}
                                             </div>
-                                            <Badge variant={apt.status === 'scheduled' ? 'default' : 'secondary'}>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <Badge variant={apt.status === 'scheduled' ? 'default' : 'secondary'} className="text-xs">
                                                 {apt.status}
                                             </Badge>
+                                            <Badge variant="outline" className={`text-xs ${getPaymentStatusColor(apt.payment_status)}`}>
+                                                {apt.payment_status}
+                                            </Badge>
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className={`text-gray-500 text-sm ${i18n.language === 'ar' ? 'text-right' : ''}`}>
-                                    {t('admin.noAppointmentsToday') || 'No appointments today'}
-                                </p>
-                            );
-                        })()}
+                                    </div>
+                                ))}
+                                {todayAppointments.length > 4 && (
+                                    <div className="text-center">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleQuickAction('appointments')}
+                                            className="text-blue-600 hover:text-blue-800"
+                                        >
+                                            {t('admin.viewAll') || 'View All'} ({todayAppointments.length})
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p className={`text-gray-500 text-sm text-center py-4 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                                {t('admin.noAppointmentsToday') || 'No appointments scheduled for today'}
+                            </p>
+                        )}
                     </CardContent>
                 </Card>
-
-                {/* Doctor Statistics */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
+                {/* Upcoming Appointments */}
+                <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">
                             <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                <User className="h-5 w-5" />
+                                <Calendar className="h-5 w-5 text-orange-600" />
+                                {t('admin.upcomingAppointments') || 'Upcoming Appointments'}
+                            </div>
+                        </CardTitle>
+                        <div className={`text-2xl font-bold text-orange-600 ${i18n.language === 'ar' ? 'text-right' : ''}`}
+                            style={i18n.language === 'ar' ? { direction: 'rtl' } : {}}>
+                            {i18n.language === 'ar' ? <><span>{upcomingAppointments.length}</span></> : <>{upcomingAppointments.length}</>}
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        {upcomingAppointments.length > 0 ? (
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {upcomingAppointments.slice(0, 4).map(apt => (
+                                    <div key={apt.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                        <div>
+                                            <div className="font-medium text-sm">{apt.patient_name}</div>
+                                            <div className="text-xs text-gray-600">
+                                                {formatTime(apt.time)} • Dr. {getDoctorName(apt.doctor_id)}
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <Badge variant="default" className="text-xs">
+                                                {apt.status}
+                                            </Badge>
+                                            <Badge variant="outline" className={`text-xs ${getPaymentStatusColor(apt.payment_status)}`}>
+                                                {apt.payment_status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                ))}
+                                {upcomingAppointments.length > 4 && (
+                                    <div className="text-center">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleQuickAction('appointments')}
+                                            className="text-orange-600 hover:text-orange-800"
+                                        >
+                                            {t('admin.viewAll') || 'View All'} ({upcomingAppointments.length})
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p className={`text-gray-500 text-sm text-center py-4 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                                {t('admin.noUpcomingAppointments') || 'No upcoming appointments'}
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+                {/* Doctor Statistics */}
+                <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">
+                            <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                                <User className="h-5 w-5 text-green-600" />
                                 {t('admin.doctorStats') || 'Doctor Statistics'}
                             </div>
                         </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2">
+                    <CardContent className="pt-0">
+                        <div className="space-y-3">
                             <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
                                 <span className="text-sm text-gray-600">{t('admin.totalDoctors') || 'Total Doctors'}</span>
-                                <span className="font-medium">{doctors.length}</span>
+                                <span className="font-bold text-lg text-green-600">{doctorStats.totalDoctors}</span>
                             </div>
                             <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
                                 <span className="text-sm text-gray-600">{t('admin.availableDoctors') || 'Available'}</span>
-                                <span className="font-medium">{doctors.filter(d => d.isAvailable).length}</span>
+                                <span className="font-medium text-green-500">{doctorStats.availableDoctors}</span>
                             </div>
                             <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
                                 <span className="text-sm text-gray-600">{t('admin.totalAppointments') || 'Total Appointments'}</span>
-                                <span className="font-medium">{getFilteredAppointments().length}</span>
+                                <span className="font-medium">{doctorStats.totalAppointments}</span>
+                            </div>
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
+                                <span className="text-sm text-gray-600">{t('admin.scheduled') || 'Scheduled'}</span>
+                                <span className="font-medium text-blue-600">{doctorStats.scheduledAppointments}</span>
+                            </div>
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
+                                <span className="text-sm text-gray-600">{t('admin.completed') || 'Completed'}</span>
+                                <span className="font-medium text-green-600">{doctorStats.completedAppointments}</span>
+                            </div>
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'} pt-2 border-t`}>
+                                <span className="text-sm text-gray-600">{t('admin.totalRevenue') || 'Total Revenue'}</span>
+                                <span className="font-bold text-green-600">{formatCurrency(doctorStats.totalRevenue)}</span>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Quick Actions */}
-                <Card className={i18n.language === 'ar' ? 'text-right' : ''}>
-                    <CardHeader className={i18n.language === 'ar' ? 'text-right' : ''}>
+                <Card className={`hover:shadow-md transition-shadow ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                    <CardHeader className={`pb-3 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
                         <CardTitle className={`text-lg ${i18n.language === 'ar' ? 'text-right' : ''}`}>
-                            {t('admin.quickActions') || 'Quick Actions'}
+                            <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}
+                                style={i18n.language === 'ar' ? { direction: 'rtl', textAlign: 'right', width: '100%', justifyContent: 'flex-end' } : {}}>
+                                <Activity className="h-5 w-5 text-purple-600" />
+                                {t('admin.quickActions') || 'Quick Actions'}
+                            </div>
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className={i18n.language === 'ar' ? 'text-right' : ''}>
+                    <CardContent className={`pt-0 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
                         <div className="space-y-2">
-                            <Button variant="outline" className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'}`} size="sm">
-                                <Calendar className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                            <Button
+                                variant="outline"
+                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-blue-50 hover:border-blue-300`}
+                                size="sm"
+                                onClick={() => handleQuickAction('schedule')}
+                            >
+                                <Plus className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-blue-600`} />
                                 {t('admin.scheduleAppointment') || 'Schedule Appointment'}
                             </Button>
-                            <Button variant="outline" className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'}`} size="sm">
-                                <User className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                            <Button
+                                variant="outline"
+                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-green-50 hover:border-green-300`}
+                                size="sm"
+                                onClick={() => handleQuickAction('doctors')}
+                            >
+                                <User className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-green-600`} />
                                 {t('admin.manageDoctors') || 'Manage Doctors'}
                             </Button>
-                            <Button variant="outline" className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'}`} size="sm">
-                                <MapPin className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                            <Button
+                                variant="outline"
+                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-purple-50 hover:border-purple-300`}
+                                size="sm"
+                                onClick={() => handleQuickAction('clinics')}
+                            >
+                                <MapPin className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-purple-600`} />
                                 {t('admin.viewClinics') || 'View Clinics'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-orange-50 hover:border-orange-300`}
+                                size="sm"
+                                onClick={() => handleQuickAction('appointments')}
+                            >
+                                <Eye className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-orange-600`} />
+                                {t('admin.viewAllAppointments') || 'View All Appointments'}
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Day Details Dialog */}
+            <Dialog open={showDayDialog} onOpenChange={setShowDayDialog}>
+                <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${i18n.language === 'ar' ? 'rtl' : ''}`}>
+                    <DialogHeader>
+                        <DialogTitle className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                            <Calendar className="h-5 w-5" />
+                            {t('admin.appointmentsFor') || 'Appointments for'} {selectedDateStr}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {selectedDayAppointments.length} {selectedDayAppointments.length === 1 ? t('admin.appointment') || 'appointment' : t('admin.appointments') || 'appointments'} scheduled
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 mt-4">
+                        {selectedDayAppointments
+                            .sort((a, b) => a.time.localeCompare(b.time))
+                            .map(apt => (
+                                <div key={apt.id} className={`p-4 border rounded-lg hover:bg-gray-50 ${getStatusColor(apt.status)} border`}>
+                                    <div className={`flex justify-between items-start ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                                        <div className="flex-1">
+                                            <div className={`flex items-center gap-2 mb-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                                                <Clock className="h-4 w-4" />
+                                                <span className="font-bold text-lg">{formatTime(apt.time)}</span>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                                                    <User className="h-4 w-4 text-gray-500" />
+                                                    <span className="font-medium">{apt.patient_name}</span>
+                                                </div>
+
+                                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                                                    <User className="h-4 w-4 text-blue-500" />
+                                                    <span>Dr. {getDoctorName(apt.doctor_id)}</span>
+                                                </div>
+
+                                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                                                    <MapPin className="h-4 w-4 text-green-500" />
+                                                    <span>{getClinicName(apt.clinic_id)}</span>
+                                                </div>
+
+                                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
+                                                    <TrendingUp className="h-4 w-4 text-purple-500" />
+                                                    <span className="font-semibold">{formatCurrency(apt.price)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className={`flex flex-col gap-2 ${i18n.language === 'ar' ? 'items-end' : 'items-start'}`}>
+                                            <Badge className={getStatusColor(apt.status)}>
+                                                {t(`admin.${apt.status}`) || apt.status}
+                                            </Badge>
+                                            <Badge variant="outline" className={getPaymentStatusColor(apt.payment_status)}>
+                                                {t(`admin.${apt.payment_status}`) || apt.payment_status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                        {selectedDayAppointments.length === 0 && (
+                            <div className="text-center py-8 text-gray-500">
+                                <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                <p>{t('admin.noAppointmentsThisDay') || 'No appointments scheduled for this day'}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className={`flex justify-end gap-2 mt-6 pt-4 border-t ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <Button variant="outline" onClick={() => setShowDayDialog(false)}>
+                            {t('common.close') || 'Close'}
+                        </Button>
+                        <Button onClick={() => handleQuickAction('schedule')}>
+                            <Plus className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+                            {t('admin.scheduleNew') || 'Schedule New'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

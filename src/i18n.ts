@@ -580,10 +580,14 @@ const enTranslations = {
         noAppointmentsToday: 'No appointments today',
         doctorStats: 'Doctor Statistics',
         availableDoctors: 'Available',
-        quickActions: 'Quick Actions',
         scheduleAppointment: 'Schedule Appointment',
         viewClinics: 'View Clinics',
-        withDoctor: 'with'
+        withDoctor: 'with',
+        today: 'Today',
+        noAppointments: 'No appointments',
+        viewAllAppointments: 'View All Appointments',
+        upcomingAppointments: 'Upcoming Appointments',
+        noUpcomingAppointments: 'No upcoming appointments',
     },
     labs: {
         title: 'Laboratory Test Results',
@@ -1982,10 +1986,14 @@ const arTranslations = {
         noAppointmentsToday: 'لا توجد مواعيد اليوم',
         doctorStats: 'إحصائيات الأطباء',
         availableDoctors: 'المتاحون',
-        quickActions: 'إجراءات سريعة',
         scheduleAppointment: 'جدولة موعد',
         viewClinics: 'عرض العيادات',
-        withDoctor: 'مع الطبيب'
+        withDoctor: 'مع الطبيب',
+        today: 'اليوم',
+        noAppointments: 'لا توجد مواعيد',
+        viewAllAppointments: 'عرض جميع المواعيد',
+        upcomingAppointments: 'المواعيد القادمة',
+        noUpcomingAppointments: 'لا توجد مواعيد قادمة',
     },
     usersManagement: {
         // Main titles and descriptions

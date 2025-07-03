@@ -46,6 +46,7 @@ interface CalendarTabProps {
         language: string;
         changeLanguage: (lng: string) => void;
     };
+    setActiveTab: (tab: string) => void;
 }
 
 const CalendarTab: React.FC<CalendarTabProps> = ({
@@ -54,14 +55,17 @@ const CalendarTab: React.FC<CalendarTabProps> = ({
     clinics,
     isLoading,
     t,
-    i18n
+    i18n,
+    setActiveTab
 }) => {
     return (
         <DoctorCalendarTab
+            key={i18n.language}
             doctors={doctors}
             clinics={clinics}
             appointments={appointments}
             isLoading={isLoading}
+            setActiveTab={setActiveTab}
         />
     );
 };

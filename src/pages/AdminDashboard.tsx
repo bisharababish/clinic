@@ -347,14 +347,17 @@ const AdminDashboard = () => {
             setIsLoading(false);
         }
     };
-
     const loadClinics = async () => {
         try {
             console.log('Loading clinics...');
-            // Add your clinic loading logic here
-            // Example:
-            // const { data, error } = await supabase.from('clinics').select('*');
-            // if (data) setClinics(data);
+            const { data, error } = await supabase
+                .from('clinics')
+                .select('*')
+                .eq('is_active', true)
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+            setClinics(data || []);
         } catch (error) {
             console.error('Error loading clinics:', error);
             toast({
@@ -368,10 +371,13 @@ const AdminDashboard = () => {
     const loadDoctors = async () => {
         try {
             console.log('Loading doctors...');
-            // Add your doctor loading logic here
-            // Example:
-            // const { data, error } = await supabase.from('doctors').select('*');
-            // if (data) setDoctors(data);
+            const { data, error } = await supabase
+                .from('doctors')
+                .select('*')
+                .order('name', { ascending: true });
+
+            if (error) throw error;
+            setDoctors(data || []);
         } catch (error) {
             console.error('Error loading doctors:', error);
             toast({
@@ -385,10 +391,37 @@ const AdminDashboard = () => {
     const loadAppointments = async () => {
         try {
             console.log('Loading appointments...');
-            // Add your appointment loading logic here
-            // Example:
-            // const { data, error } = await supabase.from('appointments').select('*');
-            // if (data) setAppointments(data);
+            const { data, error } = await supabase
+                .from('appointments')
+                .select(`
+                    *,
+                    patients:patient_id (userid, english_username_a, english_username_d),
+                    doctors:doctor_id (id, name),
+                    clinics:clinic_id (id, name)
+                `)
+                .order('date', { ascending: false });
+
+            if (error) throw error;
+
+            const mappedAppointments = data?.map(apt => ({
+                id: apt.id,
+                patient_id: apt.patient_id,
+                patient_name: `${apt.patients?.english_username_a || ''} ${apt.patients?.english_username_d || ''}`.trim(),
+                doctor_id: apt.doctor_id,
+                doctor_name: apt.doctors?.name || 'Unknown Doctor',
+                clinic_id: apt.clinic_id,
+                clinic_name: apt.clinics?.name || 'Unknown Clinic',
+                date: apt.date,
+                time: apt.time,
+                status: apt.status,
+                payment_status: apt.payment_status,
+                price: apt.price,
+                notes: apt.notes || '',
+                created_at: apt.created_at,
+                updated_at: apt.updated_at
+            })) || [];
+
+            setAppointments(mappedAppointments);
         } catch (error) {
             console.error('Error loading appointments:', error);
             toast({
@@ -673,6 +706,7 @@ const AdminDashboard = () => {
                                 isLoading={isLoading}
                                 t={t}
                                 i18n={i18n}
+                                setActiveTab={setActiveTab}
                             />}
                         </TabsContent>
                     )}
