@@ -15,6 +15,7 @@ import i18n from '../i18n';
 import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from "@/components/ui/skeleton";
+import CalendarTab from "./api/admin/CalenderTab";
 
 // FIXED: Import the complete PatientHealthManagement component
 import PatientHealthManagement from "./api/admin/PatientHealthManagement";
@@ -141,6 +142,7 @@ const AdminDashboard = () => {
     const canViewDoctorsTab = userPermissions.canViewDoctors;
     const canViewAppointmentsTab = userPermissions.canViewAppointments;
     const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole);
+    const canViewCalendarTab = ['admin', 'secretary'].includes(userRole);
 
     // Get default tab for user role
     const getDefaultTab = () => {
@@ -238,7 +240,8 @@ const AdminDashboard = () => {
             'clinics': canViewClinicsTab,
             'doctors': canViewDoctorsTab,
             'appointments': canViewAppointmentsTab,
-            'patient-health': canViewPatientHealthTab
+            'patient-health': canViewPatientHealthTab,
+            'calendar': canViewCalendarTab
         }[newTab];
 
         if (hasPermission) {
@@ -542,7 +545,7 @@ const AdminDashboard = () => {
     };
 
     // Check if any tabs are accessible
-    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab;
+    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab;
 
     // Main render
     return (
@@ -586,10 +589,16 @@ const AdminDashboard = () => {
                                 {i18n.language === 'ar' ? 'الصحة' : 'Health'}
                             </TabsTrigger>
                         )}
+
                         {/* Appointments tab last - shortened to "Appts" */}
                         {canViewAppointmentsTab && (
                             <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
                                 {i18n.language === 'ar' ? 'المواعيد' : 'Appts'}
+                            </TabsTrigger>
+                        )}
+                        {canViewCalendarTab && (
+                            <TabsTrigger value="calendar" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
                             </TabsTrigger>
                         )}
                     </TabsList>
@@ -597,7 +606,7 @@ const AdminDashboard = () => {
                     {/* OVERVIEW TAB */}
                     {canViewOverviewTab && (
                         <TabsContent value="overview" className="pt-6">
-                            <OverviewManagement
+                            {isLoading ? <Skeleton className="h-40 w-full" /> : <OverviewManagement
                                 users={users}
                                 clinics={clinics}
                                 doctors={doctors}
@@ -608,42 +617,42 @@ const AdminDashboard = () => {
                                 refreshReportData={refreshReportData}
                                 setActiveTab={setActiveTab}
                                 checkSystemStatus={checkSystemStatus}
-                            />
+                            />}
                         </TabsContent>
                     )}
 
                     {/* USERS TAB */}
                     {canViewUsersTab && (
                         <TabsContent value="users" className="pt-6">
-                            <UsersManagement />
+                            {isLoading ? <Skeleton className="h-40 w-full" /> : <UsersManagement />}
                         </TabsContent>
                     )}
 
                     {/* CLINICS TAB */}
                     {canViewClinicsTab && (
                         <TabsContent value="clinics" className="pt-6">
-                            <ClinicManagement />
+                            {isLoading ? <Skeleton className="h-40 w-full" /> : <ClinicManagement />}
                         </TabsContent>
                     )}
 
                     {/* DOCTORS TAB */}
                     {canViewDoctorsTab && (
                         <TabsContent value="doctors" className="pt-6">
-                            <DoctorManagement />
+                            {isLoading ? <Skeleton className="h-40 w-full" /> : <DoctorManagement />}
                         </TabsContent>
                     )}
 
                     {/* PATIENT HEALTH TAB - FIXED: Using the imported component */}
                     {canViewPatientHealthTab && (
                         <TabsContent value="patient-health" className="pt-6">
-                            <PatientHealthManagement />
+                            {isLoading ? <Skeleton className="h-40 w-full" /> : <PatientHealthManagement />}
                         </TabsContent>
                     )}
 
                     {/* APPOINTMENTS TAB */}
                     {canViewAppointmentsTab && (
                         <TabsContent value="appointments" className="pt-6">
-                            <AppointmentsManagement
+                            {isLoading ? <Skeleton className="h-40 w-full" /> : <AppointmentsManagement
                                 appointments={appointments}
                                 setAppointments={setAppointments}
                                 isLoading={isLoading}
@@ -651,7 +660,20 @@ const AdminDashboard = () => {
                                 loadAppointments={loadAppointments}
                                 logActivity={logActivity}
                                 userEmail={user?.email || 'admin'}
-                            />
+                            />}
+                        </TabsContent>
+                    )}
+
+                    {canViewCalendarTab && (
+                        <TabsContent value="calendar" className="pt-6">
+                            {isLoading ? <Skeleton className="h-40 w-full" /> : <CalendarTab
+                                appointments={appointments}
+                                doctors={doctors}
+                                clinics={clinics}
+                                isLoading={isLoading}
+                                t={t}
+                                i18n={i18n}
+                            />}
                         </TabsContent>
                     )}
                 </Tabs>
