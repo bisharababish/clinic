@@ -202,6 +202,22 @@ const Index = () => {
     { key: "has_alzheimer_dementia", en: "Alzheimer/Dementia", ar: "الزهايمر/الخرف" },
   ];
 
+  const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
+  const allergiesList = [
+    { en: 'Peanuts', ar: 'الفول السوداني' },
+    { en: 'Seafood', ar: 'المأكولات البحرية' },
+    { en: 'Eggs', ar: 'البيض' },
+    { en: 'Milk', ar: 'الحليب' },
+    { en: 'Pollen', ar: 'حبوب اللقاح' },
+    { en: 'Dust', ar: 'الغبار' },
+    { en: 'Insect stings', ar: 'لسعات الحشرات' },
+    { en: 'Latex', ar: 'اللاتكس' },
+    { en: 'Penicillin', ar: 'البنسلين' },
+  ];
+
+
+
+
   // Add state for cholesterol type
   const [cholesterolType, setCholesterolType] = useState<string>("");
 
@@ -875,7 +891,12 @@ const Index = () => {
         });
         setSelectedMedicines(allMeds);
       }
-
+      // NEW: Load allergies
+      if (patient.health_data.allergies) {
+        setSelectedAllergies(patient.health_data.allergies);
+      } else {
+        setSelectedAllergies([]);
+      }
       setHealthData(patient.health_data);
     } else {
       // Reset form for patients without health data
@@ -887,6 +908,7 @@ const Index = () => {
       });
       setSelectedDiseases([]);
       setSelectedMedicines([]);
+      setSelectedAllergies([]);
       setHealthData(null);
     }
 
@@ -983,6 +1005,12 @@ const Index = () => {
           });
           setSelectedMedicines(allMeds);
         }
+        // NEW: Load allergies
+        if (data.allergies) {
+          setSelectedAllergies(data.allergies);
+        } else {
+          setSelectedAllergies([]);
+        }
 
         // Enhanced log entry with user info
         const createdBy = data.created_by_name || data.created_by_email || 'Unknown';
@@ -1011,7 +1039,7 @@ const Index = () => {
         setSelectedDiseases([]);
         setSelectedMedicines([]);
         setHealthData(null);
-
+        setSelectedAllergies([]);
         setPatientLogs(prev => [...prev, { key: 'welcomeHealthInfo', timestamp: new Date() }]);
       }
 
@@ -1161,6 +1189,7 @@ const Index = () => {
         blood_type: patientInfo.bloodType || undefined,
         ...diseaseData,
         medications: medicationData,
+        allergies: selectedAllergies,
       };
 
       // Save to database using the hook (user tracking is automatic via database trigger)
@@ -1256,6 +1285,7 @@ const Index = () => {
     const medicationCount = healthData.medications
       ? Object.values(healthData.medications).flat().length
       : 0;
+    const allergyCount = healthData.allergies ? healthData.allergies.length : 0;
 
     let bmi = null;
     if (healthData.weight_kg && healthData.height_cm) {
@@ -1263,7 +1293,7 @@ const Index = () => {
       bmi = (healthData.weight_kg / (heightInMeters * heightInMeters)).toFixed(1);
     }
 
-    return { diseaseCount, medicationCount, bmi };
+    return { diseaseCount, medicationCount, allergyCount, bmi };
   };
 
   // Show loading state
@@ -1281,6 +1311,16 @@ const Index = () => {
       </div>
     );
   }
+
+  // Move these to the top of the Index component, after other useState hooks
+
+  const handleAllergySelect = (allergy: string) => {
+    setSelectedAllergies(prev =>
+      prev.includes(allergy)
+        ? prev.filter(a => a !== allergy)
+        : [...prev, allergy]
+    );
+  };
 
   return (
     <div className={`index-flex-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -2269,6 +2309,27 @@ const Index = () => {
             </div>
           </section>
 
+          {/* Allergies Section - visible to ALL users */}
+          <section className="bg-white p-6 rounded-lg shadow mt-6">
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">{isRTL ? 'الحساسية' : 'Allergies'}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {allergiesList.map(allergy => (
+                <div key={allergy.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
+                  <input
+                    type="checkbox"
+                    id={allergy.en}
+                    checked={selectedAllergies.includes(allergy.en)}
+                    onChange={() => handleAllergySelect(allergy.en)}
+                    className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <Label htmlFor={allergy.en} className="text-base">
+                    {isRTL ? allergy.ar : allergy.en}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </section>
+
           {/* Enhanced Patient Logs with User Tracking - visible to ALL users */}
           <section className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.patientLogs")}</h2>
@@ -2487,7 +2548,57 @@ const Index = () => {
                       )).concat(
                         allMeds.length > 5 ? [(
                           <div key="more" className="text-xs text-gray-600 italic mt-2">
-                            {t('home.logs.moreMedications', { count: allMeds.length - 5 })}
+                            {isRTL ?
+                              `و ${allMeds.length - 5} دواء آخر` :
+                              `+${allMeds.length - 5} more medications`
+                            }                          </div>
+                        )] : []
+                      );
+                    })()}
+                  </div>
+                </div>
+                {/* NEW: Allergies Summary */}
+                <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
+                  <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    {isRTL ? "الحساسية" : "Allergies"}
+                  </h3>
+                  <div className="space-y-2">
+                    {(() => {
+                      if (!healthData.allergies || healthData.allergies.length === 0) {
+                        return (
+                          <p className="text-sm text-gray-600 italic">
+                            {isRTL ? "لا توجد حساسية مسجلة" : "No allergies recorded"}
+                          </p>
+                        );
+                      }
+
+                      return healthData.allergies.slice(0, 5).map((allergy, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span className="text-sm font-medium">
+                            {isRTL ? (
+                              // Convert English allergy names to Arabic
+                              allergy === 'Peanuts' ? 'الفول السوداني' :
+                                allergy === 'Seafood' ? 'المأكولات البحرية' :
+                                  allergy === 'Eggs' ? 'البيض' :
+                                    allergy === 'Milk' ? 'الحليب' :
+                                      allergy === 'Pollen' ? 'حبوب اللقاح' :
+                                        allergy === 'Dust' ? 'الغبار' :
+                                          allergy === 'Insect stings' ? 'لسعات الحشرات' :
+                                            allergy === 'Latex' ? 'اللاتكس' :
+                                              allergy === 'Penicillin' ? 'البنسلين' :
+                                                allergy
+                            ) : allergy}
+                          </span>
+                        </div>
+                      )).concat(
+                        healthData.allergies.length > 5 ? [(
+                          <div key="more" className="text-xs text-gray-600 italic mt-2">
+                            {isRTL ?
+                              `و ${healthData.allergies.length - 5} حساسية أخرى` :
+                              `+${healthData.allergies.length - 5} more allergies`
+                            }
                           </div>
                         )] : []
                       );

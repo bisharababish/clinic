@@ -27,7 +27,7 @@ export interface PatientHealthData {
         flu: string[];
         antibiotics: string[];
     };
-
+    allergies?: string[]; 
     // User tracking fields
     created_by_user_id?: number;
     created_by_email?: string;

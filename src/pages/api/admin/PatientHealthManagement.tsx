@@ -59,7 +59,8 @@ import {
     EyeOffIcon,
     Filter,
     Users,
-    List
+    List,
+    AlertCircle
 } from 'lucide-react';
 
 import '../../styles/patienthealthtab.css';
@@ -132,6 +133,18 @@ const PatientHealthForm: React.FC<{
         const [selectedPatient, setSelectedPatient] = useState<PatientWithHealth | null>(null);
         const [patientSearch, setPatientSearch] = useState('');
 
+        const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
+        const allergiesList = [
+            { en: 'Peanuts', ar: 'الفول السوداني' },
+            { en: 'Seafood', ar: 'المأكولات البحرية' },
+            { en: 'Eggs', ar: 'البيض' },
+            { en: 'Milk', ar: 'الحليب' },
+            { en: 'Pollen', ar: 'حبوب اللقاح' },
+            { en: 'Dust', ar: 'الغبار' },
+            { en: 'Insect stings', ar: 'لسعات الحشرات' },
+            { en: 'Latex', ar: 'اللاتكس' },
+            { en: 'Penicillin', ar: 'البنسلين' },
+        ];
         // Patient creation state
         const [showCreatePatientForm, setShowCreatePatientForm] = useState(false);
         const [isCreatingPatient, setIsCreatingPatient] = useState(false);
@@ -173,9 +186,17 @@ const PatientHealthForm: React.FC<{
                 allergy: [],
                 flu: [],
                 antibiotics: []
-            }
+            },
+            allergies: []
         });
-
+        // Handle allergy selection
+        const handleAllergySelect = (allergy: string) => {
+            setSelectedAllergies(prev =>
+                prev.includes(allergy)
+                    ? prev.filter(a => a !== allergy)
+                    : [...prev, allergy]
+            );
+        };
         // Medication input states
         const [newMedications, setNewMedications] = useState({
             pain_relief: '',
@@ -503,8 +524,12 @@ const PatientHealthForm: React.FC<{
                             allergy: [],
                             flu: [],
                             antibiotics: []
-                        }
+                        },
+                        allergies: existingData.allergies || []
+
                     });
+                    setSelectedAllergies(existingData.allergies || []);
+
                 }
             } catch (error) {
                 console.error('Error loading existing health data:', error);
@@ -563,6 +588,10 @@ const PatientHealthForm: React.FC<{
                 return;
             }
 
+            const dataToSave = {
+                ...formData,
+                allergies: selectedAllergies
+            };
             const success = await savePatientHealthData(formData);
             if (success) {
                 setIsOpen(false);
@@ -574,6 +603,8 @@ const PatientHealthForm: React.FC<{
         const resetForm = () => {
             setSelectedPatient(null);
             setPatientSearch('');
+            setSelectedAllergies([]);
+
             setFormData({
                 patient_id: 0,
                 weight_kg: undefined,
@@ -593,7 +624,9 @@ const PatientHealthForm: React.FC<{
                     allergy: [],
                     flu: [],
                     antibiotics: []
-                }
+                },
+                allergies: []
+
             });
             setNewMedications({
                 pain_relief: '',
@@ -932,7 +965,38 @@ const PatientHealthForm: React.FC<{
                                     </Card>
                                 </>
                             )}
-
+                            {/* Allergies Section */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-right justify-end' : ''}`}>
+                                        <AlertCircle className="h-4 w-4" />
+                                        {isRTL ? 'الحساسية' : 'Allergies'}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className={`space-y-4 ${isRTL ? 'text-right' : ''}`}>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                        {allergiesList.map(allergy => (
+                                            <div key={allergy.en} className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-3 border rounded-lg transition-colors ${selectedAllergies.includes(allergy.en) ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}>
+                                                <Label htmlFor={`allergy-${allergy.en}`} className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'} flex-1 cursor-pointer`}>
+                                                    {i18n.language === 'ar' ? allergy.ar : allergy.en}
+                                                </Label>
+                                                <Checkbox
+                                                    id={`allergy-${allergy.en}`}
+                                                    checked={selectedAllergies.includes(allergy.en)}
+                                                    onCheckedChange={(checked) => {
+                                                        if (checked) {
+                                                            setSelectedAllergies(prev => [...prev, allergy.en]);
+                                                        } else {
+                                                            setSelectedAllergies(prev => prev.filter(a => a !== allergy.en));
+                                                        }
+                                                    }}
+                                                    className={isRTL ? 'ml-3' : 'mr-3'}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
                             {/* Form Actions */}
                             {selectedPatient && (
                                 <div className={`flex gap-2 patient-health-actions pt-4 border-t ${isRTL ? 'float-right' : 'float-left'}`}>
