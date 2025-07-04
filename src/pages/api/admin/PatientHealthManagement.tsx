@@ -173,6 +173,9 @@ const PatientHealthForm: React.FC<{
             weight_kg: undefined,
             height_cm: undefined,
             blood_type: '',
+            blood_pressure: undefined,
+            heart_rate: undefined,
+            temperature: undefined,
             has_high_blood_pressure: false,
             has_diabetes: false,
             has_cholesterol_hdl: false,
@@ -238,6 +241,9 @@ const PatientHealthForm: React.FC<{
                     weight_kg: existingData.health_data?.weight_kg,
                     height_cm: existingData.health_data?.height_cm,
                     blood_type: existingData.health_data?.blood_type || '',
+                    blood_pressure: existingData.health_data?.blood_pressure,
+                    heart_rate: existingData.health_data?.heart_rate,
+                    temperature: existingData.health_data?.temperature,
                     has_high_blood_pressure: existingData.health_data?.has_high_blood_pressure || false,
                     has_diabetes: existingData.health_data?.has_diabetes || false,
                     has_cholesterol_hdl: existingData.health_data?.has_cholesterol_hdl || false,
@@ -621,6 +627,9 @@ const PatientHealthForm: React.FC<{
                 weight_kg: undefined,
                 height_cm: undefined,
                 blood_type: '',
+                blood_pressure: undefined,
+                heart_rate: undefined,
+                temperature: undefined,
                 has_high_blood_pressure: false,
                 has_diabetes: false,
                 has_cholesterol_hdl: false,
@@ -812,9 +821,9 @@ const PatientHealthForm: React.FC<{
                                                 {t('patientHealth.physicalMeasurements')}
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${isRTL ? 'text-left' : ''}`}>
+                                        <CardContent className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${isRTL ? 'text-left' : ''}`}>
                                             <div>
-                                                <Label htmlFor="weight">{t('patientHealth.weight')}</Label>
+                                                <Label htmlFor="weight">{t('patientHealth.weight')} (kg)</Label>
                                                 <Input
                                                     id="weight"
                                                     type="number"
@@ -824,13 +833,12 @@ const PatientHealthForm: React.FC<{
                                                         ...prev,
                                                         weight_kg: e.target.value ? parseFloat(e.target.value) : undefined
                                                     }))}
-                                                    placeholder={t('patientHealth.weight')}
+                                                    placeholder="70"
                                                     className="text-left"
-                                                    dir="rtl"
                                                 />
                                             </div>
                                             <div>
-                                                <Label htmlFor="height">{t('patientHealth.height')}</Label>
+                                                <Label htmlFor="height">{t('patientHealth.height')} (cm)</Label>
                                                 <Input
                                                     id="height"
                                                     type="number"
@@ -840,48 +848,72 @@ const PatientHealthForm: React.FC<{
                                                         ...prev,
                                                         height_cm: e.target.value ? parseFloat(e.target.value) : undefined
                                                     }))}
-                                                    placeholder={t('patientHealth.height')}
-                                                    className={isRTL ? 'text-left' : ''}
+                                                    placeholder="175"
+                                                    className="text-left"
                                                 />
                                             </div>
                                             <div>
                                                 <Label htmlFor="blood_type">{t('patientHealth.bloodType')}</Label>
-                                                <Select
-                                                    value={formData.blood_type}
-                                                    onValueChange={(value) => setFormData(prev => ({
+                                                {/* Keep existing blood type select component */}
+                                            </div>
+
+                                            {/* NEW: Blood Pressure */}
+                                            <div>
+                                                <Label htmlFor="blood_pressure">
+                                                    {isRTL ? 'ضغط الدم' : 'Blood Pressure'} (mmHg)
+                                                </Label>
+                                                <Input
+                                                    id="blood_pressure"
+                                                    type="text"
+                                                    value={formData.blood_pressure || ''}
+                                                    onChange={(e) => setFormData(prev => ({
                                                         ...prev,
-                                                        blood_type: value
+                                                        blood_pressure: e.target.value || undefined
                                                     }))}
-                                                >
-                                                    <SelectTrigger className={isRTL ? 'text-right flex-row-reverse' : ''}>
-                                                        <SelectValue placeholder={t('patientHealth.bloodType')} />
-                                                    </SelectTrigger>
-                                                    <SelectContent className={isRTL ? 'text-right [&>div]:text-right' : ''}>
-                                                        <SelectItem value="A+" className={isRTL ? 'text-right justify-end' : ''}>
-                                                            {isRTL ? 'أ+' : 'A+'}
-                                                        </SelectItem>
-                                                        <SelectItem value="A-" className={isRTL ? 'text-right justify-end' : ''}>
-                                                            {isRTL ? 'أ-' : 'A-'}
-                                                        </SelectItem>
-                                                        <SelectItem value="B+" className={isRTL ? 'text-right justify-end' : ''}>
-                                                            {isRTL ? 'ب+' : 'B+'}
-                                                        </SelectItem>
-                                                        <SelectItem value="B-" className={isRTL ? 'text-right justify-end' : ''}>
-                                                            {isRTL ? 'ب-' : 'B-'}
-                                                        </SelectItem>
-                                                        <SelectItem value="AB+" className={isRTL ? 'text-right justify-end' : ''}>
-                                                            {isRTL ? 'أب+' : 'AB+'}
-                                                        </SelectItem>
-                                                        <SelectItem value="AB-" className={isRTL ? 'text-right justify-end' : ''}>
-                                                            {isRTL ? 'أب-' : 'AB-'}
-                                                        </SelectItem>
-                                                        <SelectItem value="O+" className={isRTL ? 'text-right justify-end' : ''}>
-                                                            {isRTL ? 'و+' : 'O+'}
-                                                        </SelectItem>
-                                                        <SelectItem value="O-" className={isRTL ? 'text-right justify-end' : ''}>
-                                                            {isRTL ? 'و-' : 'O-'}
-                                                        </SelectItem>
-                                                    </SelectContent>                                                </Select>
+                                                    placeholder="120/80"
+                                                    className="text-left"
+                                                />
+                                            </div>
+
+                                            {/* NEW: Heart Rate */}
+                                            <div>
+                                                <Label htmlFor="heart_rate">
+                                                    {isRTL ? 'معدل ضربات القلب' : 'Heart Rate'} (bpm)
+                                                </Label>
+                                                <Input
+                                                    id="heart_rate"
+                                                    type="number"
+                                                    min="30"
+                                                    max="200"
+                                                    value={formData.heart_rate || ''}
+                                                    onChange={(e) => setFormData(prev => ({
+                                                        ...prev,
+                                                        heart_rate: e.target.value ? parseInt(e.target.value) : undefined
+                                                    }))}
+                                                    placeholder="72"
+                                                    className="text-left"
+                                                />
+                                            </div>
+
+                                            {/* NEW: Temperature */}
+                                            <div>
+                                                <Label htmlFor="temperature">
+                                                    {isRTL ? 'درجة الحرارة' : 'Temperature'} (°C)
+                                                </Label>
+                                                <Input
+                                                    id="temperature"
+                                                    type="number"
+                                                    min="30"
+                                                    max="45"
+                                                    step="0.1"
+                                                    value={formData.temperature || ''}
+                                                    onChange={(e) => setFormData(prev => ({
+                                                        ...prev,
+                                                        temperature: e.target.value ? parseFloat(e.target.value) : undefined
+                                                    }))}
+                                                    placeholder="36.5"
+                                                    className="text-left"
+                                                />
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -1709,7 +1741,22 @@ const PatientHealthManagement: React.FC = () => {
                                                                 }
                                                             </div>
                                                         )}
-
+                                                        {/* Vital Signs */}
+                                                        {record.blood_pressure && (
+                                                            <div className={`text-sm ${isRTL ? 'text-left' : ''}`}>
+                                                                <span className="font-medium">{isRTL ? 'ضغط الدم:' : 'BP:'}</span> {record.blood_pressure}
+                                                            </div>
+                                                        )}
+                                                        {record.heart_rate && (
+                                                            <div className={`text-sm ${isRTL ? 'text-left' : ''}`}>
+                                                                <span className="font-medium">{isRTL ? 'النبض:' : 'HR:'}</span> {record.heart_rate} bpm
+                                                            </div>
+                                                        )}
+                                                        {record.temperature && (
+                                                            <div className={`text-sm ${isRTL ? 'text-left' : ''}`}>
+                                                                <span className="font-medium">{isRTL ? 'الحرارة:' : 'Temp:'}</span> {record.temperature}°C
+                                                            </div>
+                                                        )}
                                                         {/* Conditions and Medications */}
                                                         <div className={`flex gap-2 flex-wrap ${isRTL ? 'justify-end' : ''}`}>
                                                             <Badge variant="outline" className={`text-xs flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>

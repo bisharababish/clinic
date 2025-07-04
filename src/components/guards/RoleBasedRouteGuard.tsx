@@ -27,7 +27,6 @@ export function RoleBasedRouteGuard({ children }: RoleBasedRouteGuardProps) {
             '/clinics': permissions.canViewClinics,
             '/labs': permissions.canViewLabs,
             '/xray': permissions.canViewXray,
-            '/about': permissions.canViewAboutUs,
             '/admin': permissions.canViewAdmin,
         };
 
@@ -67,7 +66,6 @@ export function useCanAccessRoute(path: string): boolean {
         '/clinics': permissions.canViewClinics,
         '/labs': permissions.canViewLabs,
         '/xray': permissions.canViewXray,
-        '/about': permissions.canViewAboutUs,
         '/admin': permissions.canViewAdmin,
     };
 

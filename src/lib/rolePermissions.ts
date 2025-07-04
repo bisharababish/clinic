@@ -4,7 +4,6 @@ export interface UserPermissions {
   canViewClinics: boolean;
   canViewLabs: boolean;
   canViewXray: boolean;
-  canViewAboutUs: boolean;
   canViewAdmin: boolean;
   canViewAppointments: boolean;
   canViewOverview: boolean;
@@ -26,7 +25,6 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: true,
     canViewLabs: true,
     canViewXray: true,
-    canViewAboutUs: true,
     canViewAdmin: true,
     canViewAppointments: true,
     canViewOverview: true,
@@ -45,7 +43,6 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: true,
     canViewLabs: false,
     canViewXray: false,
-    canViewAboutUs: false,
     canViewAdmin: true,
     canViewAppointments: true,
     canViewOverview: false,
@@ -64,7 +61,6 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: false,
     canViewLabs: false,
     canViewXray: false,
-    canViewAboutUs: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -83,7 +79,6 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: false,
     canViewLabs: true,
     canViewXray: false,
-    canViewAboutUs: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -102,7 +97,6 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: false,
     canViewLabs: false,
     canViewXray: true,
-    canViewAboutUs: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -121,7 +115,6 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: false,
     canViewLabs: false,
     canViewXray: false,
-    canViewAboutUs: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -140,7 +133,6 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: true,
     canViewLabs: false,
     canViewXray: false,
-    canViewAboutUs: true,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -183,7 +175,6 @@ export const getAccessibleRoutes = (role: string): string[] => {
   if (permissions.canViewClinics) routes.push('/clinics');
   if (permissions.canViewLabs) routes.push('/labs');
   if (permissions.canViewXray) routes.push('/xray');
-  if (permissions.canViewAboutUs) routes.push('/about');
   if (permissions.canViewAdmin) routes.push('/admin');
 
   // ✅ NEW: Add doctor-specific routes

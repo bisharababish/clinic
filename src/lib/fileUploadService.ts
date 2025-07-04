@@ -236,13 +236,14 @@ export class FileUploadService {
     }
 
     /**
-     * Get attachments for a lab result
-     */
-    static async getLabAttachments(labResultId: number): Promise<any[]> {
-        const { data, error } = await supabase
-            .from('lab_attachments')
-            .select('*')
-            .eq('lab_result_id', labResultId)
+     /**
+      * Get attachments for a lab result
+      */
+     static async getLabAttachments(labResultId: number): Promise<Record<string, unknown>[]> {
+         const { data, error } = await supabase
+             .from('lab_attachments')
+             .select('*')
+             .eq('lab_result_id', labResultId)
             .order('created_at', { ascending: false });
 
         if (error) {

@@ -131,8 +131,22 @@ const Labs = () => {
   const loadAttachments = async (labResultId: number) => {
     try {
       const attachmentsData = await FileUploadService.getLabAttachments(labResultId);
-      setAttachments(attachmentsData);
-    } catch (error) { }
+      const mappedAttachments = Array.isArray(attachmentsData)
+        ? attachmentsData.map((att: Record<string, unknown>) => ({
+          id: att.id as number,
+          lab_result_id: att.lab_result_id as number,
+          file_name: att.file_name as string,
+          file_path: att.file_path as string,
+          file_size: att.file_size as number,
+          mime_type: att.mime_type as string,
+          uploaded_by: att.uploaded_by as number,
+          created_at: att.created_at as string,
+        }))
+        : [];
+      setAttachments(mappedAttachments);
+    } catch (error) {
+      setError(`Failed to load attachments: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
   const handleDownloadFile = async (attachment: LabAttachment) => {
     try {

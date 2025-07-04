@@ -15,7 +15,6 @@ const Auth = lazy(() => import("./pages/Auth"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Index = lazy(() => import("./pages/Index"));
-const AboutUs = lazy(() => import("./pages/Aboutus"));
 const Clinics = lazy(() => import("./pages/Clinics"));
 const Payment = lazy(() => import("./pages/Payment"));
 const Confirmation = lazy(() => import("./pages/Confirmation"));
@@ -25,7 +24,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 // ✅ FIXED: Import the new doctor pages
-const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
+const DoctorCalendarTab = lazy(() => import("./pages/DoctorLabsPage"));
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
 let globalSubscriptions: { [key: string]: ReturnType<typeof supabase.channel> | null } = {};
 
@@ -100,15 +99,18 @@ function DefaultRedirect() {
 }
 
 // Global Error Boundary
-class GlobalErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: any }> {
+class GlobalErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: unknown }
+> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null };
   }
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: unknown) {
     return { hasError: true, error };
   }
-  componentDidCatch(error: any, errorInfo: any) {
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
     console.error("Global error boundary caught: ", error, errorInfo);
   }
   render() {
@@ -218,20 +220,6 @@ function App() {
                 }
               />
 
-              {/* About Us - accessible to admin and patient only */}
-              <Route
-                path="/about"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "patient"]}>
-                    <AuthLoadingGate>
-                      <HeaderOnlyLayout>
-                        <AboutUs />
-                      </HeaderOnlyLayout>
-                    </AuthLoadingGate>
-                  </ProtectedRoute>
-                }
-              />
-
               {/* Clinics - accessible to admin, secretary, nurse, patient */}
               <Route
                 path="/clinics"
@@ -300,7 +288,13 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["admin", "doctor"]}>
                     <HeaderOnlyLayout>
-                      <DoctorLabsPage />
+                      <DoctorCalendarTab
+                        doctors={[]}
+                        clinics={[]}
+                        appointments={[]}
+                        isLoading={false}
+                        setActiveTab={() => { }}
+                      />
                     </HeaderOnlyLayout>
                   </ProtectedRoute>
                 }

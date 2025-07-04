@@ -182,9 +182,9 @@ const Clinics = () => {
 
                 setClinics(clinicsWithDoctors);
             })(), 10000); // 10 seconds timeout
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error loading clinic data:', error);
-            if (error.message === 'timeout') {
+            if (error instanceof Error && error.message === 'timeout') {
                 setLoadError(t('clinics.loadingTimeout') || 'Loading timed out. Please try again.');
             } else {
                 setLoadError(t('clinics.errorDescription') || 'An error occurred while loading clinics.');

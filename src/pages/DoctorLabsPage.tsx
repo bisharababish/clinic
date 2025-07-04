@@ -1,537 +1,878 @@
-// DoctorLabsPage.tsx - Now with real database integration
-import React, { useState, useEffect } from 'react';
-import { Search, FileText, Calendar, User, Filter, Download, Eye, AlertCircle } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+// pages/api/admin/DoctorCalendarTab.tsx
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight, Calendar, Clock, User, MapPin, Plus, Eye, TrendingUp, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../lib/supabase';
-import { FileUploadService } from '../lib/fileUploadService';
-import jsPDF from 'jspdf';
-import { Skeleton } from "@/components/ui/skeleton";
 
-// Type definitions (updated to match your database)
-interface LabResult {
-    id: number;
-    patient_id: number;
-    patient_name: string;
-    patient_email: string;
-    date_of_birth: string;
-    blood_type: string;
-    test_date: string;
-    test_type: string;
-    test_results: string;
-    doctor_notes: string;
-    created_by: number;
-    created_at: string;
-    updated_at: string;
+interface Doctor {
+    id: string;
+    name: string;
+    specialty: string;
+    clinic_id: string;
+    email: string;
+    phone?: string;
+    isAvailable: boolean;
+    price: number;
 }
 
-const DoctorLabsPage: React.FC = () => {
-    const { user } = useAuth();
+interface Clinic {
+    id: string;
+    name: string;
+    category: string;
+    description?: string;
+    isActive: boolean;
+}
+
+interface Appointment {
+    id: string;
+    patient_id: string;
+    patient_name: string;
+    doctor_id: string;
+    doctor_name: string;
+    clinic_id: string;
+    clinic_name: string;
+    date: string;
+    time: string;
+    status: 'scheduled' | 'completed' | 'cancelled';
+    payment_status: 'pending' | 'paid' | 'refunded';
+    price: number;
+}
+
+interface DoctorCalendarTabProps {
+    doctors: Doctor[];
+    clinics: Clinic[];
+    appointments: Appointment[];
+    isLoading: boolean;
+    setActiveTab: (tab: string) => void;
+}
+
+interface DayAppointment {
+    date: number;
+    isCurrentMonth: boolean;
+    fullDate: Date;
+    appointments: Appointment[];
+}
+
+// Helper: Check if two time intervals overlap
+function isTimeOverlap(start1: string, end1: string, start2: string, end2: string) {
+    return (start1 < end2) && (start2 < end1);
+}
+
+const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
+    doctors,
+    clinics,
+    appointments,
+    isLoading,
+    setActiveTab
+}) => {
     const { t, i18n } = useTranslation();
-    const isRTL = i18n.language === 'ar';
-    const [labResults, setLabResults] = useState<LabResult[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [selectedTest, setSelectedTest] = useState<LabResult | null>(null);
-    const [filterDate, setFilterDate] = useState<string>('');
-    const [filterType, setFilterType] = useState<string>('');
-    const [attachments, setAttachments] = useState<any[]>([]);
-    const [attachmentsLoading, setAttachmentsLoading] = useState(false);
-    const [attachmentsError, setAttachmentsError] = useState<string | null>(null);
+    const [selectedDoctor, setSelectedDoctor] = useState<string>('all');
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDayAppointments, setSelectedDayAppointments] = useState<Appointment[]>([]);
+    const [showDayDialog, setShowDayDialog] = useState(false);
+    const [selectedDateStr, setSelectedDateStr] = useState('');
 
-    // Fetch lab results from database
-    const fetchLabResults = async () => {
-        try {
-            setLoading(true);
-            setError(null);
+    // Get current month and year
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
 
-            const { data, error } = await supabase
-                .from('lab_results')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                throw error;
-            }
-
-            console.log('Lab results fetched:', data?.length || 0);
-            setLabResults(data || []);
-
-        } catch (error) {
-            console.error('Error fetching lab results:', error);
-            setError('Failed to load lab results. Please try again.');
-        } finally {
-            setLoading(false);
+    // Memoized filtered appointments based on selected doctor
+    const filteredAppointments = useMemo(() => {
+        if (selectedDoctor === 'all') {
+            return appointments;
         }
-    };
+        return appointments.filter(apt => apt.doctor_id === selectedDoctor);
+    }, [selectedDoctor, appointments]);
 
-    // Initialize and fetch data
-    useEffect(() => {
-        // Check if user is authenticated and is a doctor
-        if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
-            setError('Access denied. Only doctors and administrators can view lab results.');
-            return;
-        }
+    // Memoized today's appointments (all doctors, not filtered)
+    const todayAppointments = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        return appointments.filter(apt => apt.date === today);
+    }, [appointments]);
 
-        // Fetch lab results
-        fetchLabResults();
-    }, [user]);
+    // Memoized upcoming appointments (all doctors, not filtered)
+    const upcomingAppointments = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        return appointments
+            .filter(apt => apt.date > today && apt.status === 'scheduled')
+            .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+    }, [appointments]);
 
-    // Filter results based on search and filters
-    const filteredResults: LabResult[] = labResults.filter(result => {
-        const matchesSearch = result.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            result.patient_id.toString().includes(searchTerm) ||
-            result.test_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            result.patient_email.toLowerCase().includes(searchTerm.toLowerCase());
+    // Memoized doctor statistics
+    const doctorStats = useMemo(() => {
+        const totalDoctors = doctors.length;
+        const availableDoctors = doctors.filter(d => d.isAvailable).length;
+        const totalAppointments = filteredAppointments.length;
+        const scheduledAppointments = filteredAppointments.filter(apt => apt.status === 'scheduled').length;
+        const completedAppointments = filteredAppointments.filter(apt => apt.status === 'completed').length;
+        const totalRevenue = filteredAppointments
+            .filter(apt => apt.payment_status === 'paid')
+            .reduce((sum, apt) => sum + apt.price, 0);
 
-        const matchesDate = !filterDate || result.test_date.includes(filterDate);
-        const matchesType = !filterType || result.test_type.toLowerCase().includes(filterType.toLowerCase());
+        return {
+            totalDoctors,
+            availableDoctors,
+            totalAppointments,
+            scheduledAppointments,
+            completedAppointments,
+            totalRevenue
+        };
+    }, [doctors, filteredAppointments]);
 
-        return matchesSearch && matchesDate && matchesType;
-    });
+    // Generate calendar days with appointments
+    const generateCalendarDays = useMemo(() => {
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        const firstDayOfWeek = firstDay.getDay();
+        const daysInMonth = lastDay.getDate();
+        const days: DayAppointment[] = [];
 
-    const handleViewDetails = async (result: LabResult) => {
-        setSelectedTest(result);
-        setAttachments([]);
-        setAttachmentsLoading(true);
-        setAttachmentsError(null);
-        console.log('Opening modal for lab_result_id:', result.id);
-        try {
-            let data = await FileUploadService.getLabAttachments(result.id);
-            console.log('Fetched attachments:', data);
-            // Fallback: If no attachments in DB, list from storage
-            if (!data || data.length === 0) {
-                const { data: storageFiles, error: storageError } = await supabase.storage.from('lab-attachments').list(`${result.id}/`);
-                if (storageError) {
-                    setAttachmentsError('Failed to load attachments from storage');
-                } else if (storageFiles && storageFiles.length > 0) {
-                    // Map storage files to attachment-like objects
-                    data = storageFiles.filter(f => f.metadata && f.metadata.mimetype && f.metadata.mimetype.startsWith('image/')).map(f => ({
-                        id: f.id || f.name,
-                        file_name: f.name,
-                        file_path: `${result.id}/${f.name}`,
-                        mime_type: f.metadata.mimetype || 'image/*',
-                    }));
-                }
-            }
-            setAttachments(data);
-        } catch (err) {
-            setAttachmentsError('Failed to load attachments');
-        } finally {
-            setAttachmentsLoading(false);
-        }
-    };
+        // Add empty cells for days before the first day of the month
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            const prevMonth = new Date(currentYear, currentMonth, 0);
+            const prevDate = prevMonth.getDate() - (firstDayOfWeek - i - 1);
+            const fullDate = new Date(currentYear, currentMonth - 1, prevDate);
+            const dateStr = fullDate.toISOString().split('T')[0];
+            const dayAppointments = filteredAppointments.filter(apt => apt.date === dateStr);
 
-    const handleDownloadReport = async (result: LabResult) => {
-        const doc = new jsPDF();
-        let y = 10;
-        doc.setFontSize(16);
-        doc.text(isRTL ? 'تفاصيل الفحص المخبري' : 'Lab Test Details', 10, y);
-        y += 10;
-        doc.setFontSize(12);
-        doc.text((isRTL ? 'الاسم: ' : 'Name: ') + result.patient_name, 10, y); y += 8;
-        doc.text((isRTL ? 'رقم المريض: ' : 'Patient ID: ') + result.patient_id, 10, y); y += 8;
-        doc.text((isRTL ? 'البريد الإلكتروني: ' : 'Email: ') + result.patient_email, 10, y); y += 8;
-        doc.text((isRTL ? 'تاريخ الميلاد: ' : 'Date of Birth: ') + (result.date_of_birth || 'N/A'), 10, y); y += 8;
-        doc.text((isRTL ? 'فصيلة الدم: ' : 'Blood Type: ') + (result.blood_type || 'N/A'), 10, y); y += 8;
-        doc.text((isRTL ? 'تاريخ الفحص: ' : 'Test Date: ') + new Date(result.test_date).toLocaleDateString(), 10, y); y += 8;
-        doc.text((isRTL ? 'نوع الفحص: ' : 'Test Type: ') + result.test_type, 10, y); y += 8;
-        doc.text((isRTL ? 'تاريخ الإنشاء: ' : 'Created At: ') + new Date(result.created_at).toLocaleString(), 10, y); y += 12;
-        doc.setFontSize(14);
-        doc.text(isRTL ? 'نتائج الفحص:' : 'Test Results:', 10, y); y += 8;
-        doc.setFontSize(12);
-        doc.text(result.test_results, 10, y); y += 12;
-        if (result.doctor_notes) {
-            doc.setFontSize(14);
-            doc.text(isRTL ? 'ملاحظات الطبيب:' : "Doctor's Notes:", 10, y); y += 8;
-            doc.setFontSize(12);
-            doc.text(result.doctor_notes, 10, y); y += 12;
-        }
-
-        // Fetch the first image attachment for this lab result and add it to the PDF
-        try {
-            const attachments = await FileUploadService.getLabAttachments(result.id);
-            const imageAttachment = attachments.find(att => att.mime_type && att.mime_type.startsWith('image/'));
-            if (imageAttachment) {
-                const url = await FileUploadService.getFileUrl(imageAttachment.file_path);
-                // Fetch the image as a data URL
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const imgData = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-                // Add image to PDF (x, y, width, height)
-                doc.addImage(imgData, 'JPEG', 10, y, 60, 60);
-                y += 65;
-            }
-        } catch (e) {
-            // If image fetch fails, just continue and save PDF without image
-        }
-
-        doc.save(`lab_report_${result.patient_name}_${result.test_date}.pdf`);
-    };
-
-    const handleRefresh = (): void => {
-        fetchLabResults();
-    };
-
-    // AttachmentImage helper component
-    const AttachmentImage: React.FC<{ filePath: string; fileName: string }> = ({ filePath, fileName }) => {
-        const [url, setUrl] = useState<string | null>(null);
-        useEffect(() => {
-            let isMounted = true;
-            FileUploadService.getFileUrl(filePath).then((signedUrl) => {
-                if (isMounted) setUrl(signedUrl);
+            days.push({
+                date: prevDate,
+                isCurrentMonth: false,
+                fullDate,
+                appointments: dayAppointments
             });
-            return () => { isMounted = false; };
-        }, [filePath]);
-        if (!url) return <div>Loading image...</div>;
-        return (
-            <a href={url} target="_blank" rel="noopener noreferrer">
-                <img src={url} alt={fileName} className="max-w-xs max-h-48 rounded shadow" />
-            </a>
-        );
+        }
+
+        // Add days of the current month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const fullDate = new Date(currentYear, currentMonth, day);
+            const dateStr = fullDate.toISOString().split('T')[0];
+            const dayAppointments = filteredAppointments.filter(apt => apt.date === dateStr);
+
+            days.push({
+                date: day,
+                isCurrentMonth: true,
+                fullDate,
+                appointments: dayAppointments
+            });
+        }
+
+        // Add empty cells for days after the last day of the month
+        const remainingCells = 42 - days.length; // 6 weeks * 7 days
+        for (let i = 1; i <= remainingCells; i++) {
+            const fullDate = new Date(currentYear, currentMonth + 1, i);
+            const dateStr = fullDate.toISOString().split('T')[0];
+            const dayAppointments = filteredAppointments.filter(apt => apt.date === dateStr);
+
+            days.push({
+                date: i,
+                isCurrentMonth: false,
+                fullDate,
+                appointments: dayAppointments
+            });
+        }
+
+        return days;
+    }, [currentYear, currentMonth, filteredAppointments]);
+
+    // Navigation functions
+    const goToPreviousMonth = () => {
+        setCurrentDate(new Date(currentYear, currentMonth - 1, 1));
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
-                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
-                    <Skeleton width={120} height={16} className="mx-auto" />
-                    <p className="mt-4 text-gray-600">
-                        {isRTL ? 'جاري تحميل نتائج المختبر...' : 'Loading lab results...'}
-                    </p>
-                    {/* Table skeleton rows */}
-                    <div className="mt-8">
-                        {[...Array(5)].map((_, i) => (
-                            <div key={i} className="flex gap-4 items-center py-2">
-                                <Skeleton width={32} height={32} circle />
-                                <Skeleton width={120} height={16} />
-                                <Skeleton width={80} height={16} />
-                                <Skeleton width={60} height={16} />
-                                <Skeleton width={100} height={16} />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
+    const goToNextMonth = () => {
+        setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
+    };
+
+    const goToToday = () => {
+        setCurrentDate(new Date());
+    };
+
+    // Helper functions
+    const getDoctorName = (doctorId: string) => {
+        const doctor = doctors.find(d => d.id === doctorId);
+        return doctor ? doctor.name : 'Unknown Doctor';
+    };
+
+    const getClinicName = (clinicId: string) => {
+        const clinic = clinics.find(c => c.id === clinicId);
+        return clinic ? clinic.name : 'Unknown Clinic';
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'scheduled': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+            case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    const getPaymentStatusColor = (status: string) => {
+        switch (status) {
+            case 'paid': return 'bg-green-100 text-green-800';
+            case 'pending': return 'bg-yellow-100 text-yellow-800';
+            case 'refunded': return 'bg-gray-100 text-gray-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    const formatTime = (time: string) => {
+        try {
+            const [hours, minutes] = time.split(':');
+            const date = new Date();
+            date.setHours(parseInt(hours, 10));
+            date.setMinutes(parseInt(minutes, 10));
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+            return time;
+        }
+    };
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('he-IL', {
+            style: 'currency',
+            currency: 'ILS',
+            minimumFractionDigits: 0
+        }).format(amount);
+    };
+
+    const handleDayClick = (day: DayAppointment) => {
+        if (day.appointments.length > 0) {
+            setSelectedDayAppointments(day.appointments);
+            setSelectedDateStr(day.fullDate.toLocaleDateString());
+            setShowDayDialog(true);
+        }
+    };
+
+    const handleQuickAction = (action: string) => {
+        switch (action) {
+            case 'schedule':
+                // Open in new tab for scheduling
+                window.open('/admin/schedule-appointment', '_blank');
+                break;
+            case 'doctors':
+                // Switch to doctors tab
+                setActiveTab('doctors');
+                break;
+            case 'clinics':
+                // Switch to clinics tab
+                setActiveTab('clinics');
+                break;
+            case 'appointments':
+                // Switch to appointments tab
+                setActiveTab('appointments');
+                break;
+            default:
+                break;
+        }
+    };
+
+    // Month and day names with proper i18n
+    const monthNames = React.useMemo(() => [
+        t('admin.january') || 'January', t('admin.february') || 'February', t('admin.march') || 'March',
+        t('admin.april') || 'April', t('admin.may') || 'May', t('admin.june') || 'June',
+        t('admin.july') || 'July', t('admin.august') || 'August', t('admin.september') || 'September',
+        t('admin.october') || 'October', t('admin.november') || 'November', t('admin.december') || 'December'
+    ], [i18n.language]);
+
+    const weekDays = React.useMemo(() => i18n.language === 'ar'
+        ? [
+            t('admin.saturday') || 'السبت',
+            t('admin.sunday') || 'الأحد',
+            t('admin.monday') || 'الاثنين',
+            t('admin.tuesday') || 'الثلاثاء',
+            t('admin.wednesday') || 'الأربعاء',
+            t('admin.thursday') || 'الخميس',
+            t('admin.friday') || 'الجمعة',
+        ]
+        : [
+            t('admin.sunday') || 'Sun',
+            t('admin.monday') || 'Mon',
+            t('admin.tuesday') || 'Tue',
+            t('admin.wednesday') || 'Wed',
+            t('admin.thursday') || 'Thu',
+            t('admin.friday') || 'Fri',
+            t('admin.saturday') || 'Sat',
+        ], [i18n.language]);
+
+    // Time slots (customize as needed)
+    const timeSlots = [
+        '08:00', '09:00', '10:00', '11:00', '12:00',
+        '13:00', '14:00', '15:00', '16:00', '17:00',
+        '18:00', '19:00', '20:00'
+    ];
+    // For Arabic, reverse the time slots
+    const displayTimeSlots = i18n.language === 'ar' ? [...timeSlots].reverse() : timeSlots;
+    // Helper to format time in Arabic
+    function formatTimeArabic(time) {
+        // Convert to Arabic numerals and add صباحًا/مساءً
+        const [h, m] = time.split(":");
+        const hour = parseInt(h, 10);
+        const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١', '١٢', '١٣', '١٤', '١٥', '١٦', '١٧', '١٨', '١٩', '٢٠', '٢١', '٢٢', '٢٣', '٢٤'];
+        const arabicHour = arabicNumbers[hour];
+        const arabicMinute = m === '00' ? '' : ':' + arabicNumbers[parseInt(m, 10)];
+        const isAM = hour < 12;
+        return arabicHour + arabicMinute + (isAM ? ' صباحًا' : ' مساءً');
     }
 
-    if (error) {
+    if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center max-w-md">
-                    <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                        {isRTL ? 'خطأ' : 'Error'}
-                    </h2>
-                    <p className="text-gray-600 mb-4">{error}</p>
-                    <button
-                        onClick={handleRefresh}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                        {isRTL ? 'تحديث' : 'Refresh'}
-                    </button>
-                </div>
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <span className="ml-2">{t('admin.loadingCalendar') || 'Loading calendar...'}</span>
             </div>
         );
     }
 
     return (
-        <div className={`min-h-screen bg-gray-50 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="space-y-6">
             {/* Header */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="py-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                    <FileText className="h-8 w-8 text-blue-600" />
-                                    {isRTL ? 'نتائج المختبر' : 'Lab Results'}
-                                </h1>
-                                <p className="mt-1 text-sm text-gray-600">
-                                    {isRTL ? 'عرض وتحليل نتائج الفحوصات المخبرية للمرضى' : 'View and analyze patient laboratory test results'}
-                                </p>
-                            </div>
-                            <button
-                                onClick={handleRefresh}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                {isRTL ? 'تحديث' : 'Refresh'}
-                            </button>
+            <div className={`flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                {i18n.language === 'ar' ? (
+                    <>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={goToToday}>
+                                <Calendar className="h-4 w-4 ml-2" />
+                                {t('admin.today') || 'Today'}
+                            </Button>
+                            <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder={t('admin.selectDoctor') || 'Select Doctor'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('admin.allDoctors') || 'All Doctors'}</SelectItem>
+                                    {doctors.map(doctor => (
+                                        <SelectItem key={doctor.id} value={doctor.id}>
+                                            {doctor.name} - {doctor.specialty}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Search and Filters */}
-                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="relative">
-                            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
-                            <input
-                                type="text"
-                                placeholder={isRTL ? 'البحث في المرضى أو الفحوصات...' : 'Search patients or tests...'}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                                dir={isRTL ? 'rtl' : 'ltr'}
-                            />
+                        <div>
+                            <h2 className="text-2xl font-bold text-right">{t('admin.doctorCalendar') || 'Doctor Calendar'}</h2>
+                            <p className="text-gray-600 mt-1 text-right">
+                                {t('admin.manageAppointmentSchedules') || 'Manage appointment schedules for all doctors'}
+                            </p>
                         </div>
-                        <div className="relative">
-                            <Calendar className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
-                            <input
-                                type="date"
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
-                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                            />
+                    </>
+                ) : (
+                    <>
+                        <div>
+                            <h2 className="text-2xl font-bold">{t('admin.doctorCalendar') || 'Doctor Calendar'}</h2>
+                            <p className="text-gray-600 mt-1">
+                                {t('admin.manageAppointmentSchedules') || 'Manage appointment schedules for all doctors'}
+                            </p>
                         </div>
-                        <div className="relative">
-                            <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
-                            <select
-                                value={filterType}
-                                onChange={(e) => setFilterType(e.target.value)}
-                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                            >
-                                <option value="">{isRTL ? 'جميع أنواع الفحوصات' : 'All Test Types'}</option>
-                                {/* <option value="blood">{isRTL ? 'فحوصات الدم' : 'Blood Tests'}</option>
-                                <option value="urine">{isRTL ? 'فحوصات البول' : 'Urine Tests'}</option>
-                                <option value="x-ray">{isRTL ? 'الأشعة السينية' : 'X-Ray'}</option>
-                                <option value="mri">{isRTL ? 'الرنين المغناطيسي' : 'MRI'}</option> */}
-                            </select>
+                        <div className="flex gap-2">
+                            <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                                <SelectTrigger className="w-[200px]">
+                                    <SelectValue placeholder={t('admin.selectDoctor') || 'Select Doctor'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">{t('admin.allDoctors') || 'All Doctors'}</SelectItem>
+                                    {doctors.map(doctor => (
+                                        <SelectItem key={doctor.id} value={doctor.id}>
+                                            {doctor.name} - {doctor.specialty}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button variant="outline" size="sm" onClick={goToToday}>
+                                <Calendar className="h-4 w-4 mr-2" />
+                                {t('admin.today') || 'Today'}
+                            </Button>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">
-                                {filteredResults.length} {isRTL ? 'نتيجة' : 'results found'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Results Table */}
-                <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
-                                        {isRTL ? 'المريض' : 'Patient'}
-                                    </th>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
-                                        {isRTL ? 'نوع الفحص' : 'Test Type'}
-                                    </th>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
-                                        {isRTL ? 'تاريخ الفحص' : 'Test Date'}
-                                    </th>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
-                                        {isRTL ? 'فصيلة الدم' : 'Blood Type'}
-                                    </th>
-                                    <th className={`px-6 py-3 ${isRTL ? 'text-left' : 'text-left'} text-xs font-medium text-gray-500 uppercase tracking-wider`}>
-                                        {isRTL ? 'الإجراءات' : 'Actions'}
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {filteredResults.map((result) => (
-                                    <tr key={result.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <User className="h-8 w-8 text-gray-400 mr-3" />
-                                                <div>
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        {result.patient_name}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        {isRTL ? 'رقم:' : 'ID:'} {result.patient_id}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        {result.patient_email}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">{result.test_type}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">
-                                                {new Date(result.test_date).toLocaleDateString()}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                {result.blood_type || 'N/A'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => handleViewDetails(result)}
-                                                    className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    {isRTL ? 'عرض' : 'View'}
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDownloadReport(result)}
-                                                    className="text-green-600 hover:text-green-900 flex items-center gap-1"
-                                                >
-                                                    <Download className="h-4 w-4" />
-                                                    {isRTL ? 'تحميل' : 'Download'}
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {filteredResults.length === 0 && !loading && (
-                    <div className="text-center py-12">
-                        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg">
-                            {isRTL ? 'لم يتم العثور على نتائج مختبر' : 'No lab results found'}
-                        </p>
-                        <p className="text-gray-400 text-sm mt-2">
-                            {isRTL ? 'قد تحتاج إلى إضافة بعض نتائج المختبر أولاً' : 'You may need to add some lab results first'}
-                        </p>
-                    </div>
+                    </>
                 )}
             </div>
 
-            {/* Details Modal */}
-            {selectedTest && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className={`bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                        <div className="p-6 border-b">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-gray-900">
-                                    {isRTL ? 'تفاصيل الفحص المخبري' : 'Lab Test Details'}
-                                </h2>
-                                <button
-                                    onClick={() => setSelectedTest(null)}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        </div>
-                        <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <div>
-                                    <h3 className="font-medium text-gray-900 mb-2">
-                                        {isRTL ? 'معلومات المريض' : 'Patient Information'}
-                                    </h3>
-                                    <div className="space-y-1 text-sm">
-                                        <p><span className="font-medium">{isRTL ? 'الاسم:' : 'Name:'}</span> {selectedTest.patient_name}</p>
-                                        <p><span className="font-medium">{isRTL ? 'رقم المريض:' : 'Patient ID:'}</span> {selectedTest.patient_id}</p>
-                                        <p><span className="font-medium">{isRTL ? 'البريد الإلكتروني:' : 'Email:'}</span> {selectedTest.patient_email}</p>
-                                        <p><span className="font-medium">{isRTL ? 'تاريخ الميلاد:' : 'Date of Birth:'}</span> {selectedTest.date_of_birth || 'N/A'}</p>
-                                        <p><span className="font-medium">{isRTL ? 'فصيلة الدم:' : 'Blood Type:'}</span> {selectedTest.blood_type || 'N/A'}</p>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 className="font-medium text-gray-900 mb-2">
-                                        {isRTL ? 'معلومات الفحص' : 'Test Information'}
-                                    </h3>
-                                    <div className="space-y-1 text-sm">
-                                        <p><span className="font-medium">{isRTL ? 'نوع الفحص:' : 'Test Type:'}</span> {selectedTest.test_type}</p>
-                                        <p><span className="font-medium">{isRTL ? 'تاريخ الفحص:' : 'Test Date:'}</span> {new Date(selectedTest.test_date).toLocaleDateString()}</p>
-                                        <p><span className="font-medium">{isRTL ? 'تاريخ الإنشاء:' : 'Created:'}</span> {new Date(selectedTest.created_at).toLocaleString()}</p>
-                                    </div>
-                                </div>
-                            </div>
+            {/* Calendar Navigation */}
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <Button variant="outline" size="sm" onClick={goToPreviousMonth}>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
 
-                            <div className="mb-6">
-                                <h3 className="font-medium text-gray-900 mb-2">
-                                    {isRTL ? 'نتائج الفحص' : 'Test Results'}
-                                </h3>
-                                <div className="bg-gray-50 p-4 rounded-md">
-                                    <pre className="text-sm text-gray-800 whitespace-pre-wrap" dir={isRTL ? 'rtl' : 'ltr'}>
-                                        {selectedTest.test_results}
-                                    </pre>
-                                </div>
-                            </div>
+                        <CardTitle className="text-xl">
+                            {monthNames[currentMonth]} {currentYear}
+                        </CardTitle>
 
-                            {selectedTest.doctor_notes && (
-                                <div>
-                                    <h3 className="font-medium text-gray-900 mb-2">
-                                        {isRTL ? 'ملاحظات الطبيب' : 'Doctor\'s Notes'}
-                                    </h3>
-                                    <div className="bg-blue-50 p-4 rounded-md">
-                                        <p className="text-sm text-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
-                                            {selectedTest.doctor_notes}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="mb-6">
-                                <h3 className="font-medium text-gray-900 mb-2">
-                                    {isRTL ? 'المرفقات' : 'Attachments'}
-                                </h3>
-                                {attachmentsLoading && <div>{isRTL ? 'جاري التحميل...' : 'Loading...'}</div>}
-                                {attachmentsError && <div className="text-red-500">{attachmentsError}</div>}
-                                {attachments.length === 0 && !attachmentsLoading && (
-                                    <div className="text-gray-500">{isRTL ? 'لا توجد مرفقات' : 'No attachments'}</div>
-                                )}
-                                <div className="flex flex-wrap gap-4">
-                                    {attachments.map((att) => (
-                                        <div key={att.id} className="flex flex-col items-center">
-                                            {att.mime_type.startsWith('image/') ? (
-                                                <AttachmentImage filePath={att.file_path} fileName={att.file_name} />
-                                            ) : (
-                                                <a
-                                                    href="#"
-                                                    onClick={async (e) => {
-                                                        e.preventDefault();
-                                                        const url = await FileUploadService.getFileUrl(att.file_path);
-                                                        window.open(url, '_blank');
-                                                    }}
-                                                    className="text-blue-600 underline"
-                                                >
-                                                    {att.file_name}
-                                                </a>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3">
-                            <button
-                                onClick={() => handleDownloadReport(selectedTest)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-                            >
-                                <Download className="h-4 w-4" />
-                                {isRTL ? 'تحميل التقرير' : 'Download Report'}
-                            </button>
-                            <button
-                                onClick={() => setSelectedTest(null)}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-                            >
-                                {isRTL ? 'إغلاق' : 'Close'}
-                            </button>
-                        </div>
+                        <Button variant="outline" size="sm" onClick={goToNextMonth}>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
                     </div>
-                </div>
-            )}
+                </CardHeader>
+
+                <CardContent>
+                    {/* Calendar Grid */}
+                    <div className={`grid grid-cols-7 gap-1 mb-4`} dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+                        {/* Week day headers */}
+                        {weekDays.map(day => (
+                            <div key={day} className="p-2 text-center font-semibold text-gray-600 text-sm">
+                                {day}
+                            </div>
+                        ))}
+
+                        {/* Calendar days */}
+                        {generateCalendarDays.map((day, index) => {
+                            const isToday = day.fullDate.toDateString() === new Date().toDateString();
+                            // --- CONFLICT DETECTION ---
+                            // For each appointment, check if any other appointment in the same clinic overlaps in time
+                            let hasConflict = false;
+                            for (let i = 0; i < day.appointments.length; i++) {
+                                const apt1 = day.appointments[i];
+                                // Try to find another appointment in the same clinic with overlapping time
+                                for (let j = 0; j < day.appointments.length; j++) {
+                                    if (i === j) continue;
+                                    const apt2 = day.appointments[j];
+                                    if (apt1.clinic_id === apt2.clinic_id) {
+                                        // Assume time is start, try to find slot duration from all appointments
+                                        const start1 = apt1.time;
+                                        const end1 = apt1.time; // No end time, treat as point
+                                        const start2 = apt2.time;
+                                        const end2 = apt2.time;
+                                        if (start1 === start2) {
+                                            hasConflict = true;
+                                            break;
+                                        }
+                                        // If you have slot info, you can use isTimeOverlap(start1, end1, start2, end2)
+                                    }
+                                }
+                                if (hasConflict) break;
+                            }
+                            // --- END CONFLICT DETECTION ---
+                            return (
+                                <div
+                                    key={index}
+                                    className={`
+                                        min-h-[100px] p-1 border rounded-lg relative cursor-pointer transition-all duration-200
+                                        ${day.isCurrentMonth ? 'bg-white' : 'bg-gray-50'}
+                                        ${isToday ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
+                                        ${hasConflict ? 'border-red-500 bg-red-50' : ''}
+                                        ${day.appointments.length > 0 ? 'hover:bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}
+                                        ${!day.isCurrentMonth ? 'opacity-60' : ''}
+                                    `}
+                                    onClick={() => handleDayClick(day)}
+                                >
+                                    <div className={`
+                                        text-sm font-medium mb-1
+                                        ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
+                                        ${isToday ? 'text-blue-600 font-bold' : ''}
+                                    `}>
+                                        {day.date}
+                                    </div>
+
+                                    {/* Appointments for this day */}
+                                    <div className="space-y-1">
+                                        {day.appointments.slice(0, 3).map(apt => (
+                                            <div
+                                                key={apt.id}
+                                                className={`
+                                                    text-xs p-1 rounded border truncate
+                                                    ${getStatusColor(apt.status)}
+                                                    hover:shadow-sm transition-shadow
+                                                `}
+                                                title={`${formatTime(apt.time)} - ${apt.patient_name} with Dr. ${getDoctorName(apt.doctor_id)}`}
+                                            >
+                                                <div className="flex items-center gap-1 mb-1">
+                                                    <Clock className="h-2 w-2" />
+                                                    <span className="font-medium">{formatTime(apt.time)}</span>
+                                                </div>
+                                                <div className="truncate font-medium">{apt.patient_name}</div>
+                                                <div className="truncate text-xs opacity-75">
+                                                    Dr. {getDoctorName(apt.doctor_id)}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {day.appointments.length > 3 && (
+                                            <div className="text-xs text-blue-600 p-1 font-medium bg-blue-50 rounded border border-blue-200">
+                                                +{day.appointments.length - 3} {t('admin.more') || 'more'}
+                                            </div>
+                                        )}
+
+                                        {day.appointments.length === 0 && day.isCurrentMonth && (
+                                            <div className="text-xs text-gray-400 p-1 text-center opacity-50">
+                                                {t('admin.noAppointments') || 'No appointments'}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Weekly Calendar */}
+            <Card className="mt-6">
+                <CardHeader>
+                    <CardTitle className="text-lg">Weekly Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {/* Weekly calendar grid */}
+                    {(() => {
+                        // Calculate start of week (Sunday)
+                        const weekStart = new Date(currentDate);
+                        weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+                        // Build days of week
+                        const weekDaysArr = Array.from({ length: 7 }, (_, i) => {
+                            const d = new Date(weekStart);
+                            d.setDate(weekStart.getDate() + i);
+                            return d;
+                        });
+                        // Time slots (customize as needed)
+                        const timeSlots = [
+                            '08:00', '09:00', '10:00', '11:00', '12:00',
+                            '13:00', '14:00', '15:00', '16:00', '17:00',
+                            '18:00', '19:00', '20:00'
+                        ];
+                        // For Arabic, reverse the time slots
+                        const displayTimeSlots = i18n.language === 'ar' ? [...timeSlots].reverse() : timeSlots;
+                        // Helper to format time in Arabic
+                        function formatTimeArabic(time) {
+                            // Convert to Arabic numerals and add صباحًا/مساءً
+                            const [h, m] = time.split(":");
+                            const hour = parseInt(h, 10);
+                            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١', '١٢', '١٣', '١٤', '١٥', '١٦', '١٧', '١٨', '١٩', '٢٠', '٢١', '٢٢', '٢٣', '٢٤'];
+                            const arabicHour = arabicNumbers[hour];
+                            const arabicMinute = m === '00' ? '' : ':' + arabicNumbers[parseInt(m, 10)];
+                            const isAM = hour < 12;
+                            return arabicHour + arabicMinute + (isAM ? ' صباحًا' : ' مساءً');
+                        }
+                        // Day names (no dates)
+                        const dayNames = i18n.language === 'ar'
+                            ? [
+                                t('admin.sunday') || 'الأحد',
+                                t('admin.monday') || 'الاثنين',
+                                t('admin.tuesday') || 'الثلاثاء',
+                                t('admin.wednesday') || 'الأربعاء',
+                                t('admin.thursday') || 'الخميس',
+                                t('admin.friday') || 'الجمعة',
+                                t('admin.saturday') || 'السبت',
+                            ]
+                            : [
+                                t('admin.sunday') || 'Sun',
+                                t('admin.monday') || 'Mon',
+                                t('admin.tuesday') || 'Tue',
+                                t('admin.wednesday') || 'Wed',
+                                t('admin.thursday') || 'Thu',
+                                t('admin.friday') || 'Fri',
+                                t('admin.saturday') || 'Sat',
+                            ];
+                        return (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full border text-xs" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+                                    <thead>
+                                        <tr>
+                                            {i18n.language === 'ar' ? (
+                                                <>
+                                                    <th className="border p-2 bg-gray-50" style={{ minWidth: '90px' }}>{t('admin.day') || 'اليوم'}</th>
+                                                    {displayTimeSlots.map(slot => (
+                                                        <th key={slot} className="border p-2 bg-gray-50">{formatTimeArabic(slot)}</th>
+                                                    ))}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <th className="border p-2 bg-gray-50" style={{ minWidth: '90px' }}>Day</th>
+                                                    {displayTimeSlots.map(slot => (
+                                                        <th key={slot} className="border p-2 bg-gray-50">{slot}</th>
+                                                    ))}
+                                                </>
+                                            )}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weekDaysArr.map((d, dayIdx) => {
+                                            const dateStr = d.toISOString().split('T')[0];
+                                            // For Arabic, reverse the day index
+                                            const displayDayIdx = i18n.language === 'ar' ? 6 - dayIdx : dayIdx;
+                                            return (
+                                                <tr key={dayIdx}>
+                                                    {i18n.language === 'ar' ? (
+                                                        <>
+                                                            <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
+                                                            {displayTimeSlots.map((slot, slotIdx) => {
+                                                                const cellApts = filteredAppointments.filter(apt => apt.date === dateStr && apt.time.startsWith(slot));
+                                                                let hasConflict = false;
+                                                                for (let i = 0; i < cellApts.length; i++) {
+                                                                    for (let j = 0; j < cellApts.length; j++) {
+                                                                        if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
+                                                                            hasConflict = true;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    if (hasConflict) break;
+                                                                }
+                                                                return (
+                                                                    <td key={slotIdx} className={`border p-2 min-w-[100px] ${hasConflict ? 'bg-red-100 border-red-500 relative' : ''}`}>
+                                                                        {cellApts.length > 0 ? cellApts.map(apt => (
+                                                                            <div key={apt.id} className="bg-blue-100 text-blue-800 rounded px-1 mb-1 truncate">
+                                                                                {apt.patient_name} <span className="block text-xs">{apt.time}</span>
+                                                                            </div>
+                                                                        )) : <span className="text-gray-300">-</span>}
+                                                                        {hasConflict && (
+                                                                            <span className="absolute top-1 right-1 text-xs text-red-600" title="Conflict: Multiple appointments for the same clinic at this time">⚠️</span>
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
+                                                            {displayTimeSlots.map((slot, slotIdx) => {
+                                                                const cellApts = filteredAppointments.filter(apt => apt.date === dateStr && apt.time.startsWith(slot));
+                                                                let hasConflict = false;
+                                                                for (let i = 0; i < cellApts.length; i++) {
+                                                                    for (let j = 0; j < cellApts.length; j++) {
+                                                                        if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
+                                                                            hasConflict = true;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    if (hasConflict) break;
+                                                                }
+                                                                return (
+                                                                    <td key={slotIdx} className={`border p-2 min-w-[100px] ${hasConflict ? 'bg-red-100 border-red-500 relative' : ''}`}>
+                                                                        {cellApts.length > 0 ? cellApts.map(apt => (
+                                                                            <div key={apt.id} className="bg-blue-100 text-blue-800 rounded px-1 mb-1 truncate">
+                                                                                {apt.patient_name} <span className="block text-xs">{apt.time}</span>
+                                                                            </div>
+                                                                        )) : <span className="text-gray-300">-</span>}
+                                                                        {hasConflict && (
+                                                                            <span className="absolute top-1 right-1 text-xs text-red-600" title="Conflict: Multiple appointments for the same clinic at this time">⚠️</span>
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                    })()}
+                </CardContent>
+            </Card>
+
+            {/* Summary Cards */}
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                {/* Today's Appointments */}
+                <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">
+                            <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                                <Calendar className="h-5 w-5 text-blue-600" />
+                                {t('admin.todaysAppointments') || "Today's Appointments"}
+                            </div>
+                        </CardTitle>
+                        <div className={`text-2xl font-bold text-blue-600 ${i18n.language === 'ar' ? 'text-right' : ''}`}
+                            style={i18n.language === 'ar' ? { direction: 'rtl' } : {}}>
+                            {i18n.language === 'ar' ? <><span>{todayAppointments.length}</span></> : <>{todayAppointments.length}</>}
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        {todayAppointments.length > 0 ? (
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {todayAppointments.slice(0, 4).map(apt => (
+                                    <div key={apt.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                        <div>
+                                            <div className="font-medium text-sm">{apt.patient_name}</div>
+                                            <div className="text-xs text-gray-600">
+                                                {formatTime(apt.time)} • Dr. {getDoctorName(apt.doctor_id)}
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <Badge variant={apt.status === 'scheduled' ? 'default' : 'secondary'} className="text-xs">
+                                                {apt.status}
+                                            </Badge>
+                                            <Badge variant="outline" className={`text-xs ${getPaymentStatusColor(apt.payment_status)}`}>
+                                                {apt.payment_status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                ))}
+                                {todayAppointments.length > 4 && (
+                                    <div className="text-center">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleQuickAction('appointments')}
+                                            className="text-blue-600 hover:text-blue-800"
+                                        >
+                                            {t('admin.viewAll') || 'View All'} ({todayAppointments.length})
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p className={`text-gray-500 text-sm text-center py-4 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                                {t('admin.noAppointmentsToday') || 'No appointments scheduled for today'}
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+                {/* Upcoming Appointments */}
+                <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">
+                            <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                                <Calendar className="h-5 w-5 text-orange-600" />
+                                {t('admin.upcomingAppointments') || 'Upcoming Appointments'}
+                            </div>
+                        </CardTitle>
+                        <div className={`text-2xl font-bold text-orange-600 ${i18n.language === 'ar' ? 'text-right' : ''}`}
+                            style={i18n.language === 'ar' ? { direction: 'rtl' } : {}}>
+                            {i18n.language === 'ar' ? <><span>{upcomingAppointments.length}</span></> : <>{upcomingAppointments.length}</>}
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        {upcomingAppointments.length > 0 ? (
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
+                                {upcomingAppointments.slice(0, 4).map(apt => (
+                                    <div key={apt.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                                        <div>
+                                            <div className="font-medium text-sm">{apt.patient_name}</div>
+                                            <div className="text-xs text-gray-600">
+                                                {formatTime(apt.time)} • Dr. {getDoctorName(apt.doctor_id)}
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <Badge variant="default" className="text-xs">
+                                                {apt.status}
+                                            </Badge>
+                                            <Badge variant="outline" className={`text-xs ${getPaymentStatusColor(apt.payment_status)}`}>
+                                                {apt.payment_status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                ))}
+                                {upcomingAppointments.length > 4 && (
+                                    <div className="text-center">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleQuickAction('appointments')}
+                                            className="text-orange-600 hover:text-orange-800"
+                                        >
+                                            {t('admin.viewAll') || 'View All'} ({upcomingAppointments.length})
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <p className={`text-gray-500 text-sm text-center py-4 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                                {t('admin.noUpcomingAppointments') || 'No upcoming appointments'}
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+                {/* Doctor Statistics */}
+                <Card className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg">
+                            <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                                <User className="h-5 w-5 text-green-600" />
+                                {t('admin.doctorStats') || 'Doctor Statistics'}
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        <div className="space-y-3">
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
+                                <span className="text-sm text-gray-600">{t('admin.totalDoctors') || 'Total Doctors'}</span>
+                                <span className="font-bold text-lg text-green-600">{doctorStats.totalDoctors}</span>
+                            </div>
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
+                                <span className="text-sm text-gray-600">{t('admin.availableDoctors') || 'Available'}</span>
+                                <span className="font-medium text-green-500">{doctorStats.availableDoctors}</span>
+                            </div>
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
+                                <span className="text-sm text-gray-600">{t('admin.totalAppointments') || 'Total Appointments'}</span>
+                                <span className="font-medium">{doctorStats.totalAppointments}</span>
+                            </div>
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
+                                <span className="text-sm text-gray-600">{t('admin.scheduled') || 'Scheduled'}</span>
+                                <span className="font-medium text-blue-600">{doctorStats.scheduledAppointments}</span>
+                            </div>
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
+                                <span className="text-sm text-gray-600">{t('admin.completed') || 'Completed'}</span>
+                                <span className="font-medium text-green-600">{doctorStats.completedAppointments}</span>
+                            </div>
+                            <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'} pt-2 border-t`}>
+                                <span className="text-sm text-gray-600">{t('admin.totalRevenue') || 'Total Revenue'}</span>
+                                <span className="font-bold text-green-600">{formatCurrency(doctorStats.totalRevenue)}</span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Quick Actions */}
+                <Card className={`hover:shadow-md transition-shadow ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                    <CardHeader className={`pb-3 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                        <CardTitle className={`text-lg ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                            <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}
+                                style={i18n.language === 'ar' ? { direction: 'rtl', textAlign: 'right', width: '100%', justifyContent: 'flex-end' } : {}}>
+                                <Activity className="h-5 w-5 text-purple-600" />
+                                {t('admin.quickActions') || 'Quick Actions'}
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className={`pt-0 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                        <div className="space-y-2">
+                            <Button
+                                variant="outline"
+                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-blue-50 hover:border-blue-300`}
+                                size="sm"
+                                onClick={() => handleQuickAction('schedule')}
+                            >
+                                <Plus className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-blue-600`} />
+                                {t('admin.scheduleAppointment') || 'Schedule Appointment'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-green-50 hover:border-green-300`}
+                                size="sm"
+                                onClick={() => handleQuickAction('doctors')}
+                            >
+                                <User className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-green-600`} />
+                                {t('admin.manageDoctors') || 'Manage Doctors'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-purple-50 hover:border-purple-300`}
+                                size="sm"
+                                onClick={() => handleQuickAction('clinics')}
+                            >
+                                <MapPin className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-purple-600`} />
+                                {t('admin.viewClinics') || 'View Clinics'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-orange-50 hover:border-orange-300`}
+                                size="sm"
+                                onClick={() => handleQuickAction('appointments')}
+                            >
+                                <Eye className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-orange-600`} />
+                                {t('admin.viewAllAppointments') || 'View All Appointments'}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 };
 
-export default DoctorLabsPage;
+export default DoctorCalendarTab;

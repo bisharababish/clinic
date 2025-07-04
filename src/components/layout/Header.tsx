@@ -163,7 +163,6 @@ export function Header() {
     const canViewClinics = isAuthenticated && userPermissions.canViewClinics;
     const canViewLabs = isAuthenticated && userPermissions.canViewLabs;
     const canViewXray = isAuthenticated && userPermissions.canViewXray;
-    const canViewAboutUs = isAuthenticated && userPermissions.canViewAboutUs;
     const canViewAdmin = isAuthenticated && userPermissions.canViewAdmin;
 
     // Doctor-specific permissions
@@ -349,11 +348,6 @@ export function Header() {
                                 <Link to="/clinics" className="font-medium">{t('navbar.clinics') || 'Clinics'}</Link>
                             </Button>
                         )}
-                        {canViewAboutUs && (
-                            <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
-                                <Link to="/about" className="font-medium">{t('navbar.aboutUs') || 'About Us'}</Link>
-                            </Button>
-                        )}
                         {canViewLabs && !isDoctor && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/labs" className="font-medium">{t('navbar.labs') || 'Labs'}</Link>
@@ -534,20 +528,6 @@ export function Header() {
                                                 className="font-medium"
                                             >
                                                 {t('navbar.clinics') || 'Clinics'}
-                                            </Link>
-                                        </Button>
-                                    )}
-                                    {canViewAboutUs && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/about"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/about');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.aboutUs') || 'About Us'}
                                             </Link>
                                         </Button>
                                     )}

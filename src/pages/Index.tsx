@@ -184,6 +184,9 @@ const Index = () => {
     weight: "",
     height: "",
     bloodType: "A+",
+    bloodPressure: "",
+    heartRate: "",
+    temperature: "",
   });
 
   // Changed from single disease to multiple diseases (checkboxes)
@@ -867,6 +870,9 @@ const Index = () => {
         weight: patient.health_data.weight_kg?.toString() || "",
         height: patient.health_data.height_cm?.toString() || "",
         bloodType: patient.health_data.blood_type || "A+",
+        bloodPressure: patient.health_data.blood_pressure || "",
+        heartRate: patient.health_data.heart_rate?.toString() || "",
+        temperature: patient.health_data.temperature?.toString() || "",
       });
 
       // Load diseases
@@ -922,6 +928,9 @@ const Index = () => {
         weight: "",
         height: "",
         bloodType: "A+",
+        bloodPressure: "",
+        heartRate: "",
+        temperature: "",
       });
       setSelectedDiseases([]);
       setSelectedMedicines([]);
@@ -993,6 +1002,9 @@ const Index = () => {
           weight: data.weight_kg?.toString() || "",
           height: data.height_cm?.toString() || "",
           bloodType: data.blood_type || "A+",
+          bloodPressure: data.blood_pressure || "",
+          heartRate: data.heart_rate?.toString() || "",
+          temperature: data.temperature?.toString() || "",
         });
 
         // Load diseases
@@ -1061,6 +1073,9 @@ const Index = () => {
           weight: "",
           height: "",
           bloodType: "A+",
+          bloodPressure: "",
+          heartRate: "",
+          temperature: "",
         });
         setSelectedDiseases([]);
         setSelectedMedicines([]);
@@ -1257,6 +1272,9 @@ const Index = () => {
         weight_kg: patientInfo.weight ? parseFloat(patientInfo.weight) : undefined,
         height_cm: patientInfo.height ? parseInt(patientInfo.height) : undefined,
         blood_type: patientInfo.bloodType || undefined,
+        blood_pressure: patientInfo.bloodPressure || undefined,
+        heart_rate: patientInfo.heartRate ? parseInt(patientInfo.heartRate) : undefined,
+        temperature: patientInfo.temperature ? parseFloat(patientInfo.temperature) : undefined,
         ...diseaseData,
         medications: medicationData,
         allergies: selectedAllergies,
@@ -2361,32 +2379,83 @@ const Index = () => {
                   placeholder="175"
                 />
               </div>
-
-              <div className="space-y-2 md:col-span-2">
-                <Label>{t("home.bloodType")}</Label>
-                <RadioGroup
-                  value={patientInfo.bloodType}
-                  onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
-                  className={`blood-type-radio-group grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
-                >
-                  {(isRTL ?
-                    ["O-", "O+", "AB-", "AB+", "B-", "B+", "A-", "A+"] :
-                    ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
-                  ).map(type => (
-                    <div key={type} className="blood-type-radio-item flex items-center justify-center">
-                      <RadioGroupItem value={type} id={type} className="blood-type-radio" />
-                      <Label
-                        htmlFor={type}
-                        className="blood-type-label font-medium cursor-pointer"
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      >
-                        {getBloodTypeDisplay(type)}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
+              {/* NEW: Blood Pressure - Only for nurses */}
+              <div className="space-y-2">
+                <Label htmlFor="bloodPressure">
+                  {isRTL ? "ضغط الدم" : "Blood Pressure"} (mmHg)
+                </Label>
+                <Input
+                  id="bloodPressure"
+                  name="bloodPressure"
+                  type="text"
+                  value={patientInfo.bloodPressure}
+                  onChange={handleInputChange}
+                  placeholder="120/80"
+                  disabled={userRole === 'patient'}
+                />
               </div>
-            </div>
+
+              {/* NEW: Heart Rate - Only for nurses */}
+              <div className="space-y-2">
+                <Label htmlFor="heartRate">
+                  {isRTL ? "معدل ضربات القلب" : "Heart Rate"} (bpm)
+                </Label>
+                <Input
+                  id="heartRate"
+                  name="heartRate"
+                  type="number"
+                  min="30"
+                  max="200"
+                  value={patientInfo.heartRate}
+                  onChange={handleInputChange}
+                  placeholder="72"
+                  disabled={userRole === 'patient'}
+                />
+              </div>
+
+              {/* NEW: Temperature - Only for nurses */}
+              <div className="space-y-2">
+                <Label htmlFor="temperature">
+                  {isRTL ? "درجة الحرارة" : "Temperature"} (°C)
+                </Label>
+                <Input
+                  id="temperature"
+                  name="temperature"
+                  type="number"
+                  min="30"
+                  max="45"
+                  step="0.1"
+                  value={patientInfo.temperature}
+                  onChange={handleInputChange}
+                  placeholder="36.5"
+                  disabled={userRole === 'patient'}
+                />
+                <div className="space-y-2 md:col-span-2">
+                  <Label>{t("home.bloodType")}</Label>
+                  <RadioGroup
+                    value={patientInfo.bloodType}
+                    onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
+                    className={`blood-type-radio-group grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
+                  >
+                    {(isRTL ?
+                      ["O-", "O+", "AB-", "AB+", "B-", "B+", "A-", "A+"] :
+                      ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+                    ).map(type => (
+                      <div key={type} className="blood-type-radio-item flex items-center justify-center">
+                        <RadioGroupItem value={type} id={type} className="blood-type-radio" />
+                        <Label
+                          htmlFor={type}
+                          className="blood-type-label font-medium cursor-pointer"
+                          dir={isRTL ? 'rtl' : 'ltr'}
+                        >
+                          {getBloodTypeDisplay(type)}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
+              </div>
+              </div>
           </section>
           {/* ADD THIS COMPLETE NEW SECTION: Social Situation Section - Only show for secretary when female patient is selected */}
           {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && (
