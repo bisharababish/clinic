@@ -1360,7 +1360,9 @@ const enTranslations = {
 
         // Summary cards
         summary: 'Summary',
-        averagePrice: 'Average Price'
+        averagePrice: 'Average Price',
+        conflict: 'Conflict',
+        timeSlotConflict: 'This clinic already has an appointment at this time.'
     }
 };
 
@@ -2711,7 +2713,9 @@ const arTranslations = {
 
         // Summary cards
         summary: 'ملخص',
-        averagePrice: 'متوسط السعر'
+        averagePrice: 'متوسط السعر',
+        conflict: 'تعارض',
+        timeSlotConflict: 'يوجد بالفعل موعد لهذا العيادة في هذا الوقت.'
     }
 
 };

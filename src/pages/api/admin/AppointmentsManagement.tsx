@@ -79,6 +79,11 @@ interface AppointmentsManagementProps {
     userEmail?: string;
 }
 
+// Helper: Check if two time intervals overlap
+function isTimeOverlap(start1: string, end1: string, start2: string, end2: string) {
+    return (start1 < end2) && (start2 < end1);
+}
+
 const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     appointments: propAppointments,
     setAppointments: propSetAppointments,
@@ -681,6 +686,38 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
             // Format date as ISO string and extract date part
             const isoDate = appointmentDate.toISOString().split('T')[0];
+
+            // --- COLLISION CHECK ---
+            // Fetch existing appointments for this clinic and date
+            const { data: existingAppointments, error: fetchError } = await supabase
+                .from('appointments')
+                .select('time')
+                .eq('clinic_id', selectedClinicId)
+                .eq('date', isoDate);
+            if (fetchError) {
+                console.error('Error fetching existing appointments:', fetchError);
+            }
+            // Check for overlap
+            const hasConflict = (existingAppointments || []).some(apt => {
+                // Existing time is stored as start time, but we don't know end time, so assume same slot format
+                // If your system always uses the same slot format, this is safe
+                if (!apt.time) return false;
+                // Try to find the slot in doctorAvailability to get the end time
+                const slot = doctorAvailability.find(slot => slot.start_time === apt.time && slot.day === selectedDay);
+                const existingStart = apt.time;
+                const existingEnd = slot ? slot.end_time : apt.time; // fallback: treat as point if not found
+                return isTimeOverlap(startTime.trim(), endTime.trim(), existingStart, existingEnd);
+            });
+            if (hasConflict) {
+                toast({
+                    title: t('appointmentsManagement.conflict') || 'Time Conflict',
+                    description: t('appointmentsManagement.timeSlotConflict') || 'This clinic already has an appointment at this time.',
+                    variant: "destructive",
+                });
+                updateIsLoading(false);
+                return;
+            }
+            // --- END COLLISION CHECK ---
 
             // Create new appointment
             const { data, error } = await supabase

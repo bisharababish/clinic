@@ -57,6 +57,11 @@ interface DayAppointment {
     appointments: Appointment[];
 }
 
+// Helper: Check if two time intervals overlap
+function isTimeOverlap(start1: string, end1: string, start2: string, end2: string) {
+    return (start1 < end2) && (start2 < end1);
+}
+
 const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
     doctors,
     clinics,
@@ -398,8 +403,31 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                         {/* Calendar days */}
                         {generateCalendarDays.map((day, index) => {
                             const isToday = day.fullDate.toDateString() === new Date().toDateString();
-                            const hasAppointments = day.appointments.length > 0;
-
+                            // --- CONFLICT DETECTION ---
+                            // For each appointment, check if any other appointment in the same clinic overlaps in time
+                            let hasConflict = false;
+                            for (let i = 0; i < day.appointments.length; i++) {
+                                const apt1 = day.appointments[i];
+                                // Try to find another appointment in the same clinic with overlapping time
+                                for (let j = 0; j < day.appointments.length; j++) {
+                                    if (i === j) continue;
+                                    const apt2 = day.appointments[j];
+                                    if (apt1.clinic_id === apt2.clinic_id) {
+                                        // Assume time is start, try to find slot duration from all appointments
+                                        const start1 = apt1.time;
+                                        const end1 = apt1.time; // No end time, treat as point
+                                        const start2 = apt2.time;
+                                        const end2 = apt2.time;
+                                        if (start1 === start2) {
+                                            hasConflict = true;
+                                            break;
+                                        }
+                                        // If you have slot info, you can use isTimeOverlap(start1, end1, start2, end2)
+                                    }
+                                }
+                                if (hasConflict) break;
+                            }
+                            // --- END CONFLICT DETECTION ---
                             return (
                                 <div
                                     key={index}
@@ -407,7 +435,8 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                         min-h-[100px] p-1 border rounded-lg relative cursor-pointer transition-all duration-200
                                         ${day.isCurrentMonth ? 'bg-white' : 'bg-gray-50'}
                                         ${isToday ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
-                                        ${hasAppointments ? 'hover:bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}
+                                        ${hasConflict ? 'border-red-500 bg-red-50' : ''}
+                                        ${day.appointments.length > 0 ? 'hover:bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}
                                         ${!day.isCurrentMonth ? 'opacity-60' : ''}
                                     `}
                                     onClick={() => handleDayClick(day)}
@@ -667,82 +696,6 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                     </CardContent>
                 </Card>
             </div>
-
-            {/* Day Details Dialog */}
-            <Dialog open={showDayDialog} onOpenChange={setShowDayDialog}>
-                <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${i18n.language === 'ar' ? 'rtl' : ''}`}>
-                    <DialogHeader>
-                        <DialogTitle className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
-                            <Calendar className="h-5 w-5" />
-                            {t('admin.appointmentsFor') || 'Appointments for'} {selectedDateStr}
-                        </DialogTitle>
-                        <DialogDescription>
-                            {selectedDayAppointments.length} {selectedDayAppointments.length === 1 ? t('admin.appointment') || 'appointment' : t('admin.appointments') || 'appointments'} scheduled
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-4 mt-4">
-                        {selectedDayAppointments
-                            .sort((a, b) => a.time.localeCompare(b.time))
-                            .map(apt => (
-                                <div key={apt.id} className={`p-4 border rounded-lg hover:bg-gray-50 ${getStatusColor(apt.status)} border`}>
-                                    <div className={`flex justify-between items-start ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                        <div className="flex-1">
-                                            <div className={`flex items-center gap-2 mb-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
-                                                <Clock className="h-4 w-4" />
-                                                <span className="font-bold text-lg">{formatTime(apt.time)}</span>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
-                                                    <User className="h-4 w-4 text-gray-500" />
-                                                    <span className="font-medium">{apt.patient_name}</span>
-                                                </div>
-
-                                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
-                                                    <User className="h-4 w-4 text-blue-500" />
-                                                    <span>Dr. {getDoctorName(apt.doctor_id)}</span>
-                                                </div>
-
-                                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
-                                                    <MapPin className="h-4 w-4 text-green-500" />
-                                                    <span>{getClinicName(apt.clinic_id)}</span>
-                                                </div>
-
-                                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}>
-                                                    <TrendingUp className="h-4 w-4 text-purple-500" />
-                                                    <span className="font-semibold">{formatCurrency(apt.price)}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className={`flex flex-col gap-2 ${i18n.language === 'ar' ? 'items-end' : 'items-start'}`}>
-                                            <Badge className={getStatusColor(apt.status)}>
-                                                {t(`admin.${apt.status}`) || apt.status}
-                                            </Badge>
-                                            <Badge variant="outline" className={getPaymentStatusColor(apt.payment_status)}>
-                                                {t(`admin.${apt.payment_status}`) || apt.payment_status}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-
-                        {selectedDayAppointments.length === 0 && (
-                            <div className="text-center py-8 text-gray-500">
-                                <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                <p>{t('admin.noAppointmentsThisDay') || 'No appointments scheduled for this day'}</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className={`flex justify-end gap-2 mt-6 pt-4 border-t ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                        <Button variant="outline" onClick={() => setShowDayDialog(false)}>
-                            {t('common.close') || 'Close'}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 };
