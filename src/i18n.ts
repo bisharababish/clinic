@@ -54,6 +54,7 @@ const enTranslations = {
         total: 'Total',
         count: 'Count',
         revenue: 'Revenue',
+        close: 'Close',
     },
     auth: {
         welcomeBack: 'Welcome Back',
@@ -588,6 +589,7 @@ const enTranslations = {
         viewAllAppointments: 'View All Appointments',
         upcomingAppointments: 'Upcoming Appointments',
         noUpcomingAppointments: 'No upcoming appointments',
+        appointmentsFor: 'Appointments for',
     },
     labs: {
         title: 'Laboratory Test Results',
@@ -615,6 +617,7 @@ const enTranslations = {
         // Search and actions
         searchPlaceholder: 'Search users...',
         addUser: 'Add User',
+        loading: 'Loading users...',
         loadingUsers: 'Loading users...',
 
         // User info labels
@@ -1412,6 +1415,7 @@ const arTranslations = {
         total: 'المجموع',
         count: 'العدد',
         revenue: 'الإيرادات',
+        close: 'إغلاق',
     }, forgotpassowrd: {
         // Add these to the existing auth section
         enterCredentials: 'name@example.com',
@@ -1994,6 +1998,7 @@ const arTranslations = {
         viewAllAppointments: 'عرض جميع المواعيد',
         upcomingAppointments: 'المواعيد القادمة',
         noUpcomingAppointments: 'لا توجد مواعيد قادمة',
+        appointmentsFor: 'Appointments for',
     },
     usersManagement: {
         // Main titles and descriptions
@@ -2003,6 +2008,7 @@ const arTranslations = {
         // Search and actions
         searchPlaceholder: 'البحث في المستخدمين...',
         addUser: 'إضافة مستخدم',
+        loading: 'جارٍ تحميل المستخدمين...',
         loadingUsers: 'جارٍ تحميل المستخدمين...',
 
         // User info labels
@@ -2333,6 +2339,7 @@ const arTranslations = {
     },
     home: {
         reminder: 'تذكير',
+        remindeinder: 'تذكير',
         reservationRequired: 'يرجى حجز موعد قبل زيارة عيادتنا ',
         bookNow: 'احجز الآن',
         userCreation: 'إنشاء مستخدم',

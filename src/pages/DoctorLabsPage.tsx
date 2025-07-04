@@ -207,6 +207,18 @@ const DoctorLabsPage: React.FC = () => {
                     <p className="mt-4 text-gray-600">
                         {isRTL ? 'جاري تحميل نتائج المختبر...' : 'Loading lab results...'}
                     </p>
+                    {/* Table skeleton rows */}
+                    <div className="mt-8">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="flex gap-4 items-center py-2">
+                                <Skeleton width={32} height={32} circle />
+                                <Skeleton width={120} height={16} />
+                                <Skeleton width={80} height={16} />
+                                <Skeleton width={60} height={16} />
+                                <Skeleton width={100} height={16} />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );

@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { palestinianPaymentService, PaymentData, CreditCardData } from "../lib/paymentService";
 import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type PaymentMethod = "creditCard" | "cash";
 interface LocationState {
@@ -295,8 +296,10 @@ const Payment = () => {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <div className="text-center">
-                    <div className="loading-spinner"></div>
-                    <p className="mt-4">Loading payment information...</p>
+                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
+                    <Skeleton width={120} height={16} className="mx-auto" />
+                    <p className="mt-4 text-gray-600">{t('payment.loadingPaymentInfo') || 'Loading payment information...'}</p>
                 </div>
             </div>
         );

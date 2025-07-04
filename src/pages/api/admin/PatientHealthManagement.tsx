@@ -104,6 +104,8 @@ interface PatientCreationForm {
     date_of_birth: string;
     gender_user: string;
     user_password: string;
+    social_situation: string;
+
 }
 
 // Enhanced PatientHealthForm Component
@@ -127,6 +129,7 @@ const PatientHealthForm: React.FC<{
         const { toast } = useToast();
         const { user } = useAuth();
         const { getPatientHealthData, savePatientHealthData, isSaving } = usePatientHealth();
+        const [socialSituation, setSocialSituation] = useState<string>("");
 
         // Form state
         const [isOpen, setIsOpen] = useState(false);
@@ -135,15 +138,12 @@ const PatientHealthForm: React.FC<{
 
         const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
         const allergiesList = [
-            { en: 'Peanuts', ar: 'الفول السوداني' },
-            { en: 'Seafood', ar: 'المأكولات البحرية' },
-            { en: 'Eggs', ar: 'البيض' },
-            { en: 'Milk', ar: 'الحليب' },
-            { en: 'Pollen', ar: 'حبوب اللقاح' },
-            { en: 'Dust', ar: 'الغبار' },
-            { en: 'Insect stings', ar: 'لسعات الحشرات' },
-            { en: 'Latex', ar: 'اللاتكس' },
             { en: 'Penicillin', ar: 'البنسلين' },
+            { en: 'Naproxen', ar: 'نابروكسين' },
+            { en: 'Ibuprofen', ar: 'إيبوبروفين' },
+            { en: 'Aspirin', ar: 'الأسبرين' },
+            { en: 'Anticonvulsants', ar: 'مضادات الاختلاج' },
+            { en: 'Other', ar: 'أخرى' },
         ];
         // Patient creation state
         const [showCreatePatientForm, setShowCreatePatientForm] = useState(false);
@@ -163,7 +163,8 @@ const PatientHealthForm: React.FC<{
             user_phonenumber: "",
             date_of_birth: "",
             gender_user: "",
-            user_password: ""
+            user_password: "",
+            social_situation: ""
         });
 
         // Health form data
@@ -187,7 +188,8 @@ const PatientHealthForm: React.FC<{
                 flu: [],
                 antibiotics: []
             },
-            allergies: []
+            allergies: [],
+            social_situation: undefined // ADD THIS LINE
         });
         // Handle allergy selection
         const handleAllergySelect = (allergy: string) => {
@@ -250,10 +252,14 @@ const PatientHealthForm: React.FC<{
                         allergy: [],
                         flu: [],
                         antibiotics: []
-                    }
+                    },
+                    allergies: existingData.health_data?.allergies || [], // existing line
+                    social_situation: existingData.health_data?.social_situation || undefined // ADD THIS LINE
+
                 });
 
                 setSelectedPatient(existingData);
+
             }
         }, [mode, existingData, isOpen]);
 
@@ -468,7 +474,9 @@ const PatientHealthForm: React.FC<{
                     user_phonenumber: "",
                     date_of_birth: "",
                     gender_user: "",
-                    user_password: ""
+                    user_password: "",
+                    social_situation: ""
+
                 });
                 setShowCreatePatientForm(false);
 
@@ -525,7 +533,8 @@ const PatientHealthForm: React.FC<{
                             flu: [],
                             antibiotics: []
                         },
-                        allergies: existingData.allergies || []
+                        allergies: existingData.allergies || [],
+                        social_situation: existingData.social_situation || undefined // ADD THIS LINE
 
                     });
                     setSelectedAllergies(existingData.allergies || []);
@@ -588,11 +597,12 @@ const PatientHealthForm: React.FC<{
                 return;
             }
 
+            // FIXED CODE:
             const dataToSave = {
                 ...formData,
-                allergies: selectedAllergies
+                allergies: selectedAllergies,
             };
-            const success = await savePatientHealthData(formData);
+            const success = await savePatientHealthData(dataToSave); // CHANGE: Use dataToSave instead of formData
             if (success) {
                 setIsOpen(false);
                 resetForm();
@@ -604,6 +614,7 @@ const PatientHealthForm: React.FC<{
             setSelectedPatient(null);
             setPatientSearch('');
             setSelectedAllergies([]);
+            setSocialSituation(""); // ADD THIS LINE
 
             setFormData({
                 patient_id: 0,
@@ -964,7 +975,7 @@ const PatientHealthForm: React.FC<{
                                         </CardContent>
                                     </Card>
                                 </>
-                            )}
+                            )}allergiesList
                             {/* Allergies Section */}
                             <Card>
                                 <CardHeader>

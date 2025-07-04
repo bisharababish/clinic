@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import Footer from "@/components/layout/Footer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ResetPassword() {
     const [password, setPassword] = useState('');
@@ -134,7 +135,9 @@ export default function ResetPassword() {
             <div className="min-h-screen flex flex-col">
                 <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
+                        <Skeleton width={180} height={20} className="mx-auto mb-2" />
+                        <Skeleton width={120} height={16} className="mx-auto" />
                         <p className="mt-4 text-gray-600">Verifying your reset session...</p>
                     </div>
                 </main>

@@ -499,6 +499,14 @@ const Labs = () => {
           <Skeleton width={180} height={20} className="mx-auto mb-2" />
           <Skeleton width={120} height={16} className="mx-auto" />
           <p className="mt-4 text-gray-600">{t('labs.loadingPatients') || 'Loading patients...'}</p>
+          {/* Skeleton rows for patient select and form fields */}
+          <div className="mt-8 space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} width={320} height={32} className="mx-auto" />
+            ))}
+            <Skeleton width={240} height={32} className="mx-auto mt-4" />
+            <Skeleton width={400} height={80} className="mx-auto mt-4" />
+          </div>
         </div>
       </div>
     );

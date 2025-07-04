@@ -11,6 +11,7 @@ import {
   Camera,
   X,
 } from "lucide-react";
+import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '../lib/supabase';
 import i18n from '../i18n';
 
@@ -875,7 +876,7 @@ const XRay = () => {
           >
             {isUploading ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                <Skeleton width={24} height={24} circle className="mr-3" />
                 {t('xray.uploadingXray') || 'Uploading X-ray...'}
               </div>
             ) : (

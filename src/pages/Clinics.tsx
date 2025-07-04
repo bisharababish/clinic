@@ -267,11 +267,17 @@ const Clinics = () => {
     if (isLoading) {
         return (
             <div className={`loading-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? "rtl" : "ltr"}>
-                <div className="text-center">
+                <div className="flex flex-col items-center justify-center min-h-screen">
                     <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
                     <Skeleton width={180} height={20} className="mx-auto mb-2" />
                     <Skeleton width={120} height={16} className="mx-auto" />
-                    <p className="mt-4 text-gray-600">{t('clinics.loading') || 'Loading clinics...'}</p>
+                    <p className="mt-4 text-gray-600">{t('clinics.loadingClinics') || 'Loading clinics...'}</p>
+                    {/* Skeleton cards for clinics */}
+                    <div className="mt-8 space-y-4 w-full max-w-2xl">
+                        {[...Array(6)].map((_, i) => (
+                            <Skeleton key={i} width={600} height={64} className="mx-auto" />
+                        ))}
+                    </div>
                 </div>
             </div>
         );

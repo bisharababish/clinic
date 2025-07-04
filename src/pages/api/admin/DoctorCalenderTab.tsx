@@ -740,10 +740,6 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                         <Button variant="outline" onClick={() => setShowDayDialog(false)}>
                             {t('common.close') || 'Close'}
                         </Button>
-                        <Button onClick={() => handleQuickAction('schedule')}>
-                            <Plus className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'}`} />
-                            {t('admin.scheduleNew') || 'Schedule New'}
-                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

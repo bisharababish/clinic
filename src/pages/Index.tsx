@@ -70,6 +70,8 @@ interface PatientSearchResult {
   user_roles: string;
   created_at?: string;
   updated_at?: string;
+  social_situation?: string; // ADD THIS LINE
+
 }
 
 interface PatientWithHealthInfo extends PatientSearchResult {
@@ -99,6 +101,7 @@ interface PatientCreationForm {
   date_of_birth: string;
   gender_user: string;
   user_password: string;
+  social_situation?: 'single' | 'married' | '';
 }
 
 const Index = () => {
@@ -123,6 +126,7 @@ const Index = () => {
   const [selectedPatient, setSelectedPatient] = useState<PatientWithHealthInfo | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [socialSituation, setSocialSituation] = useState<"married" | "single" | "">("");
 
   // NEW: State for patient list sidebar
   const [allPatients, setAllPatients] = useState<PatientWithHealthInfo[]>([]);
@@ -147,7 +151,8 @@ const Index = () => {
     user_phonenumber: "",
     date_of_birth: "",
     gender_user: "",
-    user_password: ""
+    user_password: "",
+    social_situation: ""
   });
 
   // Existing patient form state for patients/staff
@@ -204,15 +209,12 @@ const Index = () => {
 
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
   const allergiesList = [
-    { en: 'Peanuts', ar: 'الفول السوداني' },
-    { en: 'Seafood', ar: 'المأكولات البحرية' },
-    { en: 'Eggs', ar: 'البيض' },
-    { en: 'Milk', ar: 'الحليب' },
-    { en: 'Pollen', ar: 'حبوب اللقاح' },
-    { en: 'Dust', ar: 'الغبار' },
-    { en: 'Insect stings', ar: 'لسعات الحشرات' },
-    { en: 'Latex', ar: 'اللاتكس' },
     { en: 'Penicillin', ar: 'البنسلين' },
+    { en: 'Naproxen', ar: 'نابروكسين' },
+    { en: 'Ibuprofen', ar: 'إيبوبروفين' },
+    { en: 'Aspirin', ar: 'الأسبرين' },
+    { en: 'Anticonvulsants', ar: 'مضادات الاختلاج' },
+    { en: 'Other', ar: 'أخرى' },
   ];
 
 
@@ -648,6 +650,9 @@ const Index = () => {
         user_phonenumber: createPatientForm.user_phonenumber.trim(),
         date_of_birth: createPatientForm.date_of_birth,
         gender_user: createPatientForm.gender_user,
+        social_situation: createPatientForm.social_situation === "married" || createPatientForm.social_situation === "single"
+          ? createPatientForm.social_situation
+          : null,
         user_password: password, // Store for reference (in production, this should be hashed)
         created_at: currentTimestamp,
         updated_at: currentTimestamp,
@@ -724,13 +729,16 @@ const Index = () => {
         user_phonenumber: "",
         date_of_birth: "",
         gender_user: "",
-        user_password: ""
+        user_password: "",
+        social_situation: ""
       });
       setShowCreatePatientForm(false);
 
       // Automatically select the new patient
       selectPatient(newPatient);
-
+      if (newPatient.social_situation) {
+        setSocialSituation(newPatient.social_situation as "married" | "single" | "");
+      }
     } catch (error) {
       console.error('❌ Error creating patient:', error);
 
@@ -897,6 +905,15 @@ const Index = () => {
       } else {
         setSelectedAllergies([]);
       }
+      setCustomAllergy(""); // ADD THIS LINE HERE
+      // Fix for linter: only set socialSituation if value is 'married' or 'single'
+      const ss = patient.health_data?.social_situation || patient.social_situation;
+      if (ss === "married" || ss === "single") {
+        setSocialSituation(ss);
+      } else {
+        setSocialSituation("");
+      }
+
       setHealthData(patient.health_data);
     } else {
       // Reset form for patients without health data
@@ -909,6 +926,8 @@ const Index = () => {
       setSelectedDiseases([]);
       setSelectedMedicines([]);
       setSelectedAllergies([]);
+      setCustomAllergy(""); // ADD THIS LINE HERE
+
       setHealthData(null);
     }
 
@@ -936,6 +955,7 @@ const Index = () => {
       loadAllPatients();
     }
   }, []);
+  const [customAllergy, setCustomAllergy] = useState("");
 
   // Filter patients based on search term
   const filteredPatients = allPatients.filter(patient => {
@@ -1011,6 +1031,12 @@ const Index = () => {
         } else {
           setSelectedAllergies([]);
         }
+        setCustomAllergy(""); // ADD THIS LINE HERE
+        if (data.social_situation === "married" || data.social_situation === "single") {
+          setSocialSituation(data.social_situation);
+        } else {
+          setSocialSituation("");
+        }
 
         // Enhanced log entry with user info
         const createdBy = data.created_by_name || data.created_by_email || 'Unknown';
@@ -1040,6 +1066,9 @@ const Index = () => {
         setSelectedMedicines([]);
         setHealthData(null);
         setSelectedAllergies([]);
+        setSelectedMedicines([]);
+        setSocialSituation(""); // ADD THIS LINE
+
         setPatientLogs(prev => [...prev, { key: 'welcomeHealthInfo', timestamp: new Date() }]);
       }
 
@@ -1070,7 +1099,22 @@ const Index = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
+  // Add this function
+  const addCustomAllergy = () => {
+    if (customAllergy.trim()) {
+      const trimmedAllergy = customAllergy.trim();
+      if (!selectedAllergies.includes(trimmedAllergy)) {
+        setSelectedAllergies(prev => [...prev, trimmedAllergy]);
+        setCustomAllergy("");
+      } else {
+        toast({
+          title: isRTL ? "حساسية موجودة مسبقاً" : "Allergy Already Added",
+          description: isRTL ? "هذه الحساسية مضافة بالفعل" : "This allergy is already in the list",
+          variant: "destructive",
+        });
+      }
+    }
+  };
   // FIXED: Handle disease selection (multiple diseases can be selected)
   const handleDiseaseSelect = (diseaseKey: string) => {
     setSelectedDiseases(prev =>
@@ -1141,7 +1185,32 @@ const Index = () => {
 
     return true;
   };
+  // NEW: Function to update social situation in userinfo table
+  const updatePatientSocialSituation = async (patientId: number, newSocialSituation: string) => {
+    if (userRole === 'secretary' && selectedPatient?.gender_user === 'female') {
+      try {
+        const { error } = await supabase
+          .from('userinfo')
+          .update({ social_situation: newSocialSituation || null })
+          .eq('userid', patientId);
 
+        if (error) {
+          console.error('Error updating social situation:', error);
+          toast({
+            title: isRTL ? "خطأ في تحديث الحالة الاجتماعية" : "Error Updating Social Situation",
+            description: isRTL ? "فشل في حفظ الحالة الاجتماعية" : "Failed to save social situation",
+            variant: "destructive",
+          });
+          return false;
+        }
+        return true;
+      } catch (error) {
+        console.error('Error updating social situation:', error);
+        return false;
+      }
+    }
+    return true;
+  };
   const handleSaveInfo = async () => {
     // Determine which patient ID to use
     let targetPatientId: string;
@@ -1182,6 +1251,7 @@ const Index = () => {
       const medicationData = organizeMedicinesByCategory(selectedMedicines);
 
       // Prepare data to save
+      // FIXED CODE:
       const dataToSave = {
         patient_id: parseInt(targetPatientId),
         weight_kg: patientInfo.weight ? parseFloat(patientInfo.weight) : undefined,
@@ -1190,6 +1260,7 @@ const Index = () => {
         ...diseaseData,
         medications: medicationData,
         allergies: selectedAllergies,
+        social_situation: socialSituation === "married" || socialSituation === "single" ? socialSituation : undefined
       };
 
       // Save to database using the hook (user tracking is automatic via database trigger)
@@ -1197,6 +1268,7 @@ const Index = () => {
 
       if (success) {
         // Reload data to get updated user tracking info
+
         if (userRole === 'patient') {
           await loadPatientHealthData();
         } else if ((userRole === 'nurse' || userRole === 'admin' || userRole === 'secretary') && selectedPatient) {
@@ -1307,6 +1379,12 @@ const Index = () => {
           <p className="text-gray-600">
             {isRTL ? "جاري تحميل المعلومات الصحية..." : "Loading health information..."}
           </p>
+          {/* Skeleton cards for health info */}
+          <div className="mt-8 space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} width={320} height={32} className="mx-auto" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -1404,8 +1482,10 @@ const Index = () => {
             <ScrollArea className="h-full pb-20">
               <div className="p-2">
                 {isLoadingPatients ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                  <div className="flex flex-col gap-4 py-8">
+                    {[...Array(6)].map((_, i) => (
+                      <Skeleton key={i} width={280} height={56} className="mx-auto" />
+                    ))}
                   </div>
                 ) : filteredPatients.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
@@ -1500,7 +1580,7 @@ const Index = () => {
                             <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                               {isRTL ? (
                                 <>
-                                  {/* Quick Stats - Left side in Arabic */}
+                                  {/* Quick Stats - Right side in English */}
                                   {patient.health_data && (
                                     <div className="flex gap-1 text-xs">
                                       {(() => {
@@ -1509,6 +1589,7 @@ const Index = () => {
                                           <>
                                             <span className="text-orange-600">{stats.diseaseCount}C</span>
                                             <span className="text-green-600">{stats.medicationCount}M</span>
+                                            <span className="text-red-600">{stats.allergyCount}A</span> {/* NEW: Add allergies */}
                                             {stats.bmi && <span className="text-blue-600">{stats.bmi}</span>}
                                           </>
                                         );
@@ -1589,7 +1670,7 @@ const Index = () => {
           {/* Notification Alert - visible to all */}
           <Alert variant="default" className={`alert-responsive ${isRTL ? 'rtl' : ''} bg-blue-50 border-blue-200`}>
             <AlertDescription className={isRTL ? 'py-4 px-2' : 'py-2'}>
-              <span className="font-medium">{t("home.reminder")}:</span> {t("home.reservationRequired")}
+              <span className="font-medium">{t("home.remindeinder")}:</span> {t("home.reservationRequired")}
               <Button variant="link" className={`h-auto p-0 ${isRTL ? 'mr-3' : 'ml-2'}`} asChild>
                 <Link to="/clinics">{t("home.bookNow")}</Link>
               </Button>
@@ -1712,7 +1793,7 @@ const Index = () => {
                           {/* Health Summary */}
                           {patient.health_data && (
                             <div className="mt-3 pt-2 border-t">
-                              <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div className="grid grid-cols-4 gap-2 text-xs"> {/* Changed from 3 to 4 columns */}
                                 {(() => {
                                   const stats = calculatePatientStats(patient.health_data);
                                   return (
@@ -1724,6 +1805,10 @@ const Index = () => {
                                       <div className="text-center">
                                         <div className="font-medium text-green-600">{stats.medicationCount}</div>
                                         <div className="text-gray-500">{isRTL ? "أدوية" : "Meds"}</div>
+                                      </div>
+                                      <div className="text-center">
+                                        <div className="font-medium text-red-600">{stats.allergyCount}</div>
+                                        <div className="text-gray-500">{isRTL ? "حساسية" : "Allergies"}</div>
                                       </div>
                                       <div className="text-center">
                                         <div className="font-medium text-blue-600">
@@ -1759,7 +1844,7 @@ const Index = () => {
                     <User className="h-4 w-4" />
                     {isRTL ? "المريض المحدد:" : "Selected Patient:"}
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="font-medium">{isRTL ? "الاسم:" : "Name:"}</span>
                       <div>{selectedPatient.english_username_a} {selectedPatient.english_username_d}</div>
@@ -1775,390 +1860,469 @@ const Index = () => {
                       <span className="font-medium">{isRTL ? "رقم الهوية:" : "ID Number:"}</span>
                       <div>{selectedPatient.id_number || 'N/A'}</div>
                     </div>
+
+                    {/* ADD THIS: Show social situation for female patients when secretary */}
+                    {userRole === 'secretary' && selectedPatient.gender_user === 'female' && (
+                      <div>
+                        <span className="font-medium">{isRTL ? "الحالة الاجتماعية:" : "Social Status:"}</span>
+                        <div>
+                          {socialSituation ? (
+                            socialSituation === 'married'
+                              ? (isRTL ? "متزوجة" : "Married")
+                              : (isRTL ? "عزباء" : "Single")
+                          ) : (
+                            <span className="text-gray-500 italic">
+                              {isRTL ? "غير محدد" : "Not specified"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
-            </section>
-          )}
+              {/* NEW: Create Patient Form Modal */}
+              {showCreatePatientForm && canCreatePatients() && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <UserPlus className="h-5 w-5" />
+                        {isRTL ? "إنشاء مريض جديد" : "Create New Patient"}
+                      </h3>
 
-          {/* NEW: Create Patient Form Modal */}
-          {showCreatePatientForm && canCreatePatients() && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <UserPlus className="h-5 w-5" />
-                    {isRTL ? "إنشاء مريض جديد" : "Create New Patient"}
-                  </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* English Name Fields */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-gray-700">{isRTL ? "الاسم باللغة الإنجليزية" : "English Name"}</h4>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label htmlFor="create_english_first" className="text-sm">
+                                {isRTL ? "الأول" : "First"}
+                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                              </Label>
+                              <Input
+                                id="create_english_first"
+                                name="english_username_a"
+                                value={createPatientForm.english_username_a}
+                                onChange={handleCreatePatientFormChange}
+                                required
+                                placeholder={placeholders.english.first}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="create_english_second" className="text-sm">
+                                {isRTL ? "الثاني" : "Second"}
+                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                              </Label>
+                              <Input
+                                id="create_english_second"
+                                name="english_username_b"
+                                value={createPatientForm.english_username_b}
+                                onChange={handleCreatePatientFormChange}
+                                required
+                                placeholder={placeholders.english.second}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="create_english_third" className="text-sm">
+                                {isRTL ? "الثالث" : "Third"}
+                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                              </Label>
+                              <Input
+                                id="create_english_third"
+                                name="english_username_c"
+                                value={createPatientForm.english_username_c}
+                                onChange={handleCreatePatientFormChange}
+                                required
+                                placeholder={placeholders.english.third}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="create_english_last" className="text-sm">
+                                {isRTL ? "الأخير" : "Last"}
+                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                              </Label>
+                              <Input
+                                id="create_english_last"
+                                name="english_username_d"
+                                value={createPatientForm.english_username_d}
+                                onChange={handleCreatePatientFormChange}
+                                required
+                                placeholder={placeholders.english.last}
+                              />
+                            </div>
+                          </div>
+                        </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* English Name Fields */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-700">{isRTL ? "الاسم باللغة الإنجليزية" : "English Name"}</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="create_english_first" className="text-sm">
-                            {isRTL ? "الأول" : "First"}
-                          </Label>
-                          <Input
-                            id="create_english_first"
-                            name="english_username_a"
-                            value={createPatientForm.english_username_a}
-                            onChange={handleCreatePatientFormChange}
-                            required
-                            placeholder={placeholders.english.first}
-                          />
+                        {/* Arabic Name Fields */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-gray-700">{isRTL ? "الاسم باللغة العربية" : "Arabic Name"}</h4>
+                          <div className="grid grid-cols-2 gap-3">
+                            {isRTL ? (
+                              <>
+                                <div>
+                                  <Label htmlFor="create_arabic_first" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                    الأول
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                  </Label>
+                                  <Input
+                                    id="create_arabic_first"
+                                    name="arabic_username_a"
+                                    value={createPatientForm.arabic_username_a}
+                                    onChange={handleCreatePatientFormChange}
+                                    required
+                                    dir="rtl"
+                                    className="text-right"
+                                    placeholder={placeholders.arabic.first}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="create_arabic_second" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                    الثاني
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                  </Label>
+                                  <Input
+                                    id="create_arabic_second"
+                                    name="arabic_username_b"
+                                    value={createPatientForm.arabic_username_b}
+                                    onChange={handleCreatePatientFormChange}
+                                    dir="rtl"
+                                    required
+                                    className="text-right"
+                                    placeholder={placeholders.arabic.second}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="create_arabic_third" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                    الثالث
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                  </Label>
+                                  <Input
+                                    id="create_arabic_third"
+                                    name="arabic_username_c"
+                                    value={createPatientForm.arabic_username_c}
+                                    onChange={handleCreatePatientFormChange}
+                                    dir="rtl"
+                                    required
+                                    className="text-right"
+                                    placeholder={placeholders.arabic.third}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="create_arabic_last" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                    الأخير
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                  </Label>
+                                  <Input
+                                    id="create_arabic_last"
+                                    name="arabic_username_d"
+                                    value={createPatientForm.arabic_username_d}
+                                    onChange={handleCreatePatientFormChange}
+                                    required
+                                    dir="rtl"
+                                    className="text-right"
+                                    placeholder={placeholders.arabic.last}
+                                  />
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                {/* First row: Second, First */}
+                                <div>
+                                  <Label htmlFor="create_arabic_second" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                    الثاني
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                  </Label>
+                                  <Input
+                                    id="create_arabic_second"
+                                    name="arabic_username_b"
+                                    value={createPatientForm.arabic_username_b}
+                                    onChange={handleCreatePatientFormChange}
+                                    dir="rtl"
+                                    required
+                                    className="text-right"
+                                    placeholder={placeholders.arabic.second}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="create_arabic_first" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                    الأول
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                  </Label>
+                                  <Input
+                                    id="create_arabic_first"
+                                    name="arabic_username_a"
+                                    value={createPatientForm.arabic_username_a}
+                                    onChange={handleCreatePatientFormChange}
+                                    required
+                                    dir="rtl"
+
+                                    className="text-right"
+                                    placeholder={placeholders.arabic.first}
+                                  />
+                                </div>
+                                {/* Second row: Last, Third */}
+                                <div>
+                                  <Label htmlFor="create_arabic_last" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                    الأخير
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                  </Label>
+                                  <Input
+                                    id="create_arabic_last"
+                                    name="arabic_username_d"
+                                    value={createPatientForm.arabic_username_d}
+                                    onChange={handleCreatePatientFormChange}
+                                    required
+                                    dir="rtl"
+                                    className="text-right"
+                                    placeholder={placeholders.arabic.last}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="create_arabic_third" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
+                                    الثالث
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                  </Label>
+                                  <Input
+                                    id="create_arabic_third"
+                                    name="arabic_username_c"
+                                    value={createPatientForm.arabic_username_c}
+                                    onChange={handleCreatePatientFormChange}
+                                    dir="rtl"
+                                    required
+                                    className="text-right"
+                                    placeholder={placeholders.arabic.third}
+                                  />
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <Label htmlFor="create_english_second" className="text-sm">
-                            {isRTL ? "الثاني" : "Second"}
-                          </Label>
-                          <Input
-                            id="create_english_second"
-                            name="english_username_b"
-                            value={createPatientForm.english_username_b}
-                            onChange={handleCreatePatientFormChange}
-                            placeholder={placeholders.english.second}
-                          />
+
+                        {/* Personal Information */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-gray-700">{isRTL ? "المعلومات الشخصية" : "Personal Information"}</h4>
+                          <div>
+                            <Label htmlFor="create_dob" className="text-sm">
+                              {isRTL ? "تاريخ الميلاد" : "Date of Birth"}
+                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                            </Label>
+                            <div className="relative">
+                              <Calendar className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
+                              <Input
+                                id="create_dob"
+                                name="date_of_birth"
+                                type="date"
+                                value={createPatientForm.date_of_birth}
+                                onChange={handleCreatePatientFormChange}
+                                className={`${isRTL ? 'pr-12' : 'pl-3'} ${isRTL ? 'text-left' : 'text-left'}`}
+                                required
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-sm">
+                              {isRTL ? "الجنس" : "Gender"}
+                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                            </Label>
+                            <RadioGroup
+                              value={createPatientForm.gender_user}
+                              onValueChange={(value) => setCreatePatientForm(prev => ({ ...prev, gender_user: value }))}
+                              className={`flex gap-4 mt-2 ${isRTL ? 'justify-end' : 'justify-start'}`}
+                            >
+                              {isRTL ? (
+                                <>
+                                  <div className="flex items-center space-x-2">
+                                    <Label htmlFor="create_female">{t("auth.female")}</Label>
+                                    <RadioGroupItem value="female" id="create_female" />
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Label htmlFor="create_male">{t("auth.male")}</Label>
+                                    <RadioGroupItem value="male" id="create_male" />
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="male" id="create_male" />
+                                    <Label htmlFor="create_male">{t("auth.male")}</Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="female" id="create_female" />
+                                    <Label htmlFor="create_female">{t("auth.female")}</Label>
+                                  </div>
+                                </>
+                              )}
+                            </RadioGroup>
+                          </div>
+                          {/* ADD THIS: Social Situation - Only for female patients and secretary role */}
+                          {userRole === 'secretary' && createPatientForm.gender_user === 'female' && (
+                            <div style={{ marginTop: '32px' }}>
+                              <Label className="text-sm">{isRTL ? "الحالة الاجتماعية" : "Social Situation"}</Label>
+                              <RadioGroup
+                                value={createPatientForm.social_situation}
+                                onValueChange={(value) => setCreatePatientForm(prev => ({ ...prev, social_situation: value as '' | 'single' | 'married' }))}
+                                className={`flex gap-4 mt-2 ${isRTL ? 'justify-end' : 'justify-start'}`}
+                              >
+                                {isRTL ? (
+                                  <>
+                                    <div className="flex items-center space-x-2">
+                                      <Label htmlFor="create_single">{isRTL ? "عزباء" : "Single"}</Label>
+                                      <RadioGroupItem value="single" id="create_single" />
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Label htmlFor="create_married">{isRTL ? "متزوجة" : "Married"}</Label>
+                                      <RadioGroupItem value="married" id="create_married" />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="married" id="create_married" />
+                                      <Label htmlFor="create_married">{isRTL ? "متزوجة" : "Married"}</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="single" id="create_single" />
+                                      <Label htmlFor="create_single">{isRTL ? "عزباء" : "Single"}</Label>
+                                    </div>
+                                  </>
+                                )}
+                              </RadioGroup>
+                            </div>
+                          )}
+                          <div style={{ marginTop: '32px' }}>
+                            <Label htmlFor="create_password" className="text-sm">
+                              {isRTL ? "كلمة المرور" : "Password"}
+                            </Label>
+                            <div className="relative">
+                              <Lock className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
+                              <Input
+                                id="create_password"
+                                name="user_password"
+                                type="password"
+                                value={createPatientForm.user_password}
+                                onChange={handleCreatePatientFormChange}
+                                className={isRTL ? 'pr-10' : 'pl-10'}
+                                placeholder={isRTL ? "اتركها فارغة للإنشاء التلقائي" : "Leave empty for auto-generation"}
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <Label htmlFor="create_english_third" className="text-sm">
-                            {isRTL ? "الثالث" : "Third"}
-                          </Label>
-                          <Input
-                            id="create_english_third"
-                            name="english_username_c"
-                            value={createPatientForm.english_username_c}
-                            onChange={handleCreatePatientFormChange}
-                            placeholder={placeholders.english.third}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="create_english_last" className="text-sm">
-                            {isRTL ? "الأخير" : "Last"}
-                          </Label>
-                          <Input
-                            id="create_english_last"
-                            name="english_username_d"
-                            value={createPatientForm.english_username_d}
-                            onChange={handleCreatePatientFormChange}
-                            required
-                            placeholder={placeholders.english.last}
-                          />
+
+                        {/* Contact Information */}
+                        <div className="space-y-4">
+                          <h4 className="font-medium text-gray-700">{isRTL ? "معلومات الاتصال" : "Contact Information"}</h4>
+                          <div>
+                            <Label htmlFor="create_email" className="text-sm">
+                              {isRTL ? "البريد الإلكتروني" : "Email"}
+                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                            </Label>
+                            <div className="relative">
+                              <Mail className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
+                              <Input
+                                id="create_email"
+                                name="user_email"
+                                type="email"
+                                value={createPatientForm.user_email}
+                                onChange={handleCreatePatientFormChange}
+                                className={isRTL ? 'pr-10' : 'pl-10'}
+                                required
+                                placeholder={t('usersManagement.emailPlaceholder')}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor="create_phone" className="text-sm">
+                              {isRTL ? "رقم الهاتف" : "Phone Number"}
+                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                            </Label>
+                            <div className="relative">
+                              <Phone className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
+                              <Input
+                                id="create_phone"
+                                name="user_phonenumber"
+                                type="tel"
+                                value={createPatientForm.user_phonenumber}
+                                onChange={handleCreatePatientFormChange}
+                                className={isRTL ? 'pr-10' : 'pl-10'}
+                                required
+                                placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor="create_id_number" className="text-sm">
+                              {isRTL ? "رقم الهوية" : "ID Number"}
+                            </Label>
+                            <div className="relative">
+                              <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                              <Input
+                                id="create_id_number"
+                                name="id_number"
+                                value={createPatientForm.id_number}
+                                onChange={handleCreatePatientFormChange}
+                                className={isRTL ? 'pr-10' : 'pl-10'}
+                                required
+                                placeholder="123456789"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Arabic Name Fields */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-700">{isRTL ? "الاسم باللغة العربية" : "Arabic Name"}</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        {isRTL ? (
-                          <>
-                            <div>
-                              <Label htmlFor="create_arabic_first" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
-                                الأول
-                              </Label>
-                              <Input
-                                id="create_arabic_first"
-                                name="arabic_username_a"
-                                value={createPatientForm.arabic_username_a}
-                                onChange={handleCreatePatientFormChange}
-                                required
-                                dir="rtl"
-                                className="text-right"
-                                placeholder={placeholders.arabic.first}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="create_arabic_second" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
-                                الثاني
-                              </Label>
-                              <Input
-                                id="create_arabic_second"
-                                name="arabic_username_b"
-                                value={createPatientForm.arabic_username_b}
-                                onChange={handleCreatePatientFormChange}
-                                dir="rtl"
-                                className="text-right"
-                                placeholder={placeholders.arabic.second}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="create_arabic_third" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
-                                الثالث
-                              </Label>
-                              <Input
-                                id="create_arabic_third"
-                                name="arabic_username_c"
-                                value={createPatientForm.arabic_username_c}
-                                onChange={handleCreatePatientFormChange}
-                                dir="rtl"
-                                className="text-right"
-                                placeholder={placeholders.arabic.third}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="create_arabic_last" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
-                                الأخير
-                              </Label>
-                              <Input
-                                id="create_arabic_last"
-                                name="arabic_username_d"
-                                value={createPatientForm.arabic_username_d}
-                                onChange={handleCreatePatientFormChange}
-                                required
-                                dir="rtl"
-                                className="text-right"
-                                placeholder={placeholders.arabic.last}
-                              />
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            {/* First row: Second, First */}
-                            <div>
-                              <Label htmlFor="create_arabic_second" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
-                                الثاني
-                              </Label>
-                              <Input
-                                id="create_arabic_second"
-                                name="arabic_username_b"
-                                value={createPatientForm.arabic_username_b}
-                                onChange={handleCreatePatientFormChange}
-                                dir="rtl"
-                                className="text-right"
-                                placeholder={placeholders.arabic.second}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="create_arabic_first" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
-                                الأول
-                              </Label>
-                              <Input
-                                id="create_arabic_first"
-                                name="arabic_username_a"
-                                value={createPatientForm.arabic_username_a}
-                                onChange={handleCreatePatientFormChange}
-                                required
-                                dir="rtl"
-                                className="text-right"
-                                placeholder={placeholders.arabic.first}
-                              />
-                            </div>
-                            {/* Second row: Last, Third */}
-                            <div>
-                              <Label htmlFor="create_arabic_last" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
-                                الأخير
-                              </Label>
-                              <Input
-                                id="create_arabic_last"
-                                name="arabic_username_d"
-                                value={createPatientForm.arabic_username_d}
-                                onChange={handleCreatePatientFormChange}
-                                required
-                                dir="rtl"
-                                className="text-right"
-                                placeholder={placeholders.arabic.last}
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="create_arabic_third" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
-                                الثالث
-                              </Label>
-                              <Input
-                                id="create_arabic_third"
-                                name="arabic_username_c"
-                                value={createPatientForm.arabic_username_c}
-                                onChange={handleCreatePatientFormChange}
-                                dir="rtl"
-                                className="text-right"
-                                placeholder={placeholders.arabic.third}
-                              />
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Personal Information */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-700">{isRTL ? "المعلومات الشخصية" : "Personal Information"}</h4>
-                      <div>
-                        <Label htmlFor="create_dob" className="text-sm">
-                          {isRTL ? "تاريخ الميلاد" : "Date of Birth"}
-                        </Label>
-                        <div className="relative">
-                          <Calendar className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
-                          <Input
-                            id="create_dob"
-                            name="date_of_birth"
-                            type="date"
-                            value={createPatientForm.date_of_birth}
-                            onChange={handleCreatePatientFormChange}
-                            className={`${isRTL ? 'pr-12' : 'pl-3'} ${isRTL ? 'text-left' : 'text-left'}`}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label className="text-sm">{isRTL ? "الجنس" : "Gender"} </Label>
-                        <RadioGroup
-                          value={createPatientForm.gender_user}
-                          onValueChange={(value) => setCreatePatientForm(prev => ({ ...prev, gender_user: value }))}
-                          className={`flex gap-4 mt-2 ${isRTL ? 'justify-end' : 'justify-start'}`}
+                      {/* Form Actions */}
+                      <div className="flex justify-end gap-4 mt-8 pt-6 border-t flex-row-reverse">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowCreatePatientForm(false);
+                            setCreatePatientForm({
+                              english_username_a: "",
+                              english_username_b: "",
+                              english_username_c: "",
+                              english_username_d: "",
+                              arabic_username_a: "",
+                              arabic_username_b: "",
+                              arabic_username_c: "",
+                              arabic_username_d: "",
+                              user_email: "",
+                              id_number: "",
+                              user_phonenumber: "",
+                              date_of_birth: "",
+                              gender_user: "",
+                              user_password: "",
+                              social_situation: ""
+                            });
+                          }}
+                          disabled={isCreatingPatient}
                         >
-                          {isRTL ? (
+                          {isRTL ? "إلغاء" : "Cancel"}
+                        </Button>
+                        <Button
+                          onClick={createNewPatient}
+                          disabled={isCreatingPatient}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          {isCreatingPatient ? (
                             <>
-                              <div className="flex items-center space-x-2">
-                                <Label htmlFor="create_female">{t("auth.female")}</Label>
-                                <RadioGroupItem value="female" id="create_female" />
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Label htmlFor="create_male">{t("auth.male")}</Label>
-                                <RadioGroupItem value="male" id="create_male" />
-                              </div>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              {isRTL ? "جاري الإنشاء..." : "Creating..."}
                             </>
                           ) : (
                             <>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="male" id="create_male" />
-                                <Label htmlFor="create_male">{t("auth.male")}</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="female" id="create_female" />
-                                <Label htmlFor="create_female">{t("auth.female")}</Label>
-                              </div>
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              {isRTL ? "إنشاء المريض" : "Create Patient"}
                             </>
                           )}
-                        </RadioGroup>
-                      </div>
-                      <div style={{ marginTop: '32px' }}>
-                        <Label htmlFor="create_password" className="text-sm">
-                          {isRTL ? "كلمة المرور" : "Password"}
-                        </Label>
-                        <div className="relative">
-                          <Lock className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
-                          <Input
-                            id="create_password"
-                            name="user_password"
-                            type="password"
-                            value={createPatientForm.user_password}
-                            onChange={handleCreatePatientFormChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
-                            placeholder={isRTL ? "اتركها فارغة للإنشاء التلقائي" : "Leave empty for auto-generation"}
-                          />
-                        </div>
+                        </Button>
                       </div>
                     </div>
-
-                    {/* Contact Information */}
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-700">{isRTL ? "معلومات الاتصال" : "Contact Information"}</h4>
-                      <div>
-                        <Label htmlFor="create_email" className="text-sm">
-                          {isRTL ? "البريد الإلكتروني" : "Email"}
-                        </Label>
-                        <div className="relative">
-                          <Mail className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
-                          <Input
-                            id="create_email"
-                            name="user_email"
-                            type="email"
-                            value={createPatientForm.user_email}
-                            onChange={handleCreatePatientFormChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
-                            required
-                            placeholder={t('usersManagement.emailPlaceholder')}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="create_phone" className="text-sm">
-                          {isRTL ? "رقم الهاتف" : "Phone Number"}
-                        </Label>
-                        <div className="relative">
-                          <Phone className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
-                          <Input
-                            id="create_phone"
-                            name="user_phonenumber"
-                            type="tel"
-                            value={createPatientForm.user_phonenumber}
-                            onChange={handleCreatePatientFormChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
-                            required
-                            placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="create_id_number" className="text-sm">
-                          {isRTL ? "رقم الهوية" : "ID Number"}
-                        </Label>
-                        <div className="relative">
-                          <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
-                          <Input
-                            id="create_id_number"
-                            name="id_number"
-                            value={createPatientForm.id_number}
-                            onChange={handleCreatePatientFormChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
-                            required
-                            placeholder="123456789"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Form Actions */}
-                  <div className="flex justify-end gap-4 mt-8 pt-6 border-t flex-row-reverse">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setShowCreatePatientForm(false);
-                        setCreatePatientForm({
-                          english_username_a: "",
-                          english_username_b: "",
-                          english_username_c: "",
-                          english_username_d: "",
-                          arabic_username_a: "",
-                          arabic_username_b: "",
-                          arabic_username_c: "",
-                          arabic_username_d: "",
-                          user_email: "",
-                          id_number: "",
-                          user_phonenumber: "",
-                          date_of_birth: "",
-                          gender_user: "",
-                          user_password: ""
-                        });
-                      }}
-                      disabled={isCreatingPatient}
-                    >
-                      {isRTL ? "إلغاء" : "Cancel"}
-                    </Button>
-                    <Button
-                      onClick={createNewPatient}
-                      disabled={isCreatingPatient}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      {isCreatingPatient ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          {isRTL ? "جاري الإنشاء..." : "Creating..."}
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          {isRTL ? "إنشاء المريض" : "Create Patient"}
-                        </>
-                      )}
-                    </Button>
                   </div>
                 </div>
-              </div>
-            </div>
+
+              )}
+            </section>
           )}
 
           {/* Patient Information Section - visible to ALL users */}
@@ -2224,7 +2388,73 @@ const Index = () => {
               </div>
             </div>
           </section>
+          {/* ADD THIS COMPLETE NEW SECTION: Social Situation Section - Only show for secretary when female patient is selected */}
+          {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && (
+            <section className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                <User className="h-6 w-6" />
+                {isRTL ? "الحالة الاجتماعية" : "Social Situation"}
+              </h2>
 
+              <div className="space-y-4">
+                <Label className="text-lg font-medium">
+                  {isRTL ? "حالة المريضة الاجتماعية:" : "Patient's Social Status:"}
+                </Label>
+
+                <RadioGroup
+                  value={socialSituation}
+                  onValueChange={(value) => setSocialSituation(value as '' | 'single' | 'married')}
+                  className={`flex gap-6 ${isRTL ? 'justify-end' : 'justify-start'}`}
+                >
+                  {isRTL ? (
+                    <>
+                      <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+                        <Label htmlFor="social_single" className="text-lg cursor-pointer">
+                          {isRTL ? "عزباء" : "Single"}
+                        </Label>
+                        <RadioGroupItem value="single" id="social_single" className="w-5 h-5" />
+                      </div>
+                      <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+                        <Label htmlFor="social_married" className="text-lg cursor-pointer">
+                          {isRTL ? "متزوجة" : "Married"}
+                        </Label>
+                        <RadioGroupItem value="married" id="social_married" className="w-5 h-5" />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+                        <RadioGroupItem value="married" id="social_married" className="w-5 h-5" />
+                        <Label htmlFor="social_married" className="text-lg cursor-pointer">
+                          {isRTL ? "متزوجة" : "Married"}
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+                        <RadioGroupItem value="single" id="social_single" className="w-5 h-5" />
+                        <Label htmlFor="social_single" className="text-lg cursor-pointer">
+                          {isRTL ? "عزباء" : "Single"}
+                        </Label>
+                      </div>
+                    </>
+                  )}
+                </RadioGroup>
+                {/* Show current status if available */}
+                {socialSituation && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>{isRTL ? "الحالة الحالية:" : "Current Status:"}</strong>
+                      <span className="ml-2">
+                        {socialSituation === 'married'
+                          ? (isRTL ? "متزوجة" : "Married")
+                          : (isRTL ? "عزباء" : "Single")
+                        }
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
           {/* Common Diseases - FIXED: Changed to checkboxes for multiple selection */}
           <section className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.commonDiseases")}</h2>
@@ -2311,16 +2541,17 @@ const Index = () => {
 
           {/* Allergies Section - visible to ALL users */}
           <section className="bg-white p-6 rounded-lg shadow mt-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">{isRTL ? 'الحساسية' : 'Allergies'}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">{isRTL ? 'الحساسية الدوائية' : 'Drug Allergies'}</h2>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {allergiesList.map(allergy => (
+              {allergiesList.filter(allergy => allergy.en !== 'Other').map(allergy => (
                 <div key={allergy.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
                   <input
                     type="checkbox"
                     id={allergy.en}
                     checked={selectedAllergies.includes(allergy.en)}
                     onChange={() => handleAllergySelect(allergy.en)}
-                    className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                   />
                   <Label htmlFor={allergy.en} className="text-base">
                     {isRTL ? allergy.ar : allergy.en}
@@ -2328,6 +2559,92 @@ const Index = () => {
                 </div>
               ))}
             </div>
+
+            {/* Other Allergies - Custom Input */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+              <Label className="text-sm font-medium mb-2 block">
+                {isRTL ? "حساسيات أخرى:" : "Other Allergies:"}
+              </Label>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder={isRTL ? "اكتب نوع الحساسية..." : "Enter allergy type..."}
+                    value={customAllergy}
+                    onChange={(e) => setCustomAllergy(e.target.value)}
+                    className="flex-1"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && customAllergy.trim()) {
+                        addCustomAllergy();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={addCustomAllergy}
+                    size="sm"
+                    disabled={!customAllergy.trim()}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    {isRTL ? "إضافة" : "Add"}
+                  </Button>
+                </div>
+
+                {/* Display added custom allergies */}
+                {selectedAllergies.filter(allergy => !allergiesList.some(a => a.en === allergy)).length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">
+                      {isRTL ? "الحساسيات المخصصة المضافة:" : "Added Custom Allergies:"}
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedAllergies
+                        .filter(allergy => !allergiesList.some(a => a.en === allergy))
+                        .map((allergy, index) => (
+                          <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-red-100 text-red-800">
+                            {allergy}
+                            <button
+                              onClick={() => setSelectedAllergies(prev => prev.filter(a => a !== allergy))}
+                              className="ml-1 hover:text-red-600"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Display all selected allergies */}
+            {selectedAllergies.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">
+                  {isRTL ? "جميع الحساسيات المحددة:" : "All Selected Allergies:"}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedAllergies.map((allergy, index) => {
+                    const isCustom = !allergiesList.some(a => a.en === allergy);
+                    return (
+                      <Badge
+                        key={index}
+                        variant={isCustom ? "secondary" : "outline"}
+                        className={`flex items-center gap-1 ${isCustom ? 'bg-red-100 text-red-800' : 'border-red-200 text-red-700'}`}
+                      >
+                        {isRTL && !isCustom ? (
+                          allergiesList.find(a => a.en === allergy)?.ar || allergy
+                        ) : allergy}
+                        <button
+                          onClick={() => setSelectedAllergies(prev => prev.filter(a => a !== allergy))}
+                          className="ml-1 hover:text-red-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Enhanced Patient Logs with User Tracking - visible to ALL users */}
@@ -2447,7 +2764,7 @@ const Index = () => {
                 {isRTL ? "ملخص الحالة الصحية" : "Health Summary"}
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6"> {/* Changed from 3 to 4 */}
                 {/* Basic Information */}
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
                   <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
@@ -2473,6 +2790,20 @@ const Index = () => {
                         <span className="font-medium">{getBloodTypeDisplay(healthData.blood_type)}</span>
                       </div>
                     )}
+
+                    {/* ADD THIS: Social Situation Display */}
+                    {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && healthData.social_situation && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">{isRTL ? "الحالة الاجتماعية:" : "Social Status:"}</span>
+                        <span className="font-medium">
+                          {healthData.social_situation === 'married'
+                            ? (isRTL ? "متزوجة" : "Married")
+                            : (isRTL ? "عزباء" : "Single")
+                          }
+                        </span>
+                      </div>
+                    )}
+
                     {healthData.weight_kg && healthData.height_cm && (
                       <div className="flex justify-between pt-2 border-t border-blue-200">
                         <span className="text-gray-600">BMI:</span>
@@ -2578,17 +2909,14 @@ const Index = () => {
                           <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                           <span className="text-sm font-medium">
                             {isRTL ? (
-                              // Convert English allergy names to Arabic
-                              allergy === 'Peanuts' ? 'الفول السوداني' :
-                                allergy === 'Seafood' ? 'المأكولات البحرية' :
-                                  allergy === 'Eggs' ? 'البيض' :
-                                    allergy === 'Milk' ? 'الحليب' :
-                                      allergy === 'Pollen' ? 'حبوب اللقاح' :
-                                        allergy === 'Dust' ? 'الغبار' :
-                                          allergy === 'Insect stings' ? 'لسعات الحشرات' :
-                                            allergy === 'Latex' ? 'اللاتكس' :
-                                              allergy === 'Penicillin' ? 'البنسلين' :
-                                                allergy
+                              // Convert English allergy names to Arabic (UPDATED FOR MEDICAL ALLERGIES)
+                              allergy === 'Penicillin' ? 'البنسلين' :
+                                allergy === 'Naproxen' ? 'نابروكسين' :
+                                  allergy === 'Ibuprofen' ? 'إيبوبروفين' :
+                                    allergy === 'Aspirin' ? 'الأسبرين' :
+                                      allergy === 'Anticonvulsants' ? 'مضادات الاختلاج' :
+                                        allergy === 'Other' ? 'أخرى' :
+                                          allergy
                             ) : allergy}
                           </span>
                         </div>
@@ -2638,4 +2966,4 @@ const Index = () => {
   );
 };
 
-export default Index;        
+export default Index;

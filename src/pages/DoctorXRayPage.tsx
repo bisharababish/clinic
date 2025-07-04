@@ -266,6 +266,20 @@ const DoctorXRayPage: React.FC = () => {
                     <Skeleton width={180} height={20} className="mx-auto mb-2" />
                     <Skeleton width={120} height={16} className="mx-auto" />
                     <p className="mt-4 text-gray-600">{t('doctorPages.loadingXrayImages') || 'Loading X-ray images...'}</p>
+                    {/* Skeleton cards for images grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                                <Skeleton height={240} className="w-full" />
+                                <div className="p-4">
+                                    <Skeleton width={100} height={16} className="mb-2" />
+                                    <Skeleton width={60} height={14} className="mb-1" />
+                                    <Skeleton width={80} height={14} className="mb-1" />
+                                    <Skeleton width={120} height={14} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
