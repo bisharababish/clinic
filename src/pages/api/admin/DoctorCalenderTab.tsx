@@ -300,6 +300,26 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
             t('admin.saturday') || 'Sat',
         ], [i18n.language]);
 
+    // Time slots (customize as needed)
+    const timeSlots = [
+        '08:00', '09:00', '10:00', '11:00', '12:00',
+        '13:00', '14:00', '15:00', '16:00', '17:00',
+        '18:00', '19:00', '20:00'
+    ];
+    // For Arabic, reverse the time slots
+    const displayTimeSlots = i18n.language === 'ar' ? [...timeSlots].reverse() : timeSlots;
+    // Helper to format time in Arabic
+    function formatTimeArabic(time) {
+        // Convert to Arabic numerals and add صباحًا/مساءً
+        const [h, m] = time.split(":");
+        const hour = parseInt(h, 10);
+        const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١', '١٢', '١٣', '١٤', '١٥', '١٦', '١٧', '١٨', '١٩', '٢٠', '٢١', '٢٢', '٢٣', '٢٤'];
+        const arabicHour = arabicNumbers[hour];
+        const arabicMinute = m === '00' ? '' : ':' + arabicNumbers[parseInt(m, 10)];
+        const isAM = hour < 12;
+        return arabicHour + arabicMinute + (isAM ? ' صباحًا' : ' مساءً');
+    }
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -488,6 +508,161 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                             );
                         })}
                     </div>
+                </CardContent>
+            </Card>
+
+            {/* Weekly Calendar */}
+            <Card className="mt-6">
+                <CardHeader>
+                    <CardTitle className="text-lg">Weekly Calendar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {/* Weekly calendar grid */}
+                    {(() => {
+                        // Calculate start of week (Sunday)
+                        const weekStart = new Date(currentDate);
+                        weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+                        // Build days of week
+                        const weekDaysArr = Array.from({ length: 7 }, (_, i) => {
+                            const d = new Date(weekStart);
+                            d.setDate(weekStart.getDate() + i);
+                            return d;
+                        });
+                        // Time slots (customize as needed)
+                        const timeSlots = [
+                            '08:00', '09:00', '10:00', '11:00', '12:00',
+                            '13:00', '14:00', '15:00', '16:00', '17:00',
+                            '18:00', '19:00', '20:00'
+                        ];
+                        // For Arabic, reverse the time slots
+                        const displayTimeSlots = i18n.language === 'ar' ? [...timeSlots].reverse() : timeSlots;
+                        // Helper to format time in Arabic
+                        function formatTimeArabic(time) {
+                            // Convert to Arabic numerals and add صباحًا/مساءً
+                            const [h, m] = time.split(":");
+                            const hour = parseInt(h, 10);
+                            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١', '١٢', '١٣', '١٤', '١٥', '١٦', '١٧', '١٨', '١٩', '٢٠', '٢١', '٢٢', '٢٣', '٢٤'];
+                            const arabicHour = arabicNumbers[hour];
+                            const arabicMinute = m === '00' ? '' : ':' + arabicNumbers[parseInt(m, 10)];
+                            const isAM = hour < 12;
+                            return arabicHour + arabicMinute + (isAM ? ' صباحًا' : ' مساءً');
+                        }
+                        // Day names (no dates)
+                        const dayNames = i18n.language === 'ar'
+                            ? [
+                                t('admin.sunday') || 'الأحد',
+                                t('admin.monday') || 'الاثنين',
+                                t('admin.tuesday') || 'الثلاثاء',
+                                t('admin.wednesday') || 'الأربعاء',
+                                t('admin.thursday') || 'الخميس',
+                                t('admin.friday') || 'الجمعة',
+                                t('admin.saturday') || 'السبت',
+                            ]
+                            : [
+                                t('admin.sunday') || 'Sun',
+                                t('admin.monday') || 'Mon',
+                                t('admin.tuesday') || 'Tue',
+                                t('admin.wednesday') || 'Wed',
+                                t('admin.thursday') || 'Thu',
+                                t('admin.friday') || 'Fri',
+                                t('admin.saturday') || 'Sat',
+                            ];
+                        return (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full border text-xs" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>
+                                    <thead>
+                                        <tr>
+                                            {i18n.language === 'ar' ? (
+                                                <>
+                                                    <th className="border p-2 bg-gray-50" style={{ minWidth: '90px' }}>{t('admin.day') || 'اليوم'}</th>
+                                                    {displayTimeSlots.map(slot => (
+                                                        <th key={slot} className="border p-2 bg-gray-50">{formatTimeArabic(slot)}</th>
+                                                    ))}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <th className="border p-2 bg-gray-50" style={{ minWidth: '90px' }}>Day</th>
+                                                    {displayTimeSlots.map(slot => (
+                                                        <th key={slot} className="border p-2 bg-gray-50">{slot}</th>
+                                                    ))}
+                                                </>
+                                            )}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weekDaysArr.map((d, dayIdx) => {
+                                            const dateStr = d.toISOString().split('T')[0];
+                                            // For Arabic, reverse the day index
+                                            const displayDayIdx = i18n.language === 'ar' ? 6 - dayIdx : dayIdx;
+                                            return (
+                                                <tr key={dayIdx}>
+                                                    {i18n.language === 'ar' ? (
+                                                        <>
+                                                            <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
+                                                            {displayTimeSlots.map((slot, slotIdx) => {
+                                                                const cellApts = filteredAppointments.filter(apt => apt.date === dateStr && apt.time.startsWith(slot));
+                                                                let hasConflict = false;
+                                                                for (let i = 0; i < cellApts.length; i++) {
+                                                                    for (let j = 0; j < cellApts.length; j++) {
+                                                                        if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
+                                                                            hasConflict = true;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    if (hasConflict) break;
+                                                                }
+                                                                return (
+                                                                    <td key={slotIdx} className={`border p-2 min-w-[100px] ${hasConflict ? 'bg-red-100 border-red-500 relative' : ''}`}>
+                                                                        {cellApts.length > 0 ? cellApts.map(apt => (
+                                                                            <div key={apt.id} className="bg-blue-100 text-blue-800 rounded px-1 mb-1 truncate">
+                                                                                {apt.patient_name} <span className="block text-xs">{apt.time}</span>
+                                                                            </div>
+                                                                        )) : <span className="text-gray-300">-</span>}
+                                                                        {hasConflict && (
+                                                                            <span className="absolute top-1 right-1 text-xs text-red-600" title="Conflict: Multiple appointments for the same clinic at this time">⚠️</span>
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
+                                                            {displayTimeSlots.map((slot, slotIdx) => {
+                                                                const cellApts = filteredAppointments.filter(apt => apt.date === dateStr && apt.time.startsWith(slot));
+                                                                let hasConflict = false;
+                                                                for (let i = 0; i < cellApts.length; i++) {
+                                                                    for (let j = 0; j < cellApts.length; j++) {
+                                                                        if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
+                                                                            hasConflict = true;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    if (hasConflict) break;
+                                                                }
+                                                                return (
+                                                                    <td key={slotIdx} className={`border p-2 min-w-[100px] ${hasConflict ? 'bg-red-100 border-red-500 relative' : ''}`}>
+                                                                        {cellApts.length > 0 ? cellApts.map(apt => (
+                                                                            <div key={apt.id} className="bg-blue-100 text-blue-800 rounded px-1 mb-1 truncate">
+                                                                                {apt.patient_name} <span className="block text-xs">{apt.time}</span>
+                                                                            </div>
+                                                                        )) : <span className="text-gray-300">-</span>}
+                                                                        {hasConflict && (
+                                                                            <span className="absolute top-1 right-1 text-xs text-red-600" title="Conflict: Multiple appointments for the same clinic at this time">⚠️</span>
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </>
+                                                    )}
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                    })()}
                 </CardContent>
             </Card>
 

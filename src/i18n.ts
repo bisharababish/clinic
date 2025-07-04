@@ -590,6 +590,7 @@ const enTranslations = {
         upcomingAppointments: 'Upcoming Appointments',
         noUpcomingAppointments: 'No upcoming appointments',
         appointmentsFor: 'Appointments for',
+        weeklyCalendar: 'Weekly Calendar',
     },
     labs: {
         title: 'Laboratory Test Results',
@@ -2001,6 +2002,7 @@ const arTranslations = {
         upcomingAppointments: 'المواعيد القادمة',
         noUpcomingAppointments: 'لا توجد مواعيد قادمة',
         appointmentsFor: 'Appointments for',
+        weeklyCalendar: 'التقويم الأسبوعي',
     },
     usersManagement: {
         // Main titles and descriptions

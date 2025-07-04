@@ -2157,9 +2157,9 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                         {/* Notes */}
                         <div>
-                            <Label htmlFor="notes">{t('appointmentsManagement.additionalNotes')}</Label>
+                            <Label htmlFor="appointment_notes">{t('appointmentsManagement.additionalNotes')}</Label>
                             <textarea
-                                id="notes"
+                                id="appointment_notes"
                                 className="form-textarea w-full p-2 border rounded-md min-h-[100px]"
                                 value={appointmentNotes}
                                 onChange={(e) => setAppointmentNotes(e.target.value)}
