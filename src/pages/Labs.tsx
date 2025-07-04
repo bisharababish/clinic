@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +24,23 @@ import { Textarea } from "../components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { AlertCircle, CheckCircle, Download, Trash2, File } from "lucide-react";
 import FileUpload from "../components/ui/file-upload";
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import TextAlign from '@tiptap/extension-text-align';
+import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
+import Heading from '@tiptap/extension-heading';
+import Paragraph from '@tiptap/extension-paragraph';
+import Bold from '@tiptap/extension-bold';
+import Italic from '@tiptap/extension-italic';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
+import Image from '@tiptap/extension-image';
+import { LanguageContext } from '../components/contexts/LanguageContext';
+import type { Editor } from '@tiptap/react';
+import './LabsTiptap.css';
 
 interface Patient {
   userid: number;
@@ -70,7 +87,7 @@ const Labs = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isRTL = i18n.language === 'ar';
+  const { language, isRTL } = useContext(LanguageContext);
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -465,6 +482,79 @@ const Labs = () => {
     }
   };
 
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Tiptap toolbar component
+  const TiptapToolbar = ({ editor, isRTL }: { editor: Editor | null, isRTL: boolean }) => (
+    <div className="tiptap-toolbar" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+      <button aria-label="Bold" title={isRTL ? 'عريض' : 'Bold'} onClick={() => editor?.chain().focus().toggleBold().run()} disabled={!editor?.can().chain().focus().toggleBold().run()}><b>B</b></button>
+      <button aria-label="Italic" title={isRTL ? 'مائل' : 'Italic'} onClick={() => editor?.chain().focus().toggleItalic().run()} disabled={!editor?.can().chain().focus().toggleItalic().run()}><i>I</i></button>
+      <button aria-label="Underline" title={isRTL ? 'تحته خط' : 'Underline'} onClick={() => editor?.chain().focus().toggleUnderline().run()} disabled={!editor?.can().chain().focus().toggleUnderline().run()}><u>U</u></button>
+      <button aria-label="Heading 1" title={isRTL ? 'عنوان رئيسي' : 'Heading 1'} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} disabled={!editor?.can().chain().focus().toggleHeading({ level: 1 }).run()}>H1</button>
+      <button aria-label="Heading 2" title={isRTL ? 'عنوان فرعي' : 'Heading 2'} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} disabled={!editor?.can().chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
+      <button aria-label="Normal" title={isRTL ? 'نص عادي' : 'Normal'} onClick={() => editor?.chain().focus().setParagraph().run()} disabled={!editor?.can().chain().focus().setParagraph().run()}>{isRTL ? 'نص عادي' : 'Normal'}</button>
+      <button aria-label="Align Left" title={isRTL ? 'محاذاة يسار' : 'Align Left'} onClick={() => editor?.chain().focus().setTextAlign('left').run()} disabled={!editor?.can().chain().focus().setTextAlign('left').run()}>L</button>
+      <button aria-label="Align Center" title={isRTL ? 'توسيط' : 'Align Center'} onClick={() => editor?.chain().focus().setTextAlign('center').run()} disabled={!editor?.can().chain().focus().setTextAlign('center').run()}>C</button>
+      <button aria-label="Align Right" title={isRTL ? 'محاذاة يمين' : 'Align Right'} onClick={() => editor?.chain().focus().setTextAlign('right').run()} disabled={!editor?.can().chain().focus().setTextAlign('right').run()}>R</button>
+      <button aria-label="Bullet List" title={isRTL ? 'قائمة نقطية' : 'Bullet List'} onClick={() => editor?.chain().focus().toggleBulletList().run()} disabled={!editor?.can().chain().focus().toggleBulletList().run()}>• List</button>
+      <button aria-label="Ordered List" title={isRTL ? 'قائمة مرتبة' : 'Ordered List'} onClick={() => editor?.chain().focus().toggleOrderedList().run()} disabled={!editor?.can().chain().focus().toggleOrderedList().run()}>1. List</button>
+      <button aria-label="Clear Formatting" title={isRTL ? 'مسح' : 'Clear'} onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()}>{isRTL ? 'مسح' : 'Clear'}</button>
+    </div>
+  );
+
+  // Tiptap editors for testResults and doctorNotes
+  const testResultsEditor = useEditor({
+    extensions: [
+      StarterKit,
+      TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }),
+      Placeholder.configure({ placeholder: isRTL ? 'أدخل نتائج الفحص التفصيلية' : 'Enter detailed test results' }),
+      Underline,
+      Link,
+      Heading,
+      Paragraph,
+      Bold,
+      Italic,
+      Image,
+    ],
+    content: labData.testResults,
+    editorProps: {
+      attributes: {
+        dir: isRTL ? 'rtl' : 'ltr',
+        style: `text-align: ${isRTL ? 'right' : 'left'}; min-height: 120px;`,
+      },
+    },
+    onUpdate: ({ editor }) => {
+      setLabData(prev => ({ ...prev, testResults: editor.getHTML() }));
+    },
+  });
+  const doctorNotesEditor = useEditor({
+    extensions: [
+      StarterKit,
+      TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }),
+      Placeholder.configure({ placeholder: isRTL ? 'أدخل ملاحظات أو توصيات إضافية' : 'Enter additional notes or recommendations' }),
+      Underline,
+      Link,
+      Heading,
+      Paragraph,
+      Bold,
+      Italic,
+      Image,
+    ],
+    content: labData.doctorNotes,
+    editorProps: {
+      attributes: {
+        dir: isRTL ? 'rtl' : 'ltr',
+        style: `text-align: ${isRTL ? 'right' : 'left'}; min-height: 80px;`,
+      },
+    },
+    onUpdate: ({ editor }) => {
+      setLabData(prev => ({ ...prev, doctorNotes: editor.getHTML() }));
+    },
+  });
+
   // Loading state while checking user
   if (!user) {
     return (
@@ -669,37 +759,28 @@ const Labs = () => {
                       type="text"
                       value={labData.testType}
                       onChange={handleChange}
-                      placeholder={isRTL ? 'أدخل نوع الفحص (مثل: فحص الدم، الأشعة السينية، الرنين المغناطيسي)' : 'Enter test type (e.g., Blood Test, X-Ray, MRI)'}
+                      placeholder={isRTL ? 'أدخل نوع الفحص (مثل: فحص الدم)' : 'Enter test type (e.g., Blood Test)'}
                       required
                     />
                   </div>
 
                   {/* Test Results */}
-                  <div className="md:col-span-2">
-                    <Label htmlFor="testResults">{isRTL ? 'نتائج الفحص' : 'Test Results'}</Label>
-                    <Textarea
-                      id="testResults"
-                      name="testResults"
-                      rows={4}
-                      value={labData.testResults}
-                      onChange={(e) => handleChange(e)}
-                      placeholder={isRTL ? 'أدخل نتائج الفحص التفصيلية' : 'Enter detailed test results'}
-                      required
-                    />
-                  </div>
+                  {isClient && testResultsEditor && (
+                    <div className="md:col-span-2">
+                      <Label id="testResults-label">{isRTL ? 'نتائج الفحص' : 'Test Results'}</Label>
+                      <TiptapToolbar editor={testResultsEditor} isRTL={isRTL} />
+                      <EditorContent editor={testResultsEditor} className="tiptap-editor" aria-labelledby="testResults-label" />
+                    </div>
+                  )}
 
                   {/* Doctor Notes */}
-                  <div className="md:col-span-2">
-                    <Label htmlFor="doctorNotes">{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</Label>
-                    <Textarea
-                      id="doctorNotes"
-                      name="doctorNotes"
-                      rows={3}
-                      value={labData.doctorNotes}
-                      onChange={(e) => handleChange(e)}
-                      placeholder={isRTL ? 'أدخل ملاحظات أو توصيات إضافية' : 'Enter additional notes or recommendations'}
-                    />
-                  </div>
+                  {isClient && doctorNotesEditor && (
+                    <div className="md:col-span-2">
+                      <Label id="doctorNotes-label">{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</Label>
+                      <TiptapToolbar editor={doctorNotesEditor} isRTL={isRTL} />
+                      <EditorContent editor={doctorNotesEditor} className="tiptap-editor" aria-labelledby="doctorNotes-label" />
+                    </div>
+                  )}
 
                   {/* File Upload */}
                   <div className="md:col-span-2">

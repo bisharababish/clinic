@@ -1,0 +1,53 @@
+/* Modern Tiptap Editor Styles */
+.tiptap-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0;
+}
+
+.tiptap-toolbar button {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, border 0.2s;
+    outline: none;
+}
+
+.tiptap-toolbar button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.tiptap-toolbar button:hover:not(:disabled),
+.tiptap-toolbar button:focus-visible:not(:disabled) {
+    background: #e0e7ef;
+    border-color: #a0aec0;
+}
+
+.tiptap-editor {
+    min-height: 120px;
+    border: 1px solid #e2e8f0;
+    border-radius: 0 0 0.5rem 0.5rem;
+    padding: 1rem;
+    background: white;
+    font-size: 1rem;
+    outline: none;
+    margin-bottom: 1.5rem;
+}
+
+.tiptap-editor:focus-within {
+    border-color: #3182ce;
+    box-shadow: 0 0 0 2px #bee3f8;
+}
+
+.tiptap-editor p {
+    margin: 0;
+}

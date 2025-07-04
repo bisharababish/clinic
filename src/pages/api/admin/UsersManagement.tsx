@@ -977,12 +977,12 @@ const UsersManagement = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label>{t('auth.gender')}</Label>  {/* Remove htmlFor since Select doesn't use id */}
+                                    <Label htmlFor="gender_select">{t('auth.gender')}</Label>
                                     <Select
                                         value={userFormData.gender_user}
                                         onValueChange={handleGenderChange}
                                     >
-                                        <SelectTrigger dir={isRTL ? 'rtl' : 'ltr'}>
+                                        <SelectTrigger id="gender_select" dir={isRTL ? 'rtl' : 'ltr'}>
                                             <SelectValue placeholder={t('usersManagement.selectGender')} />
                                         </SelectTrigger>
                                         <SelectContent
@@ -1009,12 +1009,12 @@ const UsersManagement = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>{t('usersManagement.role')}</Label>  {/* Remove htmlFor="user_roles" */}
+                                <Label htmlFor="role_select">{t('usersManagement.role')}</Label>
                                 <Select
                                     value={userFormData.user_roles}
                                     onValueChange={handleUserRoleChange}
                                 >
-                                    <SelectTrigger dir={isRTL ? 'rtl' : 'ltr'}>
+                                    <SelectTrigger id="role_select" dir={isRTL ? 'rtl' : 'ltr'}>
                                         <SelectValue placeholder={t('usersManagement.selectRole')} />
                                     </SelectTrigger>
                                     <SelectContent

@@ -2651,7 +2651,7 @@ const Index = () => {
                     onClick={addCustomAllergy}
                     size="sm"
                     disabled={!customAllergy.trim()}
-                    className="bg-red-600 hover:bg-red-700"
+                    className="bg-green-600 hover:bg-green-700"
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     {isRTL ? "إضافة" : "Add"}
@@ -2668,11 +2668,11 @@ const Index = () => {
                       {selectedAllergies
                         .filter(allergy => !allergiesList.some(a => a.en === allergy))
                         .map((allergy, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-red-100 text-red-800">
+                          <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800">
                             {allergy}
                             <button
                               onClick={() => setSelectedAllergies(prev => prev.filter(a => a !== allergy))}
-                              className="ml-1 hover:text-red-600"
+                              className="ml-1 hover:text-green-600"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -2697,7 +2697,7 @@ const Index = () => {
                       <Badge
                         key={index}
                         variant={isCustom ? "secondary" : "outline"}
-                        className={`flex items-center gap-1 ${isCustom ? 'bg-red-100 text-red-800' : 'border-red-200 text-red-700'}`}
+                        className={`flex items-center gap-1 ${isCustom ? 'bg-green-100 text-green-800' : 'border-green-200 text-green-700'}`}
                       >
                         {isRTL && !isCustom ? (
                           allergiesList.find(a => a.en === allergy)?.ar || allergy
