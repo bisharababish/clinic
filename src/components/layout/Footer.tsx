@@ -141,13 +141,13 @@ const Footer: React.FC = () => {
                   </h4>
                 </div>
                 <p className="text-xs text-primary/85 font-medium">
-                  {isRTL ? 'الأحد - الخميس' : 'Sunday - Thursday'}
+                  {isRTL ? 'جميع أيام الأسبوع' : 'All Days'}
                 </p>
                 <p className="text-sm font-bold text-primary/90" dir="ltr">
-                  8:00 AM - 6:00 PM
+                  8:00 AM - 8:00 PM
                 </p>
                 <p className="text-xs text-primary/70">
-                  {isRTL ? 'مغلق أيام الجمعة والسبت' : 'Closed on Fridays and Saturdays'}
+                  {isRTL ? 'مفتوح كل يوم' : 'Open every day'}
                 </p>
               </div>
             </div>
