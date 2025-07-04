@@ -550,9 +550,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     <Button
                         variant="outline"
                         className="h-20 flex flex-col items-center justify-center bg-white hover:bg-blue-50 border-2 hover:border-blue-200 transition-all duration-200 hover:shadow-md hover:scale-105"
-                        onClick={() => {
-                            window.open(window.location.origin + window.location.pathname + '?tab=users', '_blank');
-                        }}
+                        onClick={() => setActiveTab('users')}
                     >
                         <UserPlus className="h-6 w-6 mb-1 text-blue-600" />
                         <span className="text-sm font-medium">{t('admin.addUser')}</span>
@@ -561,9 +559,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     <Button
                         variant="outline"
                         className="h-20 flex flex-col items-center justify-center bg-white hover:bg-green-50 border-2 hover:border-green-200 transition-all duration-200 hover:shadow-md hover:scale-105"
-                        onClick={() => {
-                            window.open(window.location.origin + window.location.pathname + '?tab=appointments', '_blank');
-                        }}
+                        onClick={() => setActiveTab('appointments')}
                     >
                         <Calendar className="h-6 w-6 mb-1 text-green-600" />
                         <span className="text-sm font-medium">{t('admin.viewAppointments')}</span>
@@ -572,9 +568,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     <Button
                         variant="outline"
                         className="h-20 flex flex-col items-center justify-center bg-white hover:bg-purple-50 border-2 hover:border-purple-200 transition-all duration-200 hover:shadow-md hover:scale-105"
-                        onClick={() => {
-                            window.open(window.location.origin + window.location.pathname + '?tab=clinics', '_blank');
-                        }}
+                        onClick={() => setActiveTab('clinics')}
                     >
                         <Stethoscope className="h-6 w-6 mb-1 text-purple-600" />
                         <span className="text-sm font-medium">{t('admin.manageClinics')}</span>

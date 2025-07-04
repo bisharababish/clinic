@@ -22,9 +22,8 @@ const Labs = lazy(() => import("./pages/Labs"));
 const XRay = lazy(() => import("./pages/XRay"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
 
-// ✅ FIXED: Import the new doctor pages
-const DoctorCalendarTab = lazy(() => import("./pages/DoctorLabsPage"));
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
 let globalSubscriptions: { [key: string]: ReturnType<typeof supabase.channel> | null } = {};
 
@@ -288,13 +287,7 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["admin", "doctor"]}>
                     <HeaderOnlyLayout>
-                      <DoctorCalendarTab
-                        doctors={[]}
-                        clinics={[]}
-                        appointments={[]}
-                        isLoading={false}
-                        setActiveTab={() => { }}
-                      />
+                      <DoctorLabsPage />
                     </HeaderOnlyLayout>
                   </ProtectedRoute>
                 }

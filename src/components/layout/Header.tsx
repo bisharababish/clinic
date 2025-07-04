@@ -551,7 +551,7 @@ export function Header() {
                                                 to="/doctor/labs"
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    handleMobileNavigation('/doctor/labs');
+                                                    handleMobileNavigation('/labs');
                                                 }}
                                                 className="font-medium"
                                             >

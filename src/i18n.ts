@@ -458,7 +458,7 @@ const enTranslations = {
         lastChecked: 'Last checked',
 
         // Overview Tab - Charts
-        userDistributionByRole: 'User Distribution by Role',
+        userDistributionByRole: 'Distribution Of Users By Roles',
         pie: 'Pie',
         bar: 'Bar',
         numberOfUsers: 'Number of Users',
@@ -1870,7 +1870,7 @@ const arTranslations = {
         lastChecked: 'آخر فحص',
 
         // Overview Tab - Charts
-        userDistributionByRole: 'توزيع المستخدمين حسب الدور',
+        userDistributionByRole: 'توزيع المستخدمين حسب الأدوار',
         pie: 'دائري',
         bar: 'أعمدة',
         numberOfUsers: 'عدد المستخدمين',
