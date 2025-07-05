@@ -329,19 +329,45 @@ const Index = () => {
     }
     // Restrict phone number field
     if (name === 'user_phonenumber') {
-      // Allow only +970 or +972 followed by up to 9 digits
+      // Start with +97 and allow user to choose 0 or 2, then 9 digits
       let sanitized = value.replace(/[^\d+]/g, '');
-      if (!sanitized.startsWith('+970') && !sanitized.startsWith('+972')) {
-        sanitized = '+970';
+
+      // If it doesn't start with +97, add it
+      if (!sanitized.startsWith('+97')) {
+        sanitized = '+97';
       }
-      // Only allow up to 9 digits after the prefix
-      const prefix = sanitized.startsWith('+972') ? '+972' : '+970';
+
+      // If it starts with +97 but no third digit yet, allow it
+      if (sanitized.length <= 4) {
+        setCreatePatientForm(prev => ({ ...prev, [name]: sanitized }));
+        return;
+      }
+
+      // Check if third digit after +97 is 0 or 2
+      const thirdDigit = sanitized.charAt(4);
+      if (thirdDigit !== '0' && thirdDigit !== '2') {
+        // If invalid third digit, keep only +97
+        sanitized = '+97';
+      }
+
+      // Only allow up to 9 digits after +970 or +972
+      const prefix = sanitized.startsWith('+970') ? '+970' : '+972';
       let digits = sanitized.slice(prefix.length).replace(/\D/g, '');
       digits = digits.slice(0, 9);
       sanitized = prefix + digits;
+
       setCreatePatientForm(prev => ({ ...prev, [name]: sanitized }));
       return;
     }
+    // Handle ID number field - limit to 9 digits only
+    if (name === 'id_number') {
+      // Remove all non-digit characters and limit to 9 digits
+      const digitsOnly = value.replace(/\D/g, '');
+      const limitedDigits = digitsOnly.slice(0, 9);
+      setCreatePatientForm(prev => ({ ...prev, [name]: limitedDigits }));
+      return;
+    }
+
     // Other fields
     setCreatePatientForm(prev => ({ ...prev, [name]: value }));
   };
@@ -364,7 +390,7 @@ const Index = () => {
     if (!form.english_username_a.trim() || !form.english_username_d.trim()) {
       toast({
         title: isRTL ? "خطأ في النموذج" : "Form Error",
-        description: isRTL ? "الاسم الأول والأخير باللغة الإنجليزية مطلوبان" : "First and last names in English are required",
+        description: t('usersManagement.firstLastNameRequired'),
         variant: "destructive",
       });
       return false;
@@ -375,7 +401,7 @@ const Index = () => {
       if (field && !englishNameRegex.test(field)) {
         toast({
           title: isRTL ? "خطأ في الاسم الإنجليزي" : "English Name Error",
-          description: isRTL ? "يرجى إدخال أحرف إنجليزية فقط بدون أرقام" : "Please enter only English letters (no numbers)",
+          description: t('usersManagement.englishLettersOnly'),
           variant: "destructive",
         });
         return false;
@@ -386,7 +412,7 @@ const Index = () => {
     if (!form.arabic_username_a.trim() || !form.arabic_username_d.trim()) {
       toast({
         title: isRTL ? "خطأ في النموذج" : "Form Error",
-        description: isRTL ? "الاسم الأول والأخير باللغة العربية مطلوبان" : "First and last names in Arabic are required",
+        description: t('usersManagement.firstLastNameArabicRequired'),
         variant: "destructive",
       });
       return false;
@@ -397,7 +423,7 @@ const Index = () => {
       if (field && !arabicNameRegex.test(field)) {
         toast({
           title: isRTL ? "خطأ في الاسم العربي" : "Arabic Name Error",
-          description: isRTL ? "يرجى إدخال أحرف عربية فقط بدون أرقام" : "Please enter only Arabic letters (no numbers)",
+          description: t('usersManagement.arabicLettersOnly'),
           variant: "destructive",
         });
         return false;
@@ -409,7 +435,7 @@ const Index = () => {
     if (!emailRegex.test(form.user_email)) {
       toast({
         title: isRTL ? "بريد إلكتروني غير صحيح" : "Invalid Email",
-        description: isRTL ? "يرجى إدخال عنوان بريد إلكتروني صحيح" : "Please enter a valid email address",
+        description: t('usersManagement.enterValidEmail'),
         variant: "destructive",
       });
       return false;
@@ -417,10 +443,10 @@ const Index = () => {
 
     // Validate ID number (optional for secretary)
     if (!(userRole === 'secretary' && !form.id_number.trim())) {
-      if (!form.id_number.trim() || form.id_number.length < 6) {
+      if (!form.id_number.trim() || form.id_number.length !== 9) {
         toast({
           title: isRTL ? "رقم هوية غير صحيح" : "Invalid ID Number",
-          description: isRTL ? "رقم الهوية يجب أن يكون 6 أرقام على الأقل" : "ID number must be at least 6 characters long",
+          description: t('usersManagement.idNumberMustBe9Digits'),
           variant: "destructive",
         });
         return false;
@@ -441,7 +467,7 @@ const Index = () => {
     if (!form.date_of_birth) {
       toast({
         title: isRTL ? "تاريخ الميلاد مطلوب" : "Date of Birth Required",
-        description: isRTL ? "يرجى إدخال تاريخ الميلاد" : "Please enter date of birth",
+        description: t('usersManagement.enterDateOfBirth'),
         variant: "destructive",
       });
       return false;
@@ -449,7 +475,7 @@ const Index = () => {
     if (!isAtLeast16YearsOld(form.date_of_birth)) {
       toast({
         title: isRTL ? "العمر غير كافٍ" : "Age Restriction",
-        description: isRTL ? "يجب أن يكون عمر المريض 16 سنة على الأقل" : "Patient must be at least 16 years old",
+        description: t('usersManagement.patientMustBe16YearsOld'),
         variant: "destructive",
       });
       return false;
@@ -459,7 +485,7 @@ const Index = () => {
     if (!form.gender_user) {
       toast({
         title: isRTL ? "الجنس مطلوب" : "Gender Required",
-        description: isRTL ? "يرجى اختيار الجنس" : "Please select gender",
+        description: t('usersManagement.selectGender'),
         variant: "destructive",
       });
       return false;
@@ -550,7 +576,7 @@ const Index = () => {
 
       toast({
         title: isRTL ? "خطأ في تحميل المرضى" : "Error Loading Patients",
-        description: isRTL ? "فشل في تحميل قائمة المرضى" : "Failed to load patient list",
+        description: t('usersManagement.failedToLoadPatientList'),
         variant: "destructive",
       });
 
@@ -595,7 +621,7 @@ const Index = () => {
         if (existingEmail) {
           toast({
             title: isRTL ? "البريد الإلكتروني موجود مسبقاً" : "Email Already Exists",
-            description: isRTL ? "هذا البريد الإلكتروني مستخدم بالفعل" : "This email address is already in use",
+            description: t('usersManagement.emailAlreadyInUse'),
             variant: "destructive",
           });
           return;
@@ -604,7 +630,7 @@ const Index = () => {
         if (existingId && !(userRole === 'secretary' && !createPatientForm.id_number.trim())) {
           toast({
             title: isRTL ? "رقم الهوية موجود مسبقاً" : "ID Number Already Exists",
-            description: isRTL ? "رقم الهوية هذا مستخدم بالفعل" : "This ID number is already in use",
+            description: t('usersManagement.idNumberAlreadyInUse'),
             variant: "destructive",
           });
           return;
@@ -1107,6 +1133,38 @@ const Index = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    // Handle weight validation - limit to 1-220 kg
+    if (name === 'weight') {
+      const weightValue = parseFloat(value);
+      if (value === '' || (weightValue >= 1 && weightValue <= 220)) {
+        setPatientInfo(prev => ({ ...prev, [name]: value }));
+      } else {
+        toast({
+          title: isRTL ? "وزن غير صحيح" : "Invalid Weight",
+          description: isRTL ? "يرجى إدخال وزن صحيح بين 1-220 كيلوغرام" : "Please enter a valid weight between 1-220 kg",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    // Handle height validation - limit to 1-200 cm
+    if (name === 'height') {
+      const heightValue = parseInt(value);
+      if (value === '' || (heightValue >= 1 && heightValue <= 200)) {
+        setPatientInfo(prev => ({ ...prev, [name]: value }));
+      } else {
+        toast({
+          title: isRTL ? "طول غير صحيح" : "Invalid Height",
+          description: isRTL ? "يرجى إدخال طول صحيح بين 1-200 سم" : "Please enter a valid height between 1-200 cm",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    // Handle other fields normally
     setPatientInfo(prev => ({ ...prev, [name]: value }));
   };
 
@@ -1180,19 +1238,19 @@ const Index = () => {
 
   // FIXED: Validate patient information
   const validatePatientInfo = (): boolean => {
-    if (patientInfo.weight && (parseFloat(patientInfo.weight) <= 0 || parseFloat(patientInfo.weight) > 500)) {
+    if (patientInfo.weight && (parseFloat(patientInfo.weight) <= 0 || parseFloat(patientInfo.weight) > 220)) {
       toast({
         title: isRTL ? "وزن غير صحيح" : "Invalid Weight",
-        description: isRTL ? "يرجى إدخال وزن صحيح بين 1-500 كيلوغرام" : "Please enter a valid weight between 1-500 kg",
+        description: isRTL ? "يرجى إدخال وزن صحيح بين 1-220 كيلوغرام" : "Please enter a valid weight between 1-220 kg",
         variant: "destructive",
       });
       return false;
     }
 
-    if (patientInfo.height && (parseInt(patientInfo.height) <= 0 || parseInt(patientInfo.height) > 300)) {
+    if (patientInfo.height && (parseInt(patientInfo.height) <= 0 || parseInt(patientInfo.height) > 200)) {
       toast({
         title: isRTL ? "طول غير صحيح" : "Invalid Height",
-        description: isRTL ? "يرجى إدخال طول صحيح بين 1-300 سم" : "Please enter a valid height between 1-300 cm",
+        description: isRTL ? "يرجى إدخال طول صحيح بين 1-200 سم" : "Please enter a valid height between 1-200 cm",
         variant: "destructive",
       });
       return false;
@@ -1253,8 +1311,8 @@ const Index = () => {
       const diseaseData = {
         has_high_blood_pressure: selectedDiseases.includes("has_high_blood_pressure"),
         has_diabetes: selectedDiseases.includes("has_diabetes"),
-        has_cholesterol_hdl: selectedDiseases.includes("has_cholesterol") && cholesterolType === "hdl",
-        has_cholesterol_ldl: selectedDiseases.includes("has_cholesterol") && cholesterolType === "ldl",
+        has_cholesterol_hdl: selectedDiseases.includes("has_cholesterol_hdl"),
+        has_cholesterol_ldl: selectedDiseases.includes("has_cholesterol_ldl"),
         has_kidney_disease: selectedDiseases.includes("has_kidney_disease"),
         has_cancer: selectedDiseases.includes("has_cancer"),
         has_heart_disease: selectedDiseases.includes("has_heart_disease"),
@@ -2265,7 +2323,7 @@ const Index = () => {
                                 onChange={handleCreatePatientFormChange}
                                 className={isRTL ? 'pr-10' : 'pl-10'}
                                 required
-                                placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
+                                placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"} dir={isRTL ? "rtl" : "ltr"}
                               />
                             </div>
                           </div>
@@ -2359,11 +2417,11 @@ const Index = () => {
                   name="weight"
                   type="number"
                   min="1"
-                  max="500"
+                  max="220"
                   step="0.1"
                   value={patientInfo.weight}
                   onChange={handleInputChange}
-                  placeholder="70"
+                  placeholder="75"
                 />
               </div>
               <div className="space-y-2">
@@ -2373,10 +2431,10 @@ const Index = () => {
                   name="height"
                   type="number"
                   min="1"
-                  max="300"
+                  max="200"
                   value={patientInfo.height}
                   onChange={handleInputChange}
-                  placeholder="175"
+                  placeholder="170"
                 />
               </div>
               {/* NEW: Blood Pressure - Only for nurses */}
@@ -2416,7 +2474,7 @@ const Index = () => {
               {/* NEW: Temperature - Only for nurses */}
               <div className="space-y-2">
                 <Label htmlFor="temperature">
-                  {isRTL ? "درجة الحرارة" : "Temperature"} (°C)
+                  {isRTL ? "درجة حرارة الجسم" : "Body Temperature"} (°C)
                 </Label>
                 <Input
                   id="temperature"
@@ -2455,7 +2513,7 @@ const Index = () => {
                   </RadioGroup>
                 </div>
               </div>
-              </div>
+            </div>
           </section>
           {/* ADD THIS COMPLETE NEW SECTION: Social Situation Section - Only show for secretary when female patient is selected */}
           {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && (
@@ -2553,21 +2611,19 @@ const Index = () => {
                     <div className="flex flex-col items-start px-4 pb-2">
                       <label className="flex items-center gap-2 mb-1">
                         <input
-                          type="radio"
-                          name="cholesterolType"
-                          value="hdl"
-                          checked={cholesterolType === 'hdl'}
-                          onChange={() => setCholesterolType('hdl')}
+                          type="checkbox"
+                          name="cholesterolHDL"
+                          checked={selectedDiseases.includes('has_cholesterol_hdl')}
+                          onChange={() => handleDiseaseSelect('has_cholesterol_hdl')}
                         />
                         {isRTL ? 'الكوليسترول HDL' : 'Cholesterol HDL'}
                       </label>
                       <label className="flex items-center gap-2">
                         <input
-                          type="radio"
-                          name="cholesterolType"
-                          value="ldl"
-                          checked={cholesterolType === 'ldl'}
-                          onChange={() => setCholesterolType('ldl')}
+                          type="checkbox"
+                          name="cholesterolLDL"
+                          checked={selectedDiseases.includes('has_cholesterol_ldl')}
+                          onChange={() => handleDiseaseSelect('has_cholesterol_ldl')}
                         />
                         {isRTL ? 'الكوليسترول LDL' : 'Cholesterol LDL'}
                       </label>

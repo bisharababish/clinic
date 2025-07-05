@@ -70,7 +70,7 @@ const DoctorManagement = () => {
         email: "",
         phone: "",
         is_available: true,
-        price: 0,
+        price: 1,
     });
 
     // State for availability management
@@ -121,7 +121,7 @@ const DoctorManagement = () => {
         }
     }, [searchQuery, doctors]);
     const validatePhoneNumber = (phoneNumber: string): boolean => {
-        const phoneRegex = /^\+970\d{9}$/;
+        const phoneRegex = /^\+97[02]\d{9}$/;
         return phoneRegex.test(phoneNumber);
     };
     // Load clinics from database
@@ -231,22 +231,35 @@ const DoctorManagement = () => {
 
         // Handle phone number formatting
         if (name === 'phone') {
-            let cleanValue = value.replace(/\D/g, ''); // Remove non-digits
+            // Start with +97 and allow user to choose 0 or 2, then 9 digits
+            let sanitized = value.replace(/[^\d+]/g, '');
 
-            if (!value.startsWith('+970')) {
-                if (cleanValue.startsWith('970')) {
-                    cleanValue = cleanValue.substring(3); // Remove leading 970
-                }
-                setDoctorFormData(prev => ({ ...prev, [name]: `+970${cleanValue}` }));
+            // If it doesn't start with +97, add it
+            if (!sanitized.startsWith('+97')) {
+                sanitized = '+97';
+            }
+
+            // If it starts with +97 but no third digit yet, allow it
+            if (sanitized.length <= 4) {
+                setDoctorFormData(prev => ({ ...prev, [name]: sanitized }));
                 return;
             }
 
-            if (value.startsWith('+970')) {
-                const restOfNumber = cleanValue.substring(3);
-                if (restOfNumber.length > 9) return; // Max 9 digits after +970
-                setDoctorFormData(prev => ({ ...prev, [name]: `+970${restOfNumber}` }));
-                return;
+            // Check if third digit after +97 is 0 or 2
+            const thirdDigit = sanitized.charAt(4);
+            if (thirdDigit !== '0' && thirdDigit !== '2') {
+                // If invalid third digit, keep only +97
+                sanitized = '+97';
             }
+
+            // Only allow up to 9 digits after +970 or +972
+            const prefix = sanitized.startsWith('+970') ? '+970' : '+972';
+            let digits = sanitized.slice(prefix.length).replace(/\D/g, '');
+            digits = digits.slice(0, 9);
+            sanitized = prefix + digits;
+
+            setDoctorFormData(prev => ({ ...prev, [name]: sanitized }));
+            return;
         }
 
         // Default handling for other fields
@@ -271,7 +284,7 @@ const DoctorManagement = () => {
             email: "",
             phone: "",
             is_available: true,
-            price: 0
+            price: 1
         });
     };
 
@@ -833,7 +846,7 @@ const DoctorManagement = () => {
                                         type="tel"
                                         value={doctorFormData.phone}
                                         onChange={handleDoctorInputChange}
-                                        placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"}
+                                        placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"}
                                         dir={isRTL ? "rtl" : "ltr"}
                                         required
 

@@ -715,7 +715,28 @@ const enTranslations = {
         arabicLastNameInvalid: "Arabic last name must contain only Arabic letters and spaces.",
         palestinianIdInvalid: "ID number must be exactly 9 digits.",
         palestinianPhoneInvalid: "Phone number must start with +970 followed by 9 digits.",
-        ageMinimum: "User must be at least 16 years old."
+        ageMinimum: "User must be at least 16 years old.",
+
+        // Additional validation errors
+        firstLastNameRequired: "First and last names in English are required",
+        englishLettersOnly: "Please enter only English letters (no numbers)",
+        arabicLettersOnly: "Please enter only Arabic letters (no numbers)",
+        idNumberMustBe9Digits: "ID number must be exactly 9 digits",
+        strongPasswordRequired: "Password must contain uppercase, lowercase, numbers, and special characters",
+        failedToLoadUsers: "Failed to load users from database",
+
+        // Patient creation validation errors
+        patientMustBe16YearsOld: "Patient must be at least 16 years old",
+        failedToLoadPatientList: "Failed to load patient list",
+        emailAlreadyInUse: "This email address is already in use",
+        idNumberAlreadyInUse: "This ID number is already in use",
+        enterSearchTerm: "Please enter a search term",
+        failedToSearchPatients: "Failed to search for patients",
+        allergyAlreadyAdded: "This allergy is already in the list",
+        enterValidWeight: "Please enter a valid weight between 1-500 kg",
+        enterValidHeight: "Please enter a valid height between 1-300 cm",
+        failedToSaveSocialSituation: "Failed to save social situation",
+        cannotDeterminePatient: "Cannot determine which patient to update"
     },
     clinicManagement: {
         // Main titles
@@ -2110,7 +2131,28 @@ const arTranslations = {
         arabicLastNameInvalid: "اسم العائلة بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
         palestinianIdInvalid: "رقم الهوية يجب أن يكون 9 أرقام بالضبط.",
         palestinianPhoneInvalid: "رقم الهاتف يجب أن يبدأ بـ +970 متبوعاً بـ 9 أرقام.",
-        ageMinimum: "يجب أن يكون عمر المستخدم 16 سنة على الأقل."
+        ageMinimum: "يجب أن يكون عمر المستخدم 16 سنة على الأقل.",
+
+        // Additional validation errors
+        firstLastNameRequired: "الاسم الأول والأخير باللغة الإنجليزية مطلوبان",
+        englishLettersOnly: "يرجى إدخال أحرف إنجليزية فقط بدون أرقام",
+        arabicLettersOnly: "يرجى إدخال أحرف عربية فقط بدون أرقام",
+        idNumberMustBe9Digits: "رقم الهوية يجب أن يكون 9 أرقام بالضبط",
+        strongPasswordRequired: "كلمة المرور يجب أن تحتوي على أحرف كبيرة وصغيرة وأرقام ورموز خاصة",
+        failedToLoadUsers: "فشل في تحميل المستخدمين من قاعدة البيانات",
+
+        // Patient creation validation errors
+        patientMustBe16YearsOld: "يجب أن يكون عمر المريض 16 سنة على الأقل",
+        failedToLoadPatientList: "فشل في تحميل قائمة المرضى",
+        emailAlreadyInUse: "هذا البريد الإلكتروني مستخدم بالفعل",
+        idNumberAlreadyInUse: "رقم الهوية هذا مستخدم بالفعل",
+        enterSearchTerm: "يرجى إدخال نص للبحث",
+        failedToSearchPatients: "فشل في البحث عن المرضى",
+        allergyAlreadyAdded: "هذه الحساسية مضافة بالفعل",
+        enterValidWeight: "يرجى إدخال وزن صحيح بين 1-500 كيلوغرام",
+        enterValidHeight: "يرجى إدخال طول صحيح بين 1-300 سم",
+        failedToSaveSocialSituation: "فشل في حفظ الحالة الاجتماعية",
+        cannotDeterminePatient: "لا يمكن تحديد المريض المراد تحديث معلوماته"
     },
     clinicManagement: {
         // Main titles

@@ -176,7 +176,7 @@ const UsersManagement = () => {
             console.error('Error loading users:', error);
             toast({
                 title: t('common.error'),
-                description: t('admin.failedToLoadUsers'),
+                description: t('usersManagement.failedToLoadUsers'),
                 variant: "destructive",
             });
             setUsers([]);
@@ -186,9 +186,91 @@ const UsersManagement = () => {
         }
     };
 
+    // Helper: Regex for English and Arabic letters only (no numbers)
+    const englishNameRegex = /^[A-Za-z\s'-]+$/;
+    const arabicNameRegex = /^[\u0600-\u06FF\s'-]+$/;
+
     // User form handlers
     const handleUserInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+
+        // Handle English name fields - only English letters
+        if (name.startsWith('english_username')) {
+            if (value === '' || englishNameRegex.test(value)) {
+                setUserFormData(prev => ({ ...prev, [name]: value }));
+            } else {
+                toast({
+                    title: t('usersManagement.englishNameErrorTitle'),
+                    description: t('usersManagement.englishNameErrorDesc'),
+                    variant: 'destructive',
+                });
+            }
+            return;
+        }
+
+        // Handle Arabic name fields - only Arabic letters
+        if (name.startsWith('arabic_username')) {
+            if (value === '' || arabicNameRegex.test(value)) {
+                setUserFormData(prev => ({ ...prev, [name]: value }));
+            } else {
+                toast({
+                    title: t('usersManagement.arabicNameErrorTitle'),
+                    description: t('usersManagement.arabicNameErrorDesc'),
+                    variant: 'destructive',
+                });
+            }
+            return;
+        }
+
+        // Handle ID number field - limit to 9 digits only
+        if (name === 'id_number') {
+            // Remove all non-digit characters and limit to 9 digits
+            const digitsOnly = value.replace(/\D/g, '');
+            const limitedDigits = digitsOnly.slice(0, 9);
+            setUserFormData(prev => ({ ...prev, [name]: limitedDigits }));
+            return;
+        }
+
+        // Handle phone number field - +97 with 0 or 2, then 9 digits
+        if (name === 'user_phonenumber') {
+            // Start with +97 and allow user to choose 0 or 2, then 9 digits
+            let sanitized = value.replace(/[^\d+]/g, '');
+
+            // If it doesn't start with +97, add it
+            if (!sanitized.startsWith('+97')) {
+                sanitized = '+97';
+            }
+
+            // If it starts with +97 but no third digit yet, allow it
+            if (sanitized.length <= 4) {
+                setUserFormData(prev => ({ ...prev, [name]: sanitized }));
+                return;
+            }
+
+            // Check if third digit after +97 is 0 or 2
+            const thirdDigit = sanitized.charAt(4);
+            if (thirdDigit !== '0' && thirdDigit !== '2') {
+                // If invalid third digit, keep only +97
+                sanitized = '+97';
+            }
+
+            // Only allow up to 9 digits after +970 or +972
+            const prefix = sanitized.startsWith('+970') ? '+970' : '+972';
+            let digits = sanitized.slice(prefix.length).replace(/\D/g, '');
+            digits = digits.slice(0, 9);
+            sanitized = prefix + digits;
+
+            setUserFormData(prev => ({ ...prev, [name]: sanitized }));
+            return;
+        }
+
+        // Handle password field - add validation for strong password
+        if (name === 'user_password') {
+            setUserFormData(prev => ({ ...prev, [name]: value }));
+            return;
+        }
+
+        // Other fields
         setUserFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -423,8 +505,88 @@ const UsersManagement = () => {
         }
     };
 
+    // Password validation function
+    const validatePassword = (password: string): boolean => {
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        const isLongEnough = password.length >= 8;
+
+        return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar && isLongEnough;
+    };
+
     const handleUserSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+
+        // Validate form data
+        if (userFormMode === "create") {
+            // Validate required fields
+            if (!userFormData.english_username_a.trim() || !userFormData.english_username_d.trim()) {
+                toast({
+                    title: t('common.error'),
+                    description: t('usersManagement.firstLastNameRequired'),
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Validate English names contain only English letters
+            const englishFields = [userFormData.english_username_a, userFormData.english_username_b, userFormData.english_username_c, userFormData.english_username_d];
+            for (const field of englishFields) {
+                if (field && !englishNameRegex.test(field)) {
+                    toast({
+                        title: t('common.error'),
+                        description: t('usersManagement.englishLettersOnly'),
+                        variant: "destructive",
+                    });
+                    return;
+                }
+            }
+
+            // Validate Arabic names contain only Arabic letters
+            const arabicFields = [userFormData.arabic_username_a, userFormData.arabic_username_b, userFormData.arabic_username_c, userFormData.arabic_username_d];
+            for (const field of arabicFields) {
+                if (field && !arabicNameRegex.test(field)) {
+                    toast({
+                        title: t('common.error'),
+                        description: t('usersManagement.arabicLettersOnly'),
+                        variant: "destructive",
+                    });
+                    return;
+                }
+            }
+
+            // Validate ID number (exactly 9 digits)
+            if (userFormData.id_number && userFormData.id_number.length !== 9) {
+                toast({
+                    title: t('common.error'),
+                    description: t('usersManagement.idNumberMustBe9Digits'),
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Validate phone number format
+            if (userFormData.user_phonenumber && !/^\+97[02]\d{9}$/.test(userFormData.user_phonenumber)) {
+                toast({
+                    title: t('common.error'),
+                    description: t('usersManagement.phoneInvalidDesc'),
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Validate password strength
+            if (userFormData.user_password && !validatePassword(userFormData.user_password)) {
+                toast({
+                    title: t('common.error'),
+                    description: t('usersManagement.strongPasswordRequired'),
+                    variant: "destructive",
+                });
+                return;
+            }
+        }
 
         if (userFormMode === "create") {
             try {
@@ -773,7 +935,7 @@ const UsersManagement = () => {
                                 : t('usersManagement.modifyUserDesc')}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="max-h-[70vh] overflow-y-auto">
                         <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
                             <div>
                                 <div className="form-grid">
@@ -943,7 +1105,7 @@ const UsersManagement = () => {
                                     value={userFormData.id_number}
                                     onChange={handleUserInputChange}
                                     required
-                                    placeholder={t('auth.yourIDNumber')}
+                                    placeholder="123456789"
                                     dir="ltr"
                                     className={isRTL ? 'text-left' : ''}
 
@@ -957,7 +1119,7 @@ const UsersManagement = () => {
                                     name="user_phonenumber"
                                     value={userFormData.user_phonenumber}
                                     onChange={handleUserInputChange}
-                                    placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
+                                    placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"} dir={isRTL ? "rtl" : "ltr"}
                                     className={isRTL ? 'text-left' : ''}
 
                                 />
@@ -1059,6 +1221,28 @@ const UsersManagement = () => {
                                     required={userFormMode === "create"}
                                     dir="ltr"
                                 />
+                                {userFormData.user_password && (
+                                    <div className="text-xs text-gray-600">
+                                        {isRTL ? "كلمة المرور يجب أن تحتوي على:" : "Password must contain:"}
+                                        <ul className="mt-1 space-y-1">
+                                            <li className={/[A-Z]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
+                                                {isRTL ? "• حرف كبير واحد على الأقل" : "• At least one uppercase letter"}
+                                            </li>
+                                            <li className={/[a-z]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
+                                                {isRTL ? "• حرف صغير واحد على الأقل" : "• At least one lowercase letter"}
+                                            </li>
+                                            <li className={/\d/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
+                                                {isRTL ? "• رقم واحد على الأقل" : "• At least one number"}
+                                            </li>
+                                            <li className={/[!@#$%^&*(),.?":{}|<>]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
+                                                {isRTL ? "• رمز خاص واحد على الأقل" : "• At least one special character"}
+                                            </li>
+                                            <li className={userFormData.user_password.length >= 8 ? 'text-green-600' : 'text-red-600'}>
+                                                {isRTL ? "• 8 أحرف على الأقل" : "• At least 8 characters"}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
                         </form>
                     </CardContent>
