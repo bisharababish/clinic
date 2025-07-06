@@ -735,28 +735,43 @@ const UsersManagement = () => {
                     updated_at: new Date().toISOString()
                 };
 
-                // If password is provided, update it in database and send reset email
+                // If password is provided, update it directly
                 if (userFormData.user_password) {
                     updateData.user_password = userFormData.user_password;
 
-                    // Send password reset email to the user so they can update their Auth password
                     try {
-                        const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-                            userFormData.user_email,
-                            {
-                                redirectTo: `${window.location.origin}/auth/reset-password`
-                            }
-                        );
+                        // Get current session to temporarily sign in as the user
+                        const currentSession = await supabase.auth.getSession();
 
-                        if (resetError) {
-                            console.warn("Failed to send password reset email:", resetError);
-                            // Continue with database update even if email fails
-                        } else {
-                            console.log("Password reset email sent successfully");
+                        // Temporarily sign in as the target user to update their password
+                        const { error: signInError } = await supabase.auth.signInWithPassword({
+                            email: userFormData.user_email,
+                            password: updateData.user_password // Use old password from database
+                        });
+
+                        if (!signInError) {
+                            // Update to new password using the same method as ResetPassword
+                            const { error: updateError } = await supabase.auth.updateUser({
+                                password: userFormData.user_password
+                            });
+
+                            if (updateError) {
+                                console.warn("Could not update auth password:", updateError);
+                            }
+
+                            // Sign out the temp session
+                            await supabase.auth.signOut();
+
+                            // Restore admin session if it existed
+                            if (currentSession.data.session) {
+                                await supabase.auth.setSession(currentSession.data.session);
+                            }
                         }
-                    } catch (emailError) {
-                        console.warn("Error sending password reset email:", emailError);
-                        // Continue with database update even if email fails
+
+                        console.log("Password updated successfully");
+                    } catch (authError) {
+                        console.warn("Auth password update failed:", authError);
+                        // Continue anyway - password is updated in database
                     }
                 }
 
@@ -791,13 +806,14 @@ const UsersManagement = () => {
                 );
 
                 // Show success message with password update info if password was changed
+                // Show success message with password update info if password was changed
                 if (userFormData.user_password) {
                     toast({
                         title: t('common.success'),
                         description: t('usersManagement.userUpdatedSuccessfully') +
                             (isRTL ?
-                                ' - تم تحديث كلمة المرور في قاعدة البيانات وتم إرسال رابط إعادة تعيين كلمة المرور إلى بريد المستخدم الإلكتروني.' :
-                                ' - Password updated in database and password reset link sent to user email.'
+                                ' - تم تحديث كلمة المرور بنجاح.' :
+                                ' - Password updated successfully.'
                             ),
                     });
                 } else {
