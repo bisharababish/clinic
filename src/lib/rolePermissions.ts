@@ -17,6 +17,8 @@ export interface UserPermissions {
   // ✅ NEW: Doctor-specific permissions
   canViewDoctorLabs: boolean;
   canViewDoctorXray: boolean;
+  canViewCalendar: boolean;
+
 }
 
 export const RolePermissions: Record<string, UserPermissions> = {
@@ -36,7 +38,9 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageDoctors: true,
     canViewReports: true,
     canViewDoctorLabs: true,
-    canViewDoctorXray: true
+    canViewDoctorXray: true,
+    canViewCalendar: true
+
   },
   secretary: {
     canViewHome: true,
@@ -49,12 +53,14 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewUsers: true,
     canViewDoctors: false,
     canCreateAppointments: true,
-    canManageUsers: true,
-    canManageClinics: true,
+    canManageUsers: false,
+    canManageClinics: false,
     canManageDoctors: false,
     canViewReports: false,
     canViewDoctorLabs: false,
-    canViewDoctorXray: false
+    canViewDoctorXray: false,
+    canViewCalendar: true
+
   },
   doctor: {
     canViewHome: false,
@@ -72,7 +78,9 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageDoctors: false,
     canViewReports: false,
     canViewDoctorLabs: true,
-    canViewDoctorXray: true
+    canViewDoctorXray: true,
+    canViewCalendar: true
+
   },
   lab: {
     canViewHome: false,
@@ -90,7 +98,9 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageDoctors: false,
     canViewReports: false,
     canViewDoctorLabs: false,
-    canViewDoctorXray: false
+    canViewDoctorXray: false,
+    canViewCalendar: false
+
   },
   "x ray": {
     canViewHome: false,
@@ -108,7 +118,9 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageDoctors: false,
     canViewReports: false,
     canViewDoctorLabs: false,
-    canViewDoctorXray: false
+    canViewDoctorXray: false,
+    canViewCalendar: false
+
   },
   nurse: {
     canViewHome: true,
@@ -126,7 +138,9 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageDoctors: false,
     canViewReports: false,
     canViewDoctorLabs: false,
-    canViewDoctorXray: false
+    canViewDoctorXray: false,
+    canViewCalendar: false
+
   },
   patient: {
     canViewHome: true,
@@ -144,7 +158,9 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canManageDoctors: false,
     canViewReports: false,
     canViewDoctorLabs: false,
-    canViewDoctorXray: false
+    canViewDoctorXray: false,
+    canViewCalendar: false
+
   }
 };
 
@@ -198,7 +214,7 @@ export const getDefaultRouteForRole = (role: string): string => {
     case 'admin':
       return '/';
     case 'secretary':
-      return '/admin'; // Secretary goes to admin dashboard (appointments)
+      return '/'; // Secretary goes to admin dashboard (appointments)
     case 'doctor':
       return '/doctor/labs'; // ✅ CHANGED: Doctors go directly to their lab results page
     case 'nurse':

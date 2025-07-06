@@ -16,6 +16,7 @@ import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from "@/components/ui/skeleton";
 import CalendarTab from "./api/admin/CalenderTab";
+import { hasPermission } from "@/lib/rolePermissions";
 
 // FIXED: Import the complete PatientHealthManagement component
 import PatientHealthManagement from "./api/admin/PatientHealthManagement";
@@ -116,7 +117,7 @@ const AdminDashboard = () => {
     // State variables
     const [isAdmin, setIsAdmin] = useState(false);
     const [isSecretary, setIsSecretary] = useState(false);
-    const [activeTab, setActiveTab] = useState("overview");
+    const [activeTab, setActiveTab] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
@@ -137,12 +138,12 @@ const AdminDashboard = () => {
 
     // Define which tabs each role can see
     const canViewOverviewTab = userPermissions.canViewOverview;
-    const canViewUsersTab = userPermissions.canViewUsers;
-    const canViewClinicsTab = userPermissions.canViewClinics;
+    const canViewUsersTab = userRole === 'admin'; // Only admin can see users tab
+    const canViewClinicsTab = hasPermission(userRole, 'canManageClinics');
     const canViewDoctorsTab = userPermissions.canViewDoctors;
     const canViewAppointmentsTab = userPermissions.canViewAppointments;
     const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole);
-    const canViewCalendarTab = ['admin', 'secretary'].includes(userRole);
+    const canViewCalendarTab = hasPermission(userRole, 'canViewCalendar');
 
     // Get default tab for user role
     const getDefaultTab = () => {

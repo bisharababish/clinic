@@ -245,7 +245,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-gray-800">
-                            {clinics.filter(c => c.isActive).length}
+                            {clinics.length}
                         </div>
                     </CardContent>
                 </Card>
