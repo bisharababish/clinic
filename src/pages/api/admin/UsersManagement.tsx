@@ -231,34 +231,40 @@ const UsersManagement = () => {
             return;
         }
 
-        // Handle phone number field - +97 with 0 or 2, then 9 digits
         if (name === 'user_phonenumber') {
-            // Start with +97 and allow user to choose 0 or 2, then 9 digits
+            // Remove all non-digit characters except +
             let sanitized = value.replace(/[^\d+]/g, '');
 
-            // If it doesn't start with +97, add it
+            // If it doesn't start with +97, reset to +97
             if (!sanitized.startsWith('+97')) {
                 sanitized = '+97';
             }
 
-            // If it starts with +97 but no third digit yet, allow it
+            // If user is still typing the prefix (+97), allow it
             if (sanitized.length <= 4) {
                 setUserFormData(prev => ({ ...prev, [name]: sanitized }));
                 return;
             }
 
-            // Check if third digit after +97 is 0 or 2
-            const thirdDigit = sanitized.charAt(4);
-            if (thirdDigit !== '0' && thirdDigit !== '2') {
-                // If invalid third digit, keep only +97
-                sanitized = '+97';
+            // When we have exactly 5 characters (+97X), validate the third digit
+            if (sanitized.length === 5) {
+                const thirdDigit = sanitized.charAt(4);
+                if (thirdDigit !== '0' && thirdDigit !== '2') {
+                    // Invalid third digit, keep only +97
+                    sanitized = '+97';
+                }
             }
-
-            // Only allow up to 9 digits after +970 or +972
-            const prefix = sanitized.startsWith('+970') ? '+970' : '+972';
-            let digits = sanitized.slice(prefix.length).replace(/\D/g, '');
-            digits = digits.slice(0, 9);
-            sanitized = prefix + digits;
+            // If we have more than 5 characters, allow typing as long as it starts with valid prefix
+            else if (sanitized.length > 5) {
+                // Check if it starts with a valid prefix
+                if (sanitized.startsWith('+970') || sanitized.startsWith('+972')) {
+                    // Valid prefix, limit to 14 characters total (+970/2 + 9 digits)
+                    sanitized = sanitized.slice(0, 14);
+                } else {
+                    // Invalid prefix, reset to +97
+                    sanitized = '+97';
+                }
+            }
 
             setUserFormData(prev => ({ ...prev, [name]: sanitized }));
             return;
@@ -567,7 +573,7 @@ const UsersManagement = () => {
                 return;
             }
 
-            // Validate phone number format
+            // Validate phone number format (+970 or +972 followed by exactly 9 digits)
             if (userFormData.user_phonenumber && !/^\+97[02]\d{9}$/.test(userFormData.user_phonenumber)) {
                 toast({
                     title: t('common.error'),
@@ -586,6 +592,7 @@ const UsersManagement = () => {
                 });
                 return;
             }
+
         }
 
         if (userFormMode === "create") {
@@ -755,7 +762,7 @@ const UsersManagement = () => {
 
                         // First try to find existing auth user
                         const { data: existingUsers } = await serviceClient.auth.admin.listUsers();
-                        let targetUser = existingUsers.users.find(u => u.email && u.email === userFormData.user_email);
+                        let targetUser = existingUsers.users.find(u => u.email === userFormData.user_email);
 
                         if (!targetUser) {
                             // User doesn't exist in auth, create them first

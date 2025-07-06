@@ -614,7 +614,8 @@ const enTranslations = {
         // Main titles and descriptions
         title: 'User Management',
         description: 'Manage all user accounts for the clinic portal',
-
+        emailAlreadyExists: "This email is already in use by another user",
+        phoneAlreadyExists: "This phone number is already in use by another user",
         // Search and actions
         searchPlaceholder: 'Search users...',
         addUser: 'Add User',
@@ -929,7 +930,7 @@ const enTranslations = {
         manageAvailability: 'Manage Doctor\'s Availability',
         setAvailableHours: 'Set the available hours for Dr. {{name}}',
         currentAvailability: 'Current Availability',
-        noAvailabilitySlots: 'No availability slots defined yet.',
+        noAvailabilitySlots: 'No slots added.',
         addNewSlot: 'Add New Availability Slot',
         day: 'Day',
         startTime: 'Start Time',
@@ -2035,7 +2036,8 @@ const arTranslations = {
         addUser: 'إضافة مستخدم',
         loading: 'جارٍ تحميل المستخدمين...',
         loadingUsers: 'جارٍ تحميل المستخدمين...',
-
+        emailAlreadyExists: "هذا البريد الإلكتروني مستخدم بالفعل من قبل مستخدم آخر",
+        phoneAlreadyExists: "رقم الهاتف هذا مستخدم بالفعل من قبل مستخدم آخر",
         // User info labels
         id: 'الهوية',
         phone: 'الهاتف',
@@ -2345,7 +2347,7 @@ const arTranslations = {
         manageAvailability: 'إدارة توفر الطبيب',
         setAvailableHours: 'تحديد ساعات التوفر للدكتور {{name}}',
         currentAvailability: 'التوفر الحالي',
-        noAvailabilitySlots: 'لم يتم تحديد فترات توفر بعد.',
+        noAvailabilitySlots: 'لم يتم إضافة أي فترات',
         addNewSlot: 'إضافة فترة توفر جديدة',
         day: 'اليوم',
         startTime: 'وقت البداية',
