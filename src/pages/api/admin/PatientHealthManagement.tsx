@@ -194,6 +194,56 @@ const PatientHealthForm: React.FC<{
             allergies: [],
             social_situation: undefined // ADD THIS LINE
         });
+
+        const validateEnglishName = (name: string): boolean => {
+            const englishNameRegex = /^[A-Za-z\s'-]+$/;
+            return englishNameRegex.test(name.trim());
+        };
+
+        const validateArabicName = (name: string): boolean => {
+            const arabicNameRegex = /^[\u0600-\u06FF\s]+$/;
+            return arabicNameRegex.test(name.trim());
+        };
+
+        const validatePalestinianID = (id: string): boolean => {
+            const idRegex = /^\d{9}$/;
+            return idRegex.test(id.trim());
+        };
+
+        const validatePalestinianPhone = (phone: string): boolean => {
+            const phoneRegex = /^\+97[02]\d{8}$/;
+            return phoneRegex.test(phone.trim());
+        };
+        const handlePhoneInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            let value = e.target.value;
+
+            // If user tries to delete the +97 prefix, prevent it
+            if (!value.startsWith('+97')) {
+                value = '+97';
+            }
+
+            // Extract digits after +97
+            const afterPrefix = value.slice(3);
+            const digits = afterPrefix.replace(/\D/g, '');
+
+            if (digits.length === 0) {
+                setCreatePatientForm(prev => ({ ...prev, user_phonenumber: '+97' }));
+                return;
+            }
+
+            // First digit must be 0 or 2
+            const firstDigit = digits[0];
+            if (firstDigit !== '0' && firstDigit !== '2') {
+                // Don't update if first digit is invalid
+                return;
+            }
+
+            // Limit to 9 digits total
+            const limitedDigits = digits.slice(0, 9);
+            const formattedPhone = '+97' + limitedDigits;
+
+            setCreatePatientForm(prev => ({ ...prev, user_phonenumber: formattedPhone }));
+        };
         // Handle allergy selection
         const handleAllergySelect = (allergy: string) => {
             setSelectedAllergies(prev =>
@@ -282,72 +332,217 @@ const PatientHealthForm: React.FC<{
         // Handle patient creation form changes
         const handleCreatePatientFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const { name, value } = e.target;
-            setCreatePatientForm(prev => ({ ...prev, [name]: value }));
+
+            // Apply specific formatting/restrictions based on field type
+            let processedValue = value;
+
+            if (name.startsWith('english_username_')) {
+                // Only allow English letters, spaces, hyphens, and apostrophes
+                processedValue = value.replace(/[^A-Za-z\s'-]/g, '');
+            } else if (name.startsWith('arabic_username_')) {
+                // Only allow Arabic letters and spaces
+                processedValue = value.replace(/[^\u0600-\u06FF\s]/g, '');
+            } else if (name === 'id_number') {
+                // Only allow digits and limit to 9 characters
+                processedValue = value.replace(/\D/g, '').slice(0, 9);
+            }
+
+            setCreatePatientForm(prev => ({ ...prev, [name]: processedValue }));
         };
 
         // Validate patient creation form
+        // REPLACE YOUR EXISTING validatePatientCreationForm FUNCTION WITH THIS:
         const validatePatientCreationForm = (): boolean => {
             const form = createPatientForm;
+            const currentLang = i18n.language;
 
-            if (!form.english_username_a.trim() || !form.english_username_d.trim()) {
+            // English first name validation
+            if (!form.english_username_a.trim()) {
                 toast({
-                    title: "Form Error",
-                    description: "First and last names in English are required",
+                    title: currentLang === 'ar' ? "خطأ في النموذج" : "Form Error",
+                    description: currentLang === 'ar' ? "الاسم الأول باللغة الإنجليزية مطلوب" : "First name in English is required",
                     variant: "destructive",
                 });
                 return false;
             }
 
-            if (!form.arabic_username_a.trim() || !form.arabic_username_d.trim()) {
+            if (!validateEnglishName(form.english_username_a)) {
                 toast({
-                    title: "Form Error",
-                    description: "First and last names in Arabic are required",
+                    title: currentLang === 'ar' ? "خطأ في الاسم الإنجليزي" : "Invalid English Name",
+                    description: currentLang === 'ar' ? "الاسم الأول باللغة الإنجليزية يجب أن يحتوي على أحرف إنجليزية فقط" : "First name must contain only English letters",
                     variant: "destructive",
                 });
                 return false;
             }
 
+            // English second name validation (if provided)
+            if (form.english_username_b.trim() && !validateEnglishName(form.english_username_b)) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في الاسم الإنجليزي" : "Invalid English Name",
+                    description: currentLang === 'ar' ? "الاسم الثاني باللغة الإنجليزية يجب أن يحتوي على أحرف إنجليزية فقط" : "Second name must contain only English letters",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // English third name validation (if provided)
+            if (form.english_username_c.trim() && !validateEnglishName(form.english_username_c)) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في الاسم الإنجليزي" : "Invalid English Name",
+                    description: currentLang === 'ar' ? "الاسم الثالث باللغة الإنجليزية يجب أن يحتوي على أحرف إنجليزية فقط" : "Third name must contain only English letters",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // English last name validation
+            if (!form.english_username_d.trim()) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في النموذج" : "Form Error",
+                    description: currentLang === 'ar' ? "اسم العائلة باللغة الإنجليزية مطلوب" : "Last name in English is required",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            if (!validateEnglishName(form.english_username_d)) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في الاسم الإنجليزي" : "Invalid English Name",
+                    description: currentLang === 'ar' ? "اسم العائلة باللغة الإنجليزية يجب أن يحتوي على أحرف إنجليزية فقط" : "Last name must contain only English letters",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // Arabic first name validation
+            if (!form.arabic_username_a.trim()) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في النموذج" : "Form Error",
+                    description: currentLang === 'ar' ? "الاسم الأول باللغة العربية مطلوب" : "First name in Arabic is required",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            if (!validateArabicName(form.arabic_username_a)) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في الاسم العربي" : "Invalid Arabic Name",
+                    description: currentLang === 'ar' ? "الاسم الأول باللغة العربية يجب أن يحتوي على أحرف عربية فقط" : "First name must contain only Arabic letters",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // Arabic second name validation (if provided)
+            if (form.arabic_username_b.trim() && !validateArabicName(form.arabic_username_b)) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في الاسم العربي" : "Invalid Arabic Name",
+                    description: currentLang === 'ar' ? "الاسم الثاني باللغة العربية يجب أن يحتوي على أحرف عربية فقط" : "Second name must contain only Arabic letters",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // Arabic third name validation (if provided)
+            if (form.arabic_username_c.trim() && !validateArabicName(form.arabic_username_c)) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في الاسم العربي" : "Invalid Arabic Name",
+                    description: currentLang === 'ar' ? "الاسم الثالث باللغة العربية يجب أن يحتوي على أحرف عربية فقط" : "Third name must contain only Arabic letters",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // Arabic last name validation
+            if (!form.arabic_username_d.trim()) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في النموذج" : "Form Error",
+                    description: currentLang === 'ar' ? "اسم العائلة باللغة العربية مطلوب" : "Last name in Arabic is required",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            if (!validateArabicName(form.arabic_username_d)) {
+                toast({
+                    title: currentLang === 'ar' ? "خطأ في الاسم العربي" : "Invalid Arabic Name",
+                    description: currentLang === 'ar' ? "اسم العائلة باللغة العربية يجب أن يحتوي على أحرف عربية فقط" : "Last name must contain only Arabic letters",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // Email validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(form.user_email)) {
                 toast({
-                    title: "Invalid Email",
-                    description: "Please enter a valid email address",
+                    title: currentLang === 'ar' ? "بريد إلكتروني غير صحيح" : "Invalid Email",
+                    description: currentLang === 'ar' ? "يرجى إدخال عنوان بريد إلكتروني صحيح" : "Please enter a valid email address",
                     variant: "destructive",
                 });
                 return false;
             }
 
-            if (!form.id_number.trim() || form.id_number.length < 6) {
+            // Palestinian ID validation (exactly 9 digits)
+            if (!validatePalestinianID(form.id_number)) {
                 toast({
-                    title: "Invalid ID Number",
-                    description: "ID number must be at least 6 characters long",
+                    title: currentLang === 'ar' ? "رقم هوية غير صحيح" : "Invalid ID Number",
+                    description: currentLang === 'ar' ? "رقم الهوية يجب أن يكون 9 أرقام بالضبط" : "ID number must be exactly 9 digits",
                     variant: "destructive",
                 });
                 return false;
             }
 
-            if (!form.user_phonenumber.trim() || form.user_phonenumber.length < 8) {
+            // Palestinian phone number validation
+            if (!validatePalestinianPhone(form.user_phonenumber)) {
                 toast({
-                    title: "Invalid Phone Number",
-                    description: "Phone number must be at least 8 digits long",
+                    title: currentLang === 'ar' ? "رقم هاتف غير صحيح" : "Invalid Phone Number",
+                    description: currentLang === 'ar' ?
+                        "رقم الهاتف يجب أن يكون بالصيغة: +970 متبوعاً برقم 2 أو 0 ثم 8 أرقام" :
+                        "Phone number must be in format: +970 followed by 2 or 0, then 8 digits",
                     variant: "destructive",
                 });
                 return false;
             }
 
+            // Date of birth validation
             if (!form.date_of_birth) {
                 toast({
-                    title: "Date of Birth Required",
-                    description: "Please enter date of birth",
+                    title: currentLang === 'ar' ? "تاريخ الميلاد مطلوب" : "Date of Birth Required",
+                    description: currentLang === 'ar' ? "يرجى إدخال تاريخ الميلاد" : "Please enter date of birth",
                     variant: "destructive",
                 });
                 return false;
             }
 
+            // Check if date of birth is not in the future
+            const birthDate = new Date(form.date_of_birth);
+            const today = new Date();
+            if (birthDate >= today) {
+                toast({
+                    title: currentLang === 'ar' ? "تاريخ ميلاد غير صحيح" : "Invalid Date of Birth",
+                    description: currentLang === 'ar' ? "تاريخ الميلاد لا يمكن أن يكون في المستقبل" : "Date of birth cannot be in the future",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // Check if age is reasonable (not older than 120 years)
+            const age = today.getFullYear() - birthDate.getFullYear();
+            if (age > 120) {
+                toast({
+                    title: currentLang === 'ar' ? "تاريخ ميلاد غير صحيح" : "Invalid Date of Birth",
+                    description: currentLang === 'ar' ? "تاريخ الميلاد غير منطقي" : "Date of birth is unrealistic",
+                    variant: "destructive",
+                });
+                return false;
+            }
+
+            // Gender validation
             if (!form.gender_user) {
                 toast({
-                    title: "Gender Required",
-                    description: "Please select gender",
+                    title: currentLang === 'ar' ? "الجنس مطلوب" : "Gender Required",
+                    description: currentLang === 'ar' ? "يرجى اختيار الجنس" : "Please select gender",
                     variant: "destructive",
                 });
                 return false;
@@ -355,7 +550,6 @@ const PatientHealthForm: React.FC<{
 
             return true;
         };
-
         // Create a new patient account
         const createNewPatient = async () => {
             if (!validatePatientCreationForm()) return;
@@ -1093,6 +1287,10 @@ const PatientHealthForm: React.FC<{
                                             required
                                             placeholder={t('patientHealth.first')}
                                         />
+                                        {/* ADD HELPER TEXT HERE */}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {isRTL ? "أحرف إنجليزية فقط" : "English letters only"}
+                                        </div>
                                     </div>
                                     <div>
                                         <Label htmlFor="create_english_second">{t('patientHealth.second')}</Label>
@@ -1103,6 +1301,10 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             placeholder={t('patientHealth.second')}
                                         />
+                                        {/* ADD HELPER TEXT HERE */}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {isRTL ? "أحرف إنجليزية فقط" : "English letters only"}
+                                        </div>
                                     </div>
                                     <div>
                                         <Label htmlFor="create_english_third">{t('patientHealth.third')}</Label>
@@ -1113,6 +1315,10 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             placeholder={t('patientHealth.third')}
                                         />
+                                        {/* ADD HELPER TEXT HERE */}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {isRTL ? "أحرف إنجليزية فقط" : "English letters only"}
+                                        </div>
                                     </div>
                                     <div>
                                         <Label htmlFor="create_english_last">{t('patientHealth.last')}</Label>
@@ -1124,6 +1330,10 @@ const PatientHealthForm: React.FC<{
                                             required
                                             placeholder={t('patientHealth.last')}
                                         />
+                                        {/* ADD HELPER TEXT HERE */}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {isRTL ? "أحرف إنجليزية فقط" : "English letters only"}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1143,6 +1353,10 @@ const PatientHealthForm: React.FC<{
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={t('patientHealth.first')}
                                         />
+                                        {/* ADD HELPER TEXT HERE */}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {isRTL ? "أحرف عربية فقط" : "Arabic letters only"}
+                                        </div>
                                     </div>
                                     <div>
                                         <Label htmlFor="create_arabic_second">{t('patientHealth.second')}</Label>
@@ -1154,6 +1368,10 @@ const PatientHealthForm: React.FC<{
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={t('patientHealth.second')}
                                         />
+                                        {/* ADD HELPER TEXT HERE */}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {isRTL ? "أحرف عربية فقط" : "Arabic letters only"}
+                                        </div>
                                     </div>
                                     <div>
                                         <Label htmlFor="create_arabic_third">{t('patientHealth.third')}</Label>
@@ -1165,6 +1383,10 @@ const PatientHealthForm: React.FC<{
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={t('patientHealth.third')}
                                         />
+                                        {/* ADD HELPER TEXT HERE */}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {isRTL ? "أحرف عربية فقط" : "Arabic letters only"}
+                                        </div>
                                     </div>
                                     <div>
                                         <Label htmlFor="create_arabic_last">{t('patientHealth.last')}</Label>
@@ -1177,6 +1399,10 @@ const PatientHealthForm: React.FC<{
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={t('patientHealth.last')}
                                         />
+                                        {/* ADD HELPER TEXT HERE */}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {isRTL ? "أحرف عربية فقط" : "Arabic letters only"}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1211,7 +1437,7 @@ const PatientHealthForm: React.FC<{
                                             name="user_phonenumber"
                                             type="tel"
                                             value={createPatientForm.user_phonenumber}
-                                            onChange={handleCreatePatientFormChange}
+                                            onChange={handlePhoneInputChange}
                                             className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
                                             required
                                             placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}

@@ -402,7 +402,8 @@ const Labs = () => {
 
       // Prepare lab result data - ensure all integers are properly converted
       const labResult = {
-        patient_id: parseInt(selectedPatient.userid.toString()), // Convert bigint to integer
+        patient_id: selectedPatient.userid,
+        // Convert bigint to integer
         patient_name: labData.patientName || `${selectedPatient.english_username_a || ''} ${selectedPatient.english_username_d || ''}`.trim(),
         patient_email: labData.patientEmail || selectedPatient.user_email || '',
         date_of_birth: labData.dateOfBirth || null,
@@ -411,7 +412,7 @@ const Labs = () => {
         test_type: labData.testType,
         test_results: labData.testResults,
         doctor_notes: labData.doctorNotes || '',
-        created_by: parseInt(currentUserId.toString()) // Convert to integer
+        created_by: currentUserId
       };
 
       // Debug: Log the exact data being sent
