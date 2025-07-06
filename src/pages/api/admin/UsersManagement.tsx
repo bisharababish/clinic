@@ -19,7 +19,7 @@ import UserRoleBadge from '../../../components/auth/UserRoleBadge';
 import { useTranslation } from 'react-i18next';
 import "../../styles/usersmanagement.css"
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { createClient } from '@supabase/supabase-js';
 interface UserInfo {
     user_id: string; // uuid/text primary key
     userid: number;
@@ -735,43 +735,62 @@ const UsersManagement = () => {
                     updated_at: new Date().toISOString()
                 };
 
-                // If password is provided, update it directly
+                // If password is provided, update it directly in Supabase Auth
+                // If password is provided, update it directly in Supabase Auth
                 if (userFormData.user_password) {
                     updateData.user_password = userFormData.user_password;
 
                     try {
-                        // Get current session to temporarily sign in as the user
-                        const currentSession = await supabase.auth.getSession();
+                        // Create a service client for admin operations
+                        const serviceClient = createClient(
+                            import.meta.env.VITE_SUPABASE_URL,
+                            import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
+                            {
+                                auth: {
+                                    autoRefreshToken: false,
+                                    persistSession: false
+                                }
+                            }
+                        );
 
-                        // Temporarily sign in as the target user to update their password
-                        const { error: signInError } = await supabase.auth.signInWithPassword({
-                            email: userFormData.user_email,
-                            password: updateData.user_password // Use old password from database
-                        });
+                        // First try to find existing auth user
+                        const { data: existingUsers } = await serviceClient.auth.admin.listUsers();
+                        let targetUser = existingUsers.users.find(u => u.email && u.email === userFormData.user_email);
 
-                        if (!signInError) {
-                            // Update to new password using the same method as ResetPassword
-                            const { error: updateError } = await supabase.auth.updateUser({
-                                password: userFormData.user_password
+                        if (!targetUser) {
+                            // User doesn't exist in auth, create them first
+                            console.log("User not found in auth, creating auth user...");
+                            const { data: newAuthUser, error: createError } = await serviceClient.auth.admin.createUser({
+                                email: userFormData.user_email,
+                                password: userFormData.user_password,
+                                email_confirm: true // Skip email confirmation
                             });
 
-                            if (updateError) {
-                                console.warn("Could not update auth password:", updateError);
+                            if (createError) {
+                                throw createError;
                             }
+                            targetUser = newAuthUser.user;
+                        } else {
+                            // User exists, update their password
+                            const { error: updateError } = await serviceClient.auth.admin.updateUserById(
+                                targetUser.id,
+                                { password: userFormData.user_password }
+                            );
 
-                            // Sign out the temp session
-                            await supabase.auth.signOut();
-
-                            // Restore admin session if it existed
-                            if (currentSession.data.session) {
-                                await supabase.auth.setSession(currentSession.data.session);
+                            if (updateError) {
+                                throw updateError;
                             }
                         }
 
-                        console.log("Password updated successfully");
-                    } catch (authError) {
-                        console.warn("Auth password update failed:", authError);
-                        // Continue anyway - password is updated in database
+                        console.log("Password updated successfully in auth");
+                    } catch (error) {
+                        console.error("Error updating password:", error);
+                        toast({
+                            title: t('common.error'),
+                            description: "Failed to update password: " + error.message,
+                            variant: "destructive",
+                        });
+                        return;
                     }
                 }
 
