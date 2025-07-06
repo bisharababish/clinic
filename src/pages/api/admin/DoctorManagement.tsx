@@ -79,8 +79,8 @@ const DoctorManagement = () => {
     const [selectedDoctorName, setSelectedDoctorName] = useState("");
     const [newSlot, setNewSlot] = useState({
         day: "Monday",
-        start_time: "",
-        end_time: "",
+        start_time: "08:00",
+        end_time: "20:00",
     });
     const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
 
@@ -497,6 +497,49 @@ const DoctorManagement = () => {
 
     const handleNewSlotChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+
+        if (name === 'start_time') {
+            // Don't allow start time before 08:00
+            if (value < '08:00') {
+                toast({
+                    title: t('doctorManagement.validationError'),
+                    description: t('doctorManagement.startTimeMinimum') || 'Start time cannot be before 08:00',
+                    variant: "destructive",
+                });
+                return;
+            }
+            // Don't allow start time after 20:00
+            if (value > '20:00') {
+                toast({
+                    title: t('doctorManagement.validationError'),
+                    description: t('doctorManagement.startTimeMaximum') || 'Start time cannot be after 20:00',
+                    variant: "destructive",
+                });
+                return;
+            }
+        }
+
+        if (name === 'end_time') {
+            // Don't allow end time before 08:00
+            if (value < '08:00') {
+                toast({
+                    title: t('doctorManagement.validationError'),
+                    description: t('doctorManagement.endTimeMinimum') || 'End time cannot be before 08:00',
+                    variant: "destructive",
+                });
+                return;
+            }
+            // Don't allow end time after 20:00
+            if (value > '20:00') {
+                toast({
+                    title: t('doctorManagement.validationError'),
+                    description: t('doctorManagement.endTimeMaximum') || 'End time cannot be after 20:00',
+                    variant: "destructive",
+                });
+                return;
+            }
+        }
+
         setNewSlot(prev => ({ ...prev, [name]: value }));
     };
 
@@ -555,8 +598,8 @@ const DoctorManagement = () => {
                 // Reset the form for a new entry
                 setNewSlot({
                     day: newSlot.day, // Keep the same day for consecutive entries
-                    start_time: "",
-                    end_time: ""
+                    start_time: "08:00",
+                    end_time: "20:00"
                 });
 
                 toast({
@@ -1027,6 +1070,8 @@ const DoctorManagement = () => {
                                         onChange={handleNewSlotChange}
                                         className="mt-1"
                                         dir="ltr"
+                                        min="08:00"
+                                        max="20:00"
                                     />
                                 </div>
 
@@ -1042,6 +1087,8 @@ const DoctorManagement = () => {
                                         onChange={handleNewSlotChange}
                                         className="mt-1"
                                         dir="ltr"
+                                        min="08:00"
+                                        max="20:00"
                                     />
                                 </div>
                             </div>

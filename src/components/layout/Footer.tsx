@@ -40,13 +40,34 @@ const Footer: React.FC = () => {
               </div>
 
               <p className="text-sm text-primary/85 leading-relaxed font-medium mb-4">
-                {isRTL
-                  ? "نقدم خدمات الرعاية الصحية عالية الجودة والمهنية منذ عام 2025. نحن ملتزمون بتقديم أفضل رعاية طبية لمرضانا الكرام."
-                  : "Providing high-quality and professional healthcare services since 2025. We are committed to delivering the best medical care to our valued patients."
-                }
+                <div className="text-sm text-primary/85 leading-relaxed font-medium mb-4">
+                  {isRTL ? (
+                    <ul className="space-y-2" dir="rtl">
+                      <li className="flex items-start">
+                        <span className="ml-2 mt-1">•</span>
+                        <span>نقدم خدمات الرعاية الصحية عالية الجودة والمهنية منذ عام 2025</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="ml-2 mt-1">•</span>
+                        <span>نحن ملتزمون بتقديم أفضل رعاية طبية لمرضانا الكرام</span>
+                      </li>
+                    </ul>
+                  ) : (
+                    <ul className="space-y-2">
+                      <li className="flex items-start">
+                        <span className="mr-2 mt-1">•</span>
+                        <span>Providing high-quality and professional healthcare services since 2025</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="mr-2 mt-1">•</span>
+                        <span>We are committed to delivering the best medical care to our valued patients</span>
+                      </li>
+                    </ul>
+                  )}
+                </div>
               </p>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 <div className="flex items-center gap-2 text-xs text-primary/80">
                   <Award className="h-3 w-3" />
                   <span className="font-medium">
@@ -70,6 +91,24 @@ const Footer: React.FC = () => {
                   <span className="font-medium">
                     {isRTL ? "مرافق حديثة" : "Modern Facilities"}
                   </span>
+                </div>
+                {/* Hours */}
+                <div className="p-3 bg-white/50 rounded-lg border border-primary/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-primary/80" />
+                    <h4 className="font-bold text-sm text-primary/90">
+                      {isRTL ? 'ساعات العمل' : 'Working Hours'}
+                    </h4>
+                  </div>
+                  <p className="text-xs text-primary/85 font-medium">
+                    {isRTL ? 'جميع أيام الأسبوع' : 'All Days'}
+                  </p>
+                  <p className="text-sm font-bold text-primary/90" dir="ltr">
+                    8:00 AM - 8:00 PM
+                  </p>
+                  <p className="text-xs text-primary/70">
+                    {isRTL ? 'مفتوح كل يوم' : 'Open every day'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -103,9 +142,10 @@ const Footer: React.FC = () => {
                 <div className={`flex items-center gap-2 p-2 rounded-lg bg-white/50 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Mail className="h-4 w-4 text-primary/80 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
+
                     <a
                       href="mailto:info@bethlehemmedcenter.com"
-                      className="text-xs font-bold text-primary/85 hover:text-primary transition-colors block break-all"
+                      className={`text-xs font-bold text-primary/85 hover:text-primary transition-colors block break-all ${isRTL ? 'text-right' : 'text-left'}`}
                       dir="ltr"
                     >
                       info@bethlehemmedcenter.com
@@ -130,26 +170,62 @@ const Footer: React.FC = () => {
                     </a>
                   </div>
                 </div>
+                {/* Social Media Section */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="group relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary/8 to-primary/15 border border-primary/25 hover:border-primary/35 transition-all duration-500">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            <div className="relative">
+              <h4 className="font-semibold text-primary/85 mb-3 text-lg flex items-center gap-2">
+                <div className="p-1 bg-gradient-to-br from-primary to-primary/85 rounded-lg">
+                  <Users className="h-4 w-4 text-white" />
+                </div>
+                {isRTL ? 'تابعنا على وسائل التواصل' : 'Follow us on Social Media'}
+              </h4>
+              <div className="flex gap-3">
+                <a
+                  href="https://www.facebook.com/yourclinicpage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
+                >
+                  <Facebook className="w-5 h-5 text-primary/80 group-hover/social:text-blue-600 transition-colors" />
+                </a>
+                <a
+                  href="https://www.instagram.com/yourclinicpage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-pink-50 border border-primary/20 hover:border-pink-400 transition-all duration-300 shadow-sm hover:shadow-pink-200 transform hover:scale-110"
+                >
+                  <Instagram className="w-5 h-5 text-primary/80 group-hover/social:text-pink-600 transition-colors" />
+                </a>
+                <a
+                  href="https://twitter.com/yourclinicpage"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Twitter"
+                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
+                >
+                  <Twitter className="w-5 h-5 text-primary/80 group-hover/social:text-blue-500 transition-colors" />
+                </a>
+                <a
+                  href="https://wa.me/97222744444"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-green-50 border border-primary/20 hover:border-green-400 transition-all duration-300 shadow-sm hover:shadow-green-200 transform hover:scale-110"
+                >
+                  <MessageCircle className="w-5 h-5 text-primary/80 group-hover/social:text-green-600 transition-colors" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
               </div>
 
-              {/* Hours */}
-              <div className="p-3 bg-white/50 rounded-lg border border-primary/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="h-4 w-4 text-primary/80" />
-                  <h4 className="font-bold text-sm text-primary/90">
-                    {isRTL ? 'ساعات العمل' : 'Working Hours'}
-                  </h4>
-                </div>
-                <p className="text-xs text-primary/85 font-medium">
-                  {isRTL ? 'جميع أيام الأسبوع' : 'All Days'}
-                </p>
-                <p className="text-sm font-bold text-primary/90" dir="ltr">
-                  8:00 AM - 8:00 PM
-                </p>
-                <p className="text-xs text-primary/70">
-                  {isRTL ? 'مفتوح كل يوم' : 'Open every day'}
-                </p>
-              </div>
+
             </div>
           </div>
 
@@ -224,59 +300,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Social Media Section */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="group relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary/8 to-primary/15 border border-primary/25 hover:border-primary/35 transition-all duration-500">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            <div className="relative">
-              <h4 className="font-semibold text-primary/85 mb-3 text-lg flex items-center gap-2">
-                <div className="p-1 bg-gradient-to-br from-primary to-primary/85 rounded-lg">
-                  <Users className="h-4 w-4 text-white" />
-                </div>
-                {isRTL ? 'تابعنا على وسائل التواصل' : 'Follow us on Social Media'}
-              </h4>
-              <div className="flex gap-3">
-                <a
-                  href="https://www.facebook.com/yourclinicpage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Facebook"
-                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
-                >
-                  <Facebook className="w-5 h-5 text-primary/80 group-hover/social:text-blue-600 transition-colors" />
-                </a>
-                <a
-                  href="https://www.instagram.com/yourclinicpage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-pink-50 border border-primary/20 hover:border-pink-400 transition-all duration-300 shadow-sm hover:shadow-pink-200 transform hover:scale-110"
-                >
-                  <Instagram className="w-5 h-5 text-primary/80 group-hover/social:text-pink-600 transition-colors" />
-                </a>
-                <a
-                  href="https://twitter.com/yourclinicpage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Twitter"
-                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
-                >
-                  <Twitter className="w-5 h-5 text-primary/80 group-hover/social:text-blue-500 transition-colors" />
-                </a>
-                <a
-                  href="https://wa.me/97222744444"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="WhatsApp"
-                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-green-50 border border-primary/20 hover:border-green-400 transition-all duration-300 shadow-sm hover:shadow-green-200 transform hover:scale-110"
-                >
-                  <MessageCircle className="w-5 h-5 text-primary/80 group-hover/social:text-green-600 transition-colors" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
+        
         {/* Copyright Section */}
         <div className="flex flex-col items-center space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/30 border border-muted/40">
@@ -309,7 +333,7 @@ const Footer: React.FC = () => {
         <TermsOfUseModal isOpen={termsOpen} onClose={closeTerms} />
         <PrivacyPolicyModal isOpen={privacyOpen} onClose={closePrivacy} />
       </div>
-    </footer>
+    </footer >
   );
 };
 

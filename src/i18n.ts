@@ -856,7 +856,10 @@ const enTranslations = {
         // Main titles
         title: 'Doctor Management',
         doctorsManagement: 'Doctors Management',
-
+        startTimeMinimum: "Start time cannot be before 08:00",
+        startTimeMaximum: "Start time cannot be after 20:00",
+        endTimeMinimum: "End time cannot be before 08:00",
+        endTimeMaximum: "End time cannot be after 20:00",
         // Descriptions
         description: 'Manage doctors and their clinic assignments',
 
@@ -2273,7 +2276,10 @@ const arTranslations = {
         // Main titles
         title: 'إدارة الأطباء',
         doctorsManagement: 'إدارة الأطباء',
-
+        startTimeMinimum: "وقت البداية لا يمكن أن يكون قبل 08:00",
+        startTimeMaximum: "وقت البداية لا يمكن أن يكون بعد 20:00",
+        endTimeMinimum: "وقت النهاية لا يمكن أن يكون قبل 08:00",
+        endTimeMaximum: "وقت النهاية لا يمكن أن يكون بعد 20:00",
         // Descriptions
         description: 'إدارة الأطباء وتعيينات العيادات',
 

@@ -111,16 +111,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     const isArabicOnly = (text: string) => /^[\u0600-\u06FF\s]*$/.test(text);
     const isNumbersOnly = (text: string) => /^[0-9]*$/.test(text);
 
-    const calculateAge = (birthDate: string) => {
-        const today = new Date();
-        const birth = new Date(birthDate);
-        let age = today.getFullYear() - birth.getFullYear();
-        const monthDiff = today.getMonth() - birth.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--;
-        }
-        return age;
-    };
+
     const validateForm = () => {
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -156,25 +147,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         }
 
         // Age validation (minimum 16 years old)
-        if (formData.dateOfBirth) {
-            const age = calculateAge(formData.dateOfBirth);
-            if (age < 16) {
-                toast({
-                    title: t("auth.ageTooYoung"),
-                    description: t("auth.mustBe16OrOlder"),
-                    variant: "destructive",
-                });
-                return false;
-            }
-            if (age > 120) {
-                toast({
-                    title: t("auth.invalidAge"),
-                    description: "Please enter a valid date of birth",
-                    variant: "destructive",
-                });
-                return false;
-            }
-        }
+
 
         // Check if required name fields are filled and contain only appropriate characters
         if (!formData.english_username_a || !formData.english_username_d ||

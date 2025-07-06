@@ -264,7 +264,7 @@ export function PasswordChangeModal({
                     </DialogTitle>
                     <DialogDescription className="text-gray-600 mt-2">
                         {isRTL ?
-                            `مرحباً ${userName || 'بك'}! يمكنك تغيير كلمة المرور الخاصة بك لحماية حسابك بشكل أفضل.` :
+                            `مرحباً ${userName || 'بك'}! يمكنك تغيير كلمة المرور الخاصة بك لحماية حسابك.` :
                             `Hello ${userName || 'there'}! You can change your password to better secure your account.`
                         }
                     </DialogDescription>
@@ -435,14 +435,7 @@ export function PasswordChangeModal({
                                 </>
                             )}
                         </Button>
-                        <Button
-                            onClick={handleSkip}
-                            disabled={isChanging}
-                            variant="outline"
-                            className="flex-1"
-                        >
-                            {isRTL ? 'تخطي الآن' : 'Skip for Now'}
-                        </Button>
+
                     </div>
 
                     {/* Security Notice */}

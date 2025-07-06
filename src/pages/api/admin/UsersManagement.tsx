@@ -20,6 +20,8 @@ import { useTranslation } from 'react-i18next';
 import "../../styles/usersmanagement.css"
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from '@supabase/supabase-js';
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+
 interface UserInfo {
     user_id: string; // uuid/text primary key
     userid: number;
@@ -53,6 +55,7 @@ const UsersManagement = () => {
     // Data state
     const [users, setUsers] = useState<UserInfo[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<UserInfo[]>([]);
+    const [showEditPassword, setShowEditPassword] = useState(false);
 
     // Form state for users
     const [userFormMode, setUserFormMode] = useState<"create" | "edit">("create");
@@ -762,7 +765,7 @@ const UsersManagement = () => {
 
                         // First try to find existing auth user
                         const { data: existingUsers } = await serviceClient.auth.admin.listUsers();
-                        let targetUser = existingUsers.users.find(u => u.email === userFormData.user_email);
+                        let targetUser = existingUsers.users.find(u => u.email && u.email === userFormData.user_email);
 
                         if (!targetUser) {
                             // User doesn't exist in auth, create them first
@@ -1281,20 +1284,35 @@ const UsersManagement = () => {
                                     </SelectContent>
                                 </Select>
                             </div>
+
                             <div className="space-y-2">
                                 <Label htmlFor="user_password">
                                     {userFormMode === "create" ? t('common.password') : t('usersManagement.newPassword')}
                                 </Label>
-                                <Input
-                                    id="user_password"
-                                    name="user_password"
-                                    type="password"
-                                    value={userFormData.user_password}
-                                    onChange={handleUserInputChange}
-                                    placeholder="••••••••"
-                                    required={userFormMode === "create"}
-                                    dir="ltr"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="user_password"
+                                        name="user_password"
+                                        type={showEditPassword ? "text" : "password"}
+                                        value={userFormData.user_password}
+                                        onChange={handleUserInputChange}
+                                        placeholder="••••••••"
+                                        required={userFormMode === "create"}
+                                        className="pr-10" // Add padding for the eye button
+                                        dir="ltr"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEditPassword(!showEditPassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                                    >
+                                        {showEditPassword ? (
+                                            <EyeOffIcon className="h-4 w-4" />
+                                        ) : (
+                                            <EyeIcon className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                </div>
                                 {userFormData.user_password && (
                                     <div className="text-xs text-gray-600">
                                         {isRTL ? "كلمة المرور يجب أن تحتوي على:" : "Password must contain:"}
