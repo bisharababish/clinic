@@ -68,8 +68,9 @@ const ClinicManagement = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredClinics, setFilteredClinics] = useState<ClinicInfo[]>([]);
-    const [activeTab, setActiveTab] = useState<"clinics" | "categories">("clinics");
-
+    const [activeTab, setActiveTab] = useState<"clinics" | "categories">(
+        isRTL ? "clinics" : "categories"
+    );
     // State for clinic form
     const [clinicFormMode, setClinicFormMode] = useState<"create" | "edit">("create");
     const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
@@ -77,7 +78,7 @@ const ClinicManagement = () => {
         name: "",
         category_id: "",
         description: "",
-        is_active: true,
+        is_active: false,
     });
 
     // State for category form
@@ -287,7 +288,7 @@ const ClinicManagement = () => {
             name: "",
             category_id: "",
             description: "",
-            is_active: true
+            is_active: false
         });
     };
 
@@ -807,8 +808,19 @@ const ClinicManagement = () => {
                 className="w-full"
             >
                 <TabsList className={`clinic-tabs-list ${isRTL ? "rtl" : ""}`}>
-                    <TabsTrigger value="clinics">{t('clinicManagement.clinics')}</TabsTrigger>
-                    <TabsTrigger value="categories">{t('clinicManagement.categories')}</TabsTrigger>
+                    {isRTL ? (
+                        // Arabic (RTL) - Clinics first, then Categories
+                        <>
+                            <TabsTrigger value="clinics">{t('clinicManagement.clinics')}</TabsTrigger>
+                            <TabsTrigger value="categories">{t('clinicManagement.categories')}</TabsTrigger>
+                        </>
+                    ) : (
+                        // English (LTR) - Categories first, then Clinics
+                        <>
+                            <TabsTrigger value="categories">{t('clinicManagement.categories')}</TabsTrigger>
+                            <TabsTrigger value="clinics">{t('clinicManagement.clinics')}</TabsTrigger>
+                        </>
+                    )}
                 </TabsList>
 
                 {/* CLINICS TAB */}

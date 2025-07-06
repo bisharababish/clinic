@@ -69,7 +69,7 @@ const DoctorManagement = () => {
         clinic_id: "",
         email: "",
         phone: "",
-        is_available: true,
+        is_available: false,
         price: 1,
     });
 
@@ -283,7 +283,7 @@ const DoctorManagement = () => {
             clinic_id: "",
             email: "",
             phone: "",
-            is_available: true,
+            is_available: false,
             price: 1
         });
     };
