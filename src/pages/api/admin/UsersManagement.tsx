@@ -735,9 +735,29 @@ const UsersManagement = () => {
                     updated_at: new Date().toISOString()
                 };
 
-                // If password is provided, update it too
+                // If password is provided, update it in database and send reset email
                 if (userFormData.user_password) {
                     updateData.user_password = userFormData.user_password;
+
+                    // Send password reset email to the user so they can update their Auth password
+                    try {
+                        const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+                            userFormData.user_email,
+                            {
+                                redirectTo: `${window.location.origin}/auth/reset-password`
+                            }
+                        );
+
+                        if (resetError) {
+                            console.warn("Failed to send password reset email:", resetError);
+                            // Continue with database update even if email fails
+                        } else {
+                            console.log("Password reset email sent successfully");
+                        }
+                    } catch (emailError) {
+                        console.warn("Error sending password reset email:", emailError);
+                        // Continue with database update even if email fails
+                    }
                 }
 
                 const { data, error } = await supabase
@@ -770,10 +790,22 @@ const UsersManagement = () => {
                     "success"
                 );
 
-                toast({
-                    title: t('common.success'),
-                    description: t('usersManagement.userUpdatedSuccessfully'),
-                });
+                // Show success message with password update info if password was changed
+                if (userFormData.user_password) {
+                    toast({
+                        title: t('common.success'),
+                        description: t('usersManagement.userUpdatedSuccessfully') +
+                            (isRTL ?
+                                ' - تم تحديث كلمة المرور في قاعدة البيانات وتم إرسال رابط إعادة تعيين كلمة المرور إلى بريد المستخدم الإلكتروني.' :
+                                ' - Password updated in database and password reset link sent to user email.'
+                            ),
+                    });
+                } else {
+                    toast({
+                        title: t('common.success'),
+                        description: t('usersManagement.userUpdatedSuccessfully'),
+                    });
+                }
 
                 // Reset form
                 resetUserForm();
@@ -1241,6 +1273,14 @@ const UsersManagement = () => {
                                                 {isRTL ? "• 8 أحرف على الأقل" : "• At least 8 characters"}
                                             </li>
                                         </ul>
+                                        {userFormMode === "edit" && (
+                                            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-blue-700">
+                                                <strong>{isRTL ? "ملاحظة:" : "Note:"}</strong> {isRTL ?
+                                                    "سيتم تحديث كلمة المرور في قاعدة البيانات وإرسال رابط إعادة تعيين كلمة المرور إلى بريد المستخدم الإلكتروني." :
+                                                    "Password will be updated in database and a password reset link will be sent to the user's email."
+                                                }
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

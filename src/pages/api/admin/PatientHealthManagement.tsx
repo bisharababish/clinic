@@ -1395,7 +1395,7 @@ const PatientHealthForm: React.FC<{
                                             name="arabic_username_d"
                                             value={createPatientForm.arabic_username_d}
                                             onChange={handleCreatePatientFormChange}
-                                            required
+                                     required
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={t('patientHealth.last')}
                                         />
