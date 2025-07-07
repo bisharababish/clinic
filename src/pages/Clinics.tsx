@@ -1,5 +1,5 @@
 // pages/Clinics.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -58,137 +58,72 @@ const Clinics = () => {
         loadData();
     }, []);
 
-    // Helper to add timeout to a promise
-    const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> => {
-        return new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-                reject(new Error('timeout'));
-            }, ms);
-            promise.then(
-                (val) => {
-                    clearTimeout(timer);
-                    resolve(val);
-                },
-                (err) => {
-                    clearTimeout(timer);
-                    reject(err);
-                }
-            );
-        });
-    };
 
+
+    // REPLACE THE ENTIRE loadData FUNCTION WITH:
     const loadData = async () => {
         setLoadError(null);
         try {
             setIsLoading(true);
 
-            // Wrap all loading logic in a timeout
-            await withTimeout((async () => {
-                // Load categories and clinics in parallel
-                const [categoryResult, clinicResult] = await Promise.all([
-                    supabase
-                        .from('clinic_categories')
-                        .select('*')
-                        .eq('is_active', true)
-                        .order('name'),
-                    supabase
-                        .from('clinics')
-                        .select('*')
-                        .eq('is_active', true)
-                        .order('name')
-                ]);
+            // Single optimized query instead of multiple queries
+            const [categoryResult, clinicResult] = await Promise.all([
+                supabase
+                    .from('clinic_categories')
+                    .select('id, name')
+                    .eq('is_active', true)
+                    .order('display_order', { ascending: true })  // ADD THIS
+                    .order('name', { ascending: true }),          // CHANGE THIS
+                supabase
+                    .from('clinics')
+                    .select(`
+                    id,
+                    name,
+                    category,
+                    description,
+                    doctors!inner(
+                        id,
+                        name,
+                        specialty,
+                        price,
+                        doctor_availability(
+                            id,
+                            day,
+                            start_time,
+                            end_time
+                        )
+                    )
+                `)
+                    .eq('is_active', true)
+                    .eq('doctors.is_available', true)
+                    .order('display_order', { ascending: true })
+                    .order('name', { ascending: true }
+                    )]);
 
-                if (categoryResult.error) throw categoryResult.error;
-                if (clinicResult.error) throw clinicResult.error;
+            if (categoryResult.error) throw categoryResult.error;
+            if (clinicResult.error) throw clinicResult.error;
 
-                setCategories(categoryResult.data || []);
+            setCategories(categoryResult.data || []);
 
-                const clinicData = clinicResult.data || [];
-                if (clinicData.length === 0) {
-                    setClinics([]);
-                    return;
-                }
+            // Transform data to match expected structure
+            const transformedClinics = (clinicResult.data || []).map(clinic => ({
+                id: clinic.id,
+                name: clinic.name,
+                category: clinic.category,
+                description: clinic.description,
+                doctors: clinic.doctors.map(doctor => ({
+                    id: doctor.id,
+                    name: doctor.name,
+                    specialty: doctor.specialty,
+                    price: doctor.price,
+                    availability: doctor.doctor_availability || []
+                }))
+            }));
 
-                // Get all clinic IDs
-                const clinicIds = clinicData.map(clinic => clinic.id);
-
-                // Load all doctors for all clinics in one query
-                const { data: allDoctors, error: doctorError } = await supabase
-                    .from('doctors')
-                    .select('*')
-                    .in('clinic_id', clinicIds)
-                    .eq('is_available', true);
-
-                if (doctorError) throw doctorError;
-
-                if (!allDoctors || allDoctors.length === 0) {
-                    // No doctors available, set clinics without doctors
-                    const clinicsWithoutDoctors = clinicData.map(clinic => ({
-                        id: clinic.id,
-                        name: clinic.name,
-                        category: clinic.category,
-                        description: clinic.description,
-                        doctors: []
-                    }));
-                    setClinics(clinicsWithoutDoctors);
-                    return;
-                }
-
-                // Get all doctor IDs
-                const doctorIds = allDoctors.map(doctor => doctor.id);
-
-                // Load all availability for all doctors in one query
-                const { data: allAvailability, error: availabilityError } = await supabase
-                    .from('doctor_availability')
-                    .select('*')
-                    .in('doctor_id', doctorIds)
-                    .order('day', { ascending: true })
-                    .order('start_time', { ascending: true });
-
-                if (availabilityError) throw availabilityError;
-
-                // Group availability by doctor ID
-                const availabilityByDoctor = (allAvailability || []).reduce((acc, slot) => {
-                    if (!acc[slot.doctor_id]) {
-                        acc[slot.doctor_id] = [];
-                    }
-                    acc[slot.doctor_id].push(slot);
-                    return acc;
-                }, {} as { [key: string]: AvailabilitySlot[] });
-
-                // Group doctors by clinic ID
-                const doctorsByClinic = allDoctors.reduce((acc, doctor) => {
-                    if (!acc[doctor.clinic_id]) {
-                        acc[doctor.clinic_id] = [];
-                    }
-                    acc[doctor.clinic_id].push({
-                        id: doctor.id,
-                        name: doctor.name,
-                        specialty: doctor.specialty,
-                        price: doctor.price,
-                        availability: availabilityByDoctor[doctor.id] || []
-                    });
-                    return acc;
-                }, {} as { [key: string]: Doctor[] });
-
-                // Build final clinics array
-                const clinicsWithDoctors = clinicData.map(clinic => ({
-                    id: clinic.id,
-                    name: clinic.name,
-                    category: clinic.category,
-                    description: clinic.description,
-                    doctors: doctorsByClinic[clinic.id] || []
-                }));
-
-                setClinics(clinicsWithDoctors);
-            })(), 10000); // 10 seconds timeout
+            setClinics(transformedClinics);
         } catch (error) {
             console.error('Error loading clinic data:', error);
-            if (error instanceof Error && error.message === 'timeout') {
-                setLoadError(t('clinics.loadingTimeout') || 'Loading timed out. Please try again.');
-            } else {
-                setLoadError(t('clinics.errorDescription') || 'An error occurred while loading clinics.');
-            }
+            setLoadError(t('clinics.errorDescription') || 'An error occurred while loading clinics.');
             toast({
                 title: t('clinics.errorTitle'),
                 description: t('clinics.errorDescription'),
@@ -199,27 +134,28 @@ const Clinics = () => {
         }
     };
 
-    const filteredClinics = selectedCategory === "all"
-        ? clinics
-        : clinics.filter(clinic => clinic.category === selectedCategory);
+    const filteredClinics = useMemo(() => {
+        return selectedCategory === "all"
+            ? clinics
+            : clinics.filter(clinic => clinic.category === selectedCategory);
+    }, [clinics, selectedCategory]);
 
-    const handleViewClinic = (clinic: Clinic) => {
+    const handleViewClinic = useCallback((clinic: Clinic) => {
         setSelectedClinic(clinic);
         setSelectedDoctor(null);
         setSelectedTime("");
         setSelectedDay("");
-    };
+    }, []);
 
-    const handleSelectDoctor = (doctor: Doctor) => {
+    const handleSelectDoctor = useCallback((doctor: Doctor) => {
         setSelectedDoctor(doctor);
         setSelectedTime("");
         setSelectedDay("");
-    };
-
-    const handleSelectTimeSlot = (day: string, time: string) => {
+    }, []);
+    const handleSelectTimeSlot = useCallback((day: string, time: string) => {
         setSelectedDay(day);
         setSelectedTime(time);
-    };
+    }, []);
 
     const handleBookAppointment = () => {
         if (!selectedClinic || !selectedDoctor || !selectedTime) return;
@@ -267,22 +203,11 @@ const Clinics = () => {
     if (isLoading) {
         return (
             <div className={`loading-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? "rtl" : "ltr"}>
-                <div className="flex flex-col items-center justify-center min-h-screen">
-                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
-                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
-                    <Skeleton width={120} height={16} className="mx-auto" />
-                    <p className="mt-4 text-gray-600">{t('clinics.loadingClinics') || 'Loading clinics...'}</p>
-                    {/* Skeleton cards for clinics */}
-                    <div className="mt-8 space-y-4 w-full max-w-2xl">
-                        {[...Array(6)].map((_, i) => (
-                            <Skeleton key={i} width={600} height={64} className="mx-auto" />
-                        ))}
-                    </div>
-                </div>
+                <div className="loading-spinner"></div>
+                <p className="loading-text">{t('clinics.loadingClinics') || 'Loading clinics...'}</p>
             </div>
         );
     }
-
     return (
         <div className={`clinics-container ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"}>
             <div className="clinics-content">

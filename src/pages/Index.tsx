@@ -990,6 +990,14 @@ const Index = () => {
       loadAllPatients();
     }
   }, []);
+  // Clear search results when search term is cleared
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setSearchResults([]);
+      setSearchError(null);
+      setSelectedPatient(null);
+    }
+  }, [searchTerm]);
   const [customAllergy, setCustomAllergy] = useState("");
 
   // Filter patients based on search term
@@ -2449,7 +2457,6 @@ const Index = () => {
                   value={patientInfo.bloodPressure}
                   onChange={handleInputChange}
                   placeholder="120/80"
-                  disabled={userRole === 'patient'}
                 />
               </div>
 
@@ -2467,7 +2474,6 @@ const Index = () => {
                   value={patientInfo.heartRate}
                   onChange={handleInputChange}
                   placeholder="72"
-                  disabled={userRole === 'patient'}
                 />
               </div>
 
@@ -2486,7 +2492,6 @@ const Index = () => {
                   value={patientInfo.temperature}
                   onChange={handleInputChange}
                   placeholder="36.5"
-                  disabled={userRole === 'patient'}
                 />
                 <div className="space-y-2 md:col-span-2">
                   <Label>{t("home.bloodType")}</Label>

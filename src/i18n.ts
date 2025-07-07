@@ -744,7 +744,13 @@ const enTranslations = {
         title: 'Clinic Management',
         clinicsManagement: 'Clinics Management',
         clinicCategories: 'Clinic Categories',
-
+        displayOrder: "Display Order",
+        displayOrderPlaceholder: "0 = first position",
+        displayOrderDescription: "Lower numbers appear first",
+        moveUp: "Move Up",
+        moveDown: "Move Down",
+        orderUpdated: "Order updated successfully",
+        orderUpdateFailed: "Failed to update order",
         // Descriptions
         description: 'Manage all clinic departments',
         categoriesDescription: 'Manage clinic specialties and categories',
@@ -2164,7 +2170,13 @@ const arTranslations = {
         title: 'إدارة العيادات',
         clinicsManagement: 'إدارة العيادات',
         clinicCategories: 'فئات العيادات',
-
+        displayOrder: "ترتيب العرض",
+        displayOrderPlaceholder: "0 = الموضع الأول",
+        displayOrderDescription: "الأرقام الأقل تظهر أولاً",
+        moveUp: "تحريك لأعلى",
+        moveDown: "تحريك لأسفل",
+        orderUpdated: "تم تحديث الترتيب بنجاح",
+        orderUpdateFailed: "فشل في تحديث الترتيب",
         // Descriptions
         description: 'إدارة جميع أقسام العيادات',
         categoriesDescription: 'إدارة تخصصات وفئات العيادات',

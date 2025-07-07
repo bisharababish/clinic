@@ -15,7 +15,10 @@ import {
     Edit,
     Plus,
     RefreshCw,
-    Search
+    Search,
+    ArrowUp,
+    ArrowDown,
+    GripVertical
 } from "lucide-react";
 import "../../styles/clinicmanagement.css"
 import {
@@ -35,6 +38,7 @@ interface ClinicInfo {
     name: string;
     category: string;
     description?: string;
+    display_order?: number;  // ADD THIS LINE
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
@@ -43,6 +47,8 @@ interface ClinicInfo {
 interface CategoryInfo {
     id: string;
     name: string;
+    display_order?: number;  // ADD THIS LINE
+
     is_active: boolean;
 }
 
@@ -89,6 +95,8 @@ const ClinicManagement = () => {
         category_id: "",
         description: "",
         is_active: false,
+        display_order: 0,    // ADD THIS LINE
+
     });
 
     // State for category form
@@ -97,6 +105,8 @@ const ClinicManagement = () => {
     const [categoryFormData, setCategoryFormData] = useState({
         name: "",
         is_active: true,
+        display_order: 0,  // ADD THIS LINE
+
     });
 
     // Alert dialog state
@@ -174,11 +184,130 @@ const ClinicManagement = () => {
             setIsLoading(false);
         }
     };
+    // ADD THESE FUNCTIONS:
+    const moveClinicUp = async (clinicId: string) => {
+        const currentClinic = clinics.find(c => c.id === clinicId);
+        if (!currentClinic) return;
 
+        const currentOrder = currentClinic.display_order ?? 0;
+
+        try {
+            const { error } = await supabase
+                .from('clinics')
+                .update({ display_order: currentOrder - 1 })
+                .eq('id', clinicId);
+
+            if (error) throw error;
+
+            await loadClinics(true); // Refresh clinics
+            toast({
+                title: t('common.success'),
+                description: t('clinicManagement.orderUpdated'),
+            });
+        } catch (error) {
+            toast({
+                title: t('common.error'),
+                description: t('clinicManagement.orderUpdateFailed'),
+                variant: "destructive",
+            });
+        }
+    };
+
+    const moveClinicDown = async (clinicId: string) => {
+        const currentClinic = clinics.find(c => c.id === clinicId);
+        if (!currentClinic) return;
+
+        const currentOrder = currentClinic.display_order ?? 0;
+
+        try {
+            const { error } = await supabase
+                .from('clinics')
+                .update({ display_order: currentOrder + 1 })
+                .eq('id', clinicId);
+
+            if (error) throw error;
+
+            await loadClinics(true); // Refresh clinics
+            toast({
+                title: t('common.success'),
+                description: 'Clinic moved down successfully',
+            });
+        } catch (error) {
+            toast({
+                title: t('common.error'),
+                description: 'Failed to move clinic',
+                variant: "destructive",
+            });
+        }
+    };
+    const moveCategoryUp = async (categoryId: string) => {
+        const currentCategory = categories.find(c => c.id === categoryId);
+        if (!currentCategory) return;
+
+        const currentOrder = currentCategory.display_order ?? 0;
+
+        try {
+            const { error } = await supabase
+                .from('clinic_categories')
+                .update({ display_order: currentOrder - 1 })
+                .eq('id', categoryId);
+
+            if (error) throw error;
+
+            await loadCategories(true);
+            toast({
+                title: t('common.success'),
+                description: 'Category moved up successfully',
+            });
+        } catch (error) {
+            toast({
+                title: t('common.error'),
+                description: 'Failed to move category',
+                variant: "destructive",
+            });
+        }
+    };
+
+    const moveCategoryDown = async (categoryId: string) => {
+        const currentCategory = categories.find(c => c.id === categoryId);
+        if (!currentCategory) return;
+
+        const currentOrder = currentCategory.display_order ?? 0;
+
+        try {
+            const { error } = await supabase
+                .from('clinic_categories')
+                .update({ display_order: currentOrder + 1 })
+                .eq('id', categoryId);
+
+            if (error) throw error;
+
+            await loadCategories(true);
+            toast({
+                title: t('common.success'),
+                description: 'Category moved down successfully',
+            });
+        } catch (error) {
+            toast({
+                title: t('common.error'),
+                description: 'Failed to move category',
+                variant: "destructive",
+            });
+        }
+    };
     // Clinic form handlers
     const handleClinicInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setClinicFormData(prev => ({ ...prev, [name]: value }));
+
+        // Handle number inputs properly
+        if (name === 'display_order') {
+            setClinicFormData(prev => ({
+                ...prev,
+                [name]: value === '' ? 0 : Number(value)  // CHANGE THIS LINE - use Number() instead of parseInt()
+            }));
+        } else {
+            setClinicFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleClinicCategoryChange = (value: string) => {
@@ -209,10 +338,13 @@ const ClinicManagement = () => {
             name: "",
             category_id: "",
             description: "",
-            is_active: false
+            is_active: false,
+            display_order: 0    // ADD THIS LINE
+
         });
     };
 
+    // FIND THIS FUNCTION AND CHANGE IT:
     const handleEditClinic = (id: string) => {
         const clinicToEdit = clinics.find((c) => c.id === id);
         if (!clinicToEdit) {
@@ -230,7 +362,8 @@ const ClinicManagement = () => {
             name: clinicToEdit.name,
             category_id: clinicToEdit.category,
             description: clinicToEdit.description || "",
-            is_active: clinicToEdit.is_active
+            is_active: clinicToEdit.is_active,
+            display_order: clinicToEdit.display_order ?? 0
         });
     };
 
@@ -341,6 +474,8 @@ const ClinicManagement = () => {
                 category: selectedCategory.name,
                 description: clinicFormData.description || null,
                 is_active: clinicFormData.is_active,
+                display_order: clinicFormData.display_order || 0,
+
                 ...(clinicFormMode === "create"
                     ? {
                         created_at: new Date().toISOString(),
@@ -392,6 +527,8 @@ const ClinicManagement = () => {
                         category: selectedCategory.name,
                         description: clinicFormData.description || null,
                         is_active: clinicFormData.is_active,
+                        display_order: clinicFormData.display_order || 0,  // ADD THIS LINE
+
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', selectedClinic)
@@ -436,9 +573,17 @@ const ClinicManagement = () => {
     // Category form handlers
     const handleCategoryInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setCategoryFormData(prev => ({ ...prev, [name]: value }));
-    };
 
+        // Handle number inputs properly
+        if (name === 'display_order') {
+            setCategoryFormData(prev => ({
+                ...prev,
+                [name]: value === '' ? 0 : Number(value)
+            }));
+        } else {
+            setCategoryFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
     const handleCategoryActiveChange = (value: boolean) => {
         setCategoryFormData(prev => ({ ...prev, is_active: value }));
     };
@@ -448,7 +593,9 @@ const ClinicManagement = () => {
         setSelectedCategory(null);
         setCategoryFormData({
             name: "",
-            is_active: true
+            is_active: true,
+            display_order: 0  // ADD THIS LINE
+
         });
     };
 
@@ -467,7 +614,9 @@ const ClinicManagement = () => {
         setSelectedCategory(id);
         setCategoryFormData({
             name: categoryToEdit.name,
-            is_active: categoryToEdit.is_active
+            is_active: categoryToEdit.is_active,
+            display_order: categoryToEdit.display_order ?? 0  // ADD THIS LINE
+
         });
     };
 
@@ -612,7 +761,9 @@ const ClinicManagement = () => {
                     .from('clinic_categories')
                     .insert({
                         name: categoryFormData.name,
-                        is_active: categoryFormData.is_active
+                        is_active: categoryFormData.is_active,
+                        display_order: categoryFormData.display_order || 0  // ADD THIS LINE
+
                     })
                     .select();
 
@@ -635,7 +786,9 @@ const ClinicManagement = () => {
                     .from('clinic_categories')
                     .update({
                         name: categoryFormData.name,
-                        is_active: categoryFormData.is_active
+                        is_active: categoryFormData.is_active,
+                        display_order: categoryFormData.display_order || 0  // ADD THIS LINE
+
                     })
                     .eq('id', selectedCategory)
                     .select();
@@ -781,7 +934,16 @@ const ClinicManagement = () => {
                                                         </span>
                                                     </div>
                                                 </div>
+                                                {/* ADD THIS NEW DIV: */}
                                                 <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 ${isRTL ? 'sm:flex-row-reverse sm:space-x-reverse' : ''}`}>
+                                                    <div className={`flex space-x-1 ${isRTL ? 'space-x-reverse' : ''}`}>
+                                                        <Button variant="outline" size="sm" onClick={() => moveClinicUp(clinic.id)}>
+                                                            <ArrowUp className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="outline" size="sm" onClick={() => moveClinicDown(clinic.id)}>
+                                                            <ArrowDown className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                     <Button variant="outline" size="sm" onClick={() => handleEditClinic(clinic.id)}>
                                                         <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                         {t('common.edit')}
@@ -896,7 +1058,24 @@ const ClinicManagement = () => {
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
+                                        {/* ADD THE DISPLAY ORDER FIELD RIGHT HERE: */}
+                                        <div className="space-y-2">
+                                            <Label htmlFor="display_order" className={isRTL ? 'text-left block' : ''}>
+                                                {t('clinicManagement.displayOrder')}
+                                            </Label>
+                                            <Input
+                                                id="display_order"
+                                                name="display_order"
+                                                type="number"
+                                                value={clinicFormData.display_order || 0}
+                                                onChange={handleClinicInputChange}
+                                                placeholder={t('clinicManagement.displayOrderPlaceholder')}
+                                                className={isRTL ? 'text-left' : ''}
+                                                dir={isRTL ? 'rtl' : 'ltr'}
+                                            />
+                                            <p className="text-sm text-gray-500">{t('clinicManagement.displayOrderDescription')}</p>
 
+                                        </div>
                                         <div className="space-y-2">
                                             <div className={`flex items-center justify-between ${isRTL ? '' : ''}`}>
                                                 <Label htmlFor="is_active" className={isRTL ? 'text-right' : 'text-left'}>
@@ -990,6 +1169,14 @@ const ClinicManagement = () => {
                                                     </div>
                                                 </div>
                                                 <div className={`clinic-item-actions ${isRTL ? 'rtl' : ''}`}>
+                                                    <div className={`flex space-x-1 ${isRTL ? 'space-x-reverse' : ''}`}>
+                                                        <Button variant="outline" size="sm" onClick={() => moveCategoryUp(category.id)}>
+                                                            <ArrowUp className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="outline" size="sm" onClick={() => moveCategoryDown(category.id)}>
+                                                            <ArrowDown className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                     <Button variant="outline" size="sm" onClick={() => handleEditCategory(category.id)}>
                                                         <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                         {t('common.edit')}
@@ -1045,6 +1232,23 @@ const ClinicManagement = () => {
                                                 className={isRTL ? 'text-left' : ''}
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
+                                        </div>
+                                        {/* ADD THIS NEW FIELD: */}
+                                        <div className="space-y-2">
+                                            <Label htmlFor="category_display_order" className={isRTL ? 'text-left block' : ''}>
+                                                {t('clinicManagement.displayOrder')}
+                                            </Label>
+                                            <Input
+                                                id="category_display_order"
+                                                name="display_order"
+                                                type="number"
+                                                value={categoryFormData.display_order || 0}
+                                                onChange={handleCategoryInputChange}
+                                                placeholder={t('clinicManagement.displayOrderPlaceholder')}
+                                                className={isRTL ? 'text-left' : ''}
+                                                dir={isRTL ? 'rtl' : 'ltr'}
+                                            />
+                                            <p className="text-sm text-gray-500">{t('clinicManagement.displayOrderDescription')}</p>
                                         </div>
                                         <div className="space-y-2">
                                             <div className={`flex items-center justify-between ${isRTL ? '' : ''}`}>

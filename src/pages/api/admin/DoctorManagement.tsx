@@ -274,9 +274,13 @@ const DoctorManagement = () => {
 
             if (availabilityError) {
                 console.error("Error deleting availability slots:", availabilityError);
-                // Continue with doctor deletion even if availability deletion fails
+                toast({
+                    title: t('common.error'),
+                    description: t('doctorManagement.failedToDeleteAvailability'), // You might need to add this translation
+                    variant: "destructive",
+                });
+                return; // ← This stops the function from continuing
             }
-
             // Delete the doctor
             const { error } = await supabase
                 .from('doctors')

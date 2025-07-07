@@ -28,7 +28,9 @@ interface ClinicInfo {
     id: string;
     name: string;
     category: string;
+    category_id?: string;
     description?: string;
+    display_order?: number;
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
@@ -68,6 +70,8 @@ interface AppointmentInfo {
 interface CategoryInfo {
     id: string;
     name: string;
+    display_order?: number;  // ADD THIS LINE
+
     is_active: boolean;
 }
 
@@ -210,6 +214,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             const { data, error } = await supabase
                 .from('doctors')
                 .select('*')
+
                 .order('name', { ascending: true });
 
             if (error) {
@@ -295,6 +300,8 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             const { data, error } = await supabase
                 .from('clinic_categories')
                 .select('*')
+                .order('display_order', { ascending: true })
+
                 .order('name', { ascending: true });
 
             if (error) {
