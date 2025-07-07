@@ -9,6 +9,7 @@ import { getDefaultRouteForRole } from "./lib/rolePermissions";
 import { supabase } from "./lib/supabase";
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { comma } from "postcss/lib/list";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -25,36 +26,10 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
 
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
-let globalSubscriptions: { [key: string]: ReturnType<typeof supabase.channel> | null } = {};
 
 
-const initializeGlobalSubscriptions = () => {
-  Object.values(globalSubscriptions).forEach(sub => {
-    if (sub) sub.unsubscribe();
-  });
-  globalSubscriptions = {};
 
-  console.log("🔄 Initializing global subscriptions...");
 
-  globalSubscriptions.users = supabase
-    .channel('global-users-changes')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'userinfo' },
-      (payload) => {
-        console.log('Global users change:', payload);
-        window.dispatchEvent(new CustomEvent('users-updated', { detail: payload }));
-      }
-    )
-    .subscribe();
-};
-
-const cleanupGlobalSubscriptions = () => {
-  Object.values(globalSubscriptions).forEach(sub => {
-    if (sub) sub.unsubscribe();
-  });
-  globalSubscriptions = {};
-};
 // Loading component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -147,15 +122,13 @@ function App() {
     const initializeApp = async () => {
       try {
         // Initialize global subscriptions
-        initializeGlobalSubscriptions();
 
-        // Add a timeout to prevent infinite loading
         setTimeout(() => {
           if (isInitializing) {
             console.log("App initialization timeout, proceeding anyway");
             setIsInitializing(false);
           }
-        }, 3000); // 3 second max wait
+        }, 3000);
 
         // Your existing initialization logic
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -170,10 +143,6 @@ function App() {
 
     initializeApp();
 
-    // Cleanup on unmount
-    return () => {
-      cleanupGlobalSubscriptions();
-    };
   }, []);
 
   if (isInitializing) {
@@ -199,8 +168,12 @@ function App() {
   return (
     <AuthProvider>
       <GlobalErrorBoundary>
-        <Router>
-          <Suspense fallback={<PageLoader />}>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >          <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public routes */}
               <Route path="/auth" element={<Auth />} />

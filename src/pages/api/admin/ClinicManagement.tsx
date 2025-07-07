@@ -28,6 +28,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAdminState } from "../../../hooks/useAdminState";
 
 interface ClinicInfo {
     id: string;
@@ -60,17 +61,26 @@ interface DoctorInfo {
 const ClinicManagement = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
+    const { toast } = useToast();
 
-    // State for clinics
-    const [clinics, setClinics] = useState<ClinicInfo[]>([]);
-    const [categories, setCategories] = useState<CategoryInfo[]>([]);
+    // ✅ Use centralized state
+    const {
+        clinics,
+        categories,
+        isLoading,
+        loadClinics,
+        loadCategories,
+        setIsLoading
+    } = useAdminState();
+
+    // ✅ Local state for component-specific functionality
     const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredClinics, setFilteredClinics] = useState<ClinicInfo[]>([]);
     const [activeTab, setActiveTab] = useState<"clinics" | "categories">(
         isRTL ? "clinics" : "categories"
     );
+
     // State for clinic form
     const [clinicFormMode, setClinicFormMode] = useState<"create" | "edit">("create");
     const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
@@ -89,8 +99,6 @@ const ClinicManagement = () => {
         is_active: true,
     });
 
-    const { toast } = useToast();
-
     // Alert dialog state
     const [showDeleteClinicDialog, setShowDeleteClinicDialog] = useState(false);
     const [clinicToDelete, setClinicToDelete] = useState<string | null>(null);
@@ -98,20 +106,6 @@ const ClinicManagement = () => {
     const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
     const [showDeleteDoctorDialog, setShowDeleteDoctorDialog] = useState(false);
     const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
-
-    // Load clinics and categories on mount
-    useEffect(() => {
-        loadCategories();
-        loadClinics();
-        loadDoctors();
-    }, []);
-
-    useEffect(() => {
-        // If no categories exist and we're on the clinics tab, switch to categories tab
-        if (categories.length === 0 && activeTab === "clinics") {
-            setActiveTab("categories");
-        }
-    }, [categories, activeTab]);
 
     // Handle search filtering
     useEffect(() => {
@@ -126,79 +120,6 @@ const ClinicManagement = () => {
             setFilteredClinics(filtered);
         }
     }, [searchQuery, clinics]);
-
-    // Load categories from database
-    const loadCategories = async () => {
-        try {
-            setIsLoading(true);
-
-            // Check if categories table exists, if not create it
-            const { error: tableCheckError } = await supabase
-                .from('clinic_categories')
-                .select('id')
-                .limit(1);
-
-            if (tableCheckError && tableCheckError.code === 'PGRST116') {
-                // Table doesn't exist, create it
-                await supabase.rpc('create_clinic_categories_table');
-            }
-
-            const { data, error } = await supabase
-                .from('clinic_categories')
-                .select('*')
-                .order('name', { ascending: true });
-
-            if (error) throw error;
-
-            setCategories(data || []);
-        } catch (error) {
-            console.error("Error loading categories:", error);
-            toast({
-                title: t('common.error'),
-                description: t('clinicManagement.loadingCategories'),
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Load clinics from database
-    const loadClinics = async () => {
-        try {
-            setIsLoading(true);
-
-            // Check if clinics table exists, if not create it
-            const { error: tableCheckError } = await supabase
-                .from('clinics')
-                .select('id')
-                .limit(1);
-
-            if (tableCheckError && tableCheckError.code === 'PGRST116') {
-                // Table doesn't exist, create it
-                await supabase.rpc('create_clinics_table');
-            }
-
-            const { data, error } = await supabase
-                .from('clinics')
-                .select('*')
-                .order('name', { ascending: true });
-
-            if (error) throw error;
-
-            setClinics(data || []);
-            setFilteredClinics(data || []);
-        } catch (error) {
-            console.error("Error loading clinics:", error);
-            toast({
-                title: t('common.error'),
-                description: t('clinicManagement.loadingClinics'),
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     // Load doctors from database
     const loadDoctors = async () => {
@@ -324,7 +245,6 @@ const ClinicManagement = () => {
         try {
             setIsLoading(true);
 
-            // First check if there are doctors associated with this clinic
             const doctorsInClinic = doctors.filter(d => d.clinic_id === clinicToDelete);
 
             if (doctorsInClinic.length > 0) {
@@ -337,17 +257,21 @@ const ClinicManagement = () => {
                 return;
             }
 
-            // If no doctors are associated, proceed with deletion
             const { error } = await supabase
                 .from('clinics')
                 .delete()
                 .eq('id', clinicToDelete);
 
-            if (error) throw error;
+            if (error) {
+                toast({
+                    title: t('common.error'),
+                    description: t('clinicManagement.databaseError') + error.message,
+                    variant: "destructive",
+                });
+                return;
+            }
 
-            // Update state
-            setClinics(prev => prev.filter(clinic => clinic.id !== clinicToDelete));
-            setFilteredClinics(prev => prev.filter(clinic => clinic.id !== clinicToDelete));
+            // ✅ Let real-time subscription handle the update
 
             toast({
                 title: t('common.success'),
@@ -372,7 +296,6 @@ const ClinicManagement = () => {
         try {
             setIsLoading(true);
 
-            // Basic validation
             if (!clinicFormData.name || !clinicFormData.name.trim()) {
                 toast({
                     title: t('common.error'),
@@ -383,7 +306,6 @@ const ClinicManagement = () => {
                 return;
             }
 
-            // Get category - this is the critical part
             if (!clinicFormData.category_id) {
                 toast({
                     title: t('common.error'),
@@ -394,14 +316,11 @@ const ClinicManagement = () => {
                 return;
             }
 
-            // Print debug info to console
             console.log("Looking for category with ID:", clinicFormData.category_id);
             console.log("Available categories:", categories);
 
-            // Find the selected category by ID
             const selectedCategory = categories.find(cat => cat.id === clinicFormData.category_id);
 
-            // If not found, show error
             if (!selectedCategory) {
                 console.error("Category not found with ID:", clinicFormData.category_id);
                 toast({
@@ -415,35 +334,27 @@ const ClinicManagement = () => {
 
             console.log("Found category:", selectedCategory);
 
-            // Prepare clinic data with the proper category info
-            const clinicData: {
-                name: string;
-                category_id: string;
-                category: string;
-                description: string | null;
-                is_active: boolean;
-                created_at?: string;
-                updated_at?: string;
-            } = {
+            // ✅ FIX: Create the object with conditional properties
+            const clinicData = {
                 name: clinicFormData.name,
                 category_id: selectedCategory.id,
                 category: selectedCategory.name,
                 description: clinicFormData.description || null,
-                is_active: clinicFormData.is_active
+                is_active: clinicFormData.is_active,
+                ...(clinicFormMode === "create"
+                    ? {
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }
+                    : {
+                        updated_at: new Date().toISOString()
+                    }
+                )
             };
-
-            // Add timestamps
-            if (clinicFormMode === "create") {
-                clinicData.created_at = new Date().toISOString();
-                clinicData.updated_at = new Date().toISOString();
-            } else {
-                clinicData.updated_at = new Date().toISOString();
-            }
 
             console.log("Submitting clinic data:", clinicData);
 
             if (clinicFormMode === "create") {
-                // Create new clinic
                 const { data, error } = await supabase
                     .from('clinics')
                     .insert(clinicData)
@@ -463,20 +374,16 @@ const ClinicManagement = () => {
                 }
 
                 if (data && data.length > 0) {
-                    // Update local state
-                    setClinics(prev => [...prev, data[0]]);
-                    setFilteredClinics(prev => [...prev, data[0]]);
+                    // ✅ Let real-time subscription handle the update
 
                     toast({
                         title: t('common.success'),
                         description: t('clinicManagement.clinicCreatedSuccessfully'),
                     });
 
-                    // Reset form
                     resetClinicForm();
                 }
             } else if (clinicFormMode === "edit" && selectedClinic) {
-                // Update existing clinic
                 const { data, error } = await supabase
                     .from('clinics')
                     .update({
@@ -504,16 +411,13 @@ const ClinicManagement = () => {
                 }
 
                 if (data && data.length > 0) {
-                    // Update local state
-                    setClinics(prev => prev.map(c => c.id === selectedClinic ? data[0] : c));
-                    setFilteredClinics(prev => prev.map(c => c.id === selectedClinic ? data[0] : c));
+                    // ✅ Let real-time subscription handle the update
 
                     toast({
                         title: t('common.success'),
                         description: t('clinicManagement.clinicUpdatedSuccessfully'),
                     });
 
-                    // Reset form
                     resetClinicForm();
                 }
             }
@@ -567,7 +471,6 @@ const ClinicManagement = () => {
         });
     };
 
-    // Updated to use AlertDialog instead of window.confirm
     const handleDeleteCategory = (id: string) => {
         setCategoryToDelete(id);
         setShowDeleteCategoryDialog(true);
@@ -579,7 +482,6 @@ const ClinicManagement = () => {
         try {
             setIsLoading(true);
 
-            // First, get the category name
             const categoryToDeleteObj = categories.find(c => c.id === categoryToDelete);
             if (!categoryToDeleteObj) {
                 toast({
@@ -591,7 +493,6 @@ const ClinicManagement = () => {
                 return;
             }
 
-            // Check if there are clinics using this category
             const clinicsUsingCategory = clinics.filter(clinic =>
                 clinic.category === categoryToDeleteObj.name ||
                 clinic.category === categoryToDelete
@@ -608,7 +509,6 @@ const ClinicManagement = () => {
                 return;
             }
 
-            // Delete the category
             const { error } = await supabase
                 .from('clinic_categories')
                 .delete()
@@ -623,8 +523,7 @@ const ClinicManagement = () => {
                 return;
             }
 
-            // Update state
-            setCategories(prev => prev.filter(category => category.id !== categoryToDelete));
+            // ✅ Let real-time subscription handle the update
 
             toast({
                 title: t('common.success'),
@@ -709,7 +608,6 @@ const ClinicManagement = () => {
             setIsLoading(true);
 
             if (categoryFormMode === "create") {
-                // Create new category
                 const { data, error } = await supabase
                     .from('clinic_categories')
                     .insert({
@@ -721,7 +619,7 @@ const ClinicManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    setCategories(prev => [...prev, data[0]]);
+                    // ✅ Let real-time subscription handle the update
                 }
 
                 toast({
@@ -731,7 +629,6 @@ const ClinicManagement = () => {
 
                 resetCategoryForm();
             } else if (categoryFormMode === "edit" && selectedCategory) {
-                // Update existing category
                 const oldName = categories.find(c => c.id === selectedCategory)?.name;
 
                 const { data, error } = await supabase
@@ -746,23 +643,10 @@ const ClinicManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    setCategories(prev => prev.map(c => c.id === selectedCategory ? data[0] : c));
+                    // ✅ Let real-time subscription handle the update
 
-                    // Update category name in all clinics using this category
                     if (oldName && oldName !== categoryFormData.name) {
-                        // Update the related clinics in state first
-                        setClinics(prev => prev.map(clinic =>
-                            clinic.category === oldName
-                                ? { ...clinic, category: categoryFormData.name }
-                                : clinic
-                        ));
-                        setFilteredClinics(prev => prev.map(clinic =>
-                            clinic.category === oldName
-                                ? { ...clinic, category: categoryFormData.name }
-                                : clinic
-                        ));
-
-                        // Then update in the database
+                        // Update in the database
                         const { error: updateError } = await supabase
                             .from('clinics')
                             .update({ category: categoryFormData.name })
@@ -775,8 +659,8 @@ const ClinicManagement = () => {
                                 variant: "default",
                             });
                         } else {
-                            // Refresh clinics to ensure data consistency
-                            await loadClinics();
+                            // ✅ Force refresh clinics to ensure data consistency
+                            await loadClinics(true);
                         }
                     }
                 }
@@ -850,7 +734,7 @@ const ClinicManagement = () => {
                                                 />
                                             </div>
                                             <div className="clinic-action-buttons">
-                                                <Button variant="outline" size="sm" onClick={loadClinics} disabled={isLoading}>
+                                                <Button variant="outline" size="sm" onClick={() => loadClinics()} disabled={isLoading}>
                                                     <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
                                                     {t('common.refresh')}
                                                 </Button>
@@ -864,7 +748,7 @@ const ClinicManagement = () => {
                                     <CardDescription className={isRTL ? 'text-left' : 'text-left'}>
                                         {t('clinicManagement.description')}
                                     </CardDescription>
-                                    {/* ADD THIS: Clinic count right below description */}
+                                    {/* Clinic count */}
                                     <div
                                         className="text-sm text-gray-600 font-medium"
                                         style={{
@@ -921,7 +805,6 @@ const ClinicManagement = () => {
                                         )}
                                     </div>
                                 </CardContent>
-
                             </Card>
                         </div>
 
@@ -955,7 +838,6 @@ const ClinicManagement = () => {
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
-
                                         <div className="space-y-2">
                                             <Label htmlFor="category_id" className={isRTL ? 'text-left block' : ''}>
                                                 {t('clinicManagement.category')}
@@ -969,7 +851,6 @@ const ClinicManagement = () => {
                                                 required
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                                 style={{ textAlign: isRTL ? 'right' : 'left' }}
-
                                             >
                                                 <option value="">{t('clinicManagement.selectCategory')}</option>
                                                 {categories
@@ -1069,7 +950,6 @@ const ClinicManagement = () => {
                         </div>
                     </div>
                 </TabsContent>
-
                 {/* CATEGORIES TAB */}
                 <TabsContent value="categories" className="space-y-6">
                     <div className={`flex flex-col lg:flex-row gap-8 ${isRTL ? 'lg:flex-row-reverse' : ''}`}>
@@ -1080,7 +960,7 @@ const ClinicManagement = () => {
                                     <div className={`clinic-card-header-top ${isRTL ? 'rtl' : ''}`}>
                                         <CardTitle>{t('clinicManagement.clinicCategories')}</CardTitle>
                                         <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                                            <Button variant="outline" size="sm" onClick={loadCategories} disabled={isLoading}>
+                                            <Button variant="outline" size="sm" onClick={() => loadCategories()} disabled={isLoading}>
                                                 <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
                                                 {t('common.refresh')}
                                             </Button>
@@ -1166,8 +1046,29 @@ const ClinicManagement = () => {
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
-
-
+                                        <div className="space-y-2">
+                                            <div className={`flex items-center justify-between ${isRTL ? '' : ''}`}>
+                                                <Label htmlFor="categoryActive" className={isRTL ? 'text-right' : 'text-left'}>
+                                                    {t('clinicManagement.activeStatus')}
+                                                </Label>
+                                                <div className="flex items-center">
+                                                    <Switch
+                                                        id="categoryActive"
+                                                        checked={categoryFormData.is_active}
+                                                        onCheckedChange={handleCategoryActiveChange}
+                                                        style={{
+                                                            direction: 'ltr',
+                                                            transform: isRTL ? 'scaleX(-1)' : 'none'
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
+                                                {categoryFormData.is_active
+                                                    ? t('clinicManagement.categoryActive')
+                                                    : t('clinicManagement.categoryInactive')}
+                                            </p>
+                                        </div>
                                     </form>
                                 </CardContent>
                                 <CardFooter className={`flex justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -1208,7 +1109,6 @@ const ClinicManagement = () => {
                     </div>
                 </TabsContent>
             </Tabs>
-
             {/* Alert Dialogs */}
             {/* Clinic Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteClinicDialog} onOpenChange={setShowDeleteClinicDialog}>
@@ -1236,8 +1136,6 @@ const ClinicManagement = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-
             {/* Category Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteCategoryDialog} onOpenChange={setShowDeleteCategoryDialog}>
                 <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
@@ -1264,7 +1162,6 @@ const ClinicManagement = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
             {/* Doctor Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteDoctorDialog} onOpenChange={setShowDeleteDoctorDialog}>
                 <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>

@@ -21,6 +21,7 @@ import "../../styles/usersmanagement.css"
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from '@supabase/supabase-js';
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { useAdminState } from "../../../hooks/useAdminState";
 
 interface UserInfo {
     user_id: string; // uuid/text primary key
@@ -47,13 +48,17 @@ const UsersManagement = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
 
-    // State variables
-    const [isLoading, setIsLoading] = useState(false);
+    // ✅ Use centralized state instead of local state
+    const {
+        users,
+        isLoading,
+        loadUsers,
+        setIsLoading
+    } = useAdminState();
+
+    // ✅ Local UI state (component-specific)
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-
-    // Data state
-    const [users, setUsers] = useState<UserInfo[]>([]);
     const [filteredUsers, setFilteredUsers] = useState<UserInfo[]>([]);
     const [showEditPassword, setShowEditPassword] = useState(false);
 
@@ -78,24 +83,6 @@ const UsersManagement = () => {
         user_password: "",
     });
 
-    // Load users on mount
-    // Replace the subscription useEffect in UsersManagement with this:
-    useEffect(() => {
-        const handleUsersUpdate = (event: CustomEvent) => {
-            console.log('Users updated from global subscription:', event.detail);
-            // Refresh your users data here
-            loadUsers();
-        };
-
-        window.addEventListener('users-updated', handleUsersUpdate);
-
-        return () => {
-            window.removeEventListener('users-updated', handleUsersUpdate);
-        };
-    }, []);
-    useEffect(() => {
-        loadUsers();
-    }, []);
     // Handle search filtering
     useEffect(() => {
         if (searchQuery.trim() === '') {
@@ -113,81 +100,6 @@ const UsersManagement = () => {
             setFilteredUsers(filtered);
         }
     }, [searchQuery, users]);
-
-    // Load users from database
-    // Load users from database
-    const loadUsers = async () => {
-        console.log('Loading users with forced refresh...');
-        try {
-            setIsLoading(true);
-
-            // Fetch users with retry mechanism
-            let data = [];
-            let error = null;
-
-            for (let attempt = 1; attempt <= 3; attempt++) {
-                console.log(`Fetching users attempt ${attempt}/3`);
-                const result = await supabase
-                    .from('userinfo')
-                    .select('*')
-                    .order('userid', { ascending: false });
-
-                if (!result.error) {
-                    data = result.data || [];
-                    error = null;
-                    console.log(`Fetch successful, got ${data.length} users`);
-                    break;
-                } else {
-                    error = result.error;
-                    console.warn(`Fetch attempt ${attempt} failed:`, error);
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-            }
-
-            if (error) {
-                console.error('Supabase error loading users after multiple attempts:', error);
-                toast({
-                    title: t('common.error'),
-                    description: t('usersManagement.failedToLoadUsers'),
-                    variant: "destructive",
-                });
-                return;
-            }
-
-            console.log(`Users loaded: ${data.length}`);
-            setUsers(data);
-
-            // Apply search filter if exists
-            if (searchQuery.trim() === '') {
-                setFilteredUsers(data);
-            } else {
-                const query = searchQuery.toLowerCase();
-                const filtered = data.filter(user =>
-                    (user.user_email && user.user_email.toLowerCase().includes(query)) ||
-                    (user.english_username_a && user.english_username_a.toLowerCase().includes(query)) ||
-                    (user.english_username_d && user.english_username_d.toLowerCase().includes(query)) ||
-                    (user.arabic_username_a && user.arabic_username_a.includes(searchQuery)) ||
-                    (user.arabic_username_d && user.arabic_username_d.includes(searchQuery)) ||
-                    (user.user_roles && user.user_roles.toLowerCase().includes(query))
-                );
-                setFilteredUsers(filtered);
-            }
-
-            // REMOVED ALL SUBSCRIPTION CODE - now handled by global subscriptions
-
-        } catch (error) {
-            console.error('Error loading users:', error);
-            toast({
-                title: t('common.error'),
-                description: t('usersManagement.failedToLoadUsers'),
-                variant: "destructive",
-            });
-            setUsers([]);
-            setFilteredUsers([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     // Helper: Regex for English and Arabic letters only (no numbers)
     const englishNameRegex = /^[A-Za-z\s'-]+$/;
@@ -357,7 +269,6 @@ const UsersManagement = () => {
     };
 
     const handleDeleteUser = async (userid: number) => {
-        // Find user to delete
         const userToDelete = users.find(u => u.userid === userid);
         if (!userToDelete) {
             toast({
@@ -368,14 +279,11 @@ const UsersManagement = () => {
             return;
         }
 
-        // Get user display name based on language
         const userName = isRTL
             ? `${userToDelete.arabic_username_a || userToDelete.english_username_a} ${userToDelete.arabic_username_d || userToDelete.english_username_d || ''}`
             : `${userToDelete.english_username_a} ${userToDelete.english_username_d || ''}`;
 
-        // Custom confirmation toast with proper dismiss handling
         let confirmed = false;
-        let toastId: string | undefined;
 
         const confirmationPromise = new Promise<void>((resolve) => {
             const { dismiss } = toast({
@@ -386,7 +294,6 @@ const UsersManagement = () => {
                 }),
                 action: (
                     <div className={`confirmation-actions ${isRTL ? 'rtl' : ''}`}>
-
                         <button
                             className="confirm-button"
                             onClick={() => {
@@ -412,7 +319,6 @@ const UsersManagement = () => {
                 duration: Infinity,
                 className: "min-w-[400px]"
             });
-
         });
 
         await confirmationPromise;
@@ -423,10 +329,7 @@ const UsersManagement = () => {
             setIsLoading(true);
             console.log("Starting deletion process for user ID:", userid);
 
-            // FIRST: Check if this user has related appointments
-            // We need to handle patients and doctors differently
             if (userToDelete.user_roles.toLowerCase() === 'patient') {
-                // If user is a patient, delete any appointments where they are the patient
                 const { error: appointmentsDeleteError } = await supabase
                     .from('appointments')
                     .delete()
@@ -434,35 +337,29 @@ const UsersManagement = () => {
 
                 if (appointmentsDeleteError) {
                     console.warn("Error deleting patient appointments:", appointmentsDeleteError);
-                    // Continue with deletion attempt even if this fails
                 } else {
                     console.log("Successfully deleted patient appointments");
                 }
             } else if (userToDelete.user_roles.toLowerCase() === 'doctor') {
-                // If user is a doctor, delete any appointments where they are the doctor
                 const { error: appointmentsDeleteError } = await supabase
                     .from('appointments')
                     .delete()
-                    .eq('doctor_id', userToDelete.user_id); // Using user_id (UUID) for doctor_id
+                    .eq('doctor_id', userToDelete.user_id);
 
                 if (appointmentsDeleteError) {
                     console.warn("Error deleting doctor appointments:", appointmentsDeleteError);
-                    // Continue with deletion attempt even if this fails
                 } else {
                     console.log("Successfully deleted doctor appointments");
                 }
             }
 
-            // Try to call our database function first - this is the most reliable approach
             const { data: rpcData, error: rpcError } = await supabase.rpc('delete_user_by_admin', {
                 user_id_to_delete: userid
             });
 
-            // If RPC fails, fall back to direct deletion
             if (rpcError) {
                 console.warn("RPC function failed, trying direct deletion", rpcError);
 
-                // Try direct deletion
                 const { error } = await supabase
                     .from('userinfo')
                     .delete()
@@ -474,26 +371,21 @@ const UsersManagement = () => {
                 }
             }
 
-            // Update the UI
-            setUsers(prev => prev.filter(user => user.userid !== userid));
-            setFilteredUsers(prev => prev.filter(user => user.userid !== userid));
+            // ✅ Let real-time subscription handle the update automatically
 
             toast({
                 title: t('common.success'),
                 description: t('usersManagement.userDeletedSuccessfully'),
             });
 
-            // Log the activity
             const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was deleted`;
             logActivity(t('usersManagement.userDeleted'), "admin", activityMessage, "success");
 
         } catch (error) {
             console.error("Error deleting user:", error);
 
-            // More specific error message based on the error
             let errorMessage = t('usersManagement.failedToDeleteUser');
 
-            // Check if error contains message about foreign key constraint
             if (error instanceof Error &&
                 error.message.includes("foreign key constraint") &&
                 error.message.includes("appointments")) {
@@ -506,8 +398,8 @@ const UsersManagement = () => {
                 variant: "destructive",
             });
 
-            // Refresh the user list to ensure UI is in sync with the database
-            await loadUsers();
+            // ✅ Force refresh on error to ensure UI is in sync
+            await loadUsers(true);
 
         } finally {
             setIsLoading(false);
@@ -528,9 +420,8 @@ const UsersManagement = () => {
     const handleUserSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        // Validate form data
+        // ✅ All validation code exactly the same
         if (userFormMode === "create") {
-            // Validate required fields
             if (!userFormData.english_username_a.trim() || !userFormData.english_username_d.trim()) {
                 toast({
                     title: t('common.error'),
@@ -540,7 +431,6 @@ const UsersManagement = () => {
                 return;
             }
 
-            // Validate English names contain only English letters
             const englishFields = [userFormData.english_username_a, userFormData.english_username_b, userFormData.english_username_c, userFormData.english_username_d];
             for (const field of englishFields) {
                 if (field && !englishNameRegex.test(field)) {
@@ -553,7 +443,6 @@ const UsersManagement = () => {
                 }
             }
 
-            // Validate Arabic names contain only Arabic letters
             const arabicFields = [userFormData.arabic_username_a, userFormData.arabic_username_b, userFormData.arabic_username_c, userFormData.arabic_username_d];
             for (const field of arabicFields) {
                 if (field && !arabicNameRegex.test(field)) {
@@ -566,7 +455,6 @@ const UsersManagement = () => {
                 }
             }
 
-            // Validate ID number (exactly 9 digits)
             if (userFormData.id_number && userFormData.id_number.length !== 9) {
                 toast({
                     title: t('common.error'),
@@ -576,7 +464,6 @@ const UsersManagement = () => {
                 return;
             }
 
-            // Validate phone number format (+970 or +972 followed by exactly 9 digits)
             if (userFormData.user_phonenumber && !/^\+97[02]\d{9}$/.test(userFormData.user_phonenumber)) {
                 toast({
                     title: t('common.error'),
@@ -586,7 +473,6 @@ const UsersManagement = () => {
                 return;
             }
 
-            // Validate password strength
             if (userFormData.user_password && !validatePassword(userFormData.user_password)) {
                 toast({
                     title: t('common.error'),
@@ -595,7 +481,6 @@ const UsersManagement = () => {
                 });
                 return;
             }
-
         }
 
         if (userFormMode === "create") {
@@ -603,11 +488,8 @@ const UsersManagement = () => {
                 setIsLoading(true);
                 console.log("Creating new user with data:", userFormData);
 
-                // Make sure role has proper capitalization to avoid constraint issues
                 const capitalizedRole = capitalizeRole(userFormData.user_roles);
 
-                // IMPORTANT: Instead of using API routes, we'll use standard signUp
-                // and focus on getting the database record created correctly
                 try {
                     const { data: authData, error: authError } = await supabase.auth.signUp({
                         email: userFormData.user_email,
@@ -622,16 +504,13 @@ const UsersManagement = () => {
 
                     if (authError) {
                         console.error("Auth signup error:", authError);
-                        // Continue with user creation in database even if auth fails
                     } else {
                         console.log("Auth user created successfully:", authData);
                     }
                 } catch (authError) {
                     console.error("Auth error:", authError);
-                    // Continue with user creation in database even if auth fails
                 }
 
-                // Create user in database - this part always works
                 const timestamp = new Date().toISOString();
                 const { data: userData, error: userError } = await supabase
                     .from("userinfo")
@@ -649,7 +528,7 @@ const UsersManagement = () => {
                         user_phonenumber: userFormData.user_phonenumber || null,
                         date_of_birth: userFormData.date_of_birth || null,
                         gender_user: userFormData.gender_user || null,
-                        user_roles: capitalizedRole, // Use capitalized role
+                        user_roles: capitalizedRole,
                         user_password: userFormData.user_password,
                         created_at: timestamp,
                         updated_at: timestamp
@@ -668,18 +547,13 @@ const UsersManagement = () => {
 
                 console.log("User created successfully:", userData);
 
-                // Add the new user to the state immediately
-                if (userData && userData[0]) {
-                    setUsers(prev => [userData[0], ...prev]);
-                    setFilteredUsers(prev => [userData[0], ...prev]);
-                }
+                // ✅ Let real-time subscription handle the update automatically
 
                 toast({
                     title: t('common.success'),
                     description: t('usersManagement.userCreatedSuccessfully'),
                 });
 
-                // Log the activity
                 logActivity(
                     t('usersManagement.userCreated'),
                     "admin",
@@ -687,7 +561,6 @@ const UsersManagement = () => {
                     "success"
                 );
 
-                // Reset form
                 resetUserForm();
 
             } catch (error) {
@@ -704,30 +577,9 @@ const UsersManagement = () => {
             try {
                 setIsLoading(true);
 
-                // Define proper type for update data
-                interface UserUpdateData {
-                    english_username_a?: string;
-                    english_username_b?: string | null;
-                    english_username_c?: string | null;
-                    english_username_d?: string | null;
-                    arabic_username_a?: string | null;
-                    arabic_username_b?: string | null;
-                    arabic_username_c?: string | null;
-                    arabic_username_d?: string | null;
-                    user_email?: string;
-                    id_number?: string | null;
-                    user_phonenumber?: string | null;
-                    date_of_birth?: string | null;
-                    gender_user?: string | null;
-                    user_roles?: string;
-                    user_password?: string;
-                    updated_at: string;
-                }
-
-                // Make sure role has proper capitalization for edit too
                 const capitalizedRole = capitalizeRole(userFormData.user_roles);
 
-                const updateData: UserUpdateData = {
+                const updateData = {
                     english_username_a: userFormData.english_username_a,
                     english_username_b: userFormData.english_username_b || null,
                     english_username_c: userFormData.english_username_c || null,
@@ -741,17 +593,12 @@ const UsersManagement = () => {
                     user_phonenumber: userFormData.user_phonenumber || null,
                     date_of_birth: userFormData.date_of_birth || null,
                     gender_user: userFormData.gender_user || null,
-                    user_roles: capitalizedRole, // Use capitalized role
+                    user_roles: capitalizedRole,
                     updated_at: new Date().toISOString()
                 };
 
-                // If password is provided, update it directly in Supabase Auth
-                // If password is provided, update it directly in Supabase Auth
                 if (userFormData.user_password) {
-                    updateData.user_password = userFormData.user_password;
-
                     try {
-                        // Create a service client for admin operations
                         const serviceClient = createClient(
                             import.meta.env.VITE_SUPABASE_URL,
                             import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
@@ -763,17 +610,21 @@ const UsersManagement = () => {
                             }
                         );
 
-                        // First try to find existing auth user
-                        const { data: existingUsers } = await serviceClient.auth.admin.listUsers();
-                        let targetUser = existingUsers.users.find(u => u.email && u.email === userFormData.user_email);
+                        const { data: existingUsers, error: listError } = await serviceClient.auth.admin.listUsers();
 
+                        if (listError) {
+                            throw new Error(`Failed to list users: ${listError.message}`);
+                        }
+                        // Explicitly type users as Array<{ email?: string; id: string }>
+                        const usersList: Array<{ email?: string; id: string }> = existingUsers?.users ?? [];
+                        let targetUser = usersList.find(u => u.email && u.email === userFormData.user_email);
+                        /*&& u.email*/
                         if (!targetUser) {
-                            // User doesn't exist in auth, create them first
                             console.log("User not found in auth, creating auth user...");
                             const { data: newAuthUser, error: createError } = await serviceClient.auth.admin.createUser({
                                 email: userFormData.user_email,
                                 password: userFormData.user_password,
-                                email_confirm: true // Skip email confirmation
+                                email_confirm: true
                             });
 
                             if (createError) {
@@ -781,7 +632,6 @@ const UsersManagement = () => {
                             }
                             targetUser = newAuthUser.user;
                         } else {
-                            // User exists, update their password
                             const { error: updateError } = await serviceClient.auth.admin.updateUserById(
                                 targetUser.id,
                                 { password: userFormData.user_password }
@@ -820,13 +670,8 @@ const UsersManagement = () => {
                     return;
                 }
 
-                // Update the user in state immediately
-                if (data && data[0]) {
-                    setUsers(prev => prev.map(u => u.userid === selectedUser ? data[0] : u));
-                    setFilteredUsers(prev => prev.map(u => u.userid === selectedUser ? data[0] : u));
-                }
+                // ✅ Let real-time subscription handle the update automatically
 
-                // Log the activity
                 logActivity(
                     t('usersManagement.userUpdated'),
                     "admin",
@@ -834,8 +679,6 @@ const UsersManagement = () => {
                     "success"
                 );
 
-                // Show success message with password update info if password was changed
-                // Show success message with password update info if password was changed
                 if (userFormData.user_password) {
                     toast({
                         title: t('common.success'),
@@ -852,7 +695,6 @@ const UsersManagement = () => {
                     });
                 }
 
-                // Reset form
                 resetUserForm();
             } catch (error) {
                 console.error("Unexpected error:", error);
@@ -869,7 +711,6 @@ const UsersManagement = () => {
 
     // Activity logging function
     const logActivity = async (action: string, user: string, details: string, status: 'success' | 'failed' | 'pending') => {
-        // Create a new activity log entry
         try {
             const { error } = await supabase
                 .from('activity_log')
@@ -928,7 +769,7 @@ const UsersManagement = () => {
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     />
                                 </div>
-                                <Button variant="outline" size="sm" onClick={loadUsers}>
+                                <Button variant="outline" size="sm" onClick={() => loadUsers()}>
                                     <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                     {t('common.refresh')}
                                 </Button>
@@ -1003,10 +844,10 @@ const UsersManagement = () => {
             <div className="form-section">
                 <Card>
                     <CardHeader>
-                        <CardTitle className={isRTL ? 'text-left' : ''}
-                        >{userFormMode === "create" ? t('usersManagement.createNewUser') : t('usersManagement.editUser')}</CardTitle>
-                        <CardDescription className={isRTL ? 'text-left' : ''}
-                        >
+                        <CardTitle className={isRTL ? 'text-left' : ''}>
+                            {userFormMode === "create" ? t('usersManagement.createNewUser') : t('usersManagement.editUser')}
+                        </CardTitle>
+                        <CardDescription className={isRTL ? 'text-left' : ''}>
                             {userFormMode === "create"
                                 ? t('usersManagement.addNewUserDesc')
                                 : t('usersManagement.modifyUserDesc')}
@@ -1078,80 +919,75 @@ const UsersManagement = () => {
                                             className="text-left"
                                         />
                                     </div>
-
                                 </div>
                             </div>
 
                             <div>
+                                {/* Arabic Names Section - ALWAYS RTL regardless of interface language */}
+                                <div className="arabic-names-container" dir="rtl" style={{ direction: 'rtl' }}>
+                                    <div className="form-grid">
+                                        {/* Row 1: First Name (right) | Second Name (left) in RTL layout */}
+                                        <div>
+                                            <Label htmlFor="arabic_username_a" className="text-xs" dir="rtl">
+                                                {t('usersManagement.firstNameAr')}
+                                            </Label>
+                                            <Input
+                                                id="arabic_username_a"
+                                                name="arabic_username_a"
+                                                value={userFormData.arabic_username_a}
+                                                onChange={handleUserInputChange}
+                                                dir="rtl"
+                                                placeholder={t('usersManagement.firstPlaceholderAr')}
+                                                required
+                                                className="text-align-left, direction: rtl"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="arabic_username_b" className="text-xs" dir="rtl">
+                                                {t('usersManagement.secondNameAr')}
+                                            </Label>
+                                            <Input
+                                                id="arabic_username_b"
+                                                name="arabic_username_b"
+                                                value={userFormData.arabic_username_b}
+                                                onChange={handleUserInputChange}
+                                                dir="rtl"
+                                                placeholder={t('usersManagement.secondPlaceholderAr')}
+                                                required
+                                                className="text-align-left, direction: rtl"
+                                            />
+                                        </div>
 
-
-                                <div>
-                                    {/* Arabic Names Section - ALWAYS RTL regardless of interface language */}
-                                    <div className="arabic-names-container" dir="rtl" style={{ direction: 'rtl' }}>
-                                        <div className="form-grid">
-                                            {/* Row 1: First Name (right) | Second Name (left) in RTL layout */}
-                                            <div>
-                                                <Label htmlFor="arabic_username_a" className="text-xs " dir="rtl">
-                                                    {t('usersManagement.firstNameAr')}
-                                                </Label>
-                                                <Input
-                                                    id="arabic_username_a"
-                                                    name="arabic_username_a"
-                                                    value={userFormData.arabic_username_a}
-                                                    onChange={handleUserInputChange}
-                                                    dir="rtl"
-                                                    placeholder={t('usersManagement.firstPlaceholderAr')}
-                                                    required
-                                                    className="text-align-left, direction: rtl"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="arabic_username_b" className="text-xs " dir="rtl">
-                                                    {t('usersManagement.secondNameAr')}
-                                                </Label>
-                                                <Input
-                                                    id="arabic_username_b"
-                                                    name="arabic_username_b"
-                                                    value={userFormData.arabic_username_b}
-                                                    onChange={handleUserInputChange}
-                                                    dir="rtl"
-                                                    placeholder={t('usersManagement.secondPlaceholderAr')}
-                                                    required
-                                                    className="text-align-left, direction: rtl"
-                                                />
-                                            </div>
-
-                                            {/* Row 2: Third Name (right) | Fourth Name (left) in RTL layout */}
-                                            <div>
-                                                <Label htmlFor="arabic_username_c" className="text-xs" dir="rtl">
-                                                    {t('usersManagement.thirdNameAr')}
-                                                </Label>
-                                                <Input
-                                                    id="arabic_username_c"
-                                                    name="arabic_username_c"
-                                                    value={userFormData.arabic_username_c}
-                                                    onChange={handleUserInputChange}
-                                                    dir="rtl"
-                                                    placeholder={t('usersManagement.thirdPlaceholderAr')}
-                                                    required
-                                                    className="text-align-left, direction: rtl"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="arabic_username_d" className="text-xs " dir="rtl">
-                                                    {t('usersManagement.lastNameAr')}
-                                                </Label>
-                                                <Input
-                                                    id="arabic_username_d"
-                                                    name="arabic_username_d"
-                                                    value={userFormData.arabic_username_d}
-                                                    onChange={handleUserInputChange}
-                                                    dir="rtl"
-                                                    placeholder={t('usersManagement.lastPlaceholderAr')}
-                                                    required
-                                                    className="text-align-left, direction: rtl"
-                                                />
-                                            </div>
+                                        {/* Row 2: Third Name (right) | Fourth Name (left) in RTL layout */}
+                                        <div>
+                                            <Label htmlFor="arabic_username_c" className="text-xs" dir="rtl">
+                                                {t('usersManagement.thirdNameAr')}
+                                            </Label>
+                                            <Input
+                                                id="arabic_username_c"
+                                                name="arabic_username_c"
+                                                value={userFormData.arabic_username_c}
+                                                onChange={handleUserInputChange}
+                                                dir="rtl"
+                                                placeholder={t('usersManagement.thirdPlaceholderAr')}
+                                                required
+                                                className="text-align-left, direction: rtl"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="arabic_username_d" className="text-xs" dir="rtl">
+                                                {t('usersManagement.lastNameAr')}
+                                            </Label>
+                                            <Input
+                                                id="arabic_username_d"
+                                                name="arabic_username_d"
+                                                value={userFormData.arabic_username_d}
+                                                onChange={handleUserInputChange}
+                                                dir="rtl"
+                                                placeholder={t('usersManagement.lastPlaceholderAr')}
+                                                required
+                                                className="text-align-left, direction: rtl"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -1169,7 +1005,6 @@ const UsersManagement = () => {
                                     placeholder={t('usersManagement.emailPlaceholder')}
                                     dir="ltr"
                                     className={isRTL ? 'text-left' : ''}
-
                                 />
                             </div>
 
@@ -1185,7 +1020,6 @@ const UsersManagement = () => {
                                     placeholder="123456789"
                                     dir="ltr"
                                     className={isRTL ? 'text-left' : ''}
-
                                 />
                             </div>
 
@@ -1196,9 +1030,9 @@ const UsersManagement = () => {
                                     name="user_phonenumber"
                                     value={userFormData.user_phonenumber}
                                     onChange={handleUserInputChange}
-                                    placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"} dir={isRTL ? "rtl" : "ltr"}
+                                    placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"}
+                                    dir={isRTL ? "rtl" : "ltr"}
                                     className={isRTL ? 'text-left' : ''}
-
                                 />
                             </div>
 
@@ -1298,7 +1132,7 @@ const UsersManagement = () => {
                                         onChange={handleUserInputChange}
                                         placeholder="••••••••"
                                         required={userFormMode === "create"}
-                                        className="pr-10" // Add padding for the eye button
+                                        className="pr-10"
                                         dir="ltr"
                                     />
                                     <button
@@ -1372,7 +1206,7 @@ const UsersManagement = () => {
                     </CardFooter>
                 </Card>
             </div>
-        </div >
+        </div>
     );
 };
 

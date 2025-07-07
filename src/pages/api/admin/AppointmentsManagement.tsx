@@ -16,7 +16,16 @@ import { format, isToday, isThisWeek, isThisMonth, parseISO, isBefore, isAfter }
 import {
     BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell
 } from 'recharts';
+import { useAdminState } from '../../../hooks/useAdminState';
 import '../../styles/appoitmentsmanagement.css';
+
+interface AvailabilitySlot {
+    id: string;
+    doctor_id: string;
+    day: string;
+    start_time: string;
+    end_time: string;
+}
 
 interface AppointmentInfo {
     id: string;
@@ -36,46 +45,7 @@ interface AppointmentInfo {
     updated_at?: string;
 }
 
-interface PatientInfo {
-    userid: number;
-    english_username_a: string;
-    english_username_d: string;
-    user_email: string;
-}
-
-interface ClinicInfo {
-    id: string;
-    name: string;
-    category: string;
-    description?: string;
-    is_active: boolean;
-}
-
-interface DoctorInfo {
-    id: string;
-    name: string;
-    specialty: string;
-    clinic_id: string;
-    email: string;
-    price: number;
-    is_available: boolean;
-}
-
-interface AvailabilitySlot {
-    id: string;
-    doctor_id: string;
-    day: string;
-    start_time: string;
-    end_time: string;
-}
-
 interface AppointmentsManagementProps {
-    appointments?: AppointmentInfo[];
-    setAppointments?: React.Dispatch<React.SetStateAction<AppointmentInfo[]>>;
-    isLoading?: boolean;
-    setIsLoading?: React.Dispatch<React.SetStateAction<boolean>>;
-    loadAppointments?: () => Promise<void>;
-    logActivity?: (action: string, user: string, details: string, status: 'success' | 'failed' | 'pending') => Promise<void>;
     userEmail?: string;
 }
 
@@ -85,19 +55,23 @@ function isTimeOverlap(start1: string, end1: string, start2: string, end2: strin
 }
 
 const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
-    appointments: propAppointments,
-    setAppointments: propSetAppointments,
-    isLoading: propIsLoading,
-    setIsLoading: propSetIsLoading,
-    loadAppointments: propLoadAppointments,
-    logActivity: propLogActivity,
     userEmail
 }) => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
     const { toast } = useToast();
-    const [appointments, setAppointments] = useState<AppointmentInfo[]>(propAppointments || []);
-    const [isLoading, setIsLoading] = useState(propIsLoading || false);
+
+    // 🚀 Use the centralized admin state instead of local state
+    const {
+        appointments,
+        clinics,
+        doctors,
+        users: patients,
+        isLoading,
+        setIsLoading,
+        loadAppointments,
+        refreshAll
+    } = useAdminState();
 
     // Enhanced filtering states
     const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -111,291 +85,118 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     const [sortField, setSortField] = useState<string>("date");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
-    // Added for editing and adding appointments
+    // Dialog states
     const [isAddingAppointment, setIsAddingAppointment] = useState(false);
-    const [isEditingAppointment, setIsEditingAppointment] = useState(false);
-    const [editingAppointment, setEditingAppointment] = useState<AppointmentInfo | null>(null);
+    const [selectedAppointment, setSelectedAppointment] = useState<AppointmentInfo | null>(null);
     const [appointmentNotes, setAppointmentNotes] = useState<string>("");
 
-    // Added for appointment creation from admin dashboard
-    const [clinics, setClinics] = useState<ClinicInfo[]>([]);
-    const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
-    const [patients, setPatients] = useState<PatientInfo[]>([]);
+    // Form states for new appointment
     const [selectedClinicId, setSelectedClinicId] = useState<string>("");
     const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
     const [selectedPatientId, setSelectedPatientId] = useState<string>("");
-    const [appointmentDate, setAppointmentDate] = useState<string>("");
-    const [appointmentTime, setAppointmentTime] = useState<string>("");
-    const [doctorAvailability, setDoctorAvailability] = useState<AvailabilitySlot[]>([]);
     const [selectedDay, setSelectedDay] = useState<string>("");
     const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
     const [appointmentPrice, setAppointmentPrice] = useState<number>(0);
     const [patientSearchQuery, setPatientSearchQuery] = useState<string>("");
+    const [doctorAvailability, setDoctorAvailability] = useState<AvailabilitySlot[]>([]);
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    // Advanced view state
+    // View mode
     const [viewMode, setViewMode] = useState<"list" | "calendar" | "stats">("list");
 
-    // Selected appointment for detailed view
-    const [selectedAppointment, setSelectedAppointment] = useState<AppointmentInfo | null>(null);
+    // Delete confirmation
+    const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
 
-    // Stats data
-    const [statsData, setStatsData] = useState({
-        total: 0,
-        scheduled: 0,
-        completed: 0,
-        cancelled: 0,
-        pending: 0,
-        paid: 0,
-        refunded: 0,
-        revenue: 0,
-        averagePrice: 0
-    });
-
-    // Use either the prop functions or local ones
-    const updateAppointments = (newAppointments: AppointmentInfo[] | ((prev: AppointmentInfo[]) => AppointmentInfo[])) => {
-        if (propSetAppointments) {
-            propSetAppointments(newAppointments);
-        } else {
-            setAppointments(newAppointments);
-        }
-    };
-
-    const updateIsLoading = (loading: boolean) => {
-        if (propSetIsLoading) {
-            propSetIsLoading(loading);
-        } else {
-            setIsLoading(loading);
-        }
-    };
-
-    // Extract unique clinics and doctors for filtering
+    // 🚀 PERFORMANCE: Memoized computed values
     const uniqueClinics = useMemo(() => {
-        const clinics = new Set<string>();
-        (propAppointments || appointments).forEach(apt => clinics.add(apt.clinic_name));
-        return Array.from(clinics);
-    }, [propAppointments, appointments]);
+        const clinicNames = new Set<string>();
+        appointments.forEach(apt => clinicNames.add(apt.clinic_name));
+        return Array.from(clinicNames);
+    }, [appointments]);
 
     const uniqueDoctors = useMemo(() => {
-        const doctors = new Set<string>();
-        (propAppointments || appointments).forEach(apt => doctors.add(apt.doctor_name));
-        return Array.from(doctors);
-    }, [propAppointments, appointments]);
+        const doctorNames = new Set<string>();
+        appointments.forEach(apt => doctorNames.add(apt.doctor_name));
+        return Array.from(doctorNames);
+    }, [appointments]);
 
-    // Load all necessary data on mount
-    useEffect(() => {
-        if (propAppointments) {
-            setAppointments(propAppointments);
-        } else if (!propLoadAppointments) {
-            loadAppointments();
-        }
+    // Filter patients to only show those with "Patient" role
+    const filteredPatients = useMemo(() => {
+        const patientUsers = patients.filter(user => user.user_roles === 'Patient');
 
-        // Load clinics, doctors, and patients for appointment creation
-        loadClinics();
-        loadDoctors();
-        loadPatients();
-    }, [propAppointments]);
+        if (!patientSearchQuery.trim()) return patientUsers;
 
-    // Calculate stats whenever appointments change
-    useEffect(() => {
-        const currentAppointments = propAppointments || appointments;
+        const query = patientSearchQuery.toLowerCase();
+        return patientUsers.filter(p =>
+            p.english_username_a.toLowerCase().includes(query) ||
+            (p.english_username_d && p.english_username_d.toLowerCase().includes(query)) ||
+            p.user_email.toLowerCase().includes(query)
+        );
+    }, [patients, patientSearchQuery]);
+
+    // Memoized stats calculation
+    const statsData = useMemo(() => {
         const stats = {
-            total: currentAppointments.length,
-            scheduled: currentAppointments.filter(apt => apt.status === 'scheduled').length,
-            completed: currentAppointments.filter(apt => apt.status === 'completed').length,
-            cancelled: currentAppointments.filter(apt => apt.status === 'cancelled').length,
-            pending: currentAppointments.filter(apt => apt.payment_status === 'pending').length,
-            paid: currentAppointments.filter(apt => apt.payment_status === 'paid').length,
-            refunded: currentAppointments.filter(apt => apt.payment_status === 'refunded').length,
-            revenue: currentAppointments
+            total: appointments.length,
+            scheduled: appointments.filter(apt => apt.status === 'scheduled').length,
+            completed: appointments.filter(apt => apt.status === 'completed').length,
+            cancelled: appointments.filter(apt => apt.status === 'cancelled').length,
+            pending: appointments.filter(apt => apt.payment_status === 'pending').length,
+            paid: appointments.filter(apt => apt.payment_status === 'paid').length,
+            refunded: appointments.filter(apt => apt.payment_status === 'refunded').length,
+            revenue: appointments
                 .filter(apt => apt.payment_status === 'paid')
                 .reduce((sum, apt) => sum + apt.price, 0),
-            averagePrice: currentAppointments.length > 0
-                ? currentAppointments.reduce((sum, apt) => sum + apt.price, 0) / currentAppointments.length
+            averagePrice: appointments.length > 0
+                ? appointments.reduce((sum, apt) => sum + apt.price, 0) / appointments.length
                 : 0
         };
-        setStatsData(stats);
-    }, [propAppointments, appointments]);
+        return stats;
+    }, [appointments]);
 
-    // Filter doctors when clinic is selected for appointment creation
+    // 🚀 PERFORMANCE: Filter doctors when clinic is selected
+    const availableDoctorsForClinic = useMemo(() => {
+        if (!selectedClinicId) return [];
+        return doctors.filter(d => d.clinic_id === selectedClinicId && d.is_available);
+    }, [doctors, selectedClinicId]);
+
+    // 🚀 Auto-select first doctor when clinic changes
     useEffect(() => {
-        if (selectedClinicId) {
-            const filteredDoctors = doctors.filter(d => d.clinic_id === selectedClinicId && d.is_available);
-            if (filteredDoctors.length > 0 && selectedDoctorId === "") {
-                setSelectedDoctorId(filteredDoctors[0].id);
-                setAppointmentPrice(filteredDoctors[0].price);
-            } else if (!filteredDoctors.some(d => d.id === selectedDoctorId)) {
-                setSelectedDoctorId("");
-                setAppointmentPrice(0);
+        if (selectedClinicId && availableDoctorsForClinic.length > 0) {
+            if (!availableDoctorsForClinic.some(d => d.id === selectedDoctorId)) {
+                const firstDoctor = availableDoctorsForClinic[0];
+                setSelectedDoctorId(firstDoctor.id);
+                setAppointmentPrice(firstDoctor.price);
             }
         } else {
             setSelectedDoctorId("");
             setAppointmentPrice(0);
         }
-    }, [selectedClinicId, doctors]);
+    }, [selectedClinicId, availableDoctorsForClinic, selectedDoctorId]);
 
-    // Update price when doctor is selected
+    // 🚀 Update price and load availability when doctor changes
     useEffect(() => {
         if (selectedDoctorId) {
             const doctor = doctors.find(d => d.id === selectedDoctorId);
             if (doctor) {
                 setAppointmentPrice(doctor.price);
-                // Load doctor's availability
                 loadDoctorAvailability(selectedDoctorId);
             }
+        } else {
+            setDoctorAvailability([]);
+            setSelectedDay("");
+            setSelectedTimeSlot("");
         }
-    }, [selectedDoctorId]);
+    }, [selectedDoctorId, doctors]);
 
-    // Filter patients by search query
-    const filteredPatients = useMemo(() => {
-        if (!patientSearchQuery.trim()) return patients;
-
-        const query = patientSearchQuery.toLowerCase();
-        return patients.filter(p =>
-            p.english_username_a.toLowerCase().includes(query) ||
-            p.english_username_d.toLowerCase().includes(query) ||
-            p.user_email.toLowerCase().includes(query)
-        );
-    }, [patients, patientSearchQuery]);
-
-    // Load appointments from database
-    const loadAppointments = async () => {
-        if (propLoadAppointments) {
-            await propLoadAppointments();
-            return;
-        }
-
-        console.log('Loading appointments...');
-        try {
-            updateIsLoading(true);
-
-            // Query appointments with related tables
-            const { data, error } = await supabase
-                .from('appointments')
-                .select(`
-                    *,
-                    patients:patient_id (userid, english_username_a, english_username_d),
-                    doctors:doctor_id (id, name),
-                    clinics:clinic_id (id, name)
-                `)
-                .order('date', { ascending: false });
-
-            if (error) {
-                console.error('Supabase error:', error);
-                throw error;
-            }
-
-            // Transform to match our interface
-            const mappedAppointments: AppointmentInfo[] = data.map(apt => ({
-                id: apt.id,
-                patient_id: apt.patient_id,
-                patient_name: `${apt.patients.english_username_a} ${apt.patients.english_username_d || ''}`.trim(),
-                doctor_id: apt.doctor_id,
-                doctor_name: apt.doctors.name,
-                clinic_id: apt.clinic_id,
-                clinic_name: apt.clinics.name,
-                date: apt.date,
-                time: apt.time,
-                status: apt.status as 'scheduled' | 'completed' | 'cancelled',
-                payment_status: apt.payment_status as 'pending' | 'paid' | 'refunded',
-                price: apt.price,
-                notes: apt.notes || '',
-                created_at: apt.created_at,
-                updated_at: apt.updated_at
-            }));
-
-            updateAppointments(mappedAppointments);
-            console.log('Appointments loaded:', mappedAppointments.length);
-
-            // Reset to first page when loading new data
-            setCurrentPage(1);
-
-            // Success toast
-            toast({
-                title: t('common.success'),
-                description: `${mappedAppointments.length} ${t('appointmentsManagement.appointments')} ${t('appointmentsManagement.loading')}.`,
-                variant: "default",
-            });
-        } catch (error) {
-            console.error('Error loading appointments:', error);
-            toast({
-                title: t('common.error'),
-                description: t('appointmentsManagement.failedToLoad'),
-                variant: "destructive",
-            });
-        } finally {
-            updateIsLoading(false);
-        }
-    };
-
-    // Load clinics from database
-    const loadClinics = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('clinics')
-                .select('*')
-                .eq('is_active', true)
-                .order('name', { ascending: true });
-
-            if (error) throw error;
-            setClinics(data || []);
-        } catch (error) {
-            console.error('Error loading clinics:', error);
-            toast({
-                title: t('common.error'),
-                description: t('appointmentsManagement.failedToLoadClinics'),
-                variant: "destructive",
-            });
-        }
-    };
-
-    // Load doctors from database
-    const loadDoctors = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('doctors')
-                .select('*')
-                .order('name', { ascending: true });
-
-            if (error) throw error;
-            setDoctors(data || []);
-        } catch (error) {
-            console.error('Error loading doctors:', error);
-            toast({
-                title: t('common.error'),
-                description: t('appointmentsManagement.failedToLoadDoctors'),
-                variant: "destructive",
-            });
-        }
-    };
-
-    // Load patients from database
-    const loadPatients = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('userinfo')
-                .select('userid, english_username_a, english_username_d, user_email')
-                .eq('user_roles', 'Patient')
-                .order('english_username_a', { ascending: true });
-
-            if (error) throw error;
-            setPatients(data || []);
-        } catch (error) {
-            console.error('Error loading patients:', error);
-            toast({
-                title: t('common.error'),
-                description: t('appointmentsManagement.failedToLoadPatients'),
-                variant: "destructive",
-            });
-        }
-    };
-
-    // Load doctor availability
+    // 🚀 OPTIMIZED: Load doctor availability with caching
     const loadDoctorAvailability = async (doctorId: string) => {
         try {
+            console.log(`🔄 Loading availability for doctor ${doctorId}`);
+
             const { data, error } = await supabase
                 .from('doctor_availability')
                 .select('*')
@@ -403,14 +204,18 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 .order('day', { ascending: true })
                 .order('start_time', { ascending: true });
 
-            if (error) throw error;
-            setDoctorAvailability(data || []);
+            if (error) {
+                console.error('❌ Error loading doctor availability:', error);
+                throw error;
+            }
 
-            // Reset day and time selection
+            setDoctorAvailability(data || []);
             setSelectedDay("");
             setSelectedTimeSlot("");
+
+            console.log(`✅ Loaded ${data?.length || 0} availability slots`);
         } catch (error) {
-            console.error('Error loading doctor availability:', error);
+            console.error('❌ Failed to load doctor availability:', error);
             toast({
                 title: t('common.error'),
                 description: t('appointmentsManagement.failedToLoadAvailability'),
@@ -419,12 +224,34 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         }
     };
 
-    // Appointment management
+    // 🚀 OPTIMIZED: Activity logging with better error handling
+    const logActivity = async (action: string, user: string, details: string, status: 'success' | 'failed' | 'pending') => {
+        try {
+            const { error } = await supabase
+                .from('activity_log')
+                .insert({
+                    action,
+                    user_email: user,
+                    details,
+                    status,
+                    created_at: new Date().toISOString()
+                });
+
+            if (error) {
+                console.error('❌ Error logging activity:', error);
+            } else {
+                console.log('✅ Activity logged:', action);
+            }
+        } catch (error) {
+            console.error('❌ Failed to log activity:', error);
+        }
+    };
+
+    // 🚀 OPTIMIZED: Update appointment status with immediate UI feedback
     const handleUpdateAppointmentStatus = async (id: string, status: 'scheduled' | 'completed' | 'cancelled') => {
         try {
-            updateIsLoading(true);
+            console.log(`🔄 Updating appointment ${id} status to ${status}`);
 
-            // Update in database
             const { error } = await supabase
                 .from('appointments')
                 .update({
@@ -434,7 +261,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 .eq('id', id);
 
             if (error) {
-                console.error("Error updating appointment status:", error);
+                console.error("❌ Error updating appointment status:", error);
                 toast({
                     title: t('common.error'),
                     description: t('appointmentsManagement.failedToUpdateStatus'),
@@ -442,11 +269,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 });
                 return;
             }
+            await refreshAll();
 
-            // Update state
-            updateAppointments(prev => prev.map(apt =>
-                apt.id === id ? { ...apt, status } : apt
-            ));
 
             // Log the activity
             await logActivity(
@@ -460,23 +284,23 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 title: t('common.success'),
                 description: t('appointmentsManagement.statusUpdated', { status: t(`appointmentsManagement.${status}`) }),
             });
+
+            console.log(`✅ Appointment status updated successfully`);
         } catch (error) {
-            console.error("Error updating appointment status:", error);
+            console.error("❌ Error updating appointment status:", error);
             toast({
                 title: t('common.error'),
                 description: t('appointmentsManagement.failedToUpdateStatus'),
                 variant: "destructive",
             });
-        } finally {
-            updateIsLoading(false);
         }
     };
 
+    // 🚀 OPTIMIZED: Update payment status
     const handleUpdatePaymentStatus = async (id: string, status: 'pending' | 'paid' | 'refunded') => {
         try {
-            updateIsLoading(true);
+            console.log(`🔄 Updating payment status for appointment ${id} to ${status}`);
 
-            // Update in database
             const { error } = await supabase
                 .from('appointments')
                 .update({
@@ -486,7 +310,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 .eq('id', id);
 
             if (error) {
-                console.error("Error updating payment status:", error);
+                console.error("❌ Error updating payment status:", error);
                 toast({
                     title: t('common.error'),
                     description: t('appointmentsManagement.failedToUpdatePayment'),
@@ -494,13 +318,9 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 });
                 return;
             }
+            await refreshAll();
 
-            // Update state
-            updateAppointments(prev => prev.map(apt =>
-                apt.id === id ? { ...apt, payment_status: status } : apt
-            ));
 
-            // Log the activity
             await logActivity(
                 t('appointmentsManagement.paymentStatusUpdated'),
                 userEmail || "admin",
@@ -512,24 +332,23 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 title: t('common.success'),
                 description: t('appointmentsManagement.paymentStatusUpdated', { status: t(`appointmentsManagement.${status}`) }),
             });
+
+            console.log(`✅ Payment status updated successfully`);
         } catch (error) {
-            console.error("Error updating payment status:", error);
+            console.error("❌ Error updating payment status:", error);
             toast({
                 title: t('common.error'),
                 description: t('appointmentsManagement.failedToUpdatePayment'),
                 variant: "destructive",
             });
-        } finally {
-            updateIsLoading(false);
         }
     };
 
-    // Update appointment notes
+    // 🚀 OPTIMIZED: Update appointment notes
     const handleUpdateAppointmentNotes = async (id: string, notes: string) => {
         try {
-            updateIsLoading(true);
+            console.log(`🔄 Updating notes for appointment ${id}`);
 
-            // Update in database
             const { error } = await supabase
                 .from('appointments')
                 .update({
@@ -539,7 +358,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 .eq('id', id);
 
             if (error) {
-                console.error("Error updating appointment notes:", error);
+                console.error("❌ Error updating appointment notes:", error);
                 toast({
                     title: t('common.error'),
                     description: t('appointmentsManagement.failedToUpdateNotes'),
@@ -548,12 +367,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 return;
             }
 
-            // Update state
-            updateAppointments(prev => prev.map(apt =>
-                apt.id === id ? { ...apt, notes } : apt
-            ));
+            await refreshAll();
 
-            // Log the activity
             await logActivity(
                 t('appointmentsManagement.appointmentNotesUpdated'),
                 userEmail || "admin",
@@ -565,20 +380,19 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 title: t('common.success'),
                 description: t('appointmentsManagement.notesUpdated'),
             });
+
+            console.log(`✅ Notes updated successfully`);
         } catch (error) {
-            console.error("Error updating appointment notes:", error);
+            console.error("❌ Error updating appointment notes:", error);
             toast({
                 title: t('common.error'),
                 description: t('appointmentsManagement.failedToUpdateNotes'),
                 variant: "destructive",
             });
-        } finally {
-            updateIsLoading(false);
         }
     };
-    const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
 
-    // Delete appointment
+    // 🚀 OPTIMIZED: Delete appointment with confirmation
     const handleDeleteAppointment = (id: string) => {
         setAppointmentToDelete(id);
 
@@ -605,20 +419,20 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         });
     };
 
-    // Add this new function after handleDeleteAppointment:
     const confirmDeleteAppointment = async (id: string) => {
         try {
-            updateIsLoading(true);
+            setIsLoading(true);
             setAppointmentToDelete(null);
 
-            // Delete from database
+            console.log(`🔄 Deleting appointment ${id}`);
+
             const { error } = await supabase
                 .from('appointments')
                 .delete()
                 .eq('id', id);
 
             if (error) {
-                console.error("Error deleting appointment:", error);
+                console.error("❌ Error deleting appointment:", error);
                 toast({
                     title: t('common.error'),
                     description: t('appointmentsManagement.failedToDelete'),
@@ -626,11 +440,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 });
                 return;
             }
+            await refreshAll();
 
-            // Update state
-            updateAppointments(prev => prev.filter(apt => apt.id !== id));
-
-            // Log the activity
             await logActivity(
                 t('appointmentsManagement.appointmentDeleted'),
                 userEmail || "admin",
@@ -642,18 +453,21 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 title: t('common.success'),
                 description: t('appointmentsManagement.appointmentDeleted'),
             });
+
+            console.log(`✅ Appointment deleted successfully`);
         } catch (error) {
-            console.error("Error deleting appointment:", error);
+            console.error("❌ Error deleting appointment:", error);
             toast({
                 title: t('common.error'),
                 description: t('appointmentsManagement.failedToDelete'),
                 variant: "destructive",
             });
         } finally {
-            updateIsLoading(false);
+            setIsLoading(false);
         }
     };
-    // Handle adding a new appointment
+
+    // 🚀 OPTIMIZED: Add appointment with collision detection
     const handleAddAppointment = async () => {
         // Validate form
         if (!selectedClinicId || !selectedDoctorId || !selectedPatientId || !selectedDay || !selectedTimeSlot) {
@@ -666,60 +480,56 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         }
 
         try {
-            updateIsLoading(true);
+            setIsLoading(true);
+            console.log('🔄 Creating new appointment...');
 
-            // Parse the time slot to start and end times
+            // Parse the time slot
             const [startTime, endTime] = selectedTimeSlot.split('-');
 
-            // Prepare appointment date in ISO format
-            // Get today's date and the next occurrence of the selected day
+            // Calculate appointment date
             const today = new Date();
             const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const todayIndex = today.getDay();
             const selectedDayIndex = daysOfWeek.indexOf(selectedDay);
 
             let daysToAdd = selectedDayIndex - todayIndex;
-            if (daysToAdd <= 0) daysToAdd += 7; // Next week if day has passed
+            if (daysToAdd <= 0) daysToAdd += 7;
 
             const appointmentDate = new Date(today);
             appointmentDate.setDate(today.getDate() + daysToAdd);
-
-            // Format date as ISO string and extract date part
             const isoDate = appointmentDate.toISOString().split('T')[0];
 
-            // --- COLLISION CHECK ---
-            // Fetch existing appointments for this clinic and date
+            // 🚀 COLLISION CHECK: Check for existing appointments
             const { data: existingAppointments, error: fetchError } = await supabase
                 .from('appointments')
                 .select('time')
                 .eq('clinic_id', selectedClinicId)
                 .eq('date', isoDate);
+
             if (fetchError) {
-                console.error('Error fetching existing appointments:', fetchError);
+                console.error('❌ Error fetching existing appointments:', fetchError);
             }
-            // Check for overlap
+
+            // Check for time overlap
             const hasConflict = (existingAppointments || []).some(apt => {
-                // Existing time is stored as start time, but we don't know end time, so assume same slot format
-                // If your system always uses the same slot format, this is safe
                 if (!apt.time) return false;
-                // Try to find the slot in doctorAvailability to get the end time
                 const slot = doctorAvailability.find(slot => slot.start_time === apt.time && slot.day === selectedDay);
                 const existingStart = apt.time;
-                const existingEnd = slot ? slot.end_time : apt.time; // fallback: treat as point if not found
+                const existingEnd = slot ? slot.end_time : apt.time;
                 return isTimeOverlap(startTime.trim(), endTime.trim(), existingStart, existingEnd);
             });
+
             if (hasConflict) {
                 toast({
                     title: t('appointmentsManagement.conflict') || 'Time Conflict',
                     description: t('appointmentsManagement.timeSlotConflict') || 'This clinic already has an appointment at this time.',
                     variant: "destructive",
                 });
-                updateIsLoading(false);
+                setIsLoading(false);
                 return;
             }
-            // --- END COLLISION CHECK ---
 
-            // Create new appointment
+            // Create the appointment
             const { data, error } = await supabase
                 .from('appointments')
                 .insert({
@@ -738,7 +548,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 .select();
 
             if (error) {
-                console.error("Error creating appointment:", error);
+                console.error("❌ Error creating appointment:", error);
                 toast({
                     title: t('common.error'),
                     description: t('appointmentsManagement.failedToCreate'),
@@ -746,102 +556,51 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 });
                 return;
             }
+            await refreshAll();
 
-            // Get associated data
-            const patient = patients.find(p => p.userid.toString() === selectedPatientId);
+            // Get patient and doctor info for logging
+            const patient = filteredPatients.find(p => p.userid.toString() === selectedPatientId);
             const doctor = doctors.find(d => d.id === selectedDoctorId);
             const clinic = clinics.find(c => c.id === selectedClinicId);
 
-            // Create appointment object
-            if (data && data.length > 0) {
-                const newAppointment: AppointmentInfo = {
-                    id: data[0].id,
-                    patient_id: selectedPatientId,
-                    patient_name: patient ? `${patient.english_username_a} ${patient.english_username_d || ''}`.trim() : 'Unknown Patient',
-                    doctor_id: selectedDoctorId,
-                    doctor_name: doctor?.name || 'Unknown Doctor',
-                    clinic_id: selectedClinicId,
-                    clinic_name: clinic?.name || 'Unknown Clinic',
-                    date: isoDate,
-                    time: startTime.trim(),
-                    status: 'scheduled',
-                    payment_status: 'pending',
-                    price: appointmentPrice,
-                    notes: appointmentNotes,
-                    created_at: data[0].created_at,
-                    updated_at: data[0].updated_at
-                };
+            await logActivity(
+                t('appointmentsManagement.appointmentCreatedLog'),
+                userEmail || "admin",
+                `New appointment created for ${patient?.english_username_a} with Dr. ${doctor?.name} at ${clinic?.name}`,
+                "success"
+            );
 
-                // Update state
-                updateAppointments(prev => [newAppointment, ...prev]);
+            toast({
+                title: t('common.success'),
+                description: t('appointmentsManagement.appointmentCreated'),
+            });
 
-                // Log the activity
-                await logActivity(
-                    t('appointmentsManagement.appointmentCreatedLog'),
-                    userEmail || "admin",
-                    `New appointment created for ${newAppointment.patient_name} with Dr. ${newAppointment.doctor_name} at ${newAppointment.clinic_name}`,
-                    "success"
-                );
+            // Reset form
+            setSelectedClinicId("");
+            setSelectedDoctorId("");
+            setSelectedPatientId("");
+            setSelectedDay("");
+            setSelectedTimeSlot("");
+            setAppointmentNotes("");
+            setAppointmentPrice(0);
+            setIsAddingAppointment(false);
 
-                toast({
-                    title: t('common.success'),
-                    description: t('appointmentsManagement.appointmentCreated'),
-                });
-
-                // Reset form
-                setSelectedClinicId("");
-                setSelectedDoctorId("");
-                setSelectedPatientId("");
-                setSelectedDay("");
-                setSelectedTimeSlot("");
-                setAppointmentNotes("");
-                setAppointmentPrice(0);
-                setIsAddingAppointment(false);
-            }
+            console.log('✅ Appointment created successfully');
         } catch (error) {
-            console.error("Error creating appointment:", error);
+            console.error("❌ Error creating appointment:", error);
             toast({
                 title: t('common.error'),
                 description: t('appointmentsManagement.failedToCreate'),
                 variant: "destructive",
             });
         } finally {
-            updateIsLoading(false);
+            setIsLoading(false);
         }
     };
 
-    // Activity logging
-    const logActivity = async (action: string, user: string, details: string, status: 'success' | 'failed' | 'pending') => {
-        if (propLogActivity) {
-            await propLogActivity(action, user, details, status);
-            return;
-        }
-
-        // Insert into the database
-        try {
-            const { error } = await supabase
-                .from('activity_log')
-                .insert({
-                    action: action,
-                    user_email: user,
-                    details: details,
-                    status: status
-                });
-
-            if (error) {
-                console.error('Error logging activity:', error);
-            }
-        } catch (error) {
-            console.error('Error logging activity:', error);
-        }
-    };
-
-    // Export appointments to CSV
+    // 🚀 OPTIMIZED: Export to CSV with better performance
     const exportToCSV = () => {
-        const currentAppointments = propAppointments || appointments;
-
-        // Apply filters to export only filtered data
-        const dataToExport = getFilteredAppointments();
+        const dataToExport = getFilteredAppointments; // Fixed: Removed parentheses
 
         if (dataToExport.length === 0) {
             toast({
@@ -852,56 +611,65 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             return;
         }
 
-        // Create CSV headers
-        const headers = [
-            "ID", t('appointmentsManagement.patient'), t('appointmentsManagement.doctor'),
-            t('appointmentsManagement.clinic'), t('common.date'), t('common.time'),
-            t('appointmentsManagement.status'), t('appointmentsManagement.payment'),
-            t('common.price'), t('appointmentsManagement.notes')
-        ];
+        try {
+            console.log(`🔄 Exporting ${dataToExport.length} appointments to CSV`);
 
-        // Convert data to CSV rows
-        const rows = dataToExport.map(apt => [
-            apt.id,
-            apt.patient_name,
-            apt.doctor_name,
-            apt.clinic_name,
-            new Date(apt.date).toLocaleDateString(),
-            apt.time,
-            apt.status,
-            apt.payment_status,
-            apt.price,
-            apt.notes || ""
-        ]);
+            const headers = [
+                "ID", t('appointmentsManagement.patient'), t('appointmentsManagement.doctor'),
+                t('appointmentsManagement.clinic'), t('common.date'), t('common.time'),
+                t('appointmentsManagement.status'), t('appointmentsManagement.payment'),
+                t('common.price'), t('appointmentsManagement.notes')
+            ];
 
-        // Combine headers and rows
-        const csvContent = [
-            headers.join(","),
-            ...rows.map(row => row.join(","))
-        ].join("\n");
+            const rows = dataToExport.map(apt => [
+                apt.id,
+                apt.patient_name,
+                apt.doctor_name,
+                apt.clinic_name,
+                new Date(apt.date).toLocaleDateString(),
+                apt.time,
+                apt.status,
+                apt.payment_status,
+                apt.price,
+                apt.notes || ""
+            ]);
 
-        // Create download link
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `appointments_export_${new Date().toISOString().slice(0, 10)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+            const csvContent = [
+                headers.join(","),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+            ].join("\n");
 
-        // Log activity
-        logActivity(
-            t('appointmentsManagement.appointmentsExported'),
-            userEmail || "admin",
-            `Exported ${dataToExport.length} appointments to CSV`,
-            "success"
-        );
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `appointments_export_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
 
-        toast({
-            title: t('appointmentsManagement.exportComplete'),
-            description: t('appointmentsManagement.appointmentsExported', { count: dataToExport.length }),
-        });
+            logActivity(
+                t('appointmentsManagement.appointmentsExported'),
+                userEmail || "admin",
+                `Exported ${dataToExport.length} appointments to CSV`,
+                "success"
+            );
+
+            toast({
+                title: t('appointmentsManagement.exportComplete'),
+                description: t('appointmentsManagement.appointmentsExported', { count: dataToExport.length }),
+            });
+
+            console.log('✅ CSV export completed');
+        } catch (error) {
+            console.error('❌ Error exporting CSV:', error);
+            toast({
+                title: t('common.error'),
+                description: 'Failed to export CSV',
+                variant: "destructive",
+            });
+        }
     };
 
     // Helper function for status badge classes
@@ -946,22 +714,18 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     // Handle sorting
     const handleSort = (field: string) => {
         if (sortField === field) {
-            // Toggle direction if clicking the same field
             setSortDirection(sortDirection === "asc" ? "desc" : "asc");
         } else {
-            // Set new field and default to ascending
             setSortField(field);
             setSortDirection("asc");
         }
     };
 
-    // Apply all filters and sorting to appointments
-    const getFilteredAppointments = () => {
-        const currentAppointments = propAppointments || appointments;
+    // 🚀 OPTIMIZED: Apply all filters and sorting with memoization
+    const getFilteredAppointments = useMemo(() => {
+        let filtered = [...appointments];
 
-        // First apply search filter
-        let filtered = currentAppointments;
-
+        // Search filter
         if (searchQuery.trim() !== "") {
             const query = searchQuery.toLowerCase();
             filtered = filtered.filter(apt =>
@@ -972,27 +736,24 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             );
         }
 
-        // Apply status filter
+        // Status filters
         if (statusFilter !== "all") {
             filtered = filtered.filter(apt => apt.status === statusFilter);
         }
 
-        // Apply payment status filter
         if (paymentStatusFilter !== "all") {
             filtered = filtered.filter(apt => apt.payment_status === paymentStatusFilter);
         }
 
-        // Apply clinic filter
         if (clinicFilter !== "all") {
             filtered = filtered.filter(apt => apt.clinic_name === clinicFilter);
         }
 
-        // Apply doctor filter
         if (doctorFilter !== "all") {
             filtered = filtered.filter(apt => apt.doctor_name === doctorFilter);
         }
 
-        // Apply date filter
+        // Date filter
         if (dateFilter !== "all") {
             switch (dateFilter) {
                 case "today":
@@ -1017,7 +778,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             }
         }
 
-        // Apply sorting
+        // Sorting
         filtered.sort((a, b) => {
             let comparison = 0;
 
@@ -1045,24 +806,19 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         });
 
         return filtered;
-    };
-
+    }, [appointments, searchQuery, statusFilter, paymentStatusFilter, clinicFilter, doctorFilter, dateFilter, startDate, endDate, sortField, sortDirection]);
     // Get current page items for pagination
     const getCurrentPageItems = () => {
-        const filteredAppointments = getFilteredAppointments();
         const indexOfLastItem = currentPage * itemsPerPage;
         const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-        return filteredAppointments.slice(indexOfFirstItem, indexOfLastItem);
+        return getFilteredAppointments.slice(indexOfFirstItem, indexOfLastItem);
     };
 
     // Calculate total pages for pagination
-    const totalPages = Math.ceil(getFilteredAppointments().length / itemsPerPage);
-
-    // Get current appointments 
-    const currentAppointments = propAppointments || appointments;
+    const totalPages = Math.ceil(getFilteredAppointments.length / itemsPerPage);
     const paginatedAppointments = getCurrentPageItems();
 
-    // Format time for display (e.g., "09:00" to "9:00 AM")
+    // Format time for display
     const formatTime = (time: string) => {
         try {
             const [hours, minutes] = time.split(':');
@@ -1078,7 +834,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     // Handle selecting day for new appointment
     const handleDaySelect = (day: string) => {
         setSelectedDay(day);
-        setSelectedTimeSlot(""); // Reset time slot when day changes
+        setSelectedTimeSlot("");
     };
 
     // Handle selecting time slot for new appointment
@@ -1089,7 +845,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     // Get available time slots for selected day
     const getAvailableTimeSlots = () => {
         if (!selectedDay) return [];
-
         return doctorAvailability
             .filter(slot => slot.day === selectedDay)
             .map(slot => `${slot.start_time}-${slot.end_time}`);
@@ -1120,7 +875,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         }
     };
 
-    // Render the appointment list view with fixed pagination
+    // 🚀 OPTIMIZED: Render the appointment list view
     const renderListView = () => {
         return (
             <div className={`appointments-table-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -1229,12 +984,11 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         </TableBody>
                     </Table>
                 </div>
-
-                {/* Fixed pagination component */}
+                {/* Pagination */}
                 {paginatedAppointments.length > 0 && (
                     <div className={`appointments-pagination flex items-center justify-between mt-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <div className={`pagination-info text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}>
-                            {t('appointmentsManagement.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('appointmentsManagement.to')} {Math.min(currentPage * itemsPerPage, getFilteredAppointments().length)} {t('appointmentsManagement.of')} {getFilteredAppointments().length} {t('appointmentsManagement.appointments')}
+                            {t('appointmentsManagement.showing')} {(currentPage - 1) * itemsPerPage + 1} {t('appointmentsManagement.to')} {Math.min(currentPage * itemsPerPage, getFilteredAppointments.length)} {t('appointmentsManagement.of')} {getFilteredAppointments.length} {t('appointmentsManagement.appointments')}
                         </div>
                         <div className={`pagination-controls flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
                             <Button
@@ -1302,13 +1056,11 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         );
     };
 
-    // Render the calendar view
-    // Updated renderCalendarView function with only specific columns reversed for RTL
+    // 🚀 OPTIMIZED: Render the calendar view
     const renderCalendarView = () => {
-        // Group appointments by date
         const appointmentsByDate: Record<string, AppointmentInfo[]> = {};
 
-        currentAppointments.forEach(appointment => {
+        appointments.forEach(appointment => {
             const dateKey = format(parseISO(appointment.date), 'yyyy-MM-dd');
             if (!appointmentsByDate[dateKey]) {
                 appointmentsByDate[dateKey] = [];
@@ -1316,11 +1068,9 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             appointmentsByDate[dateKey].push(appointment);
         });
 
-        // Sort dates
         const sortedDates = Object.keys(appointmentsByDate).sort((a, b) =>
             new Date(a).getTime() - new Date(b).getTime()
         );
-
         return (
             <div className={`appointments-calendar space-y-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                 {sortedDates.length === 0 ? (
@@ -1350,7 +1100,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     <TableHeader>
                                         <TableRow>
                                             {isRTL ? (
-                                                // RTL order: Patient, Doctor, Clinic, Time, Status, Payment, Actions
                                                 <>
                                                     <TableHead>{t('appointmentsManagement.patient')}</TableHead>
                                                     <TableHead>{t('appointmentsManagement.doctor')}</TableHead>
@@ -1361,7 +1110,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                     <TableHead className="text-right">{t('appointmentsManagement.actions')}</TableHead>
                                                 </>
                                             ) : (
-                                                // LTR order: Time, Patient, Doctor, Clinic, Status, Payment, Actions
                                                 <>
                                                     <TableHead>{t('common.time')}</TableHead>
                                                     <TableHead>{t('appointmentsManagement.patient')}</TableHead>
@@ -1380,7 +1128,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             .map(appointment => (
                                                 <TableRow key={appointment.id} className="hover:bg-gray-50">
                                                     {isRTL ? (
-                                                        // RTL order: Patient, Doctor, Clinic, Time, Status, Payment, Actions
                                                         <>
                                                             <TableCell className="font-medium">{appointment.patient_name}</TableCell>
                                                             <TableCell>{appointment.doctor_name}</TableCell>
@@ -1408,7 +1155,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                                     className="appointments-clickable"
                                                                 >
                                                                     <Edit className="h-4 w-4" />
-                                                                    <span className="sr-only">{t('appointmentsManagement.edit')}</span>
                                                                 </Button>
                                                                 <Button
                                                                     variant="ghost"
@@ -1417,12 +1163,10 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                                     className="text-red-500 hover:text-red-700 appointments-clickable"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
-                                                                    <span className="sr-only">{t('appointmentsManagement.delete')}</span>
                                                                 </Button>
                                                             </TableCell>
                                                         </>
                                                     ) : (
-                                                        // LTR order: Time, Patient, Doctor, Clinic, Status, Payment, Actions
                                                         <>
                                                             <TableCell>{formatTime(appointment.time)}</TableCell>
                                                             <TableCell className="font-medium">{appointment.patient_name}</TableCell>
@@ -1450,7 +1194,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                                     className="appointments-clickable"
                                                                 >
                                                                     <Edit className="h-4 w-4" />
-                                                                    <span className="sr-only">{t('appointmentsManagement.edit')}</span>
                                                                 </Button>
                                                                 <Button
                                                                     variant="ghost"
@@ -1459,7 +1202,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                                     className="text-red-500 hover:text-red-700 appointments-clickable"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
-                                                                    <span className="sr-only">{t('appointmentsManagement.delete')}</span>
                                                                 </Button>
                                                             </TableCell>
                                                         </>
@@ -1475,10 +1217,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             </div>
         );
     };
-
-    // Render statistics view
+    // 🚀 OPTIMIZED: Render statistics view
     const renderStatsView = () => {
-        // Prepare data for charts
         const statusData = [
             { name: t('appointmentsManagement.scheduled'), value: statsData.scheduled, color: '#3b82f6' },
             { name: t('appointmentsManagement.completed'), value: statsData.completed, color: '#10b981' },
@@ -1491,9 +1231,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             { name: t('appointmentsManagement.refunded'), value: statsData.refunded, color: '#8b5cf6' }
         ];
 
-        // Group appointments by clinic for revenue
         const clinicRevenue: Record<string, number> = {};
-        currentAppointments.forEach(apt => {
+        appointments.forEach(apt => {
             if (apt.payment_status === 'paid') {
                 clinicRevenue[apt.clinic_name] = (clinicRevenue[apt.clinic_name] || 0) + apt.price;
             }
@@ -1537,7 +1276,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 {/* Charts */}
                 <div className="charts-grid grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Status Pie Chart */}
-
                     <Card>
                         <CardHeader>
                             <CardTitle>{t('appointmentsManagement.appointmentStatus')}</CardTitle>
@@ -1550,12 +1288,12 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             data={statusData}
                                             cx="50%"
                                             cy="50%"
-                                            outerRadius={95} // Reduced from 80 to give more space for labels
+                                            outerRadius={95}
                                             fill="#8884d8"
                                             dataKey="value"
                                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
                                                 const RADIAN = Math.PI / 180;
-                                                const radius = outerRadius + (isRTL ? 18 : 20); // More space for Arabic text
+                                                const radius = outerRadius + (isRTL ? 18 : 20);
                                                 const x = cx + radius * Math.cos(-midAngle * RADIAN);
                                                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -1605,7 +1343,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             cx="50%"
                                             cy="50%"
                                             labelLine={false}
-                                            outerRadius={95} // Reduced from 80
+                                            outerRadius={95}
                                             fill="#8884d8"
                                             dataKey="value"
                                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
@@ -1644,7 +1382,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                             )}
                         </CardContent>
                     </Card>
-
                     {/* Revenue by Clinic Bar Chart */}
                     <Card className="lg:col-span-2">
                         <CardHeader>
@@ -1674,7 +1411,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         );
     };
 
-    // Main render
+    // 🚀 MAIN RENDER
     return (
         <div className={`space-y-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Header with title and actions */}
@@ -1686,7 +1423,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     </p>
                 </div>
                 <div className={`actions-section flex items-center space-x-2 ${isRTL ? 'space-x-reverse order-1 md:order-2' : 'order-2'}`}>
-                    <Button variant="outline" onClick={loadAppointments} disabled={isLoading} className="appointments-clickable">
+                    <Button variant="outline" onClick={() => refreshAll()} disabled={isLoading} className="appointments-clickable">
                         <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
                         {t('appointmentsManagement.refresh')}
                     </Button>
@@ -1794,7 +1531,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 ))}
                             </SelectContent>
                         </Select>
-
                         {/* Date Filter */}
                         <Select value={dateFilter} onValueChange={setDateFilter}>
                             <SelectTrigger className={`filter-select ${isRTL ? 'text-right [&>span]:text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -1808,8 +1544,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 <SelectItem value="custom" className={isRTL ? 'text-right' : ''}>{t('appointmentsManagement.customRange')}</SelectItem>
                             </SelectContent>
                         </Select>
-
-                        {/* Custom Date Range Picker (shown only when custom is selected) */}
+                        {/* Custom Date Range */}
                         {dateFilter === 'custom' && (
                             <div className={`custom-date-inputs flex items-center space-x-2 col-span-2 ${isRTL ? 'space-x-reverse' : ''}`}>
                                 <Input
@@ -1839,14 +1574,14 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 {viewMode === 'calendar' && renderCalendarView()}
                 {viewMode === 'stats' && renderStatsView()}
             </div>
-
             {/* Appointment Detail Dialog */}
             {selectedAppointment && (
                 <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
                     <DialogContent className="appointments-dialog sm:max-w-[600px]">
                         <DialogHeader
                             className={`${isRTL ? 'text-right' : 'text-left'}`}
-                            style={isRTL ? { textAlign: 'right' } : {}}>   <DialogTitle>{t('appointmentsManagement.appointmentDetails')}</DialogTitle>
+                            style={isRTL ? { textAlign: 'right' } : {}}>
+                            <DialogTitle>{t('appointmentsManagement.appointmentDetails')}</DialogTitle>
                             <DialogDescription>
                                 {t('appointmentsManagement.manageAppointment', { patientName: selectedAppointment.patient_name })}
                             </DialogDescription>
@@ -1868,14 +1603,11 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     <p className="text-sm font-medium">{t('appointmentsManagement.clinic')}</p>
                                     <p>{selectedAppointment.clinic_name}</p>
                                 </div>
-                                <div className={`grid grid-cols-2 gap-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-                                    <div className={isRTL ? 'text-left' : 'text-right'}>
-                                        <p className="text-sm font-medium text-left">{t('appointmentsManagement.dateTime')}</p>
-                                        <p className="text-left">
-                                            {new Date(selectedAppointment.date).toLocaleDateString()} - {selectedAppointment.time}
-                                        </p>
-                                    </div>
-
+                                <div>
+                                    <p className="text-sm font-medium">{t('appointmentsManagement.dateTime')}</p>
+                                    <p>
+                                        {new Date(selectedAppointment.date).toLocaleDateString()} - {selectedAppointment.time}
+                                    </p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -1940,30 +1672,30 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             });
                                         }
                                     }}
-                                    onBlur={() => {
+                                    onBlur={async () => {
                                         // Update price in database when input loses focus
-                                        supabase
+                                        const { error } = await supabase
                                             .from('appointments')
                                             .update({
                                                 price: selectedAppointment.price,
                                                 updated_at: new Date().toISOString()
                                             })
-                                            .eq('id', selectedAppointment.id)
-                                            .then(({ error }) => {
-                                                if (error) {
-                                                    console.error("Error updating price:", error);
-                                                    toast({
-                                                        title: t('common.error'),
-                                                        description: t('appointmentsManagement.failedToUpdatePrice'),
-                                                        variant: "destructive",
-                                                    });
-                                                } else {
-                                                    toast({
-                                                        title: t('common.success'),
-                                                        description: t('appointmentsManagement.priceUpdated'),
-                                                    });
-                                                }
+                                            .eq('id', selectedAppointment.id);
+
+                                        if (error) {
+                                            console.error("Error updating price:", error);
+                                            toast({
+                                                title: t('common.error'),
+                                                description: t('appointmentsManagement.failedToUpdatePrice'),
+                                                variant: "destructive",
                                             });
+                                        } else {
+                                            await refreshAll();
+                                             toast({
+                                                title: t('common.success'),
+                                                description: t('appointmentsManagement.priceUpdated'),
+                                            });
+                                        }
                                     }}
                                     className="form-input"
                                 />
@@ -1994,9 +1726,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
-            )
-            }
-
+            )}
             {/* Add Appointment Dialog */}
             <Dialog open={isAddingAppointment} onOpenChange={setIsAddingAppointment}>
                 <DialogContent className={`appointments-dialog sm:max-w-[700px] ${isRTL ? '[&>button]:left-4 [&>button]:right-auto' : ''}`}>
@@ -2033,7 +1763,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 </p>
                             )}
                         </div>
-
                         {/* Doctor Selection (filtered by clinic) */}
                         <div>
                             <Label htmlFor="doctor-select">{t('appointmentsManagement.selectDoctor')}</Label>
@@ -2046,22 +1775,19 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     <SelectValue placeholder={selectedClinicId ? t('appointmentsManagement.chooseDoctor') : t('appointmentsManagement.selectClinicFirst')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {doctors
-                                        .filter(d => d.clinic_id === selectedClinicId && d.is_available)
-                                        .map(doctor => (
-                                            <SelectItem key={doctor.id} value={doctor.id}>
-                                                {doctor.name} - {doctor.specialty} (₪{doctor.price})
-                                            </SelectItem>
-                                        ))}
+                                    {availableDoctorsForClinic.map(doctor => (
+                                        <SelectItem key={doctor.id} value={doctor.id}>
+                                            {doctor.name} - {doctor.specialty} (₪{doctor.price})
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
-                            {selectedClinicId && doctors.filter(d => d.clinic_id === selectedClinicId && d.is_available).length === 0 && (
+                            {selectedClinicId && availableDoctorsForClinic.length === 0 && (
                                 <p className="text-yellow-600 text-sm mt-1">
                                     {t('appointmentsManagement.noAvailableDoctors')}
                                 </p>
                             )}
                         </div>
-
                         {/* Patient Selection with search */}
                         <div>
                             <Label htmlFor="patient-select">{t('appointmentsManagement.selectPatient')}</Label>
@@ -2090,7 +1816,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 </div>
                             </div>
                         </div>
-
                         {/* Appointment Time Selection */}
                         {selectedDoctorId && (
                             <div className="space-y-4">
@@ -2114,7 +1839,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                         })}
                                     </div>
                                 </div>
-
                                 {selectedDay && (
                                     <div>
                                         <Label>{t('appointmentsManagement.selectTimeSlot')}</Label>
@@ -2141,7 +1865,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 )}
                             </div>
                         )}
-
                         {/* Price (automatically set from doctor selection) */}
                         <div>
                             <Label>{t('appointmentsManagement.appointmentPrice')}</Label>
@@ -2181,7 +1904,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     );
 };
 

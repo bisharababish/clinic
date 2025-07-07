@@ -39,7 +39,7 @@ const Footer: React.FC = () => {
                 </h3>
               </div>
 
-              <p className="text-sm text-primary/85 leading-relaxed font-medium mb-4">
+              <div className="text-sm text-primary/85 leading-relaxed font-medium mb-4">
                 <div className="text-sm text-primary/85 leading-relaxed font-medium mb-4">
                   {isRTL ? (
                     <ul className="space-y-2" dir="rtl">
@@ -65,7 +65,7 @@ const Footer: React.FC = () => {
                     </ul>
                   )}
                 </div>
-              </p>
+              </div>
 
               <div className="grid grid-cols-1 gap-3">
                 <div className="flex items-center gap-2 text-xs text-primary/80">
@@ -171,57 +171,57 @@ const Footer: React.FC = () => {
                   </div>
                 </div>
                 {/* Social Media Section */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="group relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary/8 to-primary/15 border border-primary/25 hover:border-primary/35 transition-all duration-500">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-            <div className="relative">
-              <h4 className="font-semibold text-primary/85 mb-3 text-lg flex items-center gap-2">
-                <div className="p-1 bg-gradient-to-br from-primary to-primary/85 rounded-lg">
-                  <Users className="h-4 w-4 text-white" />
+                <div className="flex flex-col items-center mb-6">
+                  <div className="group relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary/8 to-primary/15 border border-primary/25 hover:border-primary/35 transition-all duration-500">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    <div className="relative">
+                      <h4 className="font-semibold text-primary/85 mb-3 text-lg flex items-center gap-2">
+                        <div className="p-1 bg-gradient-to-br from-primary to-primary/85 rounded-lg">
+                          <Users className="h-4 w-4 text-white" />
+                        </div>
+                        {isRTL ? 'تابعنا على وسائل التواصل' : 'Follow us on Social Media'}
+                      </h4>
+                      <div className="flex gap-3">
+                        <a
+                          href="https://www.facebook.com/yourclinicpage"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Facebook"
+                          className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
+                        >
+                          <Facebook className="w-5 h-5 text-primary/80 group-hover/social:text-blue-600 transition-colors" />
+                        </a>
+                        <a
+                          href="https://www.instagram.com/yourclinicpage"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Instagram"
+                          className="group/social p-2 rounded-xl bg-white/60 hover:bg-pink-50 border border-primary/20 hover:border-pink-400 transition-all duration-300 shadow-sm hover:shadow-pink-200 transform hover:scale-110"
+                        >
+                          <Instagram className="w-5 h-5 text-primary/80 group-hover/social:text-pink-600 transition-colors" />
+                        </a>
+                        <a
+                          href="https://twitter.com/yourclinicpage"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Twitter"
+                          className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
+                        >
+                          <Twitter className="w-5 h-5 text-primary/80 group-hover/social:text-blue-500 transition-colors" />
+                        </a>
+                        <a
+                          href="https://wa.me/97222744444"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="WhatsApp"
+                          className="group/social p-2 rounded-xl bg-white/60 hover:bg-green-50 border border-primary/20 hover:border-green-400 transition-all duration-300 shadow-sm hover:shadow-green-200 transform hover:scale-110"
+                        >
+                          <MessageCircle className="w-5 h-5 text-primary/80 group-hover/social:text-green-600 transition-colors" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                {isRTL ? 'تابعنا على وسائل التواصل' : 'Follow us on Social Media'}
-              </h4>
-              <div className="flex gap-3">
-                <a
-                  href="https://www.facebook.com/yourclinicpage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Facebook"
-                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
-                >
-                  <Facebook className="w-5 h-5 text-primary/80 group-hover/social:text-blue-600 transition-colors" />
-                </a>
-                <a
-                  href="https://www.instagram.com/yourclinicpage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-pink-50 border border-primary/20 hover:border-pink-400 transition-all duration-300 shadow-sm hover:shadow-pink-200 transform hover:scale-110"
-                >
-                  <Instagram className="w-5 h-5 text-primary/80 group-hover/social:text-pink-600 transition-colors" />
-                </a>
-                <a
-                  href="https://twitter.com/yourclinicpage"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Twitter"
-                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
-                >
-                  <Twitter className="w-5 h-5 text-primary/80 group-hover/social:text-blue-500 transition-colors" />
-                </a>
-                <a
-                  href="https://wa.me/97222744444"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="WhatsApp"
-                  className="group/social p-2 rounded-xl bg-white/60 hover:bg-green-50 border border-primary/20 hover:border-green-400 transition-all duration-300 shadow-sm hover:shadow-green-200 transform hover:scale-110"
-                >
-                  <MessageCircle className="w-5 h-5 text-primary/80 group-hover/social:text-green-600 transition-colors" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
 
               </div>
 
@@ -300,7 +300,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        
+
         {/* Copyright Section */}
         <div className="flex flex-col items-center space-y-3">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/30 border border-muted/40">

@@ -21,6 +21,8 @@ import {
     AlertTriangle
 } from "lucide-react";
 import "../../styles/doctormanagement.css"
+import { useAdminState } from "../../../hooks/useAdminState"; // ✅ NEW IMPORT
+
 interface DoctorInfo {
     id: string;
     name: string;
@@ -52,11 +54,19 @@ interface AvailabilitySlot {
 const DoctorManagement = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
+    const { toast } = useToast();
 
-    // State for doctors
-    const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
-    const [clinics, setClinics] = useState<ClinicInfo[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    // ✅ NEW: Use centralized state for doctors and clinics
+    const {
+        doctors,
+        clinics,
+        isLoading,
+        loadDoctors,
+        loadClinics,
+        setIsLoading
+    } = useAdminState();
+
+    // ✅ KEEP: Local UI state (component-specific)
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredDoctors, setFilteredDoctors] = useState<DoctorInfo[]>([]);
 
@@ -88,8 +98,6 @@ const DoctorManagement = () => {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [doctorToDelete, setDoctorToDelete] = useState<DoctorInfo | null>(null);
 
-    const { toast } = useToast();
-
     const weekdays = [
         { en: "Monday", ar: t('doctorManagement.monday') },
         { en: "Tuesday", ar: t('doctorManagement.tuesday') },
@@ -99,12 +107,6 @@ const DoctorManagement = () => {
         { en: "Saturday", ar: t('doctorManagement.saturday') },
         { en: "Sunday", ar: t('doctorManagement.sunday') }
     ];
-
-    // Load doctors and clinics on mount
-    useEffect(() => {
-        loadClinics();
-        loadDoctors();
-    }, []);
 
     // Handle search filtering
     useEffect(() => {
@@ -120,71 +122,10 @@ const DoctorManagement = () => {
             setFilteredDoctors(filtered);
         }
     }, [searchQuery, doctors]);
+
     const validatePhoneNumber = (phoneNumber: string): boolean => {
         const phoneRegex = /^\+97[02]\d{9}$/;
         return phoneRegex.test(phoneNumber);
-    };
-    // Load clinics from database
-    const loadClinics = async () => {
-        try {
-            setIsLoading(true);
-
-            const { data, error } = await supabase
-                .from('clinics')
-                .select('*')
-                .eq('is_active', true)
-                .order('name', { ascending: true });
-
-            if (error) throw error;
-
-            setClinics(data || []);
-        } catch (error) {
-            console.error("Error loading clinics:", error);
-            toast({
-                title: t('common.error'),
-                description: t('doctorManagement.loadingClinics'),
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Load doctors from database
-    const loadDoctors = async () => {
-        try {
-            setIsLoading(true);
-
-            // Check if doctors table exists, if not create it
-            const { error: tableCheckError } = await supabase
-                .from('doctors')
-                .select('id')
-                .limit(1);
-
-            if (tableCheckError && tableCheckError.code === 'PGRST116') {
-                // Table doesn't exist, create it
-                await supabase.rpc('create_doctors_table');
-            }
-
-            const { data, error } = await supabase
-                .from('doctors')
-                .select('*')
-                .order('name', { ascending: true });
-
-            if (error) throw error;
-
-            setDoctors(data || []);
-            setFilteredDoctors(data || []);
-        } catch (error) {
-            console.error("Error loading doctors:", error);
-            toast({
-                title: t('common.error'),
-                description: t('doctorManagement.loadingDoctors'),
-                variant: "destructive",
-            });
-        } finally {
-            setIsLoading(false);
-        }
     };
 
     // Load availability slots for a specific doctor
@@ -344,9 +285,9 @@ const DoctorManagement = () => {
 
             if (error) throw error;
 
-            // Update state
-            setDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
-            setFilteredDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
+            // ✅ NEW: Let real-time subscription handle the state update
+            // OLD: setDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
+            // OLD: setFilteredDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
 
             toast({
                 title: t('common.success'),
@@ -363,6 +304,9 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToDeleteDoctor'),
                 variant: "destructive",
             });
+
+            // ✅ NEW: Force refresh on error to ensure UI is in sync
+            await loadDoctors(true);
         } finally {
             setIsLoading(false);
         }
@@ -425,8 +369,10 @@ const DoctorManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    setDoctors(prev => [...prev, data[0]]);
-                    setFilteredDoctors(prev => [...prev, data[0]]);
+                    // ✅ NEW: Let real-time subscription handle the state update
+                    // OLD: setDoctors(prev => [...prev, data[0]]);
+                    // OLD: setFilteredDoctors(prev => [...prev, data[0]]);
+
                     toast({
                         title: t('common.success'),
                         description: t('doctorManagement.doctorCreatedSuccessfully'),
@@ -454,8 +400,9 @@ const DoctorManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    setDoctors(prev => prev.map(d => d.id === selectedDoctor ? data[0] : d));
-                    setFilteredDoctors(prev => prev.map(d => d.id === selectedDoctor ? data[0] : d));
+                    // ✅ NEW: Let real-time subscription handle the state update
+                    // OLD: setDoctors(prev => prev.map(d => d.id === selectedDoctor ? data[0] : d));
+                    // OLD: setFilteredDoctors(prev => prev.map(d => d.id === selectedDoctor ? data[0] : d));
 
                     toast({
                         title: t('common.success'),
@@ -679,7 +626,6 @@ const DoctorManagement = () => {
                 <div className="doctor-list-section w-full lg:w-2/3">
                     <Card>
                         <CardHeader>
-
                             <div className={`doctor-header-section flex justify-between items-start`}>
                                 <div className={`doctor-header-title flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                                     <CardTitle className={isRTL ? 'text-left' : 'text-left'}>
@@ -701,7 +647,7 @@ const DoctorManagement = () => {
                                         />
                                     </div>
                                     <div className="doctor-action-buttons flex gap-2">
-                                        <Button variant="outline" size="sm" onClick={loadDoctors} disabled={isLoading}>
+                                        <Button variant="outline" size="sm" onClick={() => loadDoctors()} disabled={isLoading}>
                                             <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
                                             <span className="hidden sm:inline">{t('common.refresh')}</span>
                                         </Button>
@@ -784,7 +730,6 @@ const DoctorManagement = () => {
                                 )}
                             </div>
                         </CardContent>
-
                     </Card>
                 </div>
 
@@ -849,11 +794,13 @@ const DoctorManagement = () => {
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     >
                                         <option value="" disabled>{t('doctorManagement.selectClinic')}</option>
-                                        {clinics.map(clinic => (
-                                            <option key={clinic.id} value={clinic.id}>
-                                                {clinic.name} ({clinic.category})
-                                            </option>
-                                        ))}
+                                        {clinics
+                                            .filter(clinic => clinic.is_active)
+                                            .map(clinic => (
+                                                <option key={clinic.id} value={clinic.id}>
+                                                    {clinic.name} ({clinic.category})
+                                                </option>
+                                            ))}
                                     </select>
                                     {clinics.length === 0 && (
                                         <p className={`text-sm text-amber-600 ${isRTL ? 'text-left' : ''}`}>
@@ -892,7 +839,6 @@ const DoctorManagement = () => {
                                         placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"}
                                         dir={isRTL ? "rtl" : "ltr"}
                                         required
-
                                     />
                                 </div>
 
@@ -977,7 +923,6 @@ const DoctorManagement = () => {
                 </div>
             </div>
 
-            {/* Availability Dialog */}
             {/* Availability Dialog */}
             <Dialog open={showAvailabilityDialog} onOpenChange={setShowAvailabilityDialog}>
                 <DialogContent className={`doctor-availability-dialog max-w-3xl ${isRTL ? 'rtl [&>button]:left-4 [&>button]:right-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -1113,7 +1058,6 @@ const DoctorManagement = () => {
             </Dialog>
 
             {/* Delete Confirmation Dialog */}
-            {/* Delete Confirmation Dialog */}
             <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <DialogContent className={`doctor-delete-dialog sm:max-w-md ${isRTL ? 'rtl [&>button]:left-4 [&>button]:right-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
                     <DialogHeader className={isRTL ? 'text-left' : ''}>
@@ -1144,7 +1088,7 @@ const DoctorManagement = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div >
+        </div>
     );
 };
 
