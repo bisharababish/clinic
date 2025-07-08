@@ -418,6 +418,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="english_username_d" className="text-xs !text-left !w-full !block" dir="ltr" style={{ textAlign: 'left' }}>
                                         Last Name
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
+
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -435,6 +437,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="english_username_c" className="text-xs !text-left w-full block" dir="ltr" style={{ textAlign: 'left' }}>
                                         Third Name
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
+
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -451,6 +455,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="english_username_b" className="text-xs !text-left w-full block" dir="ltr" style={{ textAlign: 'left' }}>
                                         Second Name
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
+
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -468,6 +474,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
                                     <Label htmlFor="english_username_a" className="text-xs !text-left w-full block" dir="ltr" style={{ textAlign: 'left' }}>
                                         First Name
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
+
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -489,7 +497,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="english_username_a" className="text-xs">
                                         First Name
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -505,7 +513,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="english_username_b" className="text-xs">
                                         Second Name
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -520,7 +528,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="english_username_c" className="text-xs">
                                         Third Name
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -535,7 +543,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="english_username_d" className="text-xs ">
                                         Last Name
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -563,7 +571,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="arabic_username_a" className="text-xs">
                                         {t("auth.firstNameAr")}
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -580,7 +588,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="arabic_username_b" className="text-xs">
                                         {t("auth.secondNameAr")}
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -596,7 +604,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="arabic_username_c" className="text-xs">
                                         {t("auth.thirdNameAr")}
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -612,7 +620,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 <div>
                                     <Label htmlFor="arabic_username_d" className="text-xs">
                                         {t("auth.lastNameAr")}
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -632,8 +640,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             <>
                                 <div>
                                     <Label htmlFor="arabic_username_d" className="text-xs text-right w-full block">
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>• </span>
                                         الاسم الرابع
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -649,8 +657,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 </div>
                                 <div>
                                     <Label htmlFor="arabic_username_c" className="text-xs text-right w-full block">
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>• </span>
+
                                         الاسم الثالث
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -665,8 +674,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 </div>
                                 <div>
                                     <Label htmlFor="arabic_username_b" className="text-xs text-right w-full block">
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>• </span>
                                         الاسم الثاني
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -681,8 +690,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                                 </div>
                                 <div>
                                     <Label htmlFor="arabic_username_a" className="text-xs text-right w-full block">
+                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>• </span>
+
                                         الاسم الأول
-                                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
                                     </Label>
                                     <div className="relative">
                                         <Input
@@ -704,7 +714,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 <div className="space-y-2">
                     <Label htmlFor="email">
                         {t("common.email")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
                     </Label>
                     <div className="relative">
                         <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
@@ -724,7 +734,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 <div className="space-y-2">
                     <Label htmlFor="id_number">
                         {t("auth.idNumber")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
                     </Label>
                     <div className="relative">
                         <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
@@ -744,7 +754,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 <div className="space-y-2">
                     <Label htmlFor="phoneNumber">
                         {t("common.phone")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
                     </Label>
                     <div className="relative">
                         <Phone className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
@@ -764,7 +774,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 <div className="space-y-2">
                     <Label htmlFor="dateOfBirth">
                         {t("auth.dateOfBirth")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
                     </Label>
                     <div className="relative">
                         <Calendar className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
@@ -788,7 +798,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 <div className="space-y-2">
                     <Label>
                         {t("auth.gender")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
                     </Label>
                     <RadioGroup
                         value={formData.gender}
@@ -809,7 +819,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 <div className="space-y-2">
                     <Label htmlFor="password">
                         {t("common.password")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
                     </Label>
                     <div className="relative">
                         <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
@@ -840,7 +850,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 <div className="space-y-2">
                     <Label htmlFor="confirmPassword">
                         {t("common.confirmPassword")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
                     </Label>
                     <div className="relative">
                         <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
