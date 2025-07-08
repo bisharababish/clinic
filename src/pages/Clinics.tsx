@@ -35,6 +35,8 @@ type Clinic = {
 type Category = {
     id: string;
     name: string;
+    name_en?: string;  // Add this
+    name_ar?: string;  // Add this
 };
 
 // Skeleton Loading Component
@@ -76,7 +78,17 @@ const Clinics = () => {
     const { toast } = useToast();
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
-
+    const getDisplayName = (category) => {
+        return isRTL && category.name_ar ? category.name_ar : category.name;
+    };
+    // Add this function in your Clinics component
+    const getCategoryDisplayName = (categoryName: string) => {
+        const category = categories.find(cat => cat.name === categoryName);
+        if (category) {
+            return getDisplayName(category);
+        }
+        return categoryName; // Fallback to original name
+    };
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
@@ -101,7 +113,8 @@ const Clinics = () => {
             const [categoryResult, clinicResult] = await Promise.all([
                 supabase
                     .from('clinic_categories')
-                    .select('id, name')
+                    .select('id, name, name_en, name_ar')
+
                     .eq('is_active', true)
                     .order('display_order', { ascending: true })
                     .order('name', { ascending: true }),
@@ -112,11 +125,12 @@ const Clinics = () => {
                     name,
                     category,
                     description,
-                    doctors!inner(
+                    doctors(
                         id,
                         name,
                         specialty,
                         price,
+                        is_available,
                         doctor_availability(
                             id,
                             day,
@@ -137,18 +151,21 @@ const Clinics = () => {
             setCategories(categoryResult.data || []);
 
             // Transform data to match expected structure
+            // Transform data to match expected structure
             const transformedClinics = (clinicResult.data || []).map(clinic => ({
                 id: clinic.id,
                 name: clinic.name,
                 category: clinic.category,
                 description: clinic.description,
-                doctors: clinic.doctors.map(doctor => ({
-                    id: doctor.id,
-                    name: doctor.name,
-                    specialty: doctor.specialty,
-                    price: doctor.price,
-                    availability: doctor.doctor_availability || []
-                }))
+                doctors: (clinic.doctors || [])
+                    .filter(doctor => doctor.is_available)  // ← Add this filter
+                    .map(doctor => ({
+                        id: doctor.id,
+                        name: doctor.name,
+                        specialty: doctor.specialty,
+                        price: doctor.price,
+                        availability: doctor.doctor_availability || []
+                    }))
             }));
 
             setClinics(transformedClinics);
@@ -285,7 +302,9 @@ const Clinics = () => {
                             onClick={() => setSelectedCategory(category.name)}
                             className="category-button mobile-button"
                         >
-                            {category.name}
+                            {getDisplayName(category)}
+
+
                         </Button>
                     ))}
                 </div>
@@ -303,7 +322,7 @@ const Clinics = () => {
                                 {clinic.name}
                             </h3>
                             <p className={`clinic-card-category ${isRTL ? 'text-left' : 'text-left'}`}>
-                                {clinic.category}
+                                {getCategoryDisplayName(clinic.category)}  {/* ← NEW */}
                             </p>
                             <p className={`clinic-card-doctors ${isRTL ? 'text-left' : 'text-left'}`}>
                                 {clinic.doctors.length} {clinic.doctors.length === 1 ? t('clinics.availableDoctor') : t('clinics.availableDoctors')}

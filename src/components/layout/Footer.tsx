@@ -103,8 +103,8 @@ const Footer: React.FC = () => {
                   <p className="text-xs text-primary/85 font-medium">
                     {isRTL ? 'جميع أيام الأسبوع' : 'All Days'}
                   </p>
-                  <p className="text-sm font-bold text-primary/90" dir="ltr">
-                    8:00 AM - 8:00 PM
+                  <p className="text-sm font-bold text-primary/90" dir={isRTL ? 'rtl' : 'ltr'}>
+                    {isRTL ? '٨:٠٠ ص - ٨:٠٠ م' : '8:00 AM - 8:00 PM'}
                   </p>
                   <p className="text-xs text-primary/70">
                     {isRTL ? 'مفتوح كل يوم' : 'Open every day'}

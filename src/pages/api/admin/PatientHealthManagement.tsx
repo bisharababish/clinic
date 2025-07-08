@@ -123,13 +123,28 @@ const PatientHealthForm: React.FC<{
         const { toast } = useToast();
         const { user } = useAuth();
         const { getPatientHealthData, savePatientHealthData, isSaving } = usePatientHealth();
+        const [customAllergy, setCustomAllergy] = useState("");
 
         // Form state
         const [isOpen, setIsOpen] = useState(false);
         const [selectedPatient, setSelectedPatient] = useState<PatientWithHealth | null>(null);
         const [patientSearch, setPatientSearch] = useState('');
         const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
-
+        const addCustomAllergy = () => {
+            if (customAllergy.trim()) {
+                const trimmedAllergy = customAllergy.trim();
+                if (!selectedAllergies.includes(trimmedAllergy)) {
+                    setSelectedAllergies(prev => [...prev, trimmedAllergy]);
+                    setCustomAllergy("");
+                } else {
+                    toast({
+                        title: isRTL ? "حساسية موجودة مسبقاً" : "Allergy Already Added",
+                        description: isRTL ? "هذه الحساسية مضافة بالفعل" : "This allergy is already in the list",
+                        variant: "destructive",
+                    });
+                }
+            }
+        };
         const allergiesList = [
             { en: 'Penicillin', ar: 'البنسلين' },
             { en: 'Naproxen', ar: 'نابروكسين' },
@@ -138,7 +153,16 @@ const PatientHealthForm: React.FC<{
             { en: 'Anticonvulsants', ar: 'مضادات الاختلاج' },
             { en: 'Other', ar: 'أخرى' },
         ];
-
+        const bloodTypes = [
+            { value: 'A+', en: 'A+', ar: 'أ+' },
+            { value: 'A-', en: 'A-', ar: 'أ-' },
+            { value: 'B+', en: 'B+', ar: 'ب+' },
+            { value: 'B-', en: 'B-', ar: 'ب-' },
+            { value: 'AB+', en: 'AB+', ar: 'أب+' },
+            { value: 'AB-', en: 'AB-', ar: 'أب-' },
+            { value: 'O+', en: 'O+', ar: 'و+' },
+            { value: 'O-', en: 'O-', ar: 'و-' }
+        ];
         // Patient creation state
         const [showCreatePatientForm, setShowCreatePatientForm] = useState(false);
         const [isCreatingPatient, setIsCreatingPatient] = useState(false);
@@ -306,13 +330,40 @@ const PatientHealthForm: React.FC<{
 
         // Handle patient creation form changes
         const handleCreatePatientFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const { name, value } = e.target;
+            const { name } = e.target;
+            let value = e.target.value;
             let processedValue = value;
 
             if (name.startsWith('english_username_')) {
                 processedValue = value.replace(/[^A-Za-z\s'-]/g, '');
             } else if (name.startsWith('arabic_username_')) {
                 processedValue = value.replace(/[^\u0600-\u06FF\s]/g, '');
+            } else if (name === 'user_phonenumber') {
+                // Always start with +97
+                if (!value.startsWith('+97')) {
+                    value = '+97';
+                }
+
+                // Extract digits after +97
+                const afterPrefix = value.slice(3);
+                const digits = afterPrefix.replace(/\D/g, '');
+
+                if (digits.length === 0) {
+                    setCreatePatientForm(prev => ({ ...prev, user_phonenumber: '+97' }));
+                    return;
+                }
+
+                // First digit after +97 must be 0 or 2
+                const firstDigit = digits[0];
+                if (firstDigit !== '0' && firstDigit !== '2') {
+                    return; // Don't allow the input
+                }
+
+                // Limit to 9 digits total after +970 or +972
+                const limitedDigits = digits.slice(0, 10);
+                const formattedPhone = '+97' + limitedDigits;
+                setCreatePatientForm(prev => ({ ...prev, user_phonenumber: formattedPhone }));
+                return;
             } else if (name === 'id_number') {
                 processedValue = value.replace(/\D/g, '').slice(0, 9);
             }
@@ -337,8 +388,8 @@ const PatientHealthForm: React.FC<{
 
             if (!form.english_username_d.trim() || !validateEnglishName(form.english_username_d)) {
                 toast({
-                    title: currentLang === 'ar' ? "خطأ في الاسم الإنجليزي" : "Invalid English Name",
-                    description: currentLang === 'ar' ? "اسم العائلة باللغة الإنجليزية يجب أن يحتوي على أحرف إنجليزية فقط" : "Last name must contain only English letters",
+                    title: isRTL ? "خطأ في الاسم الإنجليزي" : "Invalid English Name",
+                    description: isRTL ? "الاسم يجب أن يحتوي على أحرف إنجليزية فقط (مسموح بالمسافات والفواصل العليا والشرطات)" : "Name must contain only English letters (spaces, apostrophes, and hyphens allowed)",
                     variant: "destructive",
                 });
                 return false;
@@ -346,8 +397,8 @@ const PatientHealthForm: React.FC<{
 
             if (!form.arabic_username_a.trim() || !validateArabicName(form.arabic_username_a)) {
                 toast({
-                    title: currentLang === 'ar' ? "خطأ في الاسم العربي" : "Invalid Arabic Name",
-                    description: currentLang === 'ar' ? "الاسم الأول باللغة العربية يجب أن يحتوي على أحرف عربية فقط" : "First name must contain only Arabic letters",
+                    title: isRTL ? "خطأ في الاسم العربي" : "Invalid Arabic Name",
+                    description: isRTL ? "الاسم يجب أن يحتوي على أحرف عربية فقط (مسموح بالمسافات والفواصل العليا والشرطات)" : "Name must contain only Arabic letters (spaces, apostrophes, and hyphens allowed)",
                     variant: "destructive",
                 });
                 return false;
@@ -374,8 +425,8 @@ const PatientHealthForm: React.FC<{
 
             if (!validatePalestinianID(form.id_number)) {
                 toast({
-                    title: currentLang === 'ar' ? "رقم هوية غير صحيح" : "Invalid ID Number",
-                    description: currentLang === 'ar' ? "رقم الهوية يجب أن يكون 9 أرقام بالضبط" : "ID number must be exactly 9 digits",
+                    title: isRTL ? "رقم هوية غير صحيح" : "Invalid ID Number",
+                    description: isRTL ? "رقم الهوية يجب أن يكون 9 أرقام بالضبط" : "ID number must be exactly 9 digits",
                     variant: "destructive",
                 });
                 return false;
@@ -383,10 +434,8 @@ const PatientHealthForm: React.FC<{
 
             if (!validatePalestinianPhone(form.user_phonenumber)) {
                 toast({
-                    title: currentLang === 'ar' ? "رقم هاتف غير صحيح" : "Invalid Phone Number",
-                    description: currentLang === 'ar' ?
-                        "رقم الهاتف يجب أن يكون بالصيغة: +970 متبوعاً برقم 2 أو 0 ثم 8 أرقام" :
-                        "Phone number must be in format: +970 followed by 2 or 0, then 8 digits",
+                    title: isRTL ? "رقم هاتف غير صحيح" : "Invalid Phone Number",
+                    description: isRTL ? "رقم الهاتف يجب أن يبدأ بـ +970 أو +972 متبوعاً بـ 9 أرقام" : "Phone number must start with +970 or +972 followed by 9 digits",
                     variant: "destructive",
                 });
                 return false;
@@ -906,17 +955,18 @@ const PatientHealthForm: React.FC<{
                                                     onValueChange={(value) => setFormData(prev => ({ ...prev, blood_type: value }))}
                                                 >
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select blood type" />
+                                                        <SelectValue placeholder={isRTL ? "اختر فصيلة الدم" : "Select blood type"} />
                                                     </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="A+">A+</SelectItem>
-                                                        <SelectItem value="A-">A-</SelectItem>
-                                                        <SelectItem value="B+">B+</SelectItem>
-                                                        <SelectItem value="B-">B-</SelectItem>
-                                                        <SelectItem value="AB+">AB+</SelectItem>
-                                                        <SelectItem value="AB-">AB-</SelectItem>
-                                                        <SelectItem value="O+">O+</SelectItem>
-                                                        <SelectItem value="O-">O-</SelectItem>
+                                                    <SelectContent className={isRTL ? 'text-right [&>div]:text-right' : ''}>
+                                                        {bloodTypes.map((bloodType) => (
+                                                            <SelectItem
+                                                                key={bloodType.value}
+                                                                value={bloodType.value}
+                                                                className={isRTL ? 'text-right justify-end' : ''}
+                                                            >
+                                                                {isRTL ? bloodType.ar : bloodType.en}
+                                                            </SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -1075,7 +1125,7 @@ const PatientHealthForm: React.FC<{
                                         </CardHeader>
                                         <CardContent className={`space-y-4 ${isRTL ? 'text-right' : ''}`}>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                                {allergiesList.map(allergy => (
+                                                {allergiesList.filter(allergy => allergy.en !== 'Other').map(allergy => (
                                                     <div key={allergy.en} className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''} justify-between p-3 border rounded-lg transition-colors ${selectedAllergies.includes(allergy.en) ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}>
                                                         <Label htmlFor={`allergy-${allergy.en}`} className={`text-sm font-medium ${isRTL ? 'text-right' : 'text-left'} flex-1 cursor-pointer`}>
                                                             {i18n.language === 'ar' ? allergy.ar : allergy.en}
@@ -1094,6 +1144,65 @@ const PatientHealthForm: React.FC<{
                                                         />
                                                     </div>
                                                 ))}
+                                            </div>
+
+                                            {/* Other allergies text input */}
+                                            <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+                                                <Label htmlFor="other-allergies" className={`text-sm font-medium mb-2 block ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                    {isRTL ? "حساسيات أخرى:" : "Other Allergies:"}
+                                                </Label>
+                                                <div className="space-y-3">
+                                                    <div className="flex gap-2">
+                                                        <Input
+                                                            id="other-allergies"
+                                                            type="text"
+                                                            placeholder={isRTL ? "اكتب نوع الحساسية..." : "Enter allergy type..."}
+                                                            value={customAllergy}
+                                                            onChange={(e) => setCustomAllergy(e.target.value)}
+                                                            className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}
+                                                            onKeyPress={(e) => {
+                                                                if (e.key === 'Enter' && customAllergy.trim()) {
+                                                                    addCustomAllergy();
+                                                                }
+                                                            }}
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            onClick={addCustomAllergy}
+                                                            size="sm"
+                                                            disabled={!customAllergy.trim()}
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-1" />
+                                                            {isRTL ? "إضافة" : "Add"}
+                                                        </Button>
+                                                    </div>
+
+                                                    {/* Display added custom allergies */}
+                                                    {selectedAllergies.filter(allergy => !allergiesList.some(a => a.en === allergy)).length > 0 && (
+                                                        <div className="space-y-2">
+                                                            <h4 className="text-sm font-medium text-gray-700">
+                                                                {isRTL ? "الحساسيات المخصصة المضافة:" : "Added Custom Allergies:"}
+                                                            </h4>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {selectedAllergies
+                                                                    .filter(allergy => !allergiesList.some(a => a.en === allergy))
+                                                                    .map((allergy, index) => (
+                                                                        <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800">
+                                                                            {allergy}
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setSelectedAllergies(prev => prev.filter(a => a !== allergy))}
+                                                                                className="ml-1 hover:text-green-600"
+                                                                            >
+                                                                                <X className="h-3 w-3" />
+                                                                            </button>
+                                                                        </Badge>
+                                                                    ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -1125,9 +1234,300 @@ const PatientHealthForm: React.FC<{
                     </DialogContent>
                 </Dialog>
 
-                {/* Create Patient Dialog - keeping your existing implementation */}
-                {/* ... rest of create patient dialog code ... */}
+                {/* Create Patient Dialog */}
+                <Dialog open={showCreatePatientForm} onOpenChange={setShowCreatePatientForm}>
+                    <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto patient-health-dialog ${isRTL ? 'text-left [&>button]:left-4 [&>button]:right-auto' : ''}`}>
+                        <DialogHeader className={isRTL ? 'text-right' : ''}>
+                            <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`} style={isRTL ? { float: 'right' } : {}}>
+                                <UserPlus className="h-5 w-5" />
+                                {t('patientHealth.createNewPatient')}
+                            </DialogTitle>
+                            <DialogDescription className={isRTL ? 'text-left' : ''}>
+                                {t('patientHealth.createNewPatient')}
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 create-patient-form">
+                            {/* English Name Fields */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">{t('patientHealth.englishName')}</h4>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Label htmlFor="create_english_first">{t('patientHealth.first')}</Label>
+                                        <Input
+                                            id="create_english_first"
+                                            name="english_username_a"
+                                            value={createPatientForm.english_username_a}
+                                            onChange={handleCreatePatientFormChange}
+                                            required
+                                            placeholder={isRTL ? "الأول (إنجليزي فقط)" : "First (English only)"}
+                                            pattern="^[A-Za-z\s'-]+$"
+                                            title={isRTL ? "أحرف إنجليزية فقط مسموحة" : "Only English letters allowed"}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="create_english_second">{t('patientHealth.second')}</Label>
+                                        <Input
+                                            id="create_english_second"
+                                            name="english_username_b"
+                                            value={createPatientForm.english_username_b}
+                                            onChange={handleCreatePatientFormChange}
+                                            placeholder={isRTL ? "الثاني (إنجليزي فقط)" : "Second (English only)"}
+                                            pattern="^[A-Za-z\s'-]+$"
+                                            title={isRTL ? "أحرف إنجليزية فقط مسموحة" : "Only English letters allowed"}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="create_english_third">{t('patientHealth.third')}</Label>
+                                        <Input
+                                            id="create_english_third"
+                                            name="english_username_c"
+                                            value={createPatientForm.english_username_c}
+                                            onChange={handleCreatePatientFormChange}
+                                            placeholder={isRTL ? "الثالث (إنجليزي فقط)" : "Third (English only)"}
+                                            pattern="^[A-Za-z\s'-]+$"
+                                            title={isRTL ? "أحرف إنجليزية فقط مسموحة" : "Only English letters allowed"}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="create_english_last">{t('patientHealth.last')}</Label>
+                                        <Input
+                                            id="create_english_last"
+                                            name="english_username_d"
+                                            value={createPatientForm.english_username_d}
+                                            onChange={handleCreatePatientFormChange}
+                                            required
+                                            placeholder={isRTL ? "الأخير (إنجليزي فقط)" : "Last (English only)"}
+                                            pattern="^[A-Za-z\s'-]+$"
+                                            title={isRTL ? "أحرف إنجليزية فقط مسموحة" : "Only English letters allowed"}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Arabic Name Fields */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">{t('patientHealth.arabicName')}</h4>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Label htmlFor="create_arabic_first">{t('patientHealth.first')}</Label>
+                                        <Input
+                                            id="create_arabic_first"
+                                            name="arabic_username_a"
+                                            value={createPatientForm.arabic_username_a}
+                                            onChange={handleCreatePatientFormChange}
+                                            required
+                                            className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
+                                            placeholder={isRTL ? "الأول (عربي فقط)" : "First (Arabic only)"}
+                                            pattern="^[\u0600-\u06FF\s'-]+$"
+                                            title={isRTL ? "أحرف عربية فقط مسموحة" : "Only Arabic letters allowed"}
+                                            dir={isRTL ? "rtl" : "ltr"}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="create_arabic_second">{t('patientHealth.second')}</Label>
+                                        <Input
+                                            id="create_arabic_second"
+                                            name="arabic_username_b"
+                                            value={createPatientForm.arabic_username_b}
+                                            onChange={handleCreatePatientFormChange}
+                                            className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
+                                            placeholder={isRTL ? "الثاني (عربي فقط)" : "Second (Arabic only)"}
+                                            pattern="^[\u0600-\u06FF\s'-]+$"
+                                            title={isRTL ? "أحرف عربية فقط مسموحة" : "Only Arabic letters allowed"}
+                                            dir={isRTL ? "rtl" : "ltr"}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="create_arabic_third">{t('patientHealth.third')}</Label>
+                                        <Input
+                                            id="create_arabic_third"
+                                            name="arabic_username_c"
+                                            value={createPatientForm.arabic_username_c}
+                                            onChange={handleCreatePatientFormChange}
+                                            className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
+                                            placeholder={isRTL ? "الثالث (عربي فقط)" : "Third (Arabic only)"}
+                                            pattern="^[\u0600-\u06FF\s'-]+$"
+                                            title={isRTL ? "أحرف عربية فقط مسموحة" : "Only Arabic letters allowed"}
+                                            dir={isRTL ? "rtl" : "ltr"}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="create_arabic_last">{t('patientHealth.last')}</Label>
+                                        <Input
+                                            id="create_arabic_last"
+                                            name="arabic_username_d"
+                                            value={createPatientForm.arabic_username_d}
+                                            onChange={handleCreatePatientFormChange}
+                                            required
+                                            className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
+                                            placeholder={isRTL ? "الأخير (عربي فقط)" : "Last (Arabic only)"}
+                                            pattern="^[\u0600-\u06FF\s'-]+$"
+                                            title={isRTL ? "أحرف عربية فقط مسموحة" : "Only Arabic letters allowed"}
+                                            dir={isRTL ? "rtl" : "ltr"}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Information */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">{t('patientHealth.contactInformation')}</h4>
+
+                                <div>
+                                    <Label htmlFor="create_email">{t('patientHealth.email')}</Label>
+                                    <div className="relative">
+                                        <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                                        <Input
+                                            id="create_email"
+                                            name="user_email"
+                                            type="email"
+                                            value={createPatientForm.user_email}
+                                            onChange={handleCreatePatientFormChange}
+                                            className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
+                                            required
+                                            placeholder={t('doctorManagement.emailPlaceholder')}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="create_phone">{t('patientHealth.phoneNumber')}</Label>
+                                    <div className="relative">
+                                        <Phone className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                                        <Input
+                                            id="create_phone"
+                                            name="user_phonenumber"
+                                            type="tel"
+                                            value={createPatientForm.user_phonenumber}
+                                            onChange={handleCreatePatientFormChange}
+                                            className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
+                                            required
+                                            placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
+                                            pattern="^\+97[02]\d{9}$"
+                                            title={isRTL ? "يجب أن يبدأ برقم +970 أو +972 متبوعاً بـ 9 أرقام" : "Must start with +970 or +972 followed by 9 digits"}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="create_id_number">{t('patientHealth.idNumber')}</Label>
+                                    <div className="relative">
+                                        <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                                        <Input
+                                            id="create_id_number"
+                                            name="id_number"
+                                            value={createPatientForm.id_number}
+                                            onChange={handleCreatePatientFormChange}
+                                            className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
+                                            required
+                                            placeholder={t('auth.yourIDNumber')}
+                                            pattern="^\d{9}$"
+                                            maxLength={9}
+                                            title={isRTL ? "يجب أن يكون 9 أرقام بالضبط" : "Must be exactly 9 digits"}
+                                            dir="ltr"
+
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Personal Information */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium text-gray-700">{t('patientHealth.personalInformation')}</h4>
+
+                                <div>
+                                    <Label htmlFor="create_dob">{t('patientHealth.dateOfBirth')}</Label>
+                                    <div className="relative">
+                                        <Calendar className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                                        <Input
+                                            id="create_dob"
+                                            name="date_of_birth"
+                                            type="date"
+                                            value={createPatientForm.date_of_birth}
+                                            onChange={handleCreatePatientFormChange}
+                                            className={`${isRTL ? 'pr-12 text-left' : 'pl-12'}`}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <Label className="text-sm">{t('patientHealth.gender')}</Label>
+                                    <RadioGroup
+                                        value={createPatientForm.gender_user}
+                                        onValueChange={(value) => setCreatePatientForm(prev => ({ ...prev, gender_user: value }))}
+                                        className={`flex gap-4 mt-2 ${isRTL ? 'flex-row-reverse' : ''} gender-radio-group`}
+                                    >
+                                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse gap-2' : 'space-x-2'}`}>
+                                            <RadioGroupItem value="male" id="create_male" />
+                                            <Label htmlFor="create_male">{t('patientHealth.male')}</Label>
+                                        </div>
+                                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse gap-2' : 'space-x-2'}`}>
+                                            <RadioGroupItem value="female" id="create_female" />
+                                            <Label htmlFor="create_female">{t('patientHealth.female')}</Label>
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="create_password">{t('patientHealth.password')}</Label>
+                                    <div className="relative">
+                                        <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                                        <Input
+                                            id="create_password"
+                                            name="user_password"
+                                            type={showPassword ? "text" : "password"}
+                                            value={createPatientForm.user_password}
+                                            onChange={handleCreatePatientFormChange}
+                                            className={`${isRTL ? 'pr-10 pl-10 text-left' : 'pl-10 pr-10'}`}
+                                            placeholder={t('patientHealth.leaveEmptyForAutoGeneration')}
+                                        />
+                                        <button
+                                            type="button"
+                                            className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 h-4 w-4 text-muted-foreground`}
+                                            onClick={() => setShowPassword(!showPassword)}
+                                        >
+                                            {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Form Actions */}
+                        <div className={`flex gap-4 mt-8 pt-6 border-t ${isRTL ? 'justify-start' : 'justify-start'}`}>
+                            <Button
+                                onClick={createNewPatient}
+                                disabled={isCreatingPatient}
+                                className="bg-green-600 hover:bg-green-700"
+                            >
+                                {isCreatingPatient ? (
+                                    <>
+                                        <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                        {t('patientHealth.creating')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <UserPlus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                        {t('patientHealth.createPatient')}
+                                    </>
+                                )}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowCreatePatientForm(false)}
+                                disabled={isCreatingPatient}
+                            >
+                                {t('patientHealth.cancel')}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </>
+
+
+
         );
     };
 

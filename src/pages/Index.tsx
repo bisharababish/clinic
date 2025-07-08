@@ -2765,12 +2765,11 @@ const Index = () => {
                         <div key={medicine.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
                           <input
                             type="checkbox"
-                            id={medicine.en}
-                            checked={selectedMedicines.includes(medicine.en)}
+                            id={`med-${medicine.en}`} checked={selectedMedicines.includes(medicine.en)}
                             onChange={() => handleMedicineSelect(medicine.en)}
                             className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
-                          <Label htmlFor={medicine.en} className="text-base">
+                          <Label htmlFor={`med-${medicine.en}`} className="text-base">
                             {isRTL ? medicine.ar : medicine.en}
                           </Label>
                         </div>
@@ -2791,12 +2790,11 @@ const Index = () => {
                 <div key={allergy.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
                   <input
                     type="checkbox"
-                    id={allergy.en}
-                    checked={selectedAllergies.includes(allergy.en)}
+                    id={`allergy-${allergy.en}`} checked={selectedAllergies.includes(allergy.en)}
                     onChange={() => handleAllergySelect(allergy.en)}
                     className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                   />
-                  <Label htmlFor={allergy.en} className="text-base">
+                  <Label htmlFor={`allergy-${allergy.en}`} className="text-base">
                     {isRTL ? allergy.ar : allergy.en}
                   </Label>
                 </div>

@@ -150,34 +150,34 @@ const UsersManagement = () => {
             // Remove all non-digit characters except +
             let sanitized = value.replace(/[^\d+]/g, '');
 
-            // If it doesn't start with +97, reset to +97
-            if (!sanitized.startsWith('+97')) {
+            // If it doesn't start with +, add +97
+            if (!sanitized.startsWith('+')) {
+                sanitized = '+97' + sanitized;
+            }
+
+            // If it starts with + but not +97, reset to +97
+            if (sanitized.startsWith('+') && !sanitized.startsWith('+97')) {
                 sanitized = '+97';
             }
 
-            // If user is still typing the prefix (+97), allow it
+            // Handle the case where user is building the prefix
             if (sanitized.length <= 4) {
-                setUserFormData(prev => ({ ...prev, [name]: sanitized }));
-                return;
-            }
-
-            // When we have exactly 5 characters (+97X), validate the third digit
-            if (sanitized.length === 5) {
-                const thirdDigit = sanitized.charAt(4);
-                if (thirdDigit !== '0' && thirdDigit !== '2') {
-                    // Invalid third digit, keep only +97
-                    sanitized = '+97';
+                // Allow +, +9, +97
+                if (sanitized === '+' || sanitized === '+9' || sanitized === '+97') {
+                    setUserFormData(prev => ({ ...prev, [name]: sanitized }));
+                    return;
                 }
             }
-            // If we have more than 5 characters, allow typing as long as it starts with valid prefix
-            else if (sanitized.length > 5) {
-                // Check if it starts with a valid prefix
-                if (sanitized.startsWith('+970') || sanitized.startsWith('+972')) {
-                    // Valid prefix, limit to 14 characters total (+970/2 + 9 digits)
-                    sanitized = sanitized.slice(0, 14);
-                } else {
-                    // Invalid prefix, reset to +97
+
+            // When we have 4+ characters, validate the country code
+            if (sanitized.length >= 4) {
+                // Must start with +970 or +972
+                if (!sanitized.startsWith('+970') && !sanitized.startsWith('+972')) {
+                    // If user typed +97X where X is not 0 or 2, reset to +97
                     sanitized = '+97';
+                } else {
+                    // Valid prefix, limit total length to 13 characters (+970/2 + 9 digits)
+                    sanitized = sanitized.slice(0, 13);
                 }
             }
 
@@ -464,7 +464,7 @@ const UsersManagement = () => {
                 return;
             }
 
-            if (userFormData.user_phonenumber && !/^\+97[02]\d{9}$/.test(userFormData.user_phonenumber)) {
+            if (userFormData.user_phonenumber && !/^\+97[02]\d{8,9}$/.test(userFormData.user_phonenumber)) {
                 toast({
                     title: t('common.error'),
                     description: t('usersManagement.phoneInvalidDesc'),

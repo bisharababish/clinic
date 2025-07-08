@@ -28,6 +28,8 @@ interface ClinicInfo {
     id: string;
     name: string;
     category: string;
+    category_name_en?: string;  // Add this
+    category_name_ar?: string;  // Add this
     category_id?: string;
     description?: string;
     display_order?: number;
@@ -177,7 +179,12 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
             const { data, error } = await supabase
                 .from('clinics')
-                .select('*')
+                .select(`
+        *,
+        clinic_categories!clinics_category_id_fkey (
+            name_ar
+        )
+    `)
                 .order('name', { ascending: true });
 
             if (error) {
@@ -185,7 +192,12 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 throw error;
             }
 
-            setClinics(data || []);
+            const transformedClinics = (data || []).map(clinic => ({
+                ...clinic,
+                category_name_ar: clinic.clinic_categories?.name_ar
+            }));
+
+            setClinics(transformedClinics);
             setLastUpdated(prev => ({ ...prev, [cacheKey]: now }));
             console.log(`✅ Loaded ${data?.length || 0} clinics`);
         } catch (error: unknown) {
@@ -299,7 +311,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
             const { data, error } = await supabase
                 .from('clinic_categories')
-                .select('*')
+                .select('id, name, name_en, name_ar, display_order, is_active')  // ← NEW LINE
                 .order('display_order', { ascending: true })
 
                 .order('name', { ascending: true });

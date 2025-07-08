@@ -10,6 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "../../../lib/supabase";
+import { translateMedicalCategory, createBilingualCategoryName, isKnownMedicalTerm } from "../../../lib/medicalTranslations";
+import { CheckCircle } from "lucide-react";
+
+
 import {
     Trash2,
     Edit,
@@ -47,8 +51,9 @@ interface ClinicInfo {
 interface CategoryInfo {
     id: string;
     name: string;
+    name_en?: string;  // Add this
+    name_ar?: string;  // Add this
     display_order?: number;  // ADD THIS LINE
-
     is_active: boolean;
 }
 
@@ -68,7 +73,9 @@ const ClinicManagement = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
     const { toast } = useToast();
-
+    const getDisplayName = (category) => {
+        return isRTL && category.name_ar ? category.name_ar : category.name;
+    };
     // ✅ Use centralized state
     const {
         clinics,
@@ -378,18 +385,38 @@ const ClinicManagement = () => {
         try {
             setIsLoading(true);
 
-            const doctorsInClinic = doctors.filter(d => d.clinic_id === clinicToDelete);
+            // ✅ CHECK DIRECTLY IN DATABASE (not relying on loaded doctors)
+            const { data: doctorsInClinic, error: doctorsError } = await supabase
+                .from('doctors')
+                .select('id, name')
+                .eq('clinic_id', clinicToDelete);
 
-            if (doctorsInClinic.length > 0) {
+            if (doctorsError) {
+                console.error('Error checking doctors:', doctorsError);
                 toast({
-                    title: t('clinicManagement.cannotDelete'),
-                    description: t('clinicManagement.cannotDeleteClinicWithDoctors', { count: doctorsInClinic.length }),
+                    title: t('common.error'),
+                    description: 'Failed to check for doctors in clinic',
                     variant: "destructive",
                 });
+                setIsLoading(false);
                 setShowDeleteClinicDialog(false);
                 return;
             }
 
+            // ✅ PREVENT DELETION if doctors exist
+            if (doctorsInClinic && doctorsInClinic.length > 0) {
+                const doctorNames = doctorsInClinic.map(d => d.name).join(', ');
+                toast({
+                    title: t('clinicManagement.cannotDelete'),
+                    description: `Cannot delete clinic. Please remove these doctors first: ${doctorNames}`,
+                    variant: "destructive",
+                });
+                setIsLoading(false);
+                setShowDeleteClinicDialog(false);
+                return;
+            }
+
+            // ✅ ONLY DELETE CLINIC if no doctors
             const { error } = await supabase
                 .from('clinics')
                 .delete()
@@ -403,8 +430,6 @@ const ClinicManagement = () => {
                 });
                 return;
             }
-
-            // ✅ Let real-time subscription handle the update
 
             toast({
                 title: t('common.success'),
@@ -702,7 +727,13 @@ const ClinicManagement = () => {
         try {
             setIsLoading(true);
 
-            // Delete the doctor
+            // DELETE AVAILABILITY FIRST
+            await supabase
+                .from('doctor_availability')
+                .delete()
+                .eq('doctor_id', doctorToDelete);
+
+            // THEN DELETE THE DOCTOR
             const { error } = await supabase
                 .from('doctors')
                 .delete()
@@ -757,13 +788,16 @@ const ClinicManagement = () => {
             setIsLoading(true);
 
             if (categoryFormMode === "create") {
+                const bilingualName = createBilingualCategoryName(categoryFormData.name);
+
                 const { data, error } = await supabase
                     .from('clinic_categories')
                     .insert({
                         name: categoryFormData.name,
+                        name_en: bilingualName.en,
+                        name_ar: bilingualName.ar,
                         is_active: categoryFormData.is_active,
-                        display_order: categoryFormData.display_order || 0  // ADD THIS LINE
-
+                        display_order: categoryFormData.display_order || 0
                     })
                     .select();
 
@@ -782,13 +816,16 @@ const ClinicManagement = () => {
             } else if (categoryFormMode === "edit" && selectedCategory) {
                 const oldName = categories.find(c => c.id === selectedCategory)?.name;
 
+                const bilingualName = createBilingualCategoryName(categoryFormData.name);
+
                 const { data, error } = await supabase
                     .from('clinic_categories')
                     .update({
                         name: categoryFormData.name,
+                        name_en: bilingualName.en,
+                        name_ar: bilingualName.ar,
                         is_active: categoryFormData.is_active,
-                        display_order: categoryFormData.display_order || 0  // ADD THIS LINE
-
+                        display_order: categoryFormData.display_order || 0
                     })
                     .eq('id', selectedCategory)
                     .select();
@@ -1158,7 +1195,7 @@ const ClinicManagement = () => {
                                         {categories.map((category) => (
                                             <div key={category.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
                                                 <div className={`clinic-item-info ${isRTL ? 'rtl' : ''}`}>
-                                                    <h3 className="font-medium">{category.name}</h3>
+                                                    <h3 className="font-medium">{getDisplayName(category)}</h3>
                                                     <div className="mt-1" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${category.is_active
                                                             ? "bg-green-100 text-green-800"
@@ -1232,6 +1269,13 @@ const ClinicManagement = () => {
                                                 className={isRTL ? 'text-left' : ''}
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
+                                            {/* Auto-translation feedback */}
+                                            {categoryFormData.name && isKnownMedicalTerm(categoryFormData.name) && (
+                                                <div className="flex items-center space-x-2 text-green-600 text-sm mt-2">
+                                                    <CheckCircle className="h-4 w-4" />
+                                                    <span>Auto-translation available: {translateMedicalCategory(categoryFormData.name, 'ar')}</span>
+                                                </div>
+                                            )}
                                         </div>
                                         {/* ADD THIS NEW FIELD: */}
                                         <div className="space-y-2">

@@ -847,7 +847,7 @@ const XRay = () => {
               <div className="grid md:grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Date of Birth
+                    {isRTL ? 'تاريخ الميلاد' : 'Date of Birth'}
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -973,8 +973,8 @@ const XRay = () => {
             <div className="p-6">
               <div
                 className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer hover:bg-gray-50 ${isLoading || isUploading ? "opacity-50 cursor-not-allowed" :
-                    isDragging ? "border-blue-500 bg-blue-50" :
-                      file ? "border-green-500 bg-green-50" : "border-gray-300"
+                  isDragging ? "border-blue-500 bg-blue-50" :
+                    file ? "border-green-500 bg-green-50" : "border-gray-300"
                   }`}
                 onDragOver={!isLoading && !isUploading ? handleDragOver : undefined}
                 onDragLeave={!isLoading && !isUploading ? handleDragLeave : undefined}
@@ -1052,8 +1052,8 @@ const XRay = () => {
             onClick={handleSave}
             disabled={!selectedPatient || !file || !formFields.bodyPart || isUploading || isLoading}
             className={`px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${selectedPatient && file && formFields.bodyPart && !isUploading && !isLoading
-                ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
           >
             {isUploading ? (

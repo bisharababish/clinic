@@ -241,7 +241,7 @@ const AdminDashboardContent = () => {
                         )}
                         {canViewAppointmentsTab && (
                             <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
+                                {i18n.language === 'ar' ? 'المواعيد' : 'Appts'}
                             </TabsTrigger>
                         )}
                         {canViewCalendarTab && (

@@ -1,10 +1,12 @@
 // DoctorLabsPage.tsx - Now with comprehensive skeleton loading
 import React, { useState, useEffect } from 'react';
-import { Search, FileText, Calendar, User, Filter, Download, Eye, AlertCircle } from 'lucide-react';
+import { Search, FileText, Calendar, User, Filter, Download, Eye, AlertCircle, File } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { Skeleton } from "@/components/ui/skeleton";
+import { FileUploadService } from '../lib/fileUploadService';
+
 
 // Type definitions (updated to match your database)
 interface LabResult {
@@ -21,8 +23,19 @@ interface LabResult {
     created_by: number;
     created_at: string;
     updated_at: string;
-}
+    attachments?: LabAttachment[];
 
+}
+interface LabAttachment {
+    id: number;
+    lab_result_id: number;
+    file_name: string;
+    file_path: string;
+    file_size: number;
+    mime_type: string;
+    uploaded_by: number;
+    created_at: string;
+}
 // Skeleton Loading Component for DoctorLabsPage
 const DoctorLabsSkeletonLoading = ({ isRTL }: { isRTL: boolean }) => (
     <div className={`min-h-screen bg-gray-50 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -47,7 +60,7 @@ const DoctorLabsSkeletonLoading = ({ isRTL }: { isRTL: boolean }) => (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Search and Filters Skeleton */}
             <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
                     <Skeleton className="h-10 w-full" />
@@ -157,8 +170,13 @@ const DoctorLabsPage: React.FC = () => {
             }
 
             console.log('Lab results fetched:', data?.length || 0);
-            setLabResults(data || []);
-
+            const resultsWithAttachments = await Promise.all(
+                (data || []).map(async (result) => {
+                    const attachments = await FileUploadService.getLabAttachments(result.id);
+                    return { ...result, attachments };
+                })
+            );
+            setLabResults(resultsWithAttachments);
         } catch (error) {
             console.error('Error fetching lab results:', error);
             setError('Failed to load lab results. Please try again.');
@@ -166,7 +184,39 @@ const DoctorLabsPage: React.FC = () => {
             setLoading(false);
         }
     };
+    // Fetch attachments for each lab result
 
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+    const handleDownloadFile = async (attachment: LabAttachment) => {
+        try {
+            const downloadUrl = await FileUploadService.getFileUrl(attachment.file_path);
+
+            // Fetch the file as blob to force download
+            const response = await fetch(downloadUrl);
+            const blob = await response.blob();
+
+            // Create blob URL and download
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = attachment.file_name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up the blob URL
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error('Failed to download file:', error);
+        }
+    };
     // Initialize and fetch data
     useEffect(() => {
         const initializeComponent = async () => {
@@ -313,7 +363,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                 <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="relative">
-                            <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
+                            <Search className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
                             <input
                                 type="text"
                                 placeholder={isRTL ? 'البحث في المرضى أو الفحوصات...' : 'Search patients or tests...'}
@@ -325,7 +375,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                             />
                         </div>
                         <div className="relative">
-                            <Calendar className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
+                            <Calendar className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
                             <input
                                 type="date"
                                 value={filterDate}
@@ -335,7 +385,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                             />
                         </div>
                         <div className="relative">
-                            <Filter className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
+                            <Filter className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
                             <select
                                 value={filterType}
                                 onChange={(e) => setFilterType(e.target.value)}
@@ -436,19 +486,23 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">
-                                                    {new Date(result.test_date).toLocaleDateString()}
+                                                    {isRTL ? new Date(result.test_date).toLocaleDateString('ar-EG', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    }) : new Date(result.test_date).toLocaleDateString()}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                    {result.blood_type || 'N/A'}
+                                                    {result.blood_type || (isRTL ? 'غير محدد' : 'N/A')}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => handleViewDetails(result)}
-                                                        className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                                                        className="text-blue-600 hover:text-blue-900 flex items-center gap-1 mr-4"
                                                     >
                                                         <Eye className="h-4 w-4" />
                                                         {isRTL ? 'عرض' : 'View'}
@@ -546,6 +600,35 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                         <p className="text-sm text-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
                                             {selectedTest.doctor_notes}
                                         </p>
+                                    </div>
+                                </div>
+                            )}
+                            {/* ADD YOUR ATTACHMENTS CODE RIGHT HERE */}
+                            {selectedTest.attachments && selectedTest.attachments.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="font-medium text-gray-900 mb-2">
+                                        {isRTL ? 'المرفقات' : 'Attachments'}
+                                    </h3>
+                                    <div className="space-y-2">
+                                        {selectedTest.attachments.map((attachment) => (
+                                            <div key={attachment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                <div className="flex items-center space-x-3">
+                                                    <File className="w-4 h-4" />
+                                                    <div>
+                                                        <p className="text-sm font-medium">{attachment.file_name}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {formatFileSize(attachment.file_size)} • {new Date(attachment.created_at).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDownloadFile(attachment)}
+                                                    className="text-blue-600 hover:text-blue-800 p-1"
+                                                >
+                                                    <Download className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             )}

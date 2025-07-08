@@ -40,6 +40,8 @@ interface ClinicInfo {
     id: string;
     name: string;
     category: string;
+    category_name_en?: string;  // Add this
+    category_name_ar?: string;  // Add this
     is_active: boolean;
 }
 
@@ -69,7 +71,12 @@ const DoctorManagement = () => {
     // ✅ KEEP: Local UI state (component-specific)
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredDoctors, setFilteredDoctors] = useState<DoctorInfo[]>([]);
-
+    const getCategoryDisplayName = (categoryName: string, categoryNameAr?: string) => {
+        if (isRTL && categoryNameAr) {
+            return categoryNameAr;
+        }
+        return categoryName;
+    };
     // State for doctor form
     const [doctorFormMode, setDoctorFormMode] = useState<"create" | "edit">("create");
     const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
@@ -601,7 +608,10 @@ const DoctorManagement = () => {
 
     const getClinicNameById = (id: string) => {
         const clinic = clinics.find(c => c.id === id);
-        return clinic ? clinic.name : "Unknown Clinic";
+        if (!clinic) return "Unknown Clinic";
+
+        const categoryDisplay = getCategoryDisplayName(clinic.category, clinic.category_name_ar);
+        return `${clinic.name} (${categoryDisplay})`;
     };
 
     // Format time for display
@@ -802,7 +812,7 @@ const DoctorManagement = () => {
                                             .filter(clinic => clinic.is_active)
                                             .map(clinic => (
                                                 <option key={clinic.id} value={clinic.id}>
-                                                    {clinic.name} ({clinic.category})
+                                                    {clinic.name} ({getCategoryDisplayName(clinic.category, clinic.category_name_ar)})
                                                 </option>
                                             ))}
                                     </select>
@@ -840,8 +850,7 @@ const DoctorManagement = () => {
                                         type="tel"
                                         value={doctorFormData.phone}
                                         onChange={handleDoctorInputChange}
-                                        placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"}
-                                        dir={isRTL ? "rtl" : "ltr"}
+                                        placeholder={isRTL ? "٩٧٠/٩٧٢ + أرقام" : "+970/+972 + digits"} dir={isRTL ? "rtl" : "ltr"}
                                         required
                                     />
                                 </div>
