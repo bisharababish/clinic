@@ -113,7 +113,6 @@ const ClickableSkeleton = ({ selectedBodyPart, onBodyPartSelect }) => {
     }
   };
 
-
   // Map skeleton parts to form values
   const getFormValue = (skeletonPart) => {
     const mapping = {
@@ -227,8 +226,136 @@ const ClickableSkeleton = ({ selectedBodyPart, onBodyPartSelect }) => {
   );
 };
 
+// XRay Skeleton Loading Component
+const XRaySkeletonLoading = ({ isRTL }: { isRTL: boolean }) => (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4 md:p-6">
+    <div className="max-w-6xl mx-auto">
+      {/* Header Skeleton */}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center mb-4">
+          <Skeleton className="w-14 h-14 rounded-full" />
+        </div>
+        <Skeleton className="h-9 w-96 mx-auto mb-2" />
+        <Skeleton className="h-6 w-80 mx-auto" />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Patient Information Skeleton */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-black to-blue-700 p-6">
+            <div className="flex items-center text-white">
+              <User className="w-6 h-6 mr-3" />
+              <Skeleton className="h-6 w-48" />
+            </div>
+          </div>
+          <div className="p-6 space-y-4">
+            {/* Patient Search */}
+            <div>
+              <Skeleton className="h-4 w-24 mb-2" />
+              <Skeleton className="h-12 w-full mb-2" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+
+            {/* Date of Birth */}
+            <div>
+              <Skeleton className="h-4 w-20 mb-2" />
+              <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </div>
+
+            {/* Requesting Doctor */}
+            <div>
+              <Skeleton className="h-4 w-28 mb-2" />
+              <Skeleton className="h-12 w-full mb-2" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+
+            {/* Clinical Indication */}
+            <div>
+              <Skeleton className="h-4 w-32 mb-2" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          </div>
+        </div>
+
+        {/* Body Part Selection Skeleton */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-black to-blue-700 p-6">
+            <div className="flex items-center text-white">
+              <Stethoscope className="w-6 h-6 mr-3" />
+              <Skeleton className="h-6 w-40" />
+            </div>
+          </div>
+          <div className="p-6">
+            {/* Body Skeleton */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <Skeleton className="h-6 w-64 mx-auto mb-4" />
+              <div className="flex justify-center">
+                <Skeleton className="w-96 h-96 rounded-lg" />
+              </div>
+            </div>
+
+            {/* Dropdown Skeleton */}
+            <div className="mt-6">
+              <Skeleton className="h-4 w-36 mb-2" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </div>
+        </div>
+
+        {/* File Upload Skeleton */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-black to-blue-700 p-6">
+            <div className="flex items-center text-white">
+              <Upload className="w-6 h-6 mr-3" />
+              <Skeleton className="h-6 w-40" />
+            </div>
+          </div>
+          <div className="p-6">
+            {/* Upload Area */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+              <div className="space-y-4">
+                <div className="flex justify-center">
+                  <Skeleton className="w-16 h-16" />
+                </div>
+                <div>
+                  <Skeleton className="h-6 w-64 mx-auto mb-2" />
+                  <Skeleton className="h-4 w-32 mx-auto" />
+                </div>
+                <Skeleton className="h-4 w-56 mx-auto" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Save Button Skeleton */}
+      <div className="mt-8 text-center">
+        <Skeleton className="h-14 w-48 mx-auto rounded-lg" />
+      </div>
+    </div>
+  </div>
+);
+
+// Authentication/Loading Skeleton
+const AuthSkeletonLoading = () => (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
+    <div className="text-center">
+      <Skeleton className="w-12 h-12 rounded-full mx-auto mb-4" />
+      <Skeleton className="h-6 w-48 mx-auto" />
+    </div>
+  </div>
+);
+
 const XRay = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
+
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -238,6 +365,8 @@ const XRay = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
   const [announcement, setAnnouncement] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -259,66 +388,81 @@ const XRay = () => {
     return data.publicUrl;
   };
 
-  // Check auth status
+  // Check auth status and initialize
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("Current user:", user);
-      if (!user) {
-        setError("Please log in to upload X-ray images");
-      }
-    };
-    checkAuth();
-  }, []);
-
-  // Fetch patients on load
-  useEffect(() => {
-    const fetchPatients = async () => {
+    const initializeComponent = async () => {
       try {
-        const { data, error } = await supabase
-          .from("userinfo")
-          .select("userid, english_username_a, english_username_d, date_of_birth")
-          .eq("user_roles", "Patient");
+        setIsLoading(true);
 
-        if (error) {
-          console.error("Error fetching patients:", error);
-          throw error;
+        // Check authentication
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log("Current user:", user);
+        if (!user) {
+          setError("Please log in to upload X-ray images");
+          setIsInitializing(false);
+          setIsLoading(false);
+          return;
         }
 
-        console.log("Fetched patients:", data);
-        setPatients(data || []);
+        // Fetch data in parallel
+        await Promise.all([
+          fetchPatients(),
+          fetchDoctors()
+        ]);
+
       } catch (err) {
-        console.error("Error fetching patients:", err.message);
-        setError(`Failed to load patients: ${err.message}`);
+        console.error("Error initializing component:", err);
+        setError(`Failed to initialize: ${err.message}`);
+      } finally {
+        setIsInitializing(false);
+        setIsLoading(false);
       }
     };
 
-    fetchPatients();
+    initializeComponent();
   }, []);
 
-  // Fetch doctors on load
-  useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("userinfo")
-          .select("userid, english_username_a, english_username_d")
-          .eq("user_roles", "Doctor");
+  // Fetch patients
+  const fetchPatients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("userinfo")
+        .select("userid, english_username_a, english_username_d, date_of_birth")
+        .eq("user_roles", "Patient");
 
-        if (error) {
-          console.error("Error fetching doctors:", error);
-          throw error;
-        }
-
-        console.log("Fetched doctors:", data);
-        setDoctors(data || []);
-      } catch (err) {
-        console.error("Error fetching doctors:", err.message);
+      if (error) {
+        console.error("Error fetching patients:", error);
+        throw error;
       }
-    };
 
-    fetchDoctors();
-  }, []);
+      console.log("Fetched patients:", data);
+      setPatients(data || []);
+    } catch (err) {
+      console.error("Error fetching patients:", err.message);
+      throw new Error(`Failed to load patients: ${err.message}`);
+    }
+  };
+
+  // Fetch doctors
+  const fetchDoctors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("userinfo")
+        .select("userid, english_username_a, english_username_d")
+        .eq("user_roles", "Doctor");
+
+      if (error) {
+        console.error("Error fetching doctors:", error);
+        throw error;
+      }
+
+      console.log("Fetched doctors:", data);
+      setDoctors(data || []);
+    } catch (err) {
+      console.error("Error fetching doctors:", err.message);
+      // Don't throw here as doctors are optional
+    }
+  };
 
   const handleDoctorSearch = (e) => {
     setDoctorSearchTerm(e.target.value);
@@ -582,6 +726,37 @@ const XRay = () => {
     }
   };
 
+  // Show auth skeleton while checking user
+  if (isInitializing) {
+    return <AuthSkeletonLoading />;
+  }
+
+  // Show skeleton loading while data is being fetched
+  if (isLoading) {
+    return <XRaySkeletonLoading isRTL={isRTL} />;
+  }
+
+  // Show error state if there's a critical error
+  if (error && patients.length === 0 && doctors.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
+        <div className="text-center max-w-md bg-white rounded-xl shadow-lg border border-gray-200 p-8">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            {isRTL ? 'خطأ' : 'Error'}
+          </h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            {isRTL ? 'تحديث الصفحة' : 'Refresh Page'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
@@ -628,7 +803,8 @@ const XRay = () => {
             <div className="bg-gradient-to-r from-black to-blue-700 p-6">
               <div className="flex items-center text-white">
                 <User className="w-6 h-6 mr-3" />
-                <h2 className="text-xl font-semibold">{t('xray.patientInformation') || 'Patient Information'}</h2>              </div>
+                <h2 className="text-xl font-semibold">{t('xray.patientInformation') || 'Patient Information'}</h2>
+              </div>
             </div>
             <div className="p-6 space-y-4">
               <div>
@@ -638,12 +814,13 @@ const XRay = () => {
                 <input
                   type="text"
                   placeholder={t('xray.searchPatientPlaceholder') || 'Search patients...'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   value={searchTerm}
                   onChange={handleSearch}
+                  disabled={isLoading}
                 />
                 <select
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   onChange={(e) => {
                     const patient = patients.find(p => p.userid === parseInt(e.target.value));
                     if (patient) {
@@ -651,6 +828,7 @@ const XRay = () => {
                     }
                   }}
                   value={selectedPatient?.userid || ""}
+                  disabled={isLoading}
                 >
                   <option value="">{t('xray.selectPatientOption') || 'Choose a patient...'}</option>
                   {patients
@@ -666,7 +844,6 @@ const XRay = () => {
                     ))}
                 </select>
               </div>
-
               <div className="grid md:grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -691,12 +868,13 @@ const XRay = () => {
                 <input
                   type="text"
                   placeholder={t('xray.searchDoctorPlaceholder') || 'Search doctors...'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   value={doctorSearchTerm}
                   onChange={handleDoctorSearch}
+                  disabled={isLoading}
                 />
                 <select
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   onChange={(e) => {
                     const doctor = doctors.find(d => d.userid === parseInt(e.target.value));
                     if (doctor) {
@@ -707,6 +885,7 @@ const XRay = () => {
                     }
                   }}
                   value={selectedDoctor?.userid || ""}
+                  disabled={isLoading}
                 >
                   <option value="">{t('xray.selectDoctorOption') || 'Choose a doctor...'}</option>
                   {doctors
@@ -722,7 +901,6 @@ const XRay = () => {
                     ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t('xray.clinicalIndication') || 'Clinical Indication'}
@@ -732,8 +910,9 @@ const XRay = () => {
                   value={formFields.indication}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder={t('xray.indicationPlaceholder') || 'Enter clinical indication...'}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -744,7 +923,8 @@ const XRay = () => {
             <div className="bg-gradient-to-r from-black to-blue-700 p-6">
               <div className="flex items-center text-white">
                 <Stethoscope className="w-6 h-6 mr-3" />
-                <h2 className="text-xl font-semibold">{t('xray.bodyPart') || 'Body Part Selection'}</h2>              </div>
+                <h2 className="text-xl font-semibold">{t('xray.bodyPart') || 'Body Part Selection'}</h2>
+              </div>
             </div>
             <div className="p-6">
               {/* Clickable Skeleton */}
@@ -762,7 +942,8 @@ const XRay = () => {
                   name="bodyPart"
                   value={formFields.bodyPart}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading}
                 >
                   <option value="">{t('xray.selectBodyPart') || 'Select body part...'}</option>
                   <option value="chest">{t('xray.bodyParts.chest') || 'Chest'}</option>
@@ -781,7 +962,6 @@ const XRay = () => {
               </div>
             </div>
           </div>
-
           {/* File Upload */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
             <div className="bg-gradient-to-r from-black to-blue-700 p-6">
@@ -792,13 +972,14 @@ const XRay = () => {
             </div>
             <div className="p-6">
               <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer hover:bg-gray-50 ${isDragging ? "border-blue-500 bg-blue-50" :
-                  file ? "border-green-500 bg-green-50" : "border-gray-300"
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 cursor-pointer hover:bg-gray-50 ${isLoading || isUploading ? "opacity-50 cursor-not-allowed" :
+                    isDragging ? "border-blue-500 bg-blue-50" :
+                      file ? "border-green-500 bg-green-50" : "border-gray-300"
                   }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={triggerFileInput}
+                onDragOver={!isLoading && !isUploading ? handleDragOver : undefined}
+                onDragLeave={!isLoading && !isUploading ? handleDragLeave : undefined}
+                onDrop={!isLoading && !isUploading ? handleDrop : undefined}
+                onClick={!isLoading && !isUploading ? triggerFileInput : undefined}
               >
                 <input
                   type="file"
@@ -806,6 +987,7 @@ const XRay = () => {
                   onChange={handleFileChange}
                   className="hidden"
                   accept="image/jpeg,image/png,image/jpg"
+                  disabled={isLoading || isUploading}
                 />
                 {file ? (
                   <div className="space-y-4">
@@ -824,7 +1006,8 @@ const XRay = () => {
                         e.stopPropagation();
                         removeFile();
                       }}
-                      className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                      disabled={isLoading || isUploading}
+                      className="inline-flex items-center px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <X className="w-4 h-4 mr-2" />
                       {t('xray.removeFile') || 'Remove File'}
@@ -847,7 +1030,6 @@ const XRay = () => {
                   </div>
                 )}
               </div>
-
               {/* Upload Progress */}
               {isUploading && (
                 <div className="mt-6">
@@ -868,15 +1050,15 @@ const XRay = () => {
         <div className="mt-8 text-center">
           <button
             onClick={handleSave}
-            disabled={!selectedPatient || !file || !formFields.bodyPart || isUploading}
-            className={`px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${selectedPatient && file && formFields.bodyPart && !isUploading
-              ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            disabled={!selectedPatient || !file || !formFields.bodyPart || isUploading || isLoading}
+            className={`px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${selectedPatient && file && formFields.bodyPart && !isUploading && !isLoading
+                ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
               }`}
           >
             {isUploading ? (
               <div className="flex items-center justify-center">
-                <Skeleton width={24} height={24} circle className="mr-3" />
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
                 {t('xray.uploadingXray') || 'Uploading X-ray...'}
               </div>
             ) : (

@@ -1,4 +1,4 @@
-// DoctorXRayPage.tsx - With Database Integration
+// DoctorXRayPage.tsx - With comprehensive skeleton loading
 import React, { useState, useEffect } from 'react';
 import { Search, Image, Calendar, User, Filter, Download, Eye, ZoomIn, ZoomOut, RotateCw, AlertCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -28,11 +28,129 @@ interface XRayImage {
     impression?: string;
 }
 
+// Skeleton Loading Component for DoctorXRayPage
+const DoctorXRaySkeletonLoading = ({ isRTL }: { isRTL: boolean }) => (
+    <div className="min-h-screen bg-gray-50">
+        {/* Header Skeleton */}
+        <div className="bg-white shadow-sm border-b">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="py-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2">
+                                <Skeleton className="h-8 w-8" />
+                                <Skeleton className="h-8 w-40" />
+                            </div>
+                            <Skeleton className="h-4 w-80" />
+                        </div>
+                        <Skeleton className="h-10 w-24" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Search and Filters Skeleton */}
+            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-28" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Images Grid Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(9)].map((_, index) => (
+                    <div key={index} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                        {/* Image Preview Skeleton */}
+                        <div className="aspect-square bg-gray-900 relative">
+                            <Skeleton className="w-full h-full" />
+                            <div className="absolute top-2 right-2">
+                                <Skeleton className="h-6 w-20 rounded-full" />
+                            </div>
+                        </div>
+
+                        {/* Image Info Skeleton */}
+                        <div className="p-4">
+                            <div className="flex items-start justify-between mb-2">
+                                <div>
+                                    <Skeleton className="h-5 w-32 mb-1" />
+                                    <Skeleton className="h-4 w-20" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 mb-4">
+                                <Skeleton className="h-4 w-36" />
+                                <Skeleton className="h-4 w-28" />
+                                <Skeleton className="h-4 w-40" />
+                            </div>
+
+                            <Skeleton className="h-4 w-full mb-4" />
+
+                            {/* Action Buttons Skeleton */}
+                            <div className="flex space-x-2">
+                                <Skeleton className="h-9 flex-1" />
+                                <Skeleton className="h-9 flex-1" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+);
+
+// Authentication Skeleton Loading
+const AuthSkeletonLoading = () => (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+            <Skeleton className="w-12 h-12 rounded-full mx-auto mb-4" />
+            <Skeleton className="h-6 w-48 mx-auto" />
+        </div>
+    </div>
+);
+
+// Loading Skeleton with Text
+const LoadingSkeletonWithText = ({ text }: { text: string }) => (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+            <Skeleton className="w-12 h-12 rounded-full mx-auto mb-4" />
+            <Skeleton className="h-6 w-48 mx-auto mb-2" />
+            <Skeleton className="h-4 w-32 mx-auto" />
+            <p className="mt-4 text-gray-600">{text}</p>
+
+            {/* Grid Skeleton for images */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                            <Skeleton className="w-full h-60" />
+                            <div className="p-4">
+                                <Skeleton className="h-4 w-24 mb-2" />
+                                <Skeleton className="h-3 w-16 mb-1" />
+                                <Skeleton className="h-3 w-20 mb-1" />
+                                <Skeleton className="h-3 w-32" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
 const DoctorXRayPage: React.FC = () => {
     const { user } = useAuth();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+
     const [xrayImages, setXrayImages] = useState<XRayImage[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [initializing, setInitializing] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [selectedImage, setSelectedImage] = useState<XRayImage | null>(null);
@@ -40,80 +158,6 @@ const DoctorXRayPage: React.FC = () => {
     const [filterBodyPart, setFilterBodyPart] = useState<string>('');
     const [imageZoom, setImageZoom] = useState<number>(100);
     const [imageRotation, setImageRotation] = useState<number>(0);
-
-    // Fetch X-ray images from database
-    useEffect(() => {
-        const fetchXrayImages = async () => {
-            try {
-                // Check if user is authenticated and is a doctor
-                if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
-                    setError(t('admin.accessDenied') || 'Access denied. Only doctors and administrators can view X-ray images.');
-                    setLoading(false);
-                    return;
-                }
-
-                setLoading(true);
-                console.log('Fetching X-ray images...');
-
-                // Fetch X-ray images from your database
-                const { data: xrayData, error: xrayError } = await supabase
-                    .from('xray_images') // Make sure this matches your table name
-                    .select(`
-                        id,
-                        patient_id,
-                        patient_name,
-                        date_of_birth,
-                        body_part,
-                        indication,
-                        requesting_doctor,
-                        image_url,
-                        created_at
-                    `)
-                    .order('created_at', { ascending: false });
-
-                if (xrayError) {
-                    console.error('Error fetching X-ray images:', xrayError);
-                    throw new Error(xrayError.message);
-                }
-
-                console.log('Raw X-ray data:', xrayData);
-
-                if (xrayData && xrayData.length > 0) {
-                    // Transform the data to match the component interface
-                    const transformedData: XRayImage[] = xrayData.map(item => {
-                        // Get the full image URL from Supabase storage
-                        const imageUrl = getImageUrl(item.image_url);
-
-                        return {
-                            ...item,
-                            // Map database fields to component fields
-                            imageUrl,
-                            patientName: item.patient_name,
-                            patientId: item.patient_id.toString(),
-                            xrayDate: item.created_at,
-                            radiologist: item.requesting_doctor || 'Unknown',
-                            status: 'Completed', // Default status
-                            findings: item.indication || '',
-                            impression: ''
-                        };
-                    });
-
-                    console.log('Transformed X-ray data:', transformedData);
-                    setXrayImages(transformedData);
-                } else {
-                    setXrayImages([]);
-                }
-
-            } catch (err) {
-                console.error('Error in fetchXrayImages:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load X-ray images');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchXrayImages();
-    }, [user, t]);
 
     // Helper function to get image URL from Supabase storage
     const getImageUrl = (imagePath: string): string => {
@@ -130,6 +174,100 @@ const DoctorXRayPage: React.FC = () => {
             return '';
         }
     };
+
+    // Fetch X-ray images from database
+    const fetchXrayImages = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            console.log('Fetching X-ray images...');
+
+            // Fetch X-ray images from your database
+            const { data: xrayData, error: xrayError } = await supabase
+                .from('xray_images') // Make sure this matches your table name
+                .select(`
+                    id,
+                    patient_id,
+                    patient_name,
+                    date_of_birth,
+                    body_part,
+                    indication,
+                    requesting_doctor,
+                    image_url,
+                    created_at
+                `)
+                .order('created_at', { ascending: false });
+
+            if (xrayError) {
+                console.error('Error fetching X-ray images:', xrayError);
+                throw new Error(xrayError.message);
+            }
+
+            console.log('Raw X-ray data:', xrayData);
+
+            if (xrayData && xrayData.length > 0) {
+                // Transform the data to match the component interface
+                const transformedData: XRayImage[] = xrayData.map(item => {
+                    // Get the full image URL from Supabase storage
+                    const imageUrl = getImageUrl(item.image_url);
+
+                    return {
+                        ...item,
+                        // Map database fields to component fields
+                        imageUrl,
+                        patientName: item.patient_name,
+                        patientId: item.patient_id.toString(),
+                        xrayDate: item.created_at,
+                        radiologist: item.requesting_doctor || 'Unknown',
+                        status: 'Completed', // Default status
+                        findings: item.indication || '',
+                        impression: ''
+                    };
+                });
+
+                console.log('Transformed X-ray data:', transformedData);
+                setXrayImages(transformedData);
+            } else {
+                setXrayImages([]);
+            }
+
+        } catch (err) {
+            console.error('Error in fetchXrayImages:', err);
+            setError(err instanceof Error ? err.message : 'Failed to load X-ray images');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Initialize component
+    useEffect(() => {
+        const initializeComponent = async () => {
+            try {
+                // Check if user is authenticated and is a doctor
+                if (!user) {
+                    setInitializing(false);
+                    return;
+                }
+
+                if (user.role !== 'doctor' && user.role !== 'admin') {
+                    setError(t('admin.accessDenied') || 'Access denied. Only doctors and administrators can view X-ray images.');
+                    setInitializing(false);
+                    setLoading(false);
+                    return;
+                }
+
+                // Fetch X-ray images
+                await fetchXrayImages();
+            } catch (err) {
+                console.error('Error initializing component:', err);
+                setError(err instanceof Error ? err.message : 'Failed to initialize');
+            } finally {
+                setInitializing(false);
+            }
+        };
+
+        initializeComponent();
+    }, [user, t]);
 
     // Filter images based on search and filters
     const filteredImages: XRayImage[] = xrayImages.filter(image => {
@@ -215,76 +353,20 @@ const DoctorXRayPage: React.FC = () => {
     };
 
     const handleRefresh = async (): Promise<void> => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const { data: xrayData, error: xrayError } = await supabase
-                .from('xray_images')
-                .select(`
-                    id,
-                    patient_id,
-                    patient_name,
-                    date_of_birth,
-                    body_part,
-                    indication,
-                    requesting_doctor,
-                    image_url,
-                    created_at
-                `)
-                .order('created_at', { ascending: false });
-
-            if (xrayError) throw new Error(xrayError.message);
-
-            if (xrayData) {
-                const transformedData: XRayImage[] = xrayData.map(item => ({
-                    ...item,
-                    imageUrl: getImageUrl(item.image_url),
-                    patientName: item.patient_name,
-                    patientId: item.patient_id.toString(),
-                    xrayDate: item.created_at,
-                    radiologist: item.requesting_doctor || 'Unknown',
-                    status: 'Completed',
-                    findings: item.indication || '',
-                    impression: ''
-                }));
-
-                setXrayImages(transformedData);
-            }
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to refresh data');
-        } finally {
-            setLoading(false);
-        }
+        await fetchXrayImages();
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
-                    <Skeleton width={180} height={20} className="mx-auto mb-2" />
-                    <Skeleton width={120} height={16} className="mx-auto" />
-                    <p className="mt-4 text-gray-600">{t('doctorPages.loadingXrayImages') || 'Loading X-ray images...'}</p>
-                    {/* Skeleton cards for images grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                                <Skeleton height={240} className="w-full" />
-                                <div className="p-4">
-                                    <Skeleton width={100} height={16} className="mb-2" />
-                                    <Skeleton width={60} height={14} className="mb-1" />
-                                    <Skeleton width={80} height={14} className="mb-1" />
-                                    <Skeleton width={120} height={14} />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
+    // Show auth skeleton while checking user
+    if (!user && initializing) {
+        return <AuthSkeletonLoading />;
     }
 
+    // Show skeleton loading while data is being fetched
+    if (loading && initializing) {
+        return <LoadingSkeletonWithText text={t('doctorPages.loadingXrayImages') || 'Loading X-ray images...'} />;
+    }
+
+    // Show error state
     if (error) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -292,12 +374,14 @@ const DoctorXRayPage: React.FC = () => {
                     <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('common.error') || 'Error'}</h2>
                     <p className="text-gray-600 mb-4">{error}</p>
-                    <button
-                        onClick={handleRefresh}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                        {t('common.refresh') || 'Refresh'}
-                    </button>
+                    {!error.includes('Access denied') && (
+                        <button
+                            onClick={handleRefresh}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                            {t('common.refresh') || 'Refresh'}
+                        </button>
+                    )}
                 </div>
             </div>
         );
@@ -321,12 +405,13 @@ const DoctorXRayPage: React.FC = () => {
                             </div>
                             <button
                                 onClick={handleRefresh}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                disabled={loading}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
-                                {t('common.refresh') || 'Refresh'}
+                                {loading ? (t('common.refreshing') || 'Refreshing...') : (t('common.refresh') || 'Refresh')}
                             </button>
                         </div>
                     </div>
@@ -344,7 +429,8 @@ const DoctorXRayPage: React.FC = () => {
                                 placeholder={t('doctorPages.searchPatientsXray') || 'Search patients or body parts...'}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={loading}
+                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
                         <div className="relative">
@@ -352,7 +438,8 @@ const DoctorXRayPage: React.FC = () => {
                             <select
                                 value={filterBodyPart}
                                 onChange={(e) => setFilterBodyPart(e.target.value)}
-                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={loading}
+                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <option value="">{t('doctorPages.allBodyParts') || 'All Body Parts'}</option>
                                 <option value="chest">{t('xray.bodyParts.chest') || 'Chest'}</option>
@@ -375,12 +462,16 @@ const DoctorXRayPage: React.FC = () => {
                                 type="date"
                                 value={filterDate}
                                 onChange={(e) => setFilterDate(e.target.value)}
-                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={loading}
+                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-600">
-                                {filteredImages.length} {t('doctorPages.imagesFound') || 'images found'}
+                                {loading ?
+                                    <Skeleton className="h-4 w-28" /> :
+                                    `${filteredImages.length} ${t('doctorPages.imagesFound') || 'images found'}`
+                                }
                             </span>
                         </div>
                     </div>
@@ -388,69 +479,109 @@ const DoctorXRayPage: React.FC = () => {
 
                 {/* Images Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredImages.map((image) => (
-                        <div key={image.id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
-                            {/* Image Preview */}
-                            <div className="aspect-square bg-gray-900 relative">
-                                <img
-                                    src={image.imageUrl}
-                                    alt={`${image.body_part} X-ray for ${image.patient_name}`}
-                                    className="w-full h-full object-contain"
-                                    onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
-                                    }}
-                                />
-                                <div className="absolute top-2 right-2">
-                                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                        {t('admin.completed') || 'Completed'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Image Info */}
-                            <div className="p-4">
-                                <div className="flex items-start justify-between mb-2">
-                                    <div>
-                                        <h3 className="font-medium text-gray-900">{image.patient_name}</h3>
-                                        <p className="text-sm text-gray-500">{t('usersManagement.id') || 'ID'}: {image.patient_id}</p>
+                    {loading ? (
+                        // Show skeleton cards while loading
+                        [...Array(6)].map((_, index) => (
+                            <div key={index} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                                {/* Image Preview Skeleton */}
+                                <div className="aspect-square bg-gray-900 relative">
+                                    <Skeleton className="w-full h-full" />
+                                    <div className="absolute top-2 right-2">
+                                        <Skeleton className="h-6 w-20 rounded-full" />
                                     </div>
                                 </div>
 
-                                <div className="space-y-1 text-sm text-gray-600 mb-4">
-                                    <p><span className="font-medium">{t('xray.bodyPart') || 'Body Part'}:</span> {image.body_part}</p>
-                                    <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(image.created_at).toLocaleDateString()}</p>
-                                    <p><span className="font-medium">{t('xray.requestingDoctor') || 'Requesting Doctor'}:</span> {image.requesting_doctor || 'N/A'}</p>
-                                </div>
-
-                                {image.indication && (
-                                    <div className="mb-4">
-                                        <p className="text-sm text-gray-600">
-                                            <span className="font-medium">{t('xray.clinicalIndication') || 'Clinical Indication'}:</span> {image.indication}
-                                        </p>
+                                {/* Image Info Skeleton */}
+                                <div className="p-4">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                            <Skeleton className="h-5 w-32 mb-1" />
+                                            <Skeleton className="h-4 w-20" />
+                                        </div>
                                     </div>
-                                )}
 
-                                {/* Action Buttons */}
-                                <div className="flex space-x-2">
-                                    <button
-                                        onClick={() => handleViewImage(image)}
-                                        className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-1"
-                                    >
-                                        <Eye className="h-4 w-4" />
-                                        {t('common.view') || 'View'}
-                                    </button>
-                                    <button
-                                        onClick={() => handleDownloadImage(image)}
-                                        className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-200 flex items-center justify-center gap-1"
-                                    >
-                                        <Download className="h-4 w-4" />
-                                        {t('doctorPages.downloadImage') || 'Download'}
-                                    </button>
+                                    <div className="space-y-2 mb-4">
+                                        <Skeleton className="h-4 w-36" />
+                                        <Skeleton className="h-4 w-28" />
+                                        <Skeleton className="h-4 w-40" />
+                                    </div>
+
+                                    <Skeleton className="h-4 w-full mb-4" />
+
+                                    {/* Action Buttons Skeleton */}
+                                    <div className="flex space-x-2">
+                                        <Skeleton className="h-9 flex-1" />
+                                        <Skeleton className="h-9 flex-1" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        // Show actual data
+                        filteredImages.map((image) => (
+                            <div key={image.id} className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
+                                {/* Image Preview */}
+                                <div className="aspect-square bg-gray-900 relative">
+                                    <img
+                                        src={image.imageUrl}
+                                        alt={`${image.body_part} X-ray for ${image.patient_name}`}
+                                        className="w-full h-full object-contain"
+                                        onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+                                        }}
+                                    />
+                                    <div className="absolute top-2 right-2">
+                                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                            {t('admin.completed') || 'Completed'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Image Info */}
+                                <div className="p-4">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div>
+                                            <h3 className="font-medium text-gray-900">{image.patient_name}</h3>
+                                            <p className="text-sm text-gray-500">{t('usersManagement.id') || 'ID'}: {image.patient_id}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1 text-sm text-gray-600 mb-4">
+                                        <p><span className="font-medium">{t('xray.bodyPart') || 'Body Part'}:</span> {image.body_part}</p>
+                                        <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(image.created_at).toLocaleDateString()}</p>
+                                        <p><span className="font-medium">{t('xray.requestingDoctor') || 'Requesting Doctor'}:</span> {image.requesting_doctor || 'N/A'}</p>
+                                    </div>
+
+                                    {image.indication && (
+                                        <div className="mb-4">
+                                            <p className="text-sm text-gray-600">
+                                                <span className="font-medium">{t('xray.clinicalIndication') || 'Clinical Indication'}:</span> {image.indication}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Action Buttons */}
+                                    <div className="flex space-x-2">
+                                        <button
+                                            onClick={() => handleViewImage(image)}
+                                            className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-1"
+                                        >
+                                            <Eye className="h-4 w-4" />
+                                            {t('common.view') || 'View'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDownloadImage(image)}
+                                            className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-200 flex items-center justify-center gap-1"
+                                        >
+                                            <Download className="h-4 w-4" />
+                                            {t('doctorPages.downloadImage') || 'Download'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 {filteredImages.length === 0 && !loading && (
@@ -465,7 +596,6 @@ const DoctorXRayPage: React.FC = () => {
                     </div>
                 )}
             </div>
-
 
             {/* Image Viewer Modal */}
             {selectedImage && (
@@ -536,7 +666,6 @@ const DoctorXRayPage: React.FC = () => {
                                     />
                                 </div>
                             </div>
-
                             {/* Information Panel - Mobile: Bottom Sheet, Desktop: Side Panel */}
                             <div className="w-full sm:w-80 bg-gray-50 border-t sm:border-t-0 sm:border-l overflow-y-auto order-2 sm:order-2 max-h-[40vh] sm:max-h-none">
                                 <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
@@ -551,7 +680,6 @@ const DoctorXRayPage: React.FC = () => {
                                             <p><span className="font-medium">{t('xray.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.date_of_birth || 'N/A'}</p>
                                         </div>
                                     </div>
-
                                     {/* Exam Information */}
                                     <div>
                                         <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">

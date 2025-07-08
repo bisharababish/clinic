@@ -37,6 +37,40 @@ type Category = {
     name: string;
 };
 
+// Skeleton Loading Component
+const ClinicsSkeletonLoading = ({ isRTL }: { isRTL: boolean }) => (
+    <div className={`clinics-container ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"}>
+        <div className="clinics-content">
+            {/* Alert Skeleton */}
+            <div className="clinics-alert mb-6">
+                <Skeleton className="h-12 w-full" />
+            </div>
+
+            {/* Category Buttons Skeleton */}
+            <div className={`category-buttons-container ${isRTL ? 'rtl' : 'ltr'} mb-6`} dir={isRTL ? "rtl" : "ltr"}>
+                <div className="flex flex-wrap gap-2">
+                    {[...Array(5)].map((_, index) => (
+                        <Skeleton key={index} className="h-10 w-24 rounded-md" />
+                    ))}
+                </div>
+            </div>
+
+            {/* Clinics Grid Skeleton */}
+            <div className="clinics-grid">
+                {[...Array(6)].map((_, index) => (
+                    <div key={index} className="clinic-card" dir={isRTL ? "rtl" : "ltr"}>
+                        <div className="space-y-3">
+                            <Skeleton className="h-6 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                            <Skeleton className="h-4 w-2/3" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+);
+
 const Clinics = () => {
     const navigate = useNavigate();
     const { toast } = useToast();
@@ -58,9 +92,6 @@ const Clinics = () => {
         loadData();
     }, []);
 
-
-
-    // REPLACE THE ENTIRE loadData FUNCTION WITH:
     const loadData = async () => {
         setLoadError(null);
         try {
@@ -72,8 +103,8 @@ const Clinics = () => {
                     .from('clinic_categories')
                     .select('id, name')
                     .eq('is_active', true)
-                    .order('display_order', { ascending: true })  // ADD THIS
-                    .order('name', { ascending: true }),          // CHANGE THIS
+                    .order('display_order', { ascending: true })
+                    .order('name', { ascending: true }),
                 supabase
                     .from('clinics')
                     .select(`
@@ -97,8 +128,8 @@ const Clinics = () => {
                     .eq('is_active', true)
                     .eq('doctors.is_available', true)
                     .order('display_order', { ascending: true })
-                    .order('name', { ascending: true }
-                    )]);
+                    .order('name', { ascending: true })
+            ]);
 
             if (categoryResult.error) throw categoryResult.error;
             if (clinicResult.error) throw clinicResult.error;
@@ -152,6 +183,7 @@ const Clinics = () => {
         setSelectedTime("");
         setSelectedDay("");
     }, []);
+
     const handleSelectTimeSlot = useCallback((day: string, time: string) => {
         setSelectedDay(day);
         setSelectedTime(time);
@@ -200,14 +232,31 @@ const Clinics = () => {
         return dayMap[day] || day;
     };
 
+    // Show skeleton loading while data is being fetched
     if (isLoading) {
+        return <ClinicsSkeletonLoading isRTL={isRTL} />;
+    }
+
+    // Show error state if loading failed
+    if (loadError) {
         return (
-            <div className={`loading-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? "rtl" : "ltr"}>
-                <div className="loading-spinner"></div>
-                <p className="loading-text">{t('clinics.loadingClinics') || 'Loading clinics...'}</p>
+            <div className={`clinics-container ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"}>
+                <div className="clinics-content">
+                    <Alert variant="destructive" className="clinics-alert">
+                        <AlertDescription>
+                            {loadError}
+                        </AlertDescription>
+                    </Alert>
+                    <div className="text-center mt-4">
+                        <Button onClick={loadData} variant="outline">
+                            {t('clinics.retry') || 'Retry'}
+                        </Button>
+                    </div>
+                </div>
             </div>
         );
     }
+
     return (
         <div className={`clinics-container ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"}>
             <div className="clinics-content">
@@ -385,7 +434,6 @@ const Clinics = () => {
                 )}
             </div>
         </div>
-
     );
 };
 

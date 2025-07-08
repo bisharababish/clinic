@@ -83,6 +83,130 @@ interface LabAttachment {
   created_at: string;
 }
 
+// Skeleton Loading Component for Labs
+const LabsSkeletonLoading = ({ isRTL }: { isRTL: boolean }) => (
+  <div className={cn("min-h-screen bg-background text-foreground", isRTL ? 'rtl' : 'ltr')} dir={isRTL ? 'rtl' : 'ltr'}>
+    <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Page Title Skeleton */}
+        <div className="mb-6">
+          <Skeleton className="h-10 w-80 mb-2" />
+        </div>
+
+        {/* Main Card Skeleton */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>
+              <Skeleton className="h-6 w-48" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+
+                {/* Patient Selection Skeleton */}
+                <div className="md:col-span-2">
+                  <Skeleton className="h-4 w-24 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+
+                {/* Patient Name Skeleton */}
+                <div>
+                  <Skeleton className="h-4 w-20 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+
+                {/* Patient Email Skeleton */}
+                <div>
+                  <Skeleton className="h-4 w-24 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+
+                {/* Date of Birth Skeleton */}
+                <div>
+                  <Skeleton className="h-4 w-20 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+
+                {/* Blood Type Skeleton */}
+                <div>
+                  <Skeleton className="h-4 w-18 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+
+                {/* Test Date Skeleton */}
+                <div>
+                  <Skeleton className="h-4 w-16 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+
+                {/* Test Type Skeleton */}
+                <div className="md:col-span-2">
+                  <Skeleton className="h-4 w-16 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+
+                {/* Test Results Editor Skeleton */}
+                <div className="md:col-span-2">
+                  <Skeleton className="h-4 w-20 mb-2" />
+                  {/* Toolbar Skeleton */}
+                  <div className="flex flex-wrap gap-2 mb-2 p-2 border rounded-t-md">
+                    {[...Array(12)].map((_, index) => (
+                      <Skeleton key={index} className="h-8 w-12" />
+                    ))}
+                  </div>
+                  {/* Editor Content Skeleton */}
+                  <Skeleton className="h-32 w-full rounded-b-md" />
+                </div>
+
+                {/* Doctor Notes Editor Skeleton */}
+                <div className="md:col-span-2">
+                  <Skeleton className="h-4 w-20 mb-2" />
+                  {/* Toolbar Skeleton */}
+                  <div className="flex flex-wrap gap-2 mb-2 p-2 border rounded-t-md">
+                    {[...Array(12)].map((_, index) => (
+                      <Skeleton key={index} className="h-8 w-12" />
+                    ))}
+                  </div>
+                  {/* Editor Content Skeleton */}
+                  <Skeleton className="h-24 w-full rounded-b-md" />
+                </div>
+
+                {/* File Upload Skeleton */}
+                <div className="md:col-span-2">
+                  <Skeleton className="h-4 w-16 mb-2" />
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                    <div className="text-center">
+                      <Skeleton className="h-12 w-12 mx-auto mb-4" />
+                      <Skeleton className="h-4 w-48 mx-auto mb-2" />
+                      <Skeleton className="h-3 w-32 mx-auto" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Button Skeleton */}
+              <div className="flex justify-end">
+                <Skeleton className="h-10 w-40" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  </div>
+);
+
+// User Authentication Skeleton Loading
+const UserAuthSkeletonLoading = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="text-center">
+      <Skeleton className="w-8 h-8 mx-auto mb-4 rounded-full" />
+      <Skeleton className="h-6 w-32 mx-auto" />
+    </div>
+  </div>
+);
+
 const Labs = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -104,7 +228,7 @@ const Labs = () => {
   });
 
   const [isSaved, setIsSaved] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const [error, setError] = useState<string | null>(null);
 
   // --- File upload state ---
@@ -211,8 +335,12 @@ const Labs = () => {
 
   // Fetch patients on component mount
   useEffect(() => {
-    fetchPatients();
-    createLabResultsTableIfNotExists();
+    const initializeComponent = async () => {
+      await createLabResultsTableIfNotExists();
+      await fetchPatients();
+    };
+
+    initializeComponent();
   }, []);
 
   const createLabResultsTableIfNotExists = async () => {
@@ -558,14 +686,7 @@ const Labs = () => {
 
   // Loading state while checking user
   if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary rounded-full animate-spin border-t-transparent"></div>
-          <p className="mt-4 text-lg text-foreground">{t('loading') || 'Loading...'}</p>
-        </div>
-      </div>
-    );
+    return <UserAuthSkeletonLoading />;
   }
 
   // Access denied for non-lab/admin users
@@ -596,23 +717,34 @@ const Labs = () => {
     );
   }
 
+  // Show skeleton loading while data is being fetched
   if (isLoading) {
+    return <LabsSkeletonLoading isRTL={isRTL} />;
+  }
+
+  // Show error state if loading failed
+  if (error && patients.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
-          <Skeleton width={180} height={20} className="mx-auto mb-2" />
-          <Skeleton width={120} height={16} className="mx-auto" />
-          <p className="mt-4 text-gray-600">{t('labs.loadingPatients') || 'Loading patients...'}</p>
-          {/* Skeleton rows for patient select and form fields */}
-          <div className="mt-8 space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} width={320} height={32} className="mx-auto" />
-            ))}
-            <Skeleton width={240} height={32} className="mx-auto mt-4" />
-            <Skeleton width={400} height={80} className="mx-auto mt-4" />
+      <div className={cn("min-h-screen bg-background text-foreground", isRTL ? 'rtl' : 'ltr')} dir={isRTL ? 'rtl' : 'ltr'}>
+        <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-6">
+              {t('labs.title') || 'Laboratory Management'}
+            </h1>
+
+            <Alert variant="destructive" className="mt-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{t('error') || 'Error'}</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+
+            <div className="text-center mt-4">
+              <Button onClick={fetchPatients} variant="outline">
+                {t('labs.retry') || 'Retry'}
+              </Button>
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
@@ -686,7 +818,6 @@ const Labs = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   {/* Patient Name (Read-only) */}
                   <div>
                     <Label htmlFor="patientName">{isRTL ? 'اسم المريض' : 'Patient Name'}</Label>
@@ -764,7 +895,6 @@ const Labs = () => {
                       required
                     />
                   </div>
-
                   {/* Test Results */}
                   {isClient && testResultsEditor && (
                     <div className="md:col-span-2">
@@ -820,7 +950,6 @@ const Labs = () => {
                       </div>
                     </div>
                   )}
-
                   {/* Saved Attachments */}
                   {attachments.length > 0 && (
                     <div className="md:col-span-2">

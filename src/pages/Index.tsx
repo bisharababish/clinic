@@ -103,7 +103,79 @@ interface PatientCreationForm {
   user_password: string;
   social_situation?: 'single' | 'married' | '';
 }
+// Skeleton Loading Components
+const PatientSearchSkeletonLoading = ({ isRTL }: { isRTL: boolean }) => (
+  <div className="space-y-6">
+    {/* Search Controls Skeleton */}
+    <div className="search-controls">
+      <Skeleton className="h-12 flex-1" />
+      <Skeleton className="h-12 w-24" />
+      <Skeleton className="h-12 w-40" />
+    </div>
 
+    {/* Search Results Skeleton */}
+    <div className="space-y-4">
+      <Skeleton className="h-6 w-32" />
+      <div className="search-results-grid">
+        {[...Array(3)].map((_, index) => (
+          <div key={index} className="border rounded-lg p-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-36" />
+              </div>
+              <div className="pt-2 border-t">
+                <div className="grid grid-cols-4 gap-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="text-center">
+                      <Skeleton className="h-4 w-6 mx-auto mb-1" />
+                      <Skeleton className="h-3 w-12 mx-auto" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const PatientSidebarSkeletonLoading = () => (
+  <div className="p-2">
+    <div className="space-y-2">
+      {[...Array(6)].map((_, index) => (
+        <div key={index} className="border rounded-lg p-3">
+          <div className="space-y-2">
+            <div>
+              <Skeleton className="h-4 w-40 mb-1" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <div className="space-y-1">
+              <Skeleton className="h-3 w-48" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-36" />
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t">
+              <Skeleton className="h-4 w-16" />
+              <div className="flex gap-1">
+                <Skeleton className="h-3 w-6" />
+                <Skeleton className="h-3 w-6" />
+                <Skeleton className="h-3 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 const Index = () => {
   const { user } = useAuth();
   const userRole = user?.role?.toLowerCase() || "";
@@ -127,6 +199,7 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [socialSituation, setSocialSituation] = useState<"married" | "single" | "">("");
+  const [isLoadingHealthData, setIsLoadingHealthData] = useState(false);
 
   // NEW: State for patient list sidebar
   const [allPatients, setAllPatients] = useState<PatientWithHealthInfo[]>([]);
@@ -887,6 +960,8 @@ const Index = () => {
 
   // NEW: Select a patient to view details
   const selectPatient = (patient: PatientWithHealthInfo) => {
+    setIsLoadingHealthData(true); // ADD THIS LINE
+
     setSelectedPatient(patient);
 
     // Update form with patient's basic info for editing if needed
@@ -899,6 +974,7 @@ const Index = () => {
         bloodPressure: patient.health_data.blood_pressure || "",
         heartRate: patient.health_data.heart_rate?.toString() || "",
         temperature: patient.health_data.temperature?.toString() || "",
+
       });
 
       // Load diseases
@@ -947,6 +1023,8 @@ const Index = () => {
       }
 
       setHealthData(patient.health_data);
+      setIsLoadingHealthData(false); // ADD THIS LINE
+
     } else {
       // Reset form for patients without health data
       setPatientInfo({
@@ -962,8 +1040,9 @@ const Index = () => {
       setSelectedMedicines([]);
       setSelectedAllergies([]);
       setCustomAllergy(""); // ADD THIS LINE HERE
-
       setHealthData(null);
+      setIsLoadingHealthData(false); // ADD THIS LINE
+
     }
 
     // Log the selection
@@ -980,6 +1059,7 @@ const Index = () => {
   // Load existing patient health data when component mounts (for patients only)
   useEffect(() => {
     if (user?.id && userRole === 'patient') {
+      setIsLoadingHealthData(true);
       loadPatientHealthData();
     }
   }, [user]);
@@ -1025,6 +1105,7 @@ const Index = () => {
     if (userRole !== 'patient') {
       return;
     }
+    setIsLoadingHealthData(true); // ADD THIS LINE
 
     try {
       const data = await getPatientHealthData(parseInt(user.id));
@@ -1566,11 +1647,7 @@ const Index = () => {
             <ScrollArea className="h-full pb-20">
               <div className="p-2">
                 {isLoadingPatients ? (
-                  <div className="flex flex-col gap-4 py-8">
-                    {[...Array(6)].map((_, i) => (
-                      <Skeleton key={i} width={280} height={56} className="mx-auto" />
-                    ))}
-                  </div>
+                  <PatientSidebarSkeletonLoading />
                 ) : filteredPatients.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
@@ -1829,7 +1906,9 @@ const Index = () => {
               )}
 
               {/* Search Results */}
-              {searchResults.length > 0 && (
+              {isSearching ? (
+                <PatientSearchSkeletonLoading isRTL={isRTL} />
+              ) : searchResults.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
                     <UserCheck className="h-5 w-5" />
@@ -2409,7 +2488,6 @@ const Index = () => {
             </section>
           )}
 
-          {/* Patient Information Section - visible to ALL users */}
           <section className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">
               {selectedPatient ?
@@ -2417,108 +2495,120 @@ const Index = () => {
                 t("home.patientInformation")
               }
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="weight">{t("home.weight")} (kg)</Label>
-                <Input
-                  id="weight"
-                  name="weight"
-                  type="number"
-                  min="1"
-                  max="220"
-                  step="0.1"
-                  value={patientInfo.weight}
-                  onChange={handleInputChange}
-                  placeholder="75"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="height">{t("home.height")} (cm)</Label>
-                <Input
-                  id="height"
-                  name="height"
-                  type="number"
-                  min="1"
-                  max="200"
-                  value={patientInfo.height}
-                  onChange={handleInputChange}
-                  placeholder="170"
-                />
-              </div>
-              {/* NEW: Blood Pressure - Only for nurses */}
-              <div className="space-y-2">
-                <Label htmlFor="bloodPressure">
-                  {isRTL ? "ضغط الدم" : "Blood Pressure"} (mmHg)
-                </Label>
-                <Input
-                  id="bloodPressure"
-                  name="bloodPressure"
-                  type="text"
-                  value={patientInfo.bloodPressure}
-                  onChange={handleInputChange}
-                  placeholder="120/80"
-                />
-              </div>
 
-              {/* NEW: Heart Rate - Only for nurses */}
-              <div className="space-y-2">
-                <Label htmlFor="heartRate">
-                  {isRTL ? "معدل ضربات القلب" : "Heart Rate"} (bpm)
-                </Label>
-                <Input
-                  id="heartRate"
-                  name="heartRate"
-                  type="number"
-                  min="30"
-                  max="200"
-                  value={patientInfo.heartRate}
-                  onChange={handleInputChange}
-                  placeholder="72"
-                />
+            {isLoadingHealthData ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ))}
               </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="weight">{t("home.weight")} (kg)</Label>
+                  <Input
+                    id="weight"
+                    name="weight"
+                    type="number"
+                    min="1"
+                    max="220"
+                    step="0.1"
+                    value={patientInfo.weight}
+                    onChange={handleInputChange}
+                    placeholder="75"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="height">{t("home.height")} (cm)</Label>
+                  <Input
+                    id="height"
+                    name="height"
+                    type="number"
+                    min="1"
+                    max="200"
+                    value={patientInfo.height}
+                    onChange={handleInputChange}
+                    placeholder="170"
+                  />
+                </div>
+                {/* NEW: Blood Pressure - Only for nurses */}
+                <div className="space-y-2">
+                  <Label htmlFor="bloodPressure">
+                    {isRTL ? "ضغط الدم" : "Blood Pressure"} (mmHg)
+                  </Label>
+                  <Input
+                    id="bloodPressure"
+                    name="bloodPressure"
+                    type="text"
+                    value={patientInfo.bloodPressure}
+                    onChange={handleInputChange}
+                    placeholder="120/80"
+                  />
+                </div>
 
-              {/* NEW: Temperature - Only for nurses */}
-              <div className="space-y-2">
-                <Label htmlFor="temperature">
-                  {isRTL ? "درجة حرارة الجسم" : "Body Temperature"} (°C)
-                </Label>
-                <Input
-                  id="temperature"
-                  name="temperature"
-                  type="number"
-                  min="30"
-                  max="45"
-                  step="0.1"
-                  value={patientInfo.temperature}
-                  onChange={handleInputChange}
-                  placeholder="36.5"
-                />
-                <div className="space-y-2 md:col-span-2">
-                  <Label>{t("home.bloodType")}</Label>
-                  <RadioGroup
-                    value={patientInfo.bloodType}
-                    onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
-                    className={`blood-type-radio-group grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
-                  >
-                    {(isRTL ?
-                      ["O-", "O+", "AB-", "AB+", "B-", "B+", "A-", "A+"] :
-                      ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
-                    ).map(type => (
-                      <div key={type} className="blood-type-radio-item flex items-center justify-center">
-                        <RadioGroupItem value={type} id={type} className="blood-type-radio" />
-                        <Label
-                          htmlFor={type}
-                          className="blood-type-label font-medium cursor-pointer"
-                          dir={isRTL ? 'rtl' : 'ltr'}
-                        >
-                          {getBloodTypeDisplay(type)}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                {/* NEW: Heart Rate - Only for nurses */}
+                <div className="space-y-2">
+                  <Label htmlFor="heartRate">
+                    {isRTL ? "معدل ضربات القلب" : "Heart Rate"} (bpm)
+                  </Label>
+                  <Input
+                    id="heartRate"
+                    name="heartRate"
+                    type="number"
+                    min="30"
+                    max="200"
+                    value={patientInfo.heartRate}
+                    onChange={handleInputChange}
+                    placeholder="72"
+                  />
+                </div>
+
+                {/* NEW: Temperature - Only for nurses */}
+                <div className="space-y-2">
+                  <Label htmlFor="temperature">
+                    {isRTL ? "درجة حرارة الجسم" : "Body Temperature"} (°C)
+                  </Label>
+                  <Input
+                    id="temperature"
+                    name="temperature"
+                    type="number"
+                    min="30"
+                    max="45"
+                    step="0.1"
+                    value={patientInfo.temperature}
+                    onChange={handleInputChange}
+                    placeholder="36.5"
+                  />
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>{t("home.bloodType")}</Label>
+                    <RadioGroup
+                      value={patientInfo.bloodType}
+                      onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
+                      className={`blood-type-radio-group grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
+                    >
+                      {(isRTL ?
+                        ["O-", "O+", "AB-", "AB+", "B-", "B+", "A-", "A+"] :
+                        ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+                      ).map(type => (
+                        <div key={type} className="blood-type-radio-item flex items-center justify-center">
+                          <RadioGroupItem value={type} id={type} className="blood-type-radio" />
+                          <Label
+                            htmlFor={type}
+                            className="blood-type-label font-medium cursor-pointer"
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                          >
+                            {getBloodTypeDisplay(type)}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </section>
           {/* ADD THIS COMPLETE NEW SECTION: Social Situation Section - Only show for secretary when female patient is selected */}
           {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && (
@@ -2590,83 +2680,106 @@ const Index = () => {
           {/* Common Diseases - FIXED: Changed to checkboxes for multiple selection */}
           <section className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.commonDiseases")}</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {commonDiseases.map(disease => (
-                <div key={disease.key} className="border rounded-lg hover:bg-gray-50">
-                  <label
-                    htmlFor={`disease-${disease.key}`}
-                    className={`flex items-center p-4 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}
-                  >
-                    <input
-                      type="checkbox"
-                      id={`disease-${disease.key}`}
-                      checked={selectedDiseases.includes(disease.key)}
-                      onChange={() => handleDiseaseSelect(disease.key)}
-                      className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span
-                      className={`text-lg flex-1 ${isRTL ? 'text-right' : 'text-left'}`}
-                      dir={isRTL ? 'rtl' : 'ltr'}
+            {isLoadingHealthData ? (
+              <div className="grid grid-cols-3 gap-3">
+                {[...Array(8)].map((_, index) => (
+                  <Skeleton key={index} className="h-16 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {commonDiseases.map(disease => (
+                  <div key={disease.key} className="border rounded-lg hover:bg-gray-50">
+                    <label
+                      htmlFor={`disease-${disease.key}`}
+                      className={`flex items-center p-4 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}
                     >
-                      {isRTL ? disease.ar : disease.en}
-                    </span>
-                  </label>
-                  {/* Show radio buttons for cholesterol type if cholesterol is checked */}
-                  {disease.key === 'has_cholesterol' && selectedDiseases.includes('has_cholesterol') && (
-                    <div className="flex flex-col items-start px-4 pb-2">
-                      <label className="flex items-center gap-2 mb-1">
-                        <input
-                          type="checkbox"
-                          name="cholesterolHDL"
-                          checked={selectedDiseases.includes('has_cholesterol_hdl')}
-                          onChange={() => handleDiseaseSelect('has_cholesterol_hdl')}
-                        />
-                        {isRTL ? 'الكوليسترول HDL' : 'Cholesterol HDL'}
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          name="cholesterolLDL"
-                          checked={selectedDiseases.includes('has_cholesterol_ldl')}
-                          onChange={() => handleDiseaseSelect('has_cholesterol_ldl')}
-                        />
-                        {isRTL ? 'الكوليسترول LDL' : 'Cholesterol LDL'}
-                      </label>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                      <input
+                        type="checkbox"
+                        id={`disease-${disease.key}`}
+                        checked={selectedDiseases.includes(disease.key)}
+                        onChange={() => handleDiseaseSelect(disease.key)}
+                        className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span
+                        className={`text-lg flex-1 ${isRTL ? 'text-right' : 'text-left'}`}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      >
+                        {isRTL ? disease.ar : disease.en}
+                      </span>
+                    </label>
+                    {/* Show radio buttons for cholesterol type if cholesterol is checked */}
+                    {disease.key === 'has_cholesterol' && selectedDiseases.includes('has_cholesterol') && (
+                      <div className="flex flex-col items-start px-4 pb-2">
+                        <label className="flex items-center gap-2 mb-1">
+                          <input
+                            type="checkbox"
+                            name="cholesterolHDL"
+                            checked={selectedDiseases.includes('has_cholesterol_hdl')}
+                            onChange={() => handleDiseaseSelect('has_cholesterol_hdl')}
+                          />
+                          {isRTL ? 'الكوليسترول HDL' : 'Cholesterol HDL'}
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            name="cholesterolLDL"
+                            checked={selectedDiseases.includes('has_cholesterol_ldl')}
+                            onChange={() => handleDiseaseSelect('has_cholesterol_ldl')}
+                          />
+                          {isRTL ? 'الكوليسترول LDL' : 'Cholesterol LDL'}
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Medicine Categories - visible to ALL users */}
           <section className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.medicinesTitle")}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {medicineCategories.map(({ category, medicines }) => (
-                <div key={category.en} className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-700">
-                    {isRTL ? category.ar : category.en}
-                  </h3>
-                  <div className="space-y-3">
-                    {medicines.map(medicine => (
-                      <div key={medicine.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
-                        <input
-                          type="checkbox"
-                          id={medicine.en}
-                          checked={selectedMedicines.includes(medicine.en)}
-                          onChange={() => handleMedicineSelect(medicine.en)}
-                          className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <Label htmlFor={medicine.en} className="text-base">
-                          {isRTL ? medicine.ar : medicine.en}
-                        </Label>
-                      </div>
-                    ))}
+            {isLoadingHealthData ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="space-y-4">
+                    <Skeleton className="h-6 w-32" />
+                    <div className="space-y-3">
+                      {[...Array(2)].map((_, i) => (
+                        <Skeleton key={i} className="h-8 w-full" />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {medicineCategories.map(({ category, medicines }) => (
+                  <div key={category.en} className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-700">
+                      {isRTL ? category.ar : category.en}
+                    </h3>
+                    <div className="space-y-3">
+                      {medicines.map(medicine => (
+                        <div key={medicine.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
+                          <input
+                            type="checkbox"
+                            id={medicine.en}
+                            checked={selectedMedicines.includes(medicine.en)}
+                            onChange={() => handleMedicineSelect(medicine.en)}
+                            className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <Label htmlFor={medicine.en} className="text-base">
+                            {isRTL ? medicine.ar : medicine.en}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Allergies Section - visible to ALL users */}
