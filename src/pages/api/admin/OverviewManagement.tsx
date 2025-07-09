@@ -553,6 +553,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         onClick={() => {
                             setActiveTab('users');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
+                           window.history.pushState({ tab: 'users' }, '', '');
+
                         }}
                     >
                         <UserPlus className="h-6 w-6 mb-1 text-blue-600" />
@@ -565,6 +567,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         onClick={() => {
                             setActiveTab('appointments');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
+                            window.history.pushState({ tab: 'appointments' }, '', '');
+
                         }}
                     >
                         <Calendar className="h-6 w-6 mb-1 text-green-600" />
@@ -577,6 +581,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                         onClick={() => {
                             setActiveTab('clinics');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
+                            window.history.pushState({ tab: 'clinics' }, '', '');
+
                         }}
                     >
                         <Stethoscope className="h-6 w-6 mb-1 text-purple-600" />

@@ -69,7 +69,21 @@ const AdminDashboardContent = () => {
             return 'overview';
         }
     };
+    // Add this new useEffect to handle browser back button
+    useEffect(() => {
+        const handlePopState = () => {
+            // When user clicks browser back button, redirect to overview
+            if (activeTab !== 'overview' && canViewOverviewTab) {
+                setActiveTab('overview');
+            }
+        };
 
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [activeTab, canViewOverviewTab]);
     // Check admin status and access control
     useEffect(() => {
         const initializeAdminDashboard = async () => {
