@@ -697,9 +697,9 @@ const enTranslations = {
 
         // Real-time name validation errors
         englishNameErrorTitle: 'English Name Error',
-        englishNameErrorDesc: 'Please enter only English letters (no numbers)',
+        englishNameErrorDesc: 'Please enter only English letters',
         arabicNameErrorTitle: 'Arabic Name Error',
-        arabicNameErrorDesc: 'Please enter only Arabic letters (no numbers)',
+        arabicNameErrorDesc: 'Please enter only Arabic letters ',
         // Phone validation errors
         phoneInvalidTitle: 'Invalid Phone Number',
         phoneInvalidDesc: 'Phone number must start with +970 or +972 and be followed by exactly 9 digits',
