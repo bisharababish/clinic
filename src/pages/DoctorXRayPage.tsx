@@ -5,6 +5,18 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/use-toast";
+import {
+    AlertDialog,
+    AlertDialogTrigger,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogFooter,
+    AlertDialogTitle,
+    AlertDialogDescription,
+    AlertDialogAction,
+    AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 // Type definitions matching your database structure
 interface XRayImage {
@@ -158,6 +170,10 @@ const DoctorXRayPage: React.FC = () => {
     const [filterBodyPart, setFilterBodyPart] = useState<string>('');
     const [imageZoom, setImageZoom] = useState<number>(100);
     const [imageRotation, setImageRotation] = useState<number>(0);
+    // 1. Add state for tracking deletion
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [confirmDeleteImage, setConfirmDeleteImage] = useState<XRayImage | null>(null);
+    const { toast } = useToast();
 
     // Helper function to get image URL from Supabase storage
     const getImageUrl = (imagePath: string): string => {
@@ -294,7 +310,11 @@ const DoctorXRayPage: React.FC = () => {
     const handleDownloadImage = async (image: XRayImage): Promise<void> => {
         try {
             if (!image.imageUrl) {
-                alert(t('doctorPages.noImageUrl') || 'No image URL available');
+                toast({
+                    title: t('doctorPages.noImageUrl') || 'No image URL available',
+                    description: undefined,
+                    variant: 'destructive',
+                });
                 return;
             }
 
@@ -336,7 +356,11 @@ const DoctorXRayPage: React.FC = () => {
 
         } catch (error) {
             console.error('Error downloading image:', error);
-            alert(t('doctorPages.downloadFailed') || 'Failed to download image. Please try again.');
+            toast({
+                title: t('doctorPages.downloadFailed') || 'Failed to download image.',
+                description: error instanceof Error ? error.message : undefined,
+                variant: 'destructive',
+            });
         }
     };
 
@@ -354,6 +378,44 @@ const DoctorXRayPage: React.FC = () => {
 
     const handleRefresh = async (): Promise<void> => {
         await fetchXrayImages();
+    };
+
+    // 2. Add delete handler function
+    const handleDeleteImage = async (image: XRayImage): Promise<void> => {
+        setDeletingId(image.id);
+        try {
+            // Delete from database
+            const { error: dbError } = await supabase
+                .from('xray_images')
+                .delete()
+                .eq('id', image.id);
+            if (dbError) throw dbError;
+
+            // Optionally, delete from storage
+            if (image.image_url) {
+                const { error: storageError } = await supabase.storage
+                    .from('xray-images')
+                    .remove([image.image_url]);
+                if (storageError) console.warn('Storage delete error:', storageError);
+            }
+
+            // Remove from UI
+            setXrayImages(prev => prev.filter(x => x.id !== image.id));
+            toast({
+                title: t('doctorPages.deleteSuccess') || 'Image deleted',
+                description: t('doctorPages.deleteSuccessDesc') || 'The X-ray image was deleted successfully.',
+                variant: 'default',
+            });
+        } catch (err) {
+            toast({
+                title: t('doctorPages.deleteFailed') || 'Failed to delete image.',
+                description: err instanceof Error ? err.message : undefined,
+                variant: 'destructive',
+            });
+            console.error('Delete error:', err);
+        } finally {
+            setDeletingId(null);
+        }
     };
 
     // Show auth skeleton while checking user
@@ -577,6 +639,47 @@ const DoctorXRayPage: React.FC = () => {
                                             <Download className="h-4 w-4" />
                                             {t('doctorPages.downloadImage') || 'Download'}
                                         </button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <button
+                                                    onClick={() => setConfirmDeleteImage(image)}
+                                                    disabled={deletingId === image.id}
+                                                    className="flex-1 bg-red-100 text-red-700 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200 flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    {deletingId === image.id ? (t('doctorPages.deleting') || 'Deleting...') : (t('common.delete') || 'Delete')}
+                                                </button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>{t('doctorPages.confirmDeleteTitle') || 'Delete X-ray Image?'}</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        {t('doctorPages.confirmDeleteDesc') || 'Are you sure you want to delete this X-ray image? This action cannot be undone.'}
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel asChild>
+                                                        <button type="button" onClick={() => setConfirmDeleteImage(null)}>
+                                                            {t('common.cancel') || 'Cancel'}
+                                                        </button>
+                                                    </AlertDialogCancel>
+                                                    <AlertDialogAction asChild>
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                if (confirmDeleteImage) {
+                                                                    await handleDeleteImage(confirmDeleteImage);
+                                                                    setConfirmDeleteImage(null);
+                                                                }
+                                                            }}
+                                                            disabled={deletingId === image.id}
+                                                        >
+                                                            {deletingId === image.id ? (t('doctorPages.deleting') || 'Deleting...') : (t('common.delete') || 'Delete')}
+                                                        </button>
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
                                 </div>
                             </div>

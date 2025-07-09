@@ -230,6 +230,12 @@ const enTranslations = {
         rotate: 'Rotate',
         normal: 'Normal',
         abnormal: 'Abnormal',
+        confirmDeleteTitle: 'Delete X-ray Image?',
+        confirmDeleteDesc: 'Are you sure you want to delete this X-ray image? This action cannot be undone.',
+        deleting: 'Deleting...',
+        deleteSuccess: 'Image deleted',
+        deleteSuccessDesc: 'The X-ray image was deleted successfully.',
+        deleteFailed: 'Failed to delete image.',
     },
     // Add these to your existing enTranslations and arTranslations objects in i18n.ts
 
@@ -1856,6 +1862,12 @@ const arTranslations = {
         rotate: 'تدوير',
         normal: 'طبيعي',
         abnormal: 'غير طبيعي',
+        confirmDeleteTitle: 'حذف صورة الأشعة؟',
+        confirmDeleteDesc: 'هل أنت متأكد أنك تريد حذف صورة الأشعة هذه؟ لا يمكن التراجع عن هذا الإجراء.',
+        deleting: 'جارٍ الحذف...',
+        deleteSuccess: 'تم حذف الصورة',
+        deleteSuccessDesc: 'تم حذف صورة الأشعة بنجاح.',
+        deleteFailed: 'فشل في حذف الصورة.',
     },
     footer: {
         rights: 'جميع الحقوق محفوظة',

@@ -905,7 +905,7 @@ const Labs = () => {
                   )}
 
                   {/* Doctor Notes */}
-                  {isClient && doctorNotesEditor && (
+                  {userRole !== 'lab' && isClient && doctorNotesEditor && (
                     <div className="md:col-span-2">
                       <Label id="doctorNotes-label">{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</Label>
                       <TiptapToolbar editor={doctorNotesEditor} isRTL={isRTL} />
