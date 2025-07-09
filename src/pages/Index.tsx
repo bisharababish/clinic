@@ -1217,6 +1217,9 @@ const Index = () => {
         values: { error: errorMessage },
         timestamp: new Date()
       }]);
+    } finally {
+      setIsLoadingHealthData(false);
+
     }
   };
 
@@ -2062,7 +2065,7 @@ const Index = () => {
                             <div>
                               <Label htmlFor="create_english_first" className="text-sm">
                                 {isRTL ? "الأول" : "First"}
-                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                               </Label>
                               <Input
                                 id="create_english_first"
@@ -2076,7 +2079,7 @@ const Index = () => {
                             <div>
                               <Label htmlFor="create_english_second" className="text-sm">
                                 {isRTL ? "الثاني" : "Second"}
-                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                               </Label>
                               <Input
                                 id="create_english_second"
@@ -2090,7 +2093,7 @@ const Index = () => {
                             <div>
                               <Label htmlFor="create_english_third" className="text-sm">
                                 {isRTL ? "الثالث" : "Third"}
-                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                               </Label>
                               <Input
                                 id="create_english_third"
@@ -2104,7 +2107,7 @@ const Index = () => {
                             <div>
                               <Label htmlFor="create_english_last" className="text-sm">
                                 {isRTL ? "الأخير" : "Last"}
-                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                               </Label>
                               <Input
                                 id="create_english_last"
@@ -2127,7 +2130,7 @@ const Index = () => {
                                 <div>
                                   <Label htmlFor="create_arabic_first" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
                                     الأول
-                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                   </Label>
                                   <Input
                                     id="create_arabic_first"
@@ -2143,7 +2146,7 @@ const Index = () => {
                                 <div>
                                   <Label htmlFor="create_arabic_second" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
                                     الثاني
-                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                   </Label>
                                   <Input
                                     id="create_arabic_second"
@@ -2159,7 +2162,7 @@ const Index = () => {
                                 <div>
                                   <Label htmlFor="create_arabic_third" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
                                     الثالث
-                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                   </Label>
                                   <Input
                                     id="create_arabic_third"
@@ -2175,7 +2178,7 @@ const Index = () => {
                                 <div>
                                   <Label htmlFor="create_arabic_last" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
                                     الأخير
-                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                   </Label>
                                   <Input
                                     id="create_arabic_last"
@@ -2195,7 +2198,7 @@ const Index = () => {
                                 <div>
                                   <Label htmlFor="create_arabic_second" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
                                     الثاني
-                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                   </Label>
                                   <Input
                                     id="create_arabic_second"
@@ -2211,7 +2214,7 @@ const Index = () => {
                                 <div>
                                   <Label htmlFor="create_arabic_first" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
                                     الأول
-                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                   </Label>
                                   <Input
                                     id="create_arabic_first"
@@ -2229,7 +2232,7 @@ const Index = () => {
                                 <div>
                                   <Label htmlFor="create_arabic_last" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
                                     الأخير
-                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                   </Label>
                                   <Input
                                     id="create_arabic_last"
@@ -2245,7 +2248,7 @@ const Index = () => {
                                 <div>
                                   <Label htmlFor="create_arabic_third" className="text-sm text-right w-full block" style={{ direction: 'rtl' }}>
                                     الثالث
-                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                                    <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                                   </Label>
                                   <Input
                                     id="create_arabic_third"
@@ -2269,7 +2272,7 @@ const Index = () => {
                           <div>
                             <Label htmlFor="create_dob" className="text-sm">
                               {isRTL ? "تاريخ الميلاد" : "Date of Birth"}
-                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                             </Label>
                             <div className="relative">
                               <Calendar className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
@@ -2287,7 +2290,7 @@ const Index = () => {
                           <div>
                             <Label className="text-sm">
                               {isRTL ? "الجنس" : "Gender"}
-                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                             </Label>
                             <RadioGroup
                               value={createPatientForm.gender_user}
@@ -2379,7 +2382,7 @@ const Index = () => {
                           <div>
                             <Label htmlFor="create_email" className="text-sm">
                               {isRTL ? "البريد الإلكتروني" : "Email"}
-                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                             </Label>
                             <div className="relative">
                               <Mail className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
@@ -2398,7 +2401,7 @@ const Index = () => {
                           <div>
                             <Label htmlFor="create_phone" className="text-sm">
                               {isRTL ? "رقم الهاتف" : "Phone Number"}
-                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}>•</span>
+                              <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> • </span>
                             </Label>
                             <div className="relative">
                               <Phone className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
@@ -2410,7 +2413,7 @@ const Index = () => {
                                 onChange={handleCreatePatientFormChange}
                                 className={isRTL ? 'pr-10' : 'pl-10'}
                                 required
-                                placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"} dir={isRTL ? "rtl" : "ltr"}
+                                placeholder={isRTL ? "٩٧٠/٩٧٢ + أرقام" : "+970/+972 + digits"} dir={isRTL ? "rtl" : "ltr"}
                               />
                             </div>
                           </div>
@@ -2535,675 +2538,680 @@ const Index = () => {
                   />
                 </div>
                 {/* NEW: Blood Pressure - Only for nurses */}
-                <div className="space-y-2">
-                  <Label htmlFor="bloodPressure">
-                    {isRTL ? "ضغط الدم" : "Blood Pressure"} (mmHg)
-                  </Label>
-                  <Input
-                    id="bloodPressure"
-                    name="bloodPressure"
-                    type="text"
-                    value={patientInfo.bloodPressure}
-                    onChange={handleInputChange}
-                    placeholder="120/80"
-                  />
-                </div>
-
-                {/* NEW: Heart Rate - Only for nurses */}
-                <div className="space-y-2">
-                  <Label htmlFor="heartRate">
-                    {isRTL ? "معدل ضربات القلب" : "Heart Rate"} (bpm)
-                  </Label>
-                  <Input
-                    id="heartRate"
-                    name="heartRate"
-                    type="number"
-                    min="30"
-                    max="200"
-                    value={patientInfo.heartRate}
-                    onChange={handleInputChange}
-                    placeholder="72"
-                  />
-                </div>
-
-                {/* NEW: Temperature - Only for nurses */}
-                <div className="space-y-2">
-                  <Label htmlFor="temperature">
-                    {isRTL ? "درجة حرارة الجسم" : "Body Temperature"} (°C)
-                  </Label>
-                  <Input
-                    id="temperature"
-                    name="temperature"
-                    type="number"
-                    min="30"
-                    max="45"
-                    step="0.1"
-                    value={patientInfo.temperature}
-                    onChange={handleInputChange}
-                    placeholder="36.5"
-                  />
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>{t("home.bloodType")}</Label>
-                    <RadioGroup
-                      value={patientInfo.bloodType}
-                      onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
-                      className={`blood-type-radio-group grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
-                    >
-                      {(isRTL ?
-                        ["O-", "O+", "AB-", "AB+", "B-", "B+", "A-", "A+"] :
-                        ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
-                      ).map(type => (
-                        <div key={type} className="blood-type-radio-item flex items-center justify-center">
-                          <RadioGroupItem value={type} id={type} className="blood-type-radio" />
-                          <Label
-                            htmlFor={type}
-                            className="blood-type-label font-medium cursor-pointer"
-                            dir={isRTL ? 'rtl' : 'ltr'}
-                          >
-                            {getBloodTypeDisplay(type)}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-          {/* ADD THIS COMPLETE NEW SECTION: Social Situation Section - Only show for secretary when female patient is selected */}
-          {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && (
-            <section className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                <User className="h-6 w-6" />
-                {isRTL ? "الحالة الاجتماعية" : "Social Situation"}
-              </h2>
-
-              <div className="space-y-4">
-                <Label className="text-lg font-medium">
-                  {isRTL ? "حالة المريضة الاجتماعية:" : "Patient's Social Status:"}
-                </Label>
-
-                <RadioGroup
-                  value={socialSituation}
-                  onValueChange={(value) => setSocialSituation(value as '' | 'single' | 'married')}
-                  className={`flex gap-6 ${isRTL ? 'justify-end' : 'justify-start'}`}
-                >
-                  {isRTL ? (
-                    <>
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                        <Label htmlFor="social_single" className="text-lg cursor-pointer">
-                          {isRTL ? "عزباء" : "Single"}
-                        </Label>
-                        <RadioGroupItem value="single" id="social_single" className="w-5 h-5" />
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                        <Label htmlFor="social_married" className="text-lg cursor-pointer">
-                          {isRTL ? "متزوجة" : "Married"}
-                        </Label>
-                        <RadioGroupItem value="married" id="social_married" className="w-5 h-5" />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                        <RadioGroupItem value="married" id="social_married" className="w-5 h-5" />
-                        <Label htmlFor="social_married" className="text-lg cursor-pointer">
-                          {isRTL ? "متزوجة" : "Married"}
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
-                        <RadioGroupItem value="single" id="social_single" className="w-5 h-5" />
-                        <Label htmlFor="social_single" className="text-lg cursor-pointer">
-                          {isRTL ? "عزباء" : "Single"}
-                        </Label>
-                      </div>
-                    </>
-                  )}
-                </RadioGroup>
-                {/* Show current status if available */}
-                {socialSituation && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      <strong>{isRTL ? "الحالة الحالية:" : "Current Status:"}</strong>
-                      <span className="ml-2">
-                        {socialSituation === 'married'
-                          ? (isRTL ? "متزوجة" : "Married")
-                          : (isRTL ? "عزباء" : "Single")
-                        }
-                      </span>
-                    </p>
+                {userRole !== 'patient' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="bloodPressure">
+                      {isRTL ? "ضغط الدم" : "Blood Pressure"} (mmHg)
+                    </Label>
+                    <Input
+                      id="bloodPressure"
+                      name="bloodPressure"
+                      type="text"
+                      value={patientInfo.bloodPressure}
+                      onChange={handleInputChange}
+                      placeholder="120/80"
+                    />
                   </div>
                 )}
-              </div>
-            </section>
-          )}
-          {/* Common Diseases - FIXED: Changed to checkboxes for multiple selection */}
-          <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.commonDiseases")}</h2>
-            {isLoadingHealthData ? (
-              <div className="grid grid-cols-3 gap-3">
-                {[...Array(8)].map((_, index) => (
-                  <Skeleton key={index} className="h-16 w-full rounded-lg" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-3">
-                {commonDiseases.map(disease => (
-                  <div key={disease.key} className="border rounded-lg hover:bg-gray-50">
-                    <label
-                      htmlFor={`disease-${disease.key}`}
-                      className={`flex items-center p-4 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}
-                    >
-                      <input
-                        type="checkbox"
-                        id={`disease-${disease.key}`}
-                        checked={selectedDiseases.includes(disease.key)}
-                        onChange={() => handleDiseaseSelect(disease.key)}
-                        className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span
-                        className={`text-lg flex-1 ${isRTL ? 'text-right' : 'text-left'}`}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      >
-                        {isRTL ? disease.ar : disease.en}
-                      </span>
-                    </label>
-                    {/* Show radio buttons for cholesterol type if cholesterol is checked */}
-                    {disease.key === 'has_cholesterol' && selectedDiseases.includes('has_cholesterol') && (
-                      <div className="flex flex-col items-start px-4 pb-2">
-                        <label className="flex items-center gap-2 mb-1">
-                          <input
-                            type="checkbox"
-                            name="cholesterolHDL"
-                            checked={selectedDiseases.includes('has_cholesterol_hdl')}
-                            onChange={() => handleDiseaseSelect('has_cholesterol_hdl')}
-                          />
-                          {isRTL ? 'الكوليسترول HDL' : 'Cholesterol HDL'}
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            name="cholesterolLDL"
-                            checked={selectedDiseases.includes('has_cholesterol_ldl')}
-                            onChange={() => handleDiseaseSelect('has_cholesterol_ldl')}
-                          />
-                          {isRTL ? 'الكوليسترول LDL' : 'Cholesterol LDL'}
-                        </label>
+                {/* NEW: Heart Rate - Only for nurses */}
+                {userRole !== 'patient' && (
+
+                  <div className="space-y-2">
+                    <Label htmlFor="heartRate">
+                      {isRTL ? "معدل ضربات القلب" : "Heart Rate"} (bpm)
+                    </Label>
+                    <Input
+                      id="heartRate"
+                      name="heartRate"
+                      type="number"
+                      min="30"
+                      max="200"
+                      value={patientInfo.heartRate}
+                      onChange={handleInputChange}
+                      placeholder="72"
+                    />
+                  </div>
+                )}
+                {/* Temperature - Only visible to staff, not patients */}
+                {userRole !== 'patient' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="temperature">
+                      {isRTL ? "درجة حرارة الجسم" : "Body Temperature"} (°C)
+                    </Label>
+                    <Input
+                      id="temperature"
+                      name="temperature"
+                      type="number"
+                      min="30"
+                      max="45"
+                      step="0.1"
+                      value={patientInfo.temperature}
+                      onChange={handleInputChange}
+                      placeholder="36.5"
+                    />
+                  </div>
+                )}
+                <div className="space-y-2 md:col-span-2">
+                  <Label>{t("home.bloodType")}</Label>
+                  <RadioGroup
+                    value={patientInfo.bloodType}
+                    onValueChange={(value) => setPatientInfo(prev => ({ ...prev, bloodType: value }))}
+                    className={`blood-type-radio-group grid grid-cols-4 md:grid-cols-8 gap-2 ${isRTL ? 'text-right' : 'text-left'}`}
+                  >
+                    {(isRTL ?
+                      ["O-", "O+", "AB-", "AB+", "B-", "B+", "A-", "A+"] :
+                      ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
+                    ).map(type => (
+                      <div key={type} className="blood-type-radio-item flex items-center justify-center">
+                        <RadioGroupItem value={type} id={type} className="blood-type-radio" />
+                        <Label
+                          htmlFor={type}
+                          className="blood-type-label font-medium cursor-pointer"
+                          dir={isRTL ? 'rtl' : 'ltr'}
+                        >
+                          {getBloodTypeDisplay(type)}
+                        </Label>
                       </div>
-                    )}
+                    ))}
+                  </RadioGroup>
+                </div>
+              </div> 
+            )}
+      </section>
+      {/* ADD THIS COMPLETE NEW SECTION: Social Situation Section - Only show for secretary when female patient is selected */}
+      {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && (
+        <section className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+            <User className="h-6 w-6" />
+            {isRTL ? "الحالة الاجتماعية" : "Social Situation"}
+          </h2>
+
+          <div className="space-y-4">
+            <Label className="text-lg font-medium">
+              {isRTL ? "حالة المريضة الاجتماعية:" : "Patient's Social Status:"}
+            </Label>
+
+            <RadioGroup
+              value={socialSituation}
+              onValueChange={(value) => setSocialSituation(value as '' | 'single' | 'married')}
+              className={`flex gap-6 ${isRTL ? 'justify-end' : 'justify-start'}`}
+            >
+              {isRTL ? (
+                <>
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+                    <Label htmlFor="social_single" className="text-lg cursor-pointer">
+                      {isRTL ? "عزباء" : "Single"}
+                    </Label>
+                    <RadioGroupItem value="single" id="social_single" className="w-5 h-5" />
                   </div>
-                ))}
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+                    <Label htmlFor="social_married" className="text-lg cursor-pointer">
+                      {isRTL ? "متزوجة" : "Married"}
+                    </Label>
+                    <RadioGroupItem value="married" id="social_married" className="w-5 h-5" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+                    <RadioGroupItem value="married" id="social_married" className="w-5 h-5" />
+                    <Label htmlFor="social_married" className="text-lg cursor-pointer">
+                      {isRTL ? "متزوجة" : "Married"}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50">
+                    <RadioGroupItem value="single" id="social_single" className="w-5 h-5" />
+                    <Label htmlFor="social_single" className="text-lg cursor-pointer">
+                      {isRTL ? "عزباء" : "Single"}
+                    </Label>
+                  </div>
+                </>
+              )}
+            </RadioGroup>
+            {/* Show current status if available */}
+            {socialSituation && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>{isRTL ? "الحالة الحالية:" : "Current Status:"}</strong>
+                  <span className="ml-2">
+                    {socialSituation === 'married'
+                      ? (isRTL ? "متزوجة" : "Married")
+                      : (isRTL ? "عزباء" : "Single")
+                    }
+                  </span>
+                </p>
               </div>
             )}
-          </section>
-
-          {/* Medicine Categories - visible to ALL users */}
-          <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.medicinesTitle")}</h2>
-            {isLoadingHealthData ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[...Array(4)].map((_, index) => (
-                  <div key={index} className="space-y-4">
-                    <Skeleton className="h-6 w-32" />
-                    <div className="space-y-3">
-                      {[...Array(2)].map((_, i) => (
-                        <Skeleton key={i} className="h-8 w-full" />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {medicineCategories.map(({ category, medicines }) => (
-                  <div key={category.en} className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-700">
-                      {isRTL ? category.ar : category.en}
-                    </h3>
-                    <div className="space-y-3">
-                      {medicines.map(medicine => (
-                        <div key={medicine.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
-                          <input
-                            type="checkbox"
-                            id={`med-${medicine.en}`} checked={selectedMedicines.includes(medicine.en)}
-                            onChange={() => handleMedicineSelect(medicine.en)}
-                            className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <Label htmlFor={`med-${medicine.en}`} className="text-base">
-                            {isRTL ? medicine.ar : medicine.en}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Allergies Section - visible to ALL users */}
-          <section className="bg-white p-6 rounded-lg shadow mt-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">{isRTL ? 'الحساسية الدوائية' : 'Drug Allergies'}</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {allergiesList.filter(allergy => allergy.en !== 'Other').map(allergy => (
-                <div key={allergy.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
+          </div>
+        </section>
+      )}
+      {/* Common Diseases - FIXED: Changed to checkboxes for multiple selection */}
+      <section className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.commonDiseases")}</h2>
+        {isLoadingHealthData ? (
+          <div className="grid grid-cols-3 gap-3">
+            {[...Array(8)].map((_, index) => (
+              <Skeleton key={index} className="h-16 w-full rounded-lg" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3">
+            {commonDiseases.map(disease => (
+              <div key={disease.key} className="border rounded-lg hover:bg-gray-50">
+                <label
+                  htmlFor={`disease-${disease.key}`}
+                  className={`flex items-center p-4 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}
+                >
                   <input
                     type="checkbox"
-                    id={`allergy-${allergy.en}`} checked={selectedAllergies.includes(allergy.en)}
-                    onChange={() => handleAllergySelect(allergy.en)}
-                    className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                    id={`disease-${disease.key}`}
+                    checked={selectedDiseases.includes(disease.key)}
+                    onChange={() => handleDiseaseSelect(disease.key)}
+                    className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <Label htmlFor={`allergy-${allergy.en}`} className="text-base">
-                    {isRTL ? allergy.ar : allergy.en}
-                  </Label>
-                </div>
-              ))}
-            </div>
-
-            {/* Other Allergies - Custom Input */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-              <Label className="text-sm font-medium mb-2 block">
-                {isRTL ? "حساسيات أخرى:" : "Other Allergies:"}
-              </Label>
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={isRTL ? "اكتب نوع الحساسية..." : "Enter allergy type..."}
-                    value={customAllergy}
-                    onChange={(e) => setCustomAllergy(e.target.value)}
-                    className="flex-1"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && customAllergy.trim()) {
-                        addCustomAllergy();
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={addCustomAllergy}
-                    size="sm"
-                    disabled={!customAllergy.trim()}
-                    className="bg-green-600 hover:bg-green-700"
+                  <span
+                    className={`text-lg flex-1 ${isRTL ? 'text-right' : 'text-left'}`}
+                    dir={isRTL ? 'rtl' : 'ltr'}
                   >
-                    <Plus className="h-4 w-4 mr-1" />
-                    {isRTL ? "إضافة" : "Add"}
-                  </Button>
-                </div>
-
-                {/* Display added custom allergies */}
-                {selectedAllergies.filter(allergy => !allergiesList.some(a => a.en === allergy)).length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700">
-                      {isRTL ? "الحساسيات المخصصة المضافة:" : "Added Custom Allergies:"}
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedAllergies
-                        .filter(allergy => !allergiesList.some(a => a.en === allergy))
-                        .map((allergy, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800">
-                            {allergy}
-                            <button
-                              onClick={() => setSelectedAllergies(prev => prev.filter(a => a !== allergy))}
-                              className="ml-1 hover:text-green-600"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                    </div>
+                    {isRTL ? disease.ar : disease.en}
+                  </span>
+                </label>
+                {/* Show radio buttons for cholesterol type if cholesterol is checked */}
+                {disease.key === 'has_cholesterol' && selectedDiseases.includes('has_cholesterol') && (
+                  <div className="flex flex-col items-start px-4 pb-2">
+                    <label className="flex items-center gap-2 mb-1">
+                      <input
+                        type="checkbox"
+                        name="cholesterolHDL"
+                        checked={selectedDiseases.includes('has_cholesterol_hdl')}
+                        onChange={() => handleDiseaseSelect('has_cholesterol_hdl')}
+                      />
+                      {isRTL ? 'الكوليسترول HDL' : 'Cholesterol HDL'}
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        name="cholesterolLDL"
+                        checked={selectedDiseases.includes('has_cholesterol_ldl')}
+                        onChange={() => handleDiseaseSelect('has_cholesterol_ldl')}
+                      />
+                      {isRTL ? 'الكوليسترول LDL' : 'Cholesterol LDL'}
+                    </label>
                   </div>
                 )}
               </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Medicine Categories - visible to ALL users */}
+      <section className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.medicinesTitle")}</h2>
+        {isLoadingHealthData ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="space-y-4">
+                <Skeleton className="h-6 w-32" />
+                <div className="space-y-3">
+                  {[...Array(2)].map((_, i) => (
+                    <Skeleton key={i} className="h-8 w-full" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {medicineCategories.map(({ category, medicines }) => (
+              <div key={category.en} className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-700">
+                  {isRTL ? category.ar : category.en}
+                </h3>
+                <div className="space-y-3">
+                  {medicines.map(medicine => (
+                    <div key={medicine.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
+                      <input
+                        type="checkbox"
+                        id={`med-${medicine.en}`} checked={selectedMedicines.includes(medicine.en)}
+                        onChange={() => handleMedicineSelect(medicine.en)}
+                        className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <Label htmlFor={`med-${medicine.en}`} className="text-base">
+                        {isRTL ? medicine.ar : medicine.en}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Allergies Section - visible to ALL users */}
+      <section className="bg-white p-6 rounded-lg shadow mt-6">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{isRTL ? 'الحساسية الدوائية' : 'Drug Allergies'}</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {allergiesList.filter(allergy => allergy.en !== 'Other').map(allergy => (
+            <div key={allergy.en} className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
+              <input
+                type="checkbox"
+                id={`allergy-${allergy.en}`} checked={selectedAllergies.includes(allergy.en)}
+                onChange={() => handleAllergySelect(allergy.en)}
+                className="h-5 w-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+              />
+              <Label htmlFor={`allergy-${allergy.en}`} className="text-base">
+                {isRTL ? allergy.ar : allergy.en}
+              </Label>
+            </div>
+          ))}
+        </div>
+
+        {/* Other Allergies - Custom Input */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
+          <Label className="text-sm font-medium mb-2 block">
+            {isRTL ? "حساسيات أخرى:" : "Other Allergies:"}
+          </Label>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                placeholder={isRTL ? "اكتب نوع الحساسية..." : "Enter allergy type..."}
+                value={customAllergy}
+                onChange={(e) => setCustomAllergy(e.target.value)}
+                className="flex-1"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && customAllergy.trim()) {
+                    addCustomAllergy();
+                  }
+                }}
+              />
+              <Button
+                onClick={addCustomAllergy}
+                size="sm"
+                disabled={!customAllergy.trim()}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {isRTL ? "إضافة" : "Add"}
+              </Button>
             </div>
 
-            {/* Display all selected allergies */}
-            {selectedAllergies.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
-                  {isRTL ? "جميع الحساسيات المحددة:" : "All Selected Allergies:"}
-                </h3>
+            {/* Display added custom allergies */}
+            {selectedAllergies.filter(allergy => !allergiesList.some(a => a.en === allergy)).length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">
+                  {isRTL ? "الحساسيات المخصصة المضافة:" : "Added Custom Allergies:"}
+                </h4>
                 <div className="flex flex-wrap gap-2">
-                  {selectedAllergies.map((allergy, index) => {
-                    const isCustom = !allergiesList.some(a => a.en === allergy);
-                    return (
-                      <Badge
-                        key={index}
-                        variant={isCustom ? "secondary" : "outline"}
-                        className={`flex items-center gap-1 ${isCustom ? 'bg-green-100 text-green-800' : 'border-green-200 text-green-700'}`}
-                      >
-                        {isRTL && !isCustom ? (
-                          allergiesList.find(a => a.en === allergy)?.ar || allergy
-                        ) : allergy}
+                  {selectedAllergies
+                    .filter(allergy => !allergiesList.some(a => a.en === allergy))
+                    .map((allergy, index) => (
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-800">
+                        {allergy}
                         <button
                           onClick={() => setSelectedAllergies(prev => prev.filter(a => a !== allergy))}
-                          className="ml-1 hover:text-red-600"
+                          className="ml-1 hover:text-green-600"
                         >
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
-                    );
-                  })}
+                    ))}
                 </div>
               </div>
             )}
-          </section>
-
-          {/* Enhanced Patient Logs with User Tracking - visible to ALL users */}
-          <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.patientLogs")}</h2>
-
-            {/* User Tracking Information - Show if data exists */}
-            {healthData && (healthData.created_by_email || healthData.updated_by_email) && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  {isRTL ? "معلومات السجل الطبي" : "Medical Record Information"}
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  {/* Created By Info */}
-                  {healthData.created_by_email && (
-                    <div className="bg-white p-3 rounded-md border">
-                      <h4 className="font-medium text-blue-700 mb-2 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {isRTL ? "تم الإنشاء بواسطة:" : "Created by:"}
-                      </h4>
-                      <div className="space-y-1 text-gray-700">
-                        <div className="flex items-center gap-2">
-                          <User className="h-3 w-3 text-blue-500" />
-                          <span className="font-medium">{healthData.created_by_name || "Unknown User"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3 text-blue-500" />
-                          <span className="text-xs">{healthData.created_by_email}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="h-3 w-3 text-blue-500" />
-                          <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                            {healthData.created_by_role || "Patient"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3 w-3 text-blue-500" />
-                          <span className="text-xs text-gray-600">
-                            {new Date(healthData.created_at || '').toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Updated By Info */}
-                  {healthData.updated_by_email && (
-                    <div className="bg-white p-3 rounded-md border">
-                      <h4 className="font-medium text-green-700 mb-2 flex items-center gap-1">
-                        <Save className="h-3 w-3" />
-                        {isRTL ? "آخر تحديث بواسطة:" : "Last updated by:"}
-                      </h4>
-                      <div className="space-y-1 text-gray-700">
-                        <div className="flex items-center gap-2">
-                          <User className="h-3 w-3 text-green-500" />
-                          <span className="font-medium">{healthData.updated_by_name || "Unknown User"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-3 w-3 text-green-500" />
-                          <span className="text-xs">{healthData.updated_by_email}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CreditCard className="h-3 w-3 text-green-500" />
-                          <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
-                            {healthData.updated_by_role || "Patient"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3 w-3 text-green-500" />
-                          <span className="text-xs text-gray-600">
-                            {new Date(healthData.updated_at || '').toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Activity Logs */}
-            <div className="bg-gray-50 rounded-lg">
-              <div className="p-3 border-b border-gray-200">
-                <h4 className="font-medium text-gray-800 flex items-center gap-2">
-                  <Activity className="h-4 w-4" />
-                  {isRTL ? "سجل الأنشطة" : "Activity Log"}
-                </h4>
-              </div>
-              <ScrollArea className="h-48">
-                <div className="p-4">
-                  {patientLogs.length > 0 ? (
-                    <div className="space-y-2">
-                      {patientLogs.map((log, index) => (
-                        <div key={index} className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <p className={`text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                            {`${t(`home.logs.${log.key}`, log.values)} ${log.timestamp.toLocaleString()}`}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-center py-8">{t("home.noActivityLogs")}</p>
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-          </section>
-
-          {/* Health Summary Statistics - Only shown when health data exists */}
-          {healthData && (
-            <section className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                <BarChart3 className="h-6 w-6" />
-                {isRTL ? "ملخص الحالة الصحية" : "Health Summary"}
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6"> {/* Changed from 3 to 4 */}
-                {/* Basic Information */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                  <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {isRTL ? "المعلومات الأساسية" : "Basic Information"}
-                  </h3>
-                  <div className="space-y-2 text-sm">
-                    {healthData.weight_kg && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">{isRTL ? "الوزن:" : "Weight:"}</span>
-                        <span className="font-medium">{healthData.weight_kg} kg</span>
-                      </div>
-                    )}
-                    {healthData.height_cm && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">{isRTL ? "الطول:" : "Height:"}</span>
-                        <span className="font-medium">{healthData.height_cm} cm</span>
-                      </div>
-                    )}
-                    {healthData.blood_type && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">{isRTL ? "فصيلة الدم:" : "Blood Type:"}</span>
-                        <span className="font-medium">{getBloodTypeDisplay(healthData.blood_type)}</span>
-                      </div>
-                    )}
-
-                    {/* ADD THIS: Social Situation Display */}
-                    {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && healthData.social_situation && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">{isRTL ? "الحالة الاجتماعية:" : "Social Status:"}</span>
-                        <span className="font-medium">
-                          {healthData.social_situation === 'married'
-                            ? (isRTL ? "متزوجة" : "Married")
-                            : (isRTL ? "عزباء" : "Single")
-                          }
-                        </span>
-                      </div>
-                    )}
-
-                    {healthData.weight_kg && healthData.height_cm && (
-                      <div className="flex justify-between pt-2 border-t border-blue-200">
-                        <span className="text-gray-600">BMI:</span>
-                        <span className="font-medium">{calculatePatientStats(healthData).bmi}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Conditions Summary */}
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
-                  <h3 className="font-semibold text-orange-800 mb-3 flex items-center gap-2">
-                    <Heart className="h-4 w-4" />
-                    {isRTL ? "الحالات المرضية" : "Medical Conditions"}
-                  </h3>
-                  <div className="space-y-2">
-                    {(() => {
-                      const activeConditions = commonDiseases.filter(disease =>
-                        healthData[disease.key as keyof PatientHealthData] === true
-                      );
-
-                      if (activeConditions.length === 0) {
-                        return (
-                          <p className="text-sm text-gray-600 italic">
-                            {isRTL ? "لا توجد حالات مرضية مسجلة" : "No medical conditions recorded"}
-                          </p>
-                        );
-                      }
-
-                      return activeConditions.map(condition => (
-                        <div key={condition.key} className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                          <span className="text-sm font-medium">
-                            {isRTL ? condition.ar : condition.en}
-                          </span>
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                </div>
-
-                {/* Medications Summary */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
-                  <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                    <Pill className="h-4 w-4" />
-                    {isRTL ? "الأدوية الحالية" : "Current Medications"}
-                  </h3>
-                  <div className="space-y-2">
-                    {(() => {
-                      if (!healthData.medications) {
-                        return (
-                          <p className="text-sm text-gray-600 italic">
-                            {isRTL ? "لا توجد أدوية مسجلة" : "No medications recorded"}
-                          </p>
-                        );
-                      }
-
-                      const allMeds = Object.values(healthData.medications).flat();
-
-                      if (allMeds.length === 0) {
-                        return (
-                          <p className="text-sm text-gray-600 italic">
-                            {isRTL ? "لا توجد أدوية مسجلة" : "No medications recorded"}
-                          </p>
-                        );
-                      }
-
-                      return allMeds.slice(0, 5).map((med, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm font-medium">{med}</span>
-                        </div>
-                      )).concat(
-                        allMeds.length > 5 ? [(
-                          <div key="more" className="text-xs text-gray-600 italic mt-2">
-                            {isRTL ?
-                              `و ${allMeds.length - 5} دواء آخر` :
-                              `+${allMeds.length - 5} more medications`
-                            }                          </div>
-                        )] : []
-                      );
-                    })()}
-                  </div>
-                </div>
-                {/* NEW: Allergies Summary */}
-                <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
-                  <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    {isRTL ? "الحساسية" : "Allergies"}
-                  </h3>
-                  <div className="space-y-2">
-                    {(() => {
-                      if (!healthData.allergies || healthData.allergies.length === 0) {
-                        return (
-                          <p className="text-sm text-gray-600 italic">
-                            {isRTL ? "لا توجد حساسية مسجلة" : "No allergies recorded"}
-                          </p>
-                        );
-                      }
-
-                      return healthData.allergies.slice(0, 5).map((allergy, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                          <span className="text-sm font-medium">
-                            {isRTL ? (
-                              // Convert English allergy names to Arabic (UPDATED FOR MEDICAL ALLERGIES)
-                              allergy === 'Penicillin' ? 'البنسلين' :
-                                allergy === 'Naproxen' ? 'نابروكسين' :
-                                  allergy === 'Ibuprofen' ? 'إيبوبروفين' :
-                                    allergy === 'Aspirin' ? 'الأسبرين' :
-                                      allergy === 'Anticonvulsants' ? 'مضادات الاختلاج' :
-                                        allergy === 'Other' ? 'أخرى' :
-                                          allergy
-                            ) : allergy}
-                          </span>
-                        </div>
-                      )).concat(
-                        healthData.allergies.length > 5 ? [(
-                          <div key="more" className="text-xs text-gray-600 italic mt-2">
-                            {isRTL ?
-                              `و ${healthData.allergies.length - 5} حساسية أخرى` :
-                              `+${healthData.allergies.length - 5} more allergies`
-                            }
-                          </div>
-                        )] : []
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Save Button - visible to ALL users */}
-          <div className="flex justify-center">
-            <Button
-              onClick={handleSaveInfo}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 text-lg flex items-center gap-2"
-              disabled={healthSaving}
-            >
-              {healthSaving ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  {isRTL ? "جاري الحفظ..." : "Saving..."}
-                </>
-              ) : (
-                <>
-                  <Save className="h-5 w-5" />
-                  {selectedPatient ?
-                    (isRTL ? "حفظ معلومات المريض" : "Save Patient Information") :
-                    t("home.saveInformation")
-                  }
-                </>
-              )}
-            </Button>
           </div>
         </div>
+
+        {/* Display all selected allergies */}
+        {selectedAllergies.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">
+              {isRTL ? "جميع الحساسيات المحددة:" : "All Selected Allergies:"}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {selectedAllergies.map((allergy, index) => {
+                const isCustom = !allergiesList.some(a => a.en === allergy);
+                return (
+                  <Badge
+                    key={index}
+                    variant={isCustom ? "secondary" : "outline"}
+                    className={`flex items-center gap-1 ${isCustom ? 'bg-green-100 text-green-800' : 'border-green-200 text-green-700'}`}
+                  >
+                    {isRTL && !isCustom ? (
+                      allergiesList.find(a => a.en === allergy)?.ar || allergy
+                    ) : allergy}
+                    <button
+                      onClick={() => setSelectedAllergies(prev => prev.filter(a => a !== allergy))}
+                      className="ml-1 hover:text-red-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Enhanced Patient Logs with User Tracking - visible to ALL users */}
+      <section className="bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.patientLogs")}</h2>
+
+        {/* User Tracking Information - Show if data exists */}
+        {healthData && (healthData.created_by_email || healthData.updated_by_email) && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <User className="h-4 w-4" />
+              {isRTL ? "معلومات السجل الطبي" : "Medical Record Information"}
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              {/* Created By Info */}
+              {healthData.created_by_email && (
+                <div className="bg-white p-3 rounded-md border">
+                  <h4 className="font-medium text-blue-700 mb-2 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {isRTL ? "تم الإنشاء بواسطة:" : "Created by:"}
+                  </h4>
+                  <div className="space-y-1 text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <User className="h-3 w-3 text-blue-500" />
+                      <span className="font-medium">{healthData.created_by_name || "Unknown User"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3 w-3 text-blue-500" />
+                      <span className="text-xs">{healthData.created_by_email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-3 w-3 text-blue-500" />
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                        {healthData.created_by_role || "Patient"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3 w-3 text-blue-500" />
+                      <span className="text-xs text-gray-600">
+                        {new Date(healthData.created_at || '').toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Updated By Info */}
+              {healthData.updated_by_email && (
+                <div className="bg-white p-3 rounded-md border">
+                  <h4 className="font-medium text-green-700 mb-2 flex items-center gap-1">
+                    <Save className="h-3 w-3" />
+                    {isRTL ? "آخر تحديث بواسطة:" : "Last updated by:"}
+                  </h4>
+                  <div className="space-y-1 text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <User className="h-3 w-3 text-green-500" />
+                      <span className="font-medium">{healthData.updated_by_name || "Unknown User"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3 w-3 text-green-500" />
+                      <span className="text-xs">{healthData.updated_by_email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-3 w-3 text-green-500" />
+                      <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                        {healthData.updated_by_role || "Patient"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3 w-3 text-green-500" />
+                      <span className="text-xs text-gray-600">
+                        {new Date(healthData.updated_at || '').toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Activity Logs */}
+        <div className="bg-gray-50 rounded-lg">
+          <div className="p-3 border-b border-gray-200">
+            <h4 className="font-medium text-gray-800 flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              {isRTL ? "سجل الأنشطة" : "Activity Log"}
+            </h4>
+          </div>
+          <ScrollArea className="h-48">
+            <div className="p-4">
+              {patientLogs.length > 0 ? (
+                <div className="space-y-2">
+                  {patientLogs.map((log, index) => (
+                    <div key={index} className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <p className={`text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                        {`${t(`home.logs.${log.key}`, log.values)} ${log.timestamp.toLocaleString()}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">{t("home.noActivityLogs")}</p>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      </section>
+
+      {/* Health Summary Statistics - Only shown when health data exists */}
+      {healthData && (
+        <section className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+            <BarChart3 className="h-6 w-6" />
+            {isRTL ? "ملخص الحالة الصحية" : "Health Summary"}
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6"> {/* Changed from 3 to 4 */}
+            {/* Basic Information */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <User className="h-4 w-4" />
+                {isRTL ? "المعلومات الأساسية" : "Basic Information"}
+              </h3>
+              <div className="space-y-2 text-sm">
+                {healthData.weight_kg && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">{isRTL ? "الوزن:" : "Weight:"}</span>
+                    <span className="font-medium">{healthData.weight_kg} kg</span>
+                  </div>
+                )}
+                {healthData.height_cm && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">{isRTL ? "الطول:" : "Height:"}</span>
+                    <span className="font-medium">{healthData.height_cm} cm</span>
+                  </div>
+                )}
+                {healthData.blood_type && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">{isRTL ? "فصيلة الدم:" : "Blood Type:"}</span>
+                    <span className="font-medium">{getBloodTypeDisplay(healthData.blood_type)}</span>
+                  </div>
+                )}
+
+                {/* ADD THIS: Social Situation Display */}
+                {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && healthData.social_situation && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">{isRTL ? "الحالة الاجتماعية:" : "Social Status:"}</span>
+                    <span className="font-medium">
+                      {healthData.social_situation === 'married'
+                        ? (isRTL ? "متزوجة" : "Married")
+                        : (isRTL ? "عزباء" : "Single")
+                      }
+                    </span>
+                  </div>
+                )}
+
+                {healthData.weight_kg && healthData.height_cm && (
+                  <div className="flex justify-between pt-2 border-t border-blue-200">
+                    <span className="text-gray-600">BMI:</span>
+                    <span className="font-medium">{calculatePatientStats(healthData).bmi}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Conditions Summary */}
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg border border-orange-200">
+              <h3 className="font-semibold text-orange-800 mb-3 flex items-center gap-2">
+                <Heart className="h-4 w-4" />
+                {isRTL ? "الحالات المرضية" : "Medical Conditions"}
+              </h3>
+              <div className="space-y-2">
+                {(() => {
+                  const activeConditions = commonDiseases.filter(disease =>
+                    healthData[disease.key as keyof PatientHealthData] === true
+                  );
+
+                  if (activeConditions.length === 0) {
+                    return (
+                      <p className="text-sm text-gray-600 italic">
+                        {isRTL ? "لا توجد حالات مرضية مسجلة" : "No medical conditions recorded"}
+                      </p>
+                    );
+                  }
+
+                  return activeConditions.map(condition => (
+                    <div key={condition.key} className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <span className="text-sm font-medium">
+                        {isRTL ? condition.ar : condition.en}
+                      </span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
+            {/* Medications Summary */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+              <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                <Pill className="h-4 w-4" />
+                {isRTL ? "الأدوية الحالية" : "Current Medications"}
+              </h3>
+              <div className="space-y-2">
+                {(() => {
+                  if (!healthData.medications) {
+                    return (
+                      <p className="text-sm text-gray-600 italic">
+                        {isRTL ? "لا توجد أدوية مسجلة" : "No medications recorded"}
+                      </p>
+                    );
+                  }
+
+                  const allMeds = Object.values(healthData.medications).flat();
+
+                  if (allMeds.length === 0) {
+                    return (
+                      <p className="text-sm text-gray-600 italic">
+                        {isRTL ? "لا توجد أدوية مسجلة" : "No medications recorded"}
+                      </p>
+                    );
+                  }
+
+                  return allMeds.slice(0, 5).map((med, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm font-medium">{med}</span>
+                    </div>
+                  )).concat(
+                    allMeds.length > 5 ? [(
+                      <div key="more" className="text-xs text-gray-600 italic mt-2">
+                        {isRTL ?
+                          `و ${allMeds.length - 5} دواء آخر` :
+                          `+${allMeds.length - 5} more medications`
+                        }                          </div>
+                    )] : []
+                  );
+                })()}
+              </div>
+            </div>
+            {/* NEW: Allergies Summary */}
+            <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg border border-red-200">
+              <h3 className="font-semibold text-red-800 mb-3 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {isRTL ? "الحساسية" : "Allergies"}
+              </h3>
+              <div className="space-y-2">
+                {(() => {
+                  if (!healthData.allergies || healthData.allergies.length === 0) {
+                    return (
+                      <p className="text-sm text-gray-600 italic">
+                        {isRTL ? "لا توجد حساسية مسجلة" : "No allergies recorded"}
+                      </p>
+                    );
+                  }
+
+                  return healthData.allergies.slice(0, 5).map((allergy, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <span className="text-sm font-medium">
+                        {isRTL ? (
+                          // Convert English allergy names to Arabic (UPDATED FOR MEDICAL ALLERGIES)
+                          allergy === 'Penicillin' ? 'البنسلين' :
+                            allergy === 'Naproxen' ? 'نابروكسين' :
+                              allergy === 'Ibuprofen' ? 'إيبوبروفين' :
+                                allergy === 'Aspirin' ? 'الأسبرين' :
+                                  allergy === 'Anticonvulsants' ? 'مضادات الاختلاج' :
+                                    allergy === 'Other' ? 'أخرى' :
+                                      allergy
+                        ) : allergy}
+                      </span>
+                    </div>
+                  )).concat(
+                    healthData.allergies.length > 5 ? [(
+                      <div key="more" className="text-xs text-gray-600 italic mt-2">
+                        {isRTL ?
+                          `و ${healthData.allergies.length - 5} حساسية أخرى` :
+                          `+${healthData.allergies.length - 5} more allergies`
+                        }
+                      </div>
+                    )] : []
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Save Button - visible to ALL users */}
+      <div className="flex justify-center">
+        <Button
+          onClick={handleSaveInfo}
+          className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 text-lg flex items-center gap-2"
+          disabled={healthSaving}
+        >
+          {healthSaving ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              {isRTL ? "جاري الحفظ..." : "Saving..."}
+            </>
+          ) : (
+            <>
+              <Save className="h-5 w-5" />
+              {selectedPatient ?
+                (isRTL ? "حفظ معلومات المريض" : "Save Patient Information") :
+                t("home.saveInformation")
+              }
+            </>
+          )}
+        </Button>
       </div>
     </div>
+      </div >
+    </div >
   );
 };
 

@@ -1030,8 +1030,7 @@ const UsersManagement = () => {
                                     name="user_phonenumber"
                                     value={userFormData.user_phonenumber}
                                     onChange={handleUserInputChange}
-                                    placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+ أو ٩٧٢٠٠٠٠٠٠٠٠٠+" : "+97000000000 or +97200000000"}
-                                    dir={isRTL ? "rtl" : "ltr"}
+                                    placeholder={isRTL ? "٩٧٠/٩٧٢ + أرقام" : "+970/+972 + digits"} dir={isRTL ? "rtl" : "ltr"}
                                     className={isRTL ? 'text-left' : ''}
                                 />
                             </div>

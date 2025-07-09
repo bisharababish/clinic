@@ -1403,7 +1403,7 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             className={`${isRTL ? 'pr-10 text-left' : 'pl-10'}`}
                                             required
-                                            placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
+                                        placeholder={isRTL ? "٩٧٠/٩٧٢ + أرقام" : "+970/+972 + digits"} dir={isRTL ? "rtl" : "ltr"}
                                             pattern="^\+97[02]\d{9}$"
                                             title={isRTL ? "يجب أن يبدأ برقم +970 أو +972 متبوعاً بـ 9 أرقام" : "Must start with +970 or +972 followed by 9 digits"}
                                         />
