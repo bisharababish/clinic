@@ -138,14 +138,24 @@ const UsersManagement = () => {
         }
 
         // Handle ID number field - limit to 9 digits only
+        // Handle ID number field - limit to 9 digits only
         if (name === 'id_number') {
             // Remove all non-digit characters and limit to 9 digits
             const digitsOnly = value.replace(/\D/g, '');
-            const limitedDigits = digitsOnly.slice(0, 9);
+            let limitedDigits = digitsOnly.slice(0, 9);
+
+            // Validate Palestinian/Israeli ID format (must start with 1, 2, 4, or 9)
+            if (limitedDigits.length > 0) {
+                const firstDigit = limitedDigits.charAt(0);
+                if (firstDigit !== '0' && firstDigit !== '4' && firstDigit !== '8' && firstDigit !== '9') {
+                    // If invalid first digit, keep previous valid value or reset
+                    return;
+                }
+            }
+
             setUserFormData(prev => ({ ...prev, [name]: limitedDigits }));
             return;
         }
-
         if (name === 'user_phonenumber') {
             // Remove all non-digit characters except +
             let sanitized = value.replace(/[^\d+]/g, '');
