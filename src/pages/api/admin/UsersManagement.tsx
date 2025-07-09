@@ -598,9 +598,23 @@ const UsersManagement = () => {
 
                 if (userFormData.user_password) {
                     try {
+                        // Check if service role key is available
+                        const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+                        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+                        if (!serviceRoleKey) {
+                            throw new Error('Service role key not found in environment variables');
+                        }
+
+                        if (!supabaseUrl) {
+                            throw new Error('Supabase URL not found in environment variables');
+                        }
+
+                        console.log('Creating service client for password update...');
+
                         const serviceClient = createClient(
-                            import.meta.env.VITE_SUPABASE_URL,
-                            import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
+                            supabaseUrl,
+                            serviceRoleKey,
                             {
                                 auth: {
                                     autoRefreshToken: false,
