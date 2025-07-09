@@ -853,8 +853,8 @@ const UsersManagement = () => {
                                 : t('usersManagement.modifyUserDesc')}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="max-h-[70vh] overflow-y-auto">
-                        <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <CardContent className="max-h-[60vh] overflow-y-auto p-4" style={{ overflowY: 'auto', scrollBehavior: 'smooth' }}>
+                        <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4 h-full" dir={isRTL ? 'rtl' : 'ltr'} style={{ minHeight: 'fit-content' }}>
                             <div>
                                 <div className="form-grid">
                                     {/* First Row */}
@@ -1132,7 +1132,7 @@ const UsersManagement = () => {
                                         placeholder="••••••••"
                                         required={userFormMode === "create"}
                                         className="pr-10"
-                                        dir="ltr"
+                                        dir={isRTL ? "rtl" : "ltr"}
                                     />
                                     <button
                                         type="button"
