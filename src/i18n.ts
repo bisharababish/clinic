@@ -237,9 +237,7 @@ const enTranslations = {
         deleteSuccessDesc: 'The X-ray image was deleted successfully.',
         deleteFailed: 'Failed to delete image.',
     },
-    // Add these to your existing enTranslations and arTranslations objects in i18n.ts
 
-    // English translations (add to enTranslations object)
     payment: {
         // Security alert
         selectedClinic: 'Selected Clinic',
@@ -712,22 +710,22 @@ const enTranslations = {
         userDeleted: 'User Deleted',
 
         validationErrors: "Validation Errors",
-        englishFirstNameInvalid: "First name must contain only English letters and spaces.",
-        englishSecondNameInvalid: "Second name must contain only English letters and spaces.",
-        englishThirdNameInvalid: "Third name must contain only English letters and spaces.",
-        englishLastNameInvalid: "Last name must contain only English letters and spaces.",
-        arabicFirstNameInvalid: "Arabic first name must contain only Arabic letters and spaces.",
-        arabicSecondNameInvalid: "Arabic second name must contain only Arabic letters and spaces.",
-        arabicThirdNameInvalid: "Arabic third name must contain only Arabic letters and spaces.",
-        arabicLastNameInvalid: "Arabic last name must contain only Arabic letters and spaces.",
+        englishFirstNameInvalid: "First name must contain only English letters",
+        englishSecondNameInvalid: "Second name must contain only English letters.",
+        englishThirdNameInvalid: "Third name must contain only English letters.",
+        englishLastNameInvalid: "Last name must contain only English letters.",
+        arabicFirstNameInvalid: "Arabic first name must contain only Arabic letters.",
+        arabicSecondNameInvalid: "Arabic second name must contain only Arabic letters.",
+        arabicThirdNameInvalid: "Arabic third name must contain only Arabic letters.",
+        arabicLastNameInvalid: "Arabic last name must contain only Arabic letters.",
         palestinianIdInvalid: "ID number must be exactly 9 digits.",
-        palestinianPhoneInvalid: "Phone number must start with +970 followed by 9 digits.",
+        palestinianPhoneInvalid: "Phone number must be +970 followed by 9 digits.",
         ageMinimum: "User must be at least 16 years old.",
 
         // Additional validation errors
         firstLastNameRequired: "First and last names in English are required",
-        englishLettersOnly: "Please enter only English letters (no numbers)",
-        arabicLettersOnly: "Please enter only Arabic letters (no numbers)",
+        englishLettersOnly: "Please enter only English letters ",
+        arabicLettersOnly: "Please enter only Arabic letters ",
         idNumberMustBe9Digits: "ID number must be exactly 9 digits",
         strongPasswordRequired: "Password must contain uppercase, lowercase, numbers, and special characters",
         failedToLoadUsers: "Failed to load users from database",
@@ -740,8 +738,8 @@ const enTranslations = {
         enterSearchTerm: "Please enter a search term",
         failedToSearchPatients: "Failed to search for patients",
         allergyAlreadyAdded: "This allergy is already in the list",
-        enterValidWeight: "Please enter a valid weight between 1-500 kg",
-        enterValidHeight: "Please enter a valid height between 1-300 cm",
+        enterValidWeight: "Please enter a valid weight between 1-220 kg",
+        enterValidHeight: "Please enter a valid height between 1-200 cm",
         failedToSaveSocialSituation: "Failed to save social situation",
         cannotDeterminePatient: "Cannot determine which patient to update"
     },
@@ -898,7 +896,7 @@ const enTranslations = {
         emailPlaceholder: 'doctor@example.com',
         phonePlaceholder: 'e.g. +1234567890',
         appointmentPrice: 'Appointment Price (₪)',
-        pricePlaceholder: '0.00',
+        pricePlaceholder: '1.00',
         availabilityStatus: 'Availability Status',
 
         // Status messages
@@ -1075,44 +1073,7 @@ const enTranslations = {
         patient: 'Patient'
     },
     aboutUs: {
-        title: 'About Our Clinic',
-        subtitle: 'Dedicated to providing exceptional healthcare services with compassion and expertise.',
-        ourStory: 'Our Story',
-        ourStoryContent1: 'Founded in 2010, our clinic has been serving the community with top-quality healthcare services. We started with a small team of dedicated professionals and have grown into a comprehensive healthcare facility with multiple specialties.',
-        ourStoryContent2: 'Our mission is to provide personalized, compassionate care to every patient who walks through our doors.',
-        ourTeam: 'Our Team',
-        email: 'Email',
-        phone: 'Phone',
-        chiefMedicalOfficer: 'Chief Medical Officer',
-        seniorPhysician: 'Senior Physician',
-        headNurse: 'Head Nurse',
-        drSarahJohnson: 'Dr. Sarah Johnson',
-        drSarahDesc: 'With over 15 years of experience, Dr. Johnson leads our team with expertise and compassion.',
-        drMichaelChen: 'Dr. Michael Chen',
-        drMichaelDesc: 'Specializing in internal medicine, Dr. Chen is known for his thorough approach to patient care.',
-        nurseEmily: 'Nurse Emily Rodriguez',
-        nurseEmilyDesc: 'Our nursing team lead with a focus on patient comfort and wellbeing.',
         ourFacility: 'Our Facility',
-        facilityIntro: 'Our state-of-the-art facility includes:',
-        facilityFeatures: {
-            examRooms: 'Modern examination rooms',
-            labServices: 'On-site laboratory services',
-            imagingCenter: 'Digital imaging center',
-            waitingAreas: 'Comfortable waiting areas',
-            accessibility: 'Wheelchair accessible facilities'
-        },
-        getInTouch: 'Get In Touch',
-        location: 'Location',
-        hoursOfOperation: 'Hours of Operation',
-        mondayFriday: 'Monday - Sunday: 8:00 - 8:00 PM',
-
-        sendMessage: 'Send Us a Message',
-        subject: 'Subject',
-        message: 'Message',
-        sendMessageBtn: 'Send Message',
-        thankYouMessage: 'Thank you for your message! We\'ll get back to you soon.',
-        contactEmail: 'contact@bethlehemmedcenter.com',
-        contactPhone: '(02) 274-2345'
     },
     patientHealth: {
         title: 'Patient Health Management',
@@ -1209,7 +1170,6 @@ const enTranslations = {
         noDataReturned: 'No data returned from patient creation'
     },
 
-    // Add this appointmentsManagement section to your enTranslations object in i18n.ts
 
     appointmentsManagement: {
         // Main titles and descriptions
@@ -2144,14 +2104,14 @@ const arTranslations = {
         userDeleted: 'تم حذف مستخدم',
 
         validationErrors: "أخطاء في التحقق",
-        englishFirstNameInvalid: "الاسم الأول يجب أن يحتوي على أحرف إنجليزية ومسافات فقط.",
-        englishSecondNameInvalid: "الاسم الثاني يجب أن يحتوي على أحرف إنجليزية ومسافات فقط.",
-        englishThirdNameInvalid: "الاسم الثالث يجب أن يحتوي على أحرف إنجليزية ومسافات فقط.",
-        englishLastNameInvalid: "اسم العائلة يجب أن يحتوي على أحرف إنجليزية ومسافات فقط.",
-        arabicFirstNameInvalid: "الاسم الأول بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
-        arabicSecondNameInvalid: "الاسم الثاني بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
-        arabicThirdNameInvalid: "الاسم الثالث بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
-        arabicLastNameInvalid: "اسم العائلة بالعربية يجب أن يحتوي على أحرف عربية ومسافات فقط.",
+        englishFirstNameInvalid: "الاسم الأول يجب أن يحتوي على أحرف إنجليزية  .",
+        englishSecondNameInvalid: "الاسم الثاني يجب أن يحتوي على أحرف إنجليزية  .",
+        englishThirdNameInvalid: "الاسم الثالث يجب أن يحتوي على أحرف إنجليزية  .",
+        englishLastNameInvalid: "اسم العائلة يجب أن يحتوي على أحرف إنجليزية  .",
+        arabicFirstNameInvalid: "الاسم الأول بالعربية يجب أن يحتوي على أحرف عربية  .",
+        arabicSecondNameInvalid: "الاسم الثاني بالعربية يجب أن يحتوي على أحرف عربية  .",
+        arabicThirdNameInvalid: "الاسم الثالث بالعربية يجب أن يحتوي على أحرف عربية  .",
+        arabicLastNameInvalid: "اسم العائلة بالعربية يجب أن يحتوي على أحرف عربية  .",
         palestinianIdInvalid: "رقم الهوية يجب أن يكون 9 أرقام بالضبط.",
         palestinianPhoneInvalid: "رقم الهاتف يجب أن يبدأ بـ +970 متبوعاً بـ 9 أرقام.",
         ageMinimum: "يجب أن يكون عمر المستخدم 16 سنة على الأقل.",
@@ -2330,7 +2290,7 @@ const arTranslations = {
         emailPlaceholder: 'أدخل بريدك الإلكتروني',
         phonePlaceholder: 'مثال: +٩٨٧٦٥٤٣٢١',
         appointmentPrice: 'سعر الموعد (₪)',
-        pricePlaceholder: '0.00',
+        pricePlaceholder: '1.00',
         availabilityStatus: 'حالة التوفر',
 
         // Status messages
@@ -2494,43 +2454,7 @@ const arTranslations = {
         patient: 'مريض'
     },
     aboutUs: {
-        title: 'عن عيادتنا',
-        subtitle: 'ملتزمون بتقديم خدمات رعاية صحية استثنائية بالرحمة والخبرة.',
-        ourStory: 'قصتنا',
-        ourStoryContent1: 'تأسست عيادتنا في عام 2010، وقد خدمت المجتمع بخدمات رعاية صحية عالية الجودة. بدأنا بفريق صغير من المحترفين المتفانين ونمونا لنصبح مرفقًا شاملاً للرعاية الصحية مع تخصصات متعددة.',
-        ourStoryContent2: 'مهمتنا هي تقديم رعاية شخصية ورحيمة لكل مريض يدخل من أبوابنا.',
-        ourTeam: 'فريقنا',
-        email: 'البريد الإلكتروني',
-        phone: 'الهاتف',
-        chiefMedicalOfficer: 'كبير الأطباء',
-        seniorPhysician: 'طبيب أول',
-        headNurse: 'رئيس التمريض',
-        drSarahJohnson: 'د. سارة جونسون',
-        drSarahDesc: 'بخبرة تزيد عن 15 عامًا، تقود د. جونسون فريقنا بالخبرة والرحمة.',
-        drMichaelChen: 'د. مايكل تشين',
-        drMichaelDesc: 'متخصص في الطب الباطني، د. تشين معروف بنهجه الشامل في رعاية المرضى.',
-        nurseEmily: 'الممرضة إيميلي رودريغيز',
-        nurseEmilyDesc: 'قائدة فريق التمريض مع التركيز على راحة المرضى ورفاهيتهم.',
-        ourFacility: 'مرافقنا',
-        facilityIntro: 'تشمل مرافقنا الحديثة:',
-        facilityFeatures: {
-            examRooms: 'غرف فحص حديثة',
-            labServices: 'خدمات مختبرية داخلية',
-            imagingCenter: 'مركز تصوير رقمي',
-            waitingAreas: 'مناطق انتظار مريحة',
-            accessibility: 'مرافق يمكن الوصول إليها بالكرسي المتحرك'
-        },
-        getInTouch: 'تواصل معنا',
-        location: 'الموقع',
-        hoursOfOperation: 'ساعات العمل',
-        mondayFriday: 'الاثنين - الجمعة: 8:00 صباحًا - 8:00 مساءً',
-        sendMessage: 'أرسل لنا رسالة',
-        subject: 'الموضوع',
-        message: 'الرسالة',
-        sendMessageBtn: 'إرسال الرسالة',
-        thankYouMessage: 'شكرًا لك على رسالتك! سنعاود الاتصال بك قريبًا.',
-        contactEmail: 'contact@bethlehemmedcenter.com',
-        contactPhone: '(02) 274-2345'
+        ourFacility: 'مرافقنا',   
     },
     xray: {
         // Page titles and descriptions
