@@ -213,7 +213,51 @@ const AdminDashboardContent = () => {
                 </div>
             ) : (
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                    <TabsList className={`flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    {/* MOBILE: Two rows for tabs */}
+                    <div className="md:hidden">
+                        <TabsList className={`flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                            {canViewOverviewTab && (
+                                <TabsTrigger value="overview" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {t('admin.overview') || 'Overview'}
+                                </TabsTrigger>
+                            )}
+                            {canViewUsersTab && (
+                                <TabsTrigger value="users" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {t('admin.users') || 'Users'}
+                                </TabsTrigger>
+                            )}
+                            {canViewClinicsTab && (
+                                <TabsTrigger value="clinics" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {t('admin.clinics') || 'Clinics'}
+                                </TabsTrigger>
+                            )}
+                            {canViewDoctorsTab && (
+                                <TabsTrigger value="doctors" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {t('admin.doctors') || 'Doctors'}
+                                </TabsTrigger>
+                            )}
+                        </TabsList>
+                        <TabsList className={`flex w-full gap-0.5 mt-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                            {canViewPatientHealthTab && (
+                                <TabsTrigger value="patient-health" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'الصحة' : 'Health'}
+                                </TabsTrigger>
+                            )}
+                            {canViewAppointmentsTab && (
+                                <TabsTrigger value="appointments" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
+                                </TabsTrigger>
+                            )}
+                            {canViewCalendarTab && (
+                                <TabsTrigger value="calendar" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
+                                </TabsTrigger>
+                            )}
+                        </TabsList>
+                    </div>
+
+                    {/* DESKTOP: All tabs in one row */}
+                    <TabsList className={`hidden md:flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         {canViewOverviewTab && (
                             <TabsTrigger value="overview" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
                                 {t('admin.overview') || 'Overview'}
@@ -241,7 +285,7 @@ const AdminDashboardContent = () => {
                         )}
                         {canViewAppointmentsTab && (
                             <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {i18n.language === 'ar' ? 'المواعيد' : 'Appts'}
+                                {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
                             </TabsTrigger>
                         )}
                         {canViewCalendarTab && (
