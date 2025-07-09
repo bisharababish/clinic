@@ -482,7 +482,15 @@ const Labs = () => {
     if (isSaved) setIsSaved(false);
     if (error) setError(null);
   };
+  const handleBloodTypeChange = (value: string) => {
+    setLabData(prev => ({
+      ...prev,
+      bloodType: value === "not_specified" ? "" : value
+    }));
 
+    if (isSaved) setIsSaved(false);
+    if (error) setError(null);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -856,17 +864,48 @@ const Labs = () => {
                     />
                   </div>
 
-                  {/* Blood Type (Read-only, but maybe editable in future) */}
+                  {/* Blood Type - Select dropdown with Arabic translations */}
                   <div>
                     <Label htmlFor="bloodType">{isRTL ? 'فصيلة الدم' : 'Blood Type'}</Label>
-                    <Input
-                      id="bloodType"
-                      name="bloodType"
-                      type="text"
-                      value={labData.bloodType}
-                      readOnly
-                      placeholder={labData.bloodType ? "" : (isRTL ? 'فصيلة الدم (إن وجدت)' : 'Blood type (if available)')}
-                    />
+                    <Select
+                      onValueChange={handleBloodTypeChange}
+                      value={labData.bloodType || "not_specified"}
+                      disabled={isLoading}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    >
+                      <SelectTrigger id="bloodType" className="w-full">
+                        <SelectValue placeholder={isRTL ? 'اختر فصيلة الدم' : 'Select blood type'} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="not_specified">
+                          {isRTL ? 'غير محدد' : 'Not specified'}
+                        </SelectItem>
+                        <SelectItem value="A+">
+                          {isRTL ? 'أ+' : 'A+'}
+                        </SelectItem>
+                        <SelectItem value="A-">
+                          {isRTL ? 'أ-' : 'A-'}
+                        </SelectItem>
+                        <SelectItem value="B+">
+                          {isRTL ? 'ب+' : 'B+'}
+                        </SelectItem>
+                        <SelectItem value="B-">
+                          {isRTL ? 'ب-' : 'B-'}
+                        </SelectItem>
+                        <SelectItem value="AB+">
+                          {isRTL ? 'أب+' : 'AB+'}
+                        </SelectItem>
+                        <SelectItem value="AB-">
+                          {isRTL ? 'أب-' : 'AB-'}
+                        </SelectItem>
+                        <SelectItem value="O+">
+                          {isRTL ? 'و+' : 'O+'}
+                        </SelectItem>
+                        <SelectItem value="O-">
+                          {isRTL ? 'و-' : 'O-'}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Test Date */}
