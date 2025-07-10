@@ -65,7 +65,6 @@ const DoctorManagement = () => {
         isLoading,
         loadDoctors,
         loadClinics,
-        setIsLoading
     } = useAdminState();
 
     // ✅ KEEP: Local UI state (component-specific)
@@ -138,7 +137,6 @@ const DoctorManagement = () => {
     // Load availability slots for a specific doctor
     const loadAvailabilitySlots = async (doctorId: string) => {
         try {
-            setIsLoading(true);
 
             // Check if availability_slots table exists, if not create it
             const { error: tableCheckError } = await supabase
@@ -168,9 +166,7 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToLoadSlots'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     // Doctor form handlers
@@ -271,7 +267,6 @@ const DoctorManagement = () => {
         if (!doctorToDelete) return;
 
         try {
-            setIsLoading(true);
 
             // First delete all availability slots for this doctor
             const { error: availabilityError } = await supabase
@@ -296,9 +291,7 @@ const DoctorManagement = () => {
 
             if (error) throw error;
 
-            // ✅ NEW: Let real-time subscription handle the state update
-            // OLD: setDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
-            // OLD: setFilteredDoctors(prev => prev.filter(doctor => doctor.id !== doctorToDelete.id));
+
 
             toast({
                 title: t('common.success'),
@@ -316,11 +309,7 @@ const DoctorManagement = () => {
                 variant: "destructive",
             });
 
-            // ✅ NEW: Force refresh on error to ensure UI is in sync
-            await loadDoctors(true);
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     const handleDoctorSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -358,7 +347,6 @@ const DoctorManagement = () => {
         }
 
         try {
-            setIsLoading(true);
 
             if (doctorFormMode === "create") {
                 // Create new doctor
@@ -411,9 +399,7 @@ const DoctorManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    // ✅ NEW: Let real-time subscription handle the state update
-                    // OLD: setDoctors(prev => prev.map(d => d.id === selectedDoctor ? data[0] : d));
-                    // OLD: setFilteredDoctors(prev => prev.map(d => d.id === selectedDoctor ? data[0] : d));
+                   
 
                     toast({
                         title: t('common.success'),
@@ -430,9 +416,7 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToSaveDoctor'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     // Availability slot handlers
@@ -536,7 +520,6 @@ const DoctorManagement = () => {
         }
 
         try {
-            setIsLoading(true);
 
             const { data, error } = await supabase
                 .from('doctor_availability')
@@ -572,14 +555,11 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToAddSlot'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     const handleDeleteAvailabilitySlot = async (id: string) => {
         try {
-            setIsLoading(true);
 
             const { error } = await supabase
                 .from('doctor_availability')
@@ -601,9 +581,7 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToDeleteSlot'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     const getClinicNameById = (id: string) => {
@@ -1082,11 +1060,7 @@ const DoctorManagement = () => {
                             {t('doctorManagement.confirmDeleteDoctor', { name: doctorToDelete?.name })}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4">
-                        <p className={`text-sm text-gray-500 ${isRTL ? 'text-left' : ''}`}>
-                            {t('doctorManagement.permanentRemoval')}
-                        </p>
-                    </div>
+
                     <DialogFooter className={`doctor-delete-footer sm:justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <DialogClose asChild>
                             <Button variant="outline">{t('common.cancel')}</Button>

@@ -53,7 +53,6 @@ const UsersManagement = () => {
         users,
         isLoading,
         loadUsers,
-        setIsLoading
     } = useAdminState();
 
     // ✅ Local UI state (component-specific)
@@ -324,8 +323,9 @@ const UsersManagement = () => {
 
         if (!confirmed) return;
 
+        if (!userToDelete) return;
+
         try {
-            setIsLoading(true);
             console.log("Starting deletion process for user ID:", userid);
 
             if (userToDelete.user_roles.toLowerCase() === 'patient') {
@@ -370,7 +370,7 @@ const UsersManagement = () => {
                 }
             }
 
-            // ✅ Let real-time subscription handle the update automatically
+          
 
             toast({
                 title: t('common.success'),
@@ -397,14 +397,8 @@ const UsersManagement = () => {
                 variant: "destructive",
             });
 
-            // ✅ Force refresh on error to ensure UI is in sync
-            await loadUsers(true);
-
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
-
     // Password validation function
     const validatePassword = (password: string): boolean => {
         const hasUpperCase = /[A-Z]/.test(password);
@@ -484,7 +478,6 @@ const UsersManagement = () => {
 
         if (userFormMode === "create") {
             try {
-                setIsLoading(true);
                 console.log("Creating new user with data:", userFormData);
 
                 const capitalizedRole = capitalizeRole(userFormData.user_roles);
@@ -569,12 +562,9 @@ const UsersManagement = () => {
                     description: t('usersManagement.unexpectedError'),
                     variant: "destructive",
                 });
-            } finally {
-                setIsLoading(false);
-            }
+            } 
         } else if (userFormMode === "edit" && selectedUser !== null) {
             try {
-                setIsLoading(true);
 
                 const capitalizedRole = capitalizeRole(userFormData.user_roles);
 
@@ -716,9 +706,7 @@ const UsersManagement = () => {
                     description: t('usersManagement.unexpectedError'),
                     variant: "destructive",
                 });
-            } finally {
-                setIsLoading(false);
-            }
+            } 
         }
     };
 

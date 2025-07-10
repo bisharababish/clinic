@@ -269,7 +269,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 });
                 return;
             }
-            await refreshAll();
 
 
             // Log the activity
@@ -318,7 +317,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 });
                 return;
             }
-            await refreshAll();
 
 
             await logActivity(
@@ -367,7 +365,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 return;
             }
 
-            await refreshAll();
 
             await logActivity(
                 t('appointmentsManagement.appointmentNotesUpdated'),
@@ -421,7 +418,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
     const confirmDeleteAppointment = async (id: string) => {
         try {
-            setIsLoading(true);
             setAppointmentToDelete(null);
 
             console.log(`🔄 Deleting appointment ${id}`);
@@ -440,7 +436,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 });
                 return;
             }
-            await refreshAll();
 
             await logActivity(
                 t('appointmentsManagement.appointmentDeleted'),
@@ -462,9 +457,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 description: t('appointmentsManagement.failedToDelete'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     // 🚀 OPTIMIZED: Add appointment with collision detection
@@ -480,7 +473,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
         }
 
         try {
-            setIsLoading(true);
             console.log('🔄 Creating new appointment...');
 
             // Parse the time slot
@@ -525,8 +517,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     description: t('appointmentsManagement.timeSlotConflict') || 'This clinic already has an appointment at this time.',
                     variant: "destructive",
                 });
-                setIsLoading(false);
-                return;
+                                return;
             }
 
             // Create the appointment
@@ -556,7 +547,6 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 });
                 return;
             }
-            await refreshAll();
 
             // Get patient and doctor info for logging
             const patient = filteredPatients.find(p => p.userid.toString() === selectedPatientId);
@@ -593,9 +583,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 description: t('appointmentsManagement.failedToCreate'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     // 🚀 OPTIMIZED: Export to CSV with better performance
@@ -1423,7 +1411,9 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     </p>
                 </div>
                 <div className={`actions-section flex items-center space-x-2 ${isRTL ? 'space-x-reverse order-1 md:order-2' : 'order-2'}`}>
-                    <Button variant="outline" onClick={() => refreshAll()} disabled={isLoading} className="appointments-clickable">
+                    <Button variant="outline" onClick={() => {
+                        if (!isLoading) refreshAll();
+                    }} disabled={isLoading} className="appointments-clickable">
                         <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
                         {t('appointmentsManagement.refresh')}
                     </Button>
@@ -1690,8 +1680,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                                 variant: "destructive",
                                             });
                                         } else {
-                                            await refreshAll();
-                                             toast({
+                                            toast({
                                                 title: t('common.success'),
                                                 description: t('appointmentsManagement.priceUpdated'),
                                             });

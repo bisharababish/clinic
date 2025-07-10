@@ -1,5 +1,5 @@
 // hooks/useAdminState.tsx - IMPROVED VERSION
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -126,10 +126,22 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const [error, setError] = useState<string | null>(null);
     const [lastUpdated, setLastUpdated] = useState<{ [key: string]: number }>({});
     const { toast } = useToast();
-
+    const activeOperationsRef = useRef(new Set<string>());
+    const isLoadingRef = useRef(false);
+    const debouncedOperations = useRef(new Map<string, NodeJS.Timeout>());
     const CACHE_DURATION = 120 * 1000;
-
+    const updateLoadingState = () => {
+        const newLoadingState = activeOperationsRef.current.size > 0;
+        isLoadingRef.current = newLoadingState;
+        setIsLoading(newLoadingState);
+    };
+    // REPLACE THE ENTIRE loadUsers FUNCTION WITH THIS:
     const loadUsers = async (forceRefresh = false) => {
+        if (isLoadingRef.current && !forceRefresh) {
+            console.log('⏳ Already loading, skipping users load');
+            return;
+        }
+
         const now = Date.now();
         const cacheKey = 'users';
 
@@ -138,6 +150,9 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             return;
         }
 
+        const operationId = `load-users-${now}`;
+        activeOperationsRef.current.add(operationId); // ADD THIS
+        updateLoadingState(); // ADD THIS
         try {
             console.log('🔄 Loading users...');
 
@@ -146,10 +161,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 .select('*')
                 .order('userid', { ascending: false });
 
-            if (error) {
-                console.error('❌ Error loading users:', error);
-                throw error;
-            }
+            if (error) throw error;
 
             setUsers(data || []);
             setLastUpdated(prev => ({ ...prev, [cacheKey]: now }));
@@ -162,10 +174,19 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 description: 'Failed to load users',
                 variant: 'destructive',
             });
+        } finally {
+            activeOperationsRef.current.delete(operationId); // CHANGE THIS
+            updateLoadingState(); // CHANGE THIS
         }
     };
 
+    // REPLACE THE ENTIRE loadClinics FUNCTION WITH THIS:
     const loadClinics = async (forceRefresh = false) => {
+        if (isLoadingRef.current && !forceRefresh) {
+            console.log('⏳ Already loading, skipping clinics load');
+            return;
+        }
+
         const now = Date.now();
         const cacheKey = 'clinics';
 
@@ -174,23 +195,24 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             return;
         }
 
+        const operationId = `load-clinics-${now}`;
+        activeOperationsRef.current.add(operationId);
+        isLoadingRef.current = true;
+
         try {
             console.log('🔄 Loading clinics...');
 
             const { data, error } = await supabase
                 .from('clinics')
                 .select(`
-        *,
-        clinic_categories!clinics_category_id_fkey (
-            name_ar
-        )
-    `)
+                *,
+                clinic_categories!clinics_category_id_fkey (
+                    name_ar
+                )
+            `)
                 .order('name', { ascending: true });
 
-            if (error) {
-                console.error('❌ Error loading clinics:', error);
-                throw error;
-            }
+            if (error) throw error;
 
             const transformedClinics = (data || []).map(clinic => ({
                 ...clinic,
@@ -208,10 +230,18 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 description: 'Failed to load clinics',
                 variant: 'destructive',
             });
+        } finally {
+            activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
-
+    // REPLACE THE ENTIRE loadDoctors FUNCTION WITH THIS:
     const loadDoctors = async (forceRefresh = false) => {
+        if (isLoadingRef.current && !forceRefresh) {
+            console.log('⏳ Already loading, skipping doctors load');
+            return;
+        }
+
         const now = Date.now();
         const cacheKey = 'doctors';
 
@@ -220,19 +250,19 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             return;
         }
 
+        const operationId = `load-doctors-${now}`;
+        activeOperationsRef.current.add(operationId);
+        isLoadingRef.current = true;
+
         try {
             console.log('🔄 Loading doctors...');
 
             const { data, error } = await supabase
                 .from('doctors')
                 .select('*')
-
                 .order('name', { ascending: true });
 
-            if (error) {
-                console.error('❌ Error loading doctors:', error);
-                throw error;
-            }
+            if (error) throw error;
 
             setDoctors(data || []);
             setLastUpdated(prev => ({ ...prev, [cacheKey]: now }));
@@ -240,10 +270,19 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         } catch (error: unknown) {
             console.error('❌ Failed to load doctors:', error);
             setError('Failed to load doctors: ' + (error instanceof Error ? error.message : String(error)));
+        } finally {
+           activeOperationsRef.current.delete(operationId);
+updateLoadingState();
         }
     };
 
+    // REPLACE THE ENTIRE loadAppointments FUNCTION WITH THIS:
     const loadAppointments = async (forceRefresh = false) => {
+        if (isLoadingRef.current && !forceRefresh) {
+            console.log('⏳ Already loading, skipping appointments load');
+            return;
+        }
+
         const now = Date.now();
         const cacheKey = 'appointments';
 
@@ -252,23 +291,24 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             return;
         }
 
+        const operationId = `load-appointments-${now}`;
+        activeOperationsRef.current.add(operationId);
+        isLoadingRef.current = true;
+
         try {
             console.log('🔄 Loading appointments...');
 
             const { data, error } = await supabase
                 .from('appointments')
                 .select(`
-                    *,
-                    patients:patient_id (userid, english_username_a, english_username_d),
-                    doctors:doctor_id (id, name),
-                    clinics:clinic_id (id, name)
-                `)
+                *,
+                patients:patient_id (userid, english_username_a, english_username_d),
+                doctors:doctor_id (id, name),
+                clinics:clinic_id (id, name)
+            `)
                 .order('date', { ascending: false });
 
-            if (error) {
-                console.error('❌ Error loading appointments:', error);
-                throw error;
-            }
+            if (error) throw error;
 
             const mappedAppointments: AppointmentInfo[] = data?.map(apt => ({
                 id: apt.id,
@@ -294,10 +334,19 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         } catch (error: unknown) {
             console.error('❌ Failed to load appointments:', error);
             setError('Failed to load appointments: ' + (error instanceof Error ? error.message : String(error)));
+        } finally {
+           activeOperationsRef.current.delete(operationId);
+updateLoadingState();
         }
     };
 
+    // REPLACE THE ENTIRE loadCategories FUNCTION WITH THIS:
     const loadCategories = async (forceRefresh = false) => {
+        if (isLoadingRef.current && !forceRefresh) {
+            console.log('⏳ Already loading, skipping categories load');
+            return;
+        }
+
         const now = Date.now();
         const cacheKey = 'categories';
 
@@ -306,21 +355,20 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             return;
         }
 
+        const operationId = `load-categories-${now}`;
+        activeOperationsRef.current.add(operationId);
+        isLoadingRef.current = true;
+
         try {
             console.log('🔄 Loading categories...');
 
             const { data, error } = await supabase
                 .from('clinic_categories')
-                .select('id, name, name_en, name_ar, display_order, is_active')  // ← NEW LINE
+                .select('id, name, name_en, name_ar, display_order, is_active')
                 .order('display_order', { ascending: true })
-
                 .order('name', { ascending: true });
 
-            if (error) {
-                console.error('❌ Error loading categories:', error);
-                setCategories([]);
-                return;
-            }
+            if (error) throw error;
 
             setCategories(data || []);
             setLastUpdated(prev => ({ ...prev, [cacheKey]: now }));
@@ -328,12 +376,14 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         } catch (error: unknown) {
             console.error('❌ Failed to load categories:', error);
             setCategories([]);
+        } finally {
+         activeOperationsRef.current.delete(operationId);
+updateLoadingState();
         }
     };
 
     const loadAll = async (forceRefresh = false) => {
         console.log('🔄 Loading all data...');
-        setIsLoading(true);
 
         try {
             await Promise.all([
@@ -366,156 +416,76 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const getClinic = (clinicId: string) => clinics.find(c => c.id === clinicId);
     const getDoctor = (doctorId: string) => doctors.find(d => d.id === doctorId);
 
-    // ✅ IMPROVED: More robust real-time subscriptions with proper error handling
+    // REPLACE THE ENTIRE SUBSCRIPTIONS useEffect WITH THIS:
+    // REPLACE THE ENTIRE useEffect WITH SUBSCRIPTIONS WITH THIS:
     useEffect(() => {
         console.log('🔗 Setting up admin state subscriptions...');
 
         const subscriptions: Array<ReturnType<typeof supabase.channel>> = [];
 
-        // Users subscription with better handling
+        const debouncedRefresh = (tableName: string, loadFunction: () => Promise<void>) => {
+            const existingTimeout = debouncedOperations.current.get(tableName);
+            if (existingTimeout) {
+                clearTimeout(existingTimeout);
+            }
+
+            const newTimeout = setTimeout(() => {
+                if (!activeOperationsRef.current.has(`load-${tableName}`)) {
+                    loadFunction();
+                }
+                debouncedOperations.current.delete(tableName);
+            }, 1000);
+
+            debouncedOperations.current.set(tableName, newTimeout);
+        };
+
         const usersSubscription = supabase
             .channel('admin-users-realtime')
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'userinfo' },
-                (payload) => {
-                    console.log('🔄 Users table changed:', payload.eventType, payload);
-
-                    // Handle specific events for immediate UI updates
-                    if (payload.eventType === 'INSERT' && payload.new) {
-                        setUsers(prev => [payload.new as UserInfo, ...prev]);
-                        console.log('✅ User added to state immediately');
-                    } else if (payload.eventType === 'UPDATE' && payload.new) {
-                        setUsers(prev => prev.map(user =>
-                            user.userid === (payload.new as UserInfo).userid ? payload.new as UserInfo : user
-                        ));
-                        console.log('✅ User updated in state immediately');
-                    } else if (payload.eventType === 'DELETE' && payload.old) {
-                        setUsers(prev => prev.filter(user => user.userid !== (payload.old as UserInfo).userid));
-                        console.log('✅ User removed from state immediately');
-                    }
-
-                    // Also refresh after a small delay for consistency
-                    setTimeout(() => loadUsers(true), 1000);
-                }
-            )
-            .subscribe((status) => {
-                console.log('Users subscription status:', status);
-            });
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'userinfo' }, () => {
+                debouncedRefresh('users', () => loadUsers(true));
+            })
+            .subscribe();
         subscriptions.push(usersSubscription);
 
-        // Clinics subscription with immediate updates
         const clinicsSubscription = supabase
             .channel('admin-clinics-realtime')
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'clinics' },
-                (payload) => {
-                    console.log('🔄 Clinics table changed:', payload.eventType, payload);
-
-                    if (payload.eventType === 'INSERT' && payload.new) {
-                        setClinics(prev => [...prev, payload.new as ClinicInfo]);
-                        console.log('✅ Clinic added to state immediately');
-                    } else if (payload.eventType === 'UPDATE' && payload.new) {
-                        setClinics(prev => prev.map(clinic =>
-                            clinic.id === (payload.new as ClinicInfo).id ? payload.new as ClinicInfo : clinic
-                        ));
-                        console.log('✅ Clinic updated in state immediately');
-                    } else if (payload.eventType === 'DELETE' && payload.old) {
-                        setClinics(prev => prev.filter(clinic => clinic.id !== (payload.old as ClinicInfo).id));
-                        console.log('✅ Clinic removed from state immediately');
-                    }
-
-                    setTimeout(() => loadClinics(true), 1000);
-                }
-            )
-            .subscribe((status) => {
-                console.log('Clinics subscription status:', status);
-            });
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'clinics' }, () => {
+                debouncedRefresh('clinics', () => loadClinics(true));
+            })
+            .subscribe();
         subscriptions.push(clinicsSubscription);
 
-        // Categories subscription with immediate updates
         const categoriesSubscription = supabase
             .channel('admin-categories-realtime')
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'clinic_categories' },
-                (payload) => {
-                    console.log('🔄 Categories table changed:', payload.eventType, payload);
-
-                    if (payload.eventType === 'INSERT' && payload.new) {
-                        setCategories(prev => [...prev, payload.new as CategoryInfo]);
-                        console.log('✅ Category added to state immediately');
-                    } else if (payload.eventType === 'UPDATE' && payload.new) {
-                        setCategories(prev => prev.map(category =>
-                            category.id === (payload.new as CategoryInfo).id ? payload.new as CategoryInfo : category
-                        ));
-                        console.log('✅ Category updated in state immediately');
-                    } else if (payload.eventType === 'DELETE' && payload.old) {
-                        setCategories(prev => prev.filter(category => category.id !== (payload.old as CategoryInfo).id));
-                        console.log('✅ Category removed from state immediately');
-                    }
-
-                    setTimeout(() => loadCategories(true), 1000);
-                }
-            )
-            .subscribe((status) => {
-                console.log('Categories subscription status:', status);
-            });
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'clinic_categories' }, () => {
+                debouncedRefresh('categories', () => loadCategories(true));
+            })
+            .subscribe();
         subscriptions.push(categoriesSubscription);
 
-        // Doctors subscription
         const doctorsSubscription = supabase
             .channel('admin-doctors-realtime')
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'doctors' },
-                (payload) => {
-                    console.log('🔄 Doctors table changed:', payload.eventType, payload);
-
-                    if (payload.eventType === 'INSERT' && payload.new) {
-                        setDoctors(prev => [...prev, payload.new as DoctorInfo]);
-                        console.log('✅ Doctor added to state immediately');
-                    } else if (payload.eventType === 'UPDATE' && payload.new) {
-                        setDoctors(prev => prev.map(doctor =>
-                            doctor.id === (payload.new as DoctorInfo).id ? payload.new as DoctorInfo : doctor
-                        ));
-                        console.log('✅ Doctor updated in state immediately');
-                    } else if (payload.eventType === 'DELETE' && payload.old) {
-                        setDoctors(prev => prev.filter(doctor => doctor.id !== (payload.old as DoctorInfo).id));
-                        console.log('✅ Doctor removed from state immediately');
-                    }
-
-                    setTimeout(() => loadDoctors(true), 1000);
-                }
-            )
-            .subscribe((status) => {
-                console.log('Doctors subscription status:', status);
-            });
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'doctors' }, () => {
+                debouncedRefresh('doctors', () => loadDoctors(true));
+            })
+            .subscribe();
         subscriptions.push(doctorsSubscription);
 
-        // Appointments subscription (more complex due to joins)
         const appointmentsSubscription = supabase
             .channel('admin-appointments-realtime')
-            .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'appointments' },
-                (payload) => {
-                    console.log('🔄 Appointments table changed:', payload.eventType, payload);
-                    // For appointments, we'll just refresh since they have complex joins
-                    setTimeout(() => loadAppointments(true), 500);
-                }
-            )
-            .subscribe((status) => {
-                console.log('Appointments subscription status:', status);
-            });
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {
+                debouncedRefresh('appointments', () => loadAppointments(true));
+            })
+            .subscribe();
         subscriptions.push(appointmentsSubscription);
 
-        // Cleanup function
         return () => {
             console.log('🧹 Cleaning up admin state subscriptions...');
-            subscriptions.forEach(sub => {
-                if (sub) {
-                    sub.unsubscribe();
-                }
-            });
+            subscriptions.forEach(sub => sub?.unsubscribe());
+            debouncedOperations.current.forEach(timeout => clearTimeout(timeout));
+            debouncedOperations.current.clear();
         };
-    }, []); // Empty dependency array - only run once
+    }, []);
 
     // Initial data load
     useEffect(() => {

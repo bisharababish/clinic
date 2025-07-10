@@ -923,7 +923,6 @@ const enTranslations = {
         // Delete confirmation
         confirmDeletion: 'Confirm Deletion',
         confirmDeleteDoctor: 'Are you sure you want to delete Dr. {{name}}? This action cannot be undone.',
-        permanentRemoval: 'This will permanently remove the doctor and all their availability slots from the system.',
         deleting: 'Deleting...',
         deleteDoctor: 'Delete Doctor',
 

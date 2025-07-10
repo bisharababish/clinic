@@ -83,7 +83,6 @@ const ClinicManagement = () => {
         isLoading,
         loadClinics,
         loadCategories,
-        setIsLoading
     } = useAdminState();
 
     // ✅ Local state for component-specific functionality
@@ -111,7 +110,7 @@ const ClinicManagement = () => {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [categoryFormData, setCategoryFormData] = useState({
         name: "",
-        is_active: true,
+        is_active: false,
         display_order: 0,  // ADD THIS LINE
 
     });
@@ -141,7 +140,6 @@ const ClinicManagement = () => {
     // Load doctors from database
     const loadDoctors = async () => {
         try {
-            setIsLoading(true);
 
             // Check if doctors table exists
             const { error: tableCheckError } = await supabase
@@ -187,9 +185,7 @@ const ClinicManagement = () => {
                 description: t('clinicManagement.loadingDoctors'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
     // ADD THESE FUNCTIONS:
     const moveClinicUp = async (clinicId: string) => {
@@ -206,7 +202,6 @@ const ClinicManagement = () => {
 
             if (error) throw error;
 
-            await loadClinics(true); // Refresh clinics
             toast({
                 title: t('common.success'),
                 description: t('clinicManagement.orderUpdated'),
@@ -234,7 +229,6 @@ const ClinicManagement = () => {
 
             if (error) throw error;
 
-            await loadClinics(true); // Refresh clinics
             toast({
                 title: t('common.success'),
                 description: 'Clinic moved down successfully',
@@ -261,7 +255,6 @@ const ClinicManagement = () => {
 
             if (error) throw error;
 
-            await loadCategories(true);
             toast({
                 title: t('common.success'),
                 description: 'Category moved up successfully',
@@ -289,7 +282,6 @@ const ClinicManagement = () => {
 
             if (error) throw error;
 
-            await loadCategories(true);
             toast({
                 title: t('common.success'),
                 description: 'Category moved down successfully',
@@ -383,8 +375,8 @@ const ClinicManagement = () => {
         if (!clinicToDelete) return;
 
         try {
-            setIsLoading(true);
 
+            
             // ✅ CHECK DIRECTLY IN DATABASE (not relying on loaded doctors)
             const { data: doctorsInClinic, error: doctorsError } = await supabase
                 .from('doctors')
@@ -398,7 +390,7 @@ const ClinicManagement = () => {
                     description: 'Failed to check for doctors in clinic',
                     variant: "destructive",
                 });
-                setIsLoading(false);
+
                 setShowDeleteClinicDialog(false);
                 return;
             }
@@ -411,7 +403,6 @@ const ClinicManagement = () => {
                     description: `Cannot delete clinic. Please remove these doctors first: ${doctorNames}`,
                     variant: "destructive",
                 });
-                setIsLoading(false);
                 setShowDeleteClinicDialog(false);
                 return;
             }
@@ -442,7 +433,6 @@ const ClinicManagement = () => {
                 variant: "destructive",
             });
         } finally {
-            setIsLoading(false);
             setShowDeleteClinicDialog(false);
         }
     };
@@ -452,7 +442,6 @@ const ClinicManagement = () => {
         console.log("Form submitted with data:", clinicFormData);
 
         try {
-            setIsLoading(true);
 
             if (!clinicFormData.name || !clinicFormData.name.trim()) {
                 toast({
@@ -460,7 +449,6 @@ const ClinicManagement = () => {
                     description: t('clinicManagement.clinicNameRequired'),
                     variant: "destructive",
                 });
-                setIsLoading(false);
                 return;
             }
 
@@ -470,7 +458,6 @@ const ClinicManagement = () => {
                     description: t('clinicManagement.categoryRequired'),
                     variant: "destructive",
                 });
-                setIsLoading(false);
                 return;
             }
 
@@ -486,7 +473,6 @@ const ClinicManagement = () => {
                     description: t('clinicManagement.categoryNotFound'),
                     variant: "destructive",
                 });
-                setIsLoading(false);
                 return;
             }
 
@@ -529,7 +515,6 @@ const ClinicManagement = () => {
                         description: error.message || t('clinicManagement.failedToSaveClinic'),
                         variant: "destructive",
                     });
-                    setIsLoading(false);
                     return;
                 }
 
@@ -568,7 +553,6 @@ const ClinicManagement = () => {
                         description: error.message || t('clinicManagement.failedToUpdateClinic'),
                         variant: "destructive",
                     });
-                    setIsLoading(false);
                     return;
                 }
 
@@ -590,9 +574,7 @@ const ClinicManagement = () => {
                 description: t('clinicManagement.unexpectedError'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     // Category form handlers
@@ -654,7 +636,7 @@ const ClinicManagement = () => {
         if (!categoryToDelete) return;
 
         try {
-            setIsLoading(true);
+
 
             const categoryToDeleteObj = categories.find(c => c.id === categoryToDelete);
             if (!categoryToDeleteObj) {
@@ -710,7 +692,6 @@ const ClinicManagement = () => {
                 variant: "destructive",
             });
         } finally {
-            setIsLoading(false);
             setShowDeleteCategoryDialog(false);
         }
     };
@@ -725,7 +706,6 @@ const ClinicManagement = () => {
         if (!doctorToDelete) return;
 
         try {
-            setIsLoading(true);
 
             // DELETE AVAILABILITY FIRST
             await supabase
@@ -762,7 +742,6 @@ const ClinicManagement = () => {
                 variant: "destructive",
             });
         } finally {
-            setIsLoading(false);
             setShowDeleteDoctorDialog(false);
         }
     };
@@ -785,7 +764,6 @@ const ClinicManagement = () => {
         }
 
         try {
-            setIsLoading(true);
 
             if (categoryFormMode === "create") {
                 const bilingualName = createBilingualCategoryName(categoryFormData.name);
@@ -848,10 +826,7 @@ const ClinicManagement = () => {
                                 description: "Category updated but failed to update related clinics.",
                                 variant: "default",
                             });
-                        } else {
-                            // ✅ Force refresh clinics to ensure data consistency
-                            await loadClinics(true);
-                        }
+                        } 
                     }
                 }
 
@@ -868,9 +843,7 @@ const ClinicManagement = () => {
                 description: t('clinicManagement.failedToSaveCategory'),
                 variant: "destructive",
             });
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     // Main render
