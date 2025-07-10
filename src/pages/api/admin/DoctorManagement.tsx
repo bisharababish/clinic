@@ -104,6 +104,10 @@ const DoctorManagement = () => {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [doctorToDelete, setDoctorToDelete] = useState<DoctorInfo | null>(null);
 
+    // Add state for slot deletion confirmation
+    const [showSlotDeleteDialog, setShowSlotDeleteDialog] = useState(false);
+    const [slotToDelete, setSlotToDelete] = useState<AvailabilitySlot | null>(null);
+
     const weekdays = [
         { en: "Monday", ar: t('doctorManagement.monday') },
         { en: "Tuesday", ar: t('doctorManagement.tuesday') },
@@ -954,7 +958,10 @@ const DoctorManagement = () => {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={() => handleDeleteAvailabilitySlot(slot.id)}
+                                                                onClick={() => {
+                                                                    setSlotToDelete(slot);
+                                                                    setShowSlotDeleteDialog(true);
+                                                                }}
                                                             >
                                                                 <Trash2 className="h-4 w-4 text-red-500" />
                                                             </Button>
@@ -1075,6 +1082,46 @@ const DoctorManagement = () => {
                             disabled={isLoading}
                         >
                             {isLoading ? t('doctorManagement.deleting') : t('doctorManagement.deleteDoctor')}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Confirmation Dialog for Slot Deletion */}
+            <Dialog open={showSlotDeleteDialog} onOpenChange={setShowSlotDeleteDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>
+                            {t('doctorManagement.confirmSlotDeletionTitle')}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t('doctorManagement.confirmSlotDeletionDesc', {
+                                day: slotToDelete ? getDayName(slotToDelete.day) : '',
+                                start: slotToDelete ? formatTime(slotToDelete.start_time) : '',
+                                end: slotToDelete ? formatTime(slotToDelete.end_time) : ''
+                            })}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button variant="outline">{t('common.cancel')}</Button>
+                        </DialogClose>
+                        <Button
+                            variant="destructive"
+                            onClick={async () => {
+                                if (slotToDelete) {
+                                    await handleDeleteAvailabilitySlot(slotToDelete.id);
+                                    setShowSlotDeleteDialog(false);
+                                    setSlotToDelete(null);
+                                    toast({
+                                        title: t('doctorManagement.slotDeletedTitle'),
+                                        description: t('doctorManagement.slotDeletedDesc'),
+                                        variant: 'destructive',
+                                    });
+                                }
+                            }}
+                        >
+                            {t('doctorManagement.deleteSlot')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

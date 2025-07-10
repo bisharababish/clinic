@@ -978,7 +978,13 @@ const enTranslations = {
         loadingDoctors: 'Loading doctors...',
         loadingClinics: 'Loading clinics...',
         loadingSlots: 'Loading availability slots...',
-        phoneRequired: "Phone number is required."
+        phoneRequired: "Phone number is required.",
+        // Confirmation dialog and toast for slot deletion
+        confirmSlotDeletionTitle: 'Delete Time Slot?',
+        confirmSlotDeletionDesc: 'Are you sure you want to delete this time slot for {{day}} ({{start}} - {{end}})?',
+        slotDeletedTitle: 'Time Slot Deleted',
+        slotDeletedDesc: 'The time slot was deleted successfully.',
+        deleteSlot: 'Delete Slot'
     },
     forgotpassowrd: {
         // Add these to the existing auth section
@@ -2372,7 +2378,13 @@ const arTranslations = {
         loadingDoctors: 'جارٍ تحميل الأطباء...',
         loadingClinics: 'جارٍ تحميل العيادات...',
         loadingSlots: 'جارٍ تحميل فترات التوفر...',
-        phoneRequired: "رقم الهاتف مطلوب."
+        phoneRequired: "رقم الهاتف مطلوب.",
+        // Confirmation dialog and toast for slot deletion
+        confirmSlotDeletionTitle: 'حذف فترة زمنية؟',
+        confirmSlotDeletionDesc: 'هل أنت متأكد أنك تريد حذف هذه الفترة الزمنية ليوم {{day}} ({{start}} - {{end}})؟',
+        slotDeletedTitle: 'تم حذف الفترة الزمنية',
+        slotDeletedDesc: 'تم حذف الفترة الزمنية بنجاح.',
+        deleteSlot: 'حذف الفترة الزمنية'
     },
     home: {
         reminder: 'تذكير',
