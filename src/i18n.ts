@@ -963,7 +963,7 @@ const enTranslations = {
         // Availability validation
         fillAvailabilityFields: 'Please fill in all availability fields.',
         validTimeValues: 'Please enter valid time values.',
-        endTimeAfterStart: 'End time must be after start time.',
+        endTimeAfterStart: 'Time Invalid',
 
         // Availability success messages
         slotAddedSuccessfully: 'Availability slot added successfully.',
@@ -2357,7 +2357,7 @@ const arTranslations = {
         // Availability validation
         fillAvailabilityFields: 'يرجى ملء جميع حقول التوفر.',
         validTimeValues: 'يرجى إدخال قيم وقت صالحة.',
-        endTimeAfterStart: 'يجب أن يكون وقت النهاية بعد وقت البداية.',
+        endTimeAfterStart: 'خطأ في الوقت',
 
         // Availability success messages
         slotAddedSuccessfully: 'تم إضافة فترة التوفر بنجاح.',
@@ -2453,7 +2453,7 @@ const arTranslations = {
         patient: 'مريض'
     },
     aboutUs: {
-        ourFacility: 'مرافقنا',   
+        ourFacility: 'مرافقنا',
     },
     xray: {
         // Page titles and descriptions
