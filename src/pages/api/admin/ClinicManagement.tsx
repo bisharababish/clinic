@@ -185,7 +185,7 @@ const ClinicManagement = () => {
                 description: t('clinicManagement.loadingDoctors'),
                 variant: "destructive",
             });
-        } 
+        }
     };
     // ADD THESE FUNCTIONS:
     const moveClinicUp = async (clinicId: string) => {
@@ -376,7 +376,7 @@ const ClinicManagement = () => {
 
         try {
 
-            
+
             // ✅ CHECK DIRECTLY IN DATABASE (not relying on loaded doctors)
             const { data: doctorsInClinic, error: doctorsError } = await supabase
                 .from('doctors')
@@ -574,7 +574,7 @@ const ClinicManagement = () => {
                 description: t('clinicManagement.unexpectedError'),
                 variant: "destructive",
             });
-        } 
+        }
     };
 
     // Category form handlers
@@ -600,7 +600,7 @@ const ClinicManagement = () => {
         setSelectedCategory(null);
         setCategoryFormData({
             name: "",
-            is_active: true,
+            is_active: false,
             display_order: 0  // ADD THIS LINE
 
         });
@@ -826,7 +826,7 @@ const ClinicManagement = () => {
                                 description: "Category updated but failed to update related clinics.",
                                 variant: "default",
                             });
-                        } 
+                        }
                     }
                 }
 
@@ -843,7 +843,7 @@ const ClinicManagement = () => {
                 description: t('clinicManagement.failedToSaveCategory'),
                 variant: "destructive",
             });
-        } 
+        }
     };
 
     // Main render
