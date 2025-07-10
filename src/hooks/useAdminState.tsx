@@ -271,8 +271,8 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             console.error('❌ Failed to load doctors:', error);
             setError('Failed to load doctors: ' + (error instanceof Error ? error.message : String(error)));
         } finally {
-           activeOperationsRef.current.delete(operationId);
-updateLoadingState();
+            activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
 
@@ -335,8 +335,8 @@ updateLoadingState();
             console.error('❌ Failed to load appointments:', error);
             setError('Failed to load appointments: ' + (error instanceof Error ? error.message : String(error)));
         } finally {
-           activeOperationsRef.current.delete(operationId);
-updateLoadingState();
+            activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
 
@@ -377,8 +377,8 @@ updateLoadingState();
             console.error('❌ Failed to load categories:', error);
             setCategories([]);
         } finally {
-         activeOperationsRef.current.delete(operationId);
-updateLoadingState();
+            activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
 
@@ -490,7 +490,7 @@ updateLoadingState();
     // Initial data load
     useEffect(() => {
         console.log('🚀 AdminStateProvider initialized, loading initial data...');
-        loadAll(false); // Don't force refresh on initial load
+        loadAll(true); // Always force refresh on initial load for admin
     }, []);
 
     const value: AdminStateContextType = {

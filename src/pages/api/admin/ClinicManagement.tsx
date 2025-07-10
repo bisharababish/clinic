@@ -423,6 +423,7 @@ const ClinicManagement = () => {
                 return;
             }
 
+            await loadClinics(true); // Force refresh clinics
             toast({
                 title: t('common.success'),
                 description: t('clinicManagement.clinicDeletedSuccessfully'),
@@ -521,12 +522,11 @@ const ClinicManagement = () => {
 
                 if (data && data.length > 0) {
                     setClinics(prev => [...prev, data[0]]);
-
+                    await loadClinics(true); // Force refresh clinics
                     toast({
                         title: t('common.success'),
                         description: t('clinicManagement.clinicCreatedSuccessfully'),
                     });
-
                     resetClinicForm();
                 }
             } else if (clinicFormMode === "edit" && selectedClinic) {
@@ -539,7 +539,6 @@ const ClinicManagement = () => {
                         description: clinicFormData.description || null,
                         is_active: clinicFormData.is_active,
                         display_order: clinicFormData.display_order || 0,  // ADD THIS LINE
-
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', selectedClinic)
@@ -561,11 +560,11 @@ const ClinicManagement = () => {
                     setClinics(prev => prev.map(clinic =>
                         clinic.id === selectedClinic ? data[0] : clinic
                     ));
+                    await loadClinics(true); // Force refresh clinics
                     toast({
                         title: t('common.success'),
                         description: t('clinicManagement.clinicUpdatedSuccessfully'),
                     });
-
                     resetClinicForm();
                 }
             }
@@ -681,6 +680,7 @@ const ClinicManagement = () => {
                 return;
             }
 
+            await loadCategories(true); // Force refresh categories
             // ✅ Let real-time subscription handle the update
 
             toast({
@@ -784,7 +784,7 @@ const ClinicManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    // ✅ Let real-time subscription handle the update
+                    await loadCategories(true); // Force refresh categories
                 }
 
                 toast({
@@ -813,8 +813,7 @@ const ClinicManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    // ✅ Let real-time subscription handle the update
-
+                    await loadCategories(true); // Force refresh categories
                     if (oldName && oldName !== categoryFormData.name) {
                         // Update in the database
                         const { error: updateError } = await supabase
