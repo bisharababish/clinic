@@ -565,6 +565,9 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 description: t('appointmentsManagement.appointmentCreated'),
             });
 
+            // Refresh appointments in real time
+            await loadAppointments();
+
             // Reset form
             setSelectedClinicId("");
             setSelectedDoctorId("");

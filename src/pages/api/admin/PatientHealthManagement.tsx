@@ -1552,8 +1552,8 @@ const PatientHealthManagement: React.FC = () => {
     const { toast } = useToast();
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
-    const isLoading = adminLoading || patientHealthLoading;
-
+    const [localLoading, setLocalLoading] = useState(false);
+    const isLoading = adminLoading || patientHealthLoading || localLoading;
     const recordsMap = useMemo(() =>
         new Map(records.map(record => [record.patient_id, record])), [records]);
     // ✅ OPTIMIZED: Memoized patients with health data
@@ -1658,10 +1658,11 @@ const PatientHealthManagement: React.FC = () => {
         try {
             console.log('📊 Loading health records only...');
             const healthData = await getAllPatientHealthData();
-            setRecords(healthData);
-            console.log(`✅ Loaded ${healthData.length} health records`);
+            setRecords(healthData || []);
+            console.log(`✅ Loaded ${healthData?.length || 0} health records`);
         } catch (error) {
             console.error('❌ Error fetching health records:', error);
+            setRecords([]); // Reset records on error
             toast({
                 title: t('common.error') || "Error",
                 description: t('patientHealth.failedToLoad') || "Failed to load patient health data",
@@ -1690,13 +1691,27 @@ const PatientHealthManagement: React.FC = () => {
                 },
                 (payload) => {
                     console.log('🔄 Health record changed:', payload.eventType);
-                    setTimeout(() => loadHealthRecordsOnly(), 500);
+                    // Debounce the reload to prevent multiple calls
+                    const timeoutId = setTimeout(async () => {
+                        try {
+                            await loadHealthRecordsOnly();
+                        } catch (error) {
+                            console.error('❌ Error in subscription reload:', error);
+                        }
+                    }, 1000);
+
+                    // Clear timeout if component unmounts
+                    return () => clearTimeout(timeoutId);
                 })
             .subscribe();
 
         return () => {
             console.log('🧹 Cleaning up health subscription...');
-            supabase.removeChannel(healthSubscription);
+            try {
+                supabase.removeChannel(healthSubscription);
+            } catch (error) {
+                console.error('❌ Error cleaning up subscription:', error);
+            }
         };
     }, [loadHealthRecordsOnly]);
 

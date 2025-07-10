@@ -130,10 +130,37 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const isLoadingRef = useRef(false);
     const debouncedOperations = useRef(new Map<string, NodeJS.Timeout>());
     const CACHE_DURATION = 120 * 1000;
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (activeOperationsRef.current.size > 0) {
+                console.log('🔍 Active operations:', Array.from(activeOperationsRef.current));
+            }
+
+            // Force clear if stuck for too long
+            if (isLoadingRef.current && activeOperationsRef.current.size === 0) {
+                console.warn('⚠️ Loading state stuck, forcing clear');
+                setIsLoading(false);
+                isLoadingRef.current = false;
+            }
+        }, 5000);
+        return () => clearInterval(interval);
+    }, []);
     const updateLoadingState = () => {
         const newLoadingState = activeOperationsRef.current.size > 0;
         isLoadingRef.current = newLoadingState;
         setIsLoading(newLoadingState);
+
+        // Auto-clear loading state if stuck for too long
+        if (newLoadingState) {
+            setTimeout(() => {
+                if (activeOperationsRef.current.size > 0) {
+                    console.warn('⚠️ Clearing stuck loading operations');
+                    activeOperationsRef.current.clear();
+                    setIsLoading(false);
+                    isLoadingRef.current = false;
+                }
+            }, 30000); // 30 second timeout
+        }
     };
     // REPLACE THE ENTIRE loadUsers FUNCTION WITH THIS:
     const loadUsers = async (forceRefresh = false) => {
@@ -176,7 +203,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             });
         } finally {
             activeOperationsRef.current.delete(operationId); // CHANGE THIS
-            updateLoadingState(); // CHANGE THIS
+            setTimeout(() => updateLoadingState(), 100); // Small delay to ensure state updates
         }
     };
 
@@ -197,7 +224,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-clinics-${now}`;
         activeOperationsRef.current.add(operationId);
-        isLoadingRef.current = true;
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading clinics...');
@@ -232,7 +259,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             });
         } finally {
             activeOperationsRef.current.delete(operationId);
-            updateLoadingState();
+            setTimeout(() => updateLoadingState(), 100); // Small delay to ensure state updates
         }
     };
     // REPLACE THE ENTIRE loadDoctors FUNCTION WITH THIS:
@@ -252,7 +279,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-doctors-${now}`;
         activeOperationsRef.current.add(operationId);
-        isLoadingRef.current = true;
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading doctors...');
@@ -272,7 +299,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             setError('Failed to load doctors: ' + (error instanceof Error ? error.message : String(error)));
         } finally {
             activeOperationsRef.current.delete(operationId);
-            updateLoadingState();
+            setTimeout(() => updateLoadingState(), 100); // Small delay to ensure state updates
         }
     };
 
@@ -293,7 +320,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-appointments-${now}`;
         activeOperationsRef.current.add(operationId);
-        isLoadingRef.current = true;
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading appointments...');
@@ -336,7 +363,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             setError('Failed to load appointments: ' + (error instanceof Error ? error.message : String(error)));
         } finally {
             activeOperationsRef.current.delete(operationId);
-            updateLoadingState();
+            setTimeout(() => updateLoadingState(), 100); // Small delay to ensure state updates
         }
     };
 
@@ -357,7 +384,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-categories-${now}`;
         activeOperationsRef.current.add(operationId);
-        isLoadingRef.current = true;
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading categories...');
@@ -378,7 +405,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             setCategories([]);
         } finally {
             activeOperationsRef.current.delete(operationId);
-            updateLoadingState();
+            setTimeout(() => updateLoadingState(), 100); // Small delay to ensure state updates
         }
     };
 
@@ -429,11 +456,16 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 clearTimeout(existingTimeout);
             }
 
-            const newTimeout = setTimeout(() => {
-                if (!activeOperationsRef.current.has(`load-${tableName}`)) {
-                    loadFunction();
+            const newTimeout = setTimeout(async () => {
+                try {
+                    if (!activeOperationsRef.current.has(`load-${tableName}`)) {
+                        await loadFunction();
+                    }
+                } catch (error) {
+                    console.error(`❌ Error in debounced refresh for ${tableName}:`, error);
+                } finally {
+                    debouncedOperations.current.delete(tableName);
                 }
-                debouncedOperations.current.delete(tableName);
             }, 1000);
 
             debouncedOperations.current.set(tableName, newTimeout);
