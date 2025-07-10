@@ -36,7 +36,7 @@ const Footer: React.FC = () => {
       <div className="container mx-auto py-12 px-4">
 
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-8 items-start">
 
           {/* Company Story & Services */}
           <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-primary/8 to-primary/15 border border-primary/25 hover:border-primary/35 transition-all duration-500 hover:shadow-xl hover:shadow-primary/15 transform hover:-translate-y-2">
@@ -105,7 +105,7 @@ const Footer: React.FC = () => {
                   </span>
                 </div>
                 {/* Hours */}
-                <div className="p-3 bg-white/50 rounded-lg border border-primary/20">
+                <div className="pt-2 pb-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="h-4 w-4 text-primary/80" />
                     <h4 className="font-bold text-sm text-primary/90">
@@ -127,10 +127,10 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Contact Information & Hours */}
-          <div className="group relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br from-primary/8 to-primary/15 border border-primary/25 hover:border-primary/35 transition-all duration-500 hover:shadow-xl hover:shadow-primary/15 transform hover:-translate-y-2">
+          <div className="group relative overflow-hidden p-4 rounded-3xl bg-gradient-to-br from-primary/8 to-primary/15 border border-primary/25 hover:border-primary/35 transition-all duration-500 hover:shadow-xl hover:shadow-primary/15 transform hover:-translate-y-2 max-w-md mx-auto flex flex-col">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             <div className="relative">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 bg-gradient-to-br from-primary to-primary/85 rounded-xl shadow-lg">
                   <Phone className="h-5 w-5 text-white" />
                 </div>
@@ -139,7 +139,7 @@ const Footer: React.FC = () => {
                 </h3>
               </div>
 
-              <div className="space-y-3 mb-4">
+              <div className="space-y-2">
                 {/* Phone */}
                 <div className={`flex items-center gap-2 p-2 rounded-lg bg-white/50 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Phone className="h-4 w-4 text-primary/80" />
@@ -182,62 +182,55 @@ const Footer: React.FC = () => {
                     </a>
                   </div>
                 </div>
-                {/* Social Media Section */}
-                <div className="flex flex-col items-center mb-6">
-                  <div className="group relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary/8 to-primary/15 border border-primary/25 hover:border-primary/35 transition-all duration-500">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                    <div className="relative">
-                      <h4 className="font-semibold text-primary/85 mb-3 text-lg flex items-center gap-2">
-                        <div className="p-1 bg-gradient-to-br from-primary to-primary/85 rounded-lg">
-                          <Users className="h-4 w-4 text-white" />
-                        </div>
-                        {isRTL ? 'تابعنا على وسائل التواصل' : 'Follow us on Social Media'}
-                      </h4>
-                      <div className="flex gap-3">
-                        <a
-                          href="https://www.facebook.com/yourclinicpage"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="Facebook"
-                          className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
-                        >
-                          <Facebook className="w-5 h-5 text-primary/80 group-hover/social:text-blue-600 transition-colors" />
-                        </a>
-                        <a
-                          href="https://www.instagram.com/yourclinicpage"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="Instagram"
-                          className="group/social p-2 rounded-xl bg-white/60 hover:bg-pink-50 border border-primary/20 hover:border-pink-400 transition-all duration-300 shadow-sm hover:shadow-pink-200 transform hover:scale-110"
-                        >
-                          <Instagram className="w-5 h-5 text-primary/80 group-hover/social:text-pink-600 transition-colors" />
-                        </a>
-                        <a
-                          href="https://x.com/yourclinicpage"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="X (formerly Twitter)"
-                          className="group/social p-2 rounded-xl bg-white/60 hover:bg-gray-50 border border-primary/20 hover:border-gray-400 transition-all duration-300 shadow-sm hover:shadow-gray-200 transform hover:scale-110"
-                        >
-                          <XIcon className="w-5 h-5 text-primary/80 group-hover/social:text-gray-800 transition-colors" />
-                        </a>
-                        <a
-                          href="https://wa.me/97222744444"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="WhatsApp"
-                          className="group/social p-2 rounded-xl bg-white/60 hover:bg-green-50 border border-primary/20 hover:border-green-400 transition-all duration-300 shadow-sm hover:shadow-green-200 transform hover:scale-110"
-                        >
-                          <MessageCircle className="w-5 h-5 text-primary/80 group-hover/social:text-green-600 transition-colors" />
-                        </a>
-                      </div>
+
+                {/* Social Media Section - back inside the card */}
+                <div className="w-full flex flex-col items-center mt-3">
+                  <h4 className="font-semibold text-primary/85 mb-2 text-lg flex items-center gap-2">
+                    <div className="p-1 bg-gradient-to-br from-primary to-primary/85 rounded-lg">
+                      <Users className="h-4 w-4 text-white" />
                     </div>
+                    {isRTL ? 'تابعنا على وسائل التواصل' : 'Follow us on Social Media'}
+                  </h4>
+                  <div className="flex gap-6 justify-center">
+                    <a
+                      href="https://www.facebook.com/yourclinicpage"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Facebook"
+                      className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
+                    >
+                      <Facebook className="w-5 h-5 text-primary/80 group-hover/social:text-blue-600 transition-colors" />
+                    </a>
+                    <a
+                      href="https://www.instagram.com/yourclinicpage"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Instagram"
+                      className="group/social p-2 rounded-xl bg-white/60 hover:bg-pink-50 border border-primary/20 hover:border-pink-400 transition-all duration-300 shadow-sm hover:shadow-pink-200 transform hover:scale-110"
+                    >
+                      <Instagram className="w-5 h-5 text-primary/80 group-hover/social:text-pink-600 transition-colors" />
+                    </a>
+                    <a
+                      href="https://x.com/yourclinicpage"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="X (formerly Twitter)"
+                      className="group/social p-2 rounded-xl bg-white/60 hover:bg-gray-50 border border-primary/20 hover:border-gray-400 transition-all duration-300 shadow-sm hover:shadow-gray-200 transform hover:scale-110"
+                    >
+                      <XIcon className="w-5 h-5 text-primary/80 group-hover/social:text-gray-800 transition-colors" />
+                    </a>
+                    <a
+                      href="https://wa.me/97222744444"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="WhatsApp"
+                      className="group/social p-2 rounded-xl bg-white/60 hover:bg-green-50 border border-primary/20 hover:border-green-400 transition-all duration-300 shadow-sm hover:shadow-green-200 transform hover:scale-110"
+                    >
+                      <MessageCircle className="w-5 h-5 text-primary/80 group-hover/social:text-green-600 transition-colors" />
+                    </a>
                   </div>
                 </div>
-
               </div>
-
-
             </div>
           </div>
 
