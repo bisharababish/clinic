@@ -166,7 +166,7 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToLoadSlots'),
                 variant: "destructive",
             });
-        } 
+        }
     };
 
     // Doctor form handlers
@@ -309,7 +309,7 @@ const DoctorManagement = () => {
                 variant: "destructive",
             });
 
-        } 
+        }
     };
 
     const handleDoctorSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -337,7 +337,7 @@ const DoctorManagement = () => {
             return;
         }
 
-        if (isNaN(doctorFormData.price) || doctorFormData.price < 0) {
+        if (isNaN(doctorFormData.price) || doctorFormData.price < 1) {
             toast({
                 title: t('doctorManagement.validationError'),
                 description: t('doctorManagement.validPrice'),
@@ -399,7 +399,7 @@ const DoctorManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                   
+
 
                     toast({
                         title: t('common.success'),
@@ -416,7 +416,7 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToSaveDoctor'),
                 variant: "destructive",
             });
-        } 
+        }
     };
 
     // Availability slot handlers
@@ -555,7 +555,7 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToAddSlot'),
                 variant: "destructive",
             });
-        } 
+        }
     };
 
     const handleDeleteAvailabilitySlot = async (id: string) => {
@@ -581,7 +581,7 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToDeleteSlot'),
                 variant: "destructive",
             });
-        } 
+        }
     };
 
     const getClinicNameById = (id: string) => {
@@ -841,6 +841,7 @@ const DoctorManagement = () => {
                                         id="price"
                                         name="price"
                                         type="number"
+                                        min={1}
                                         value={doctorFormData.price.toString()}
                                         onChange={handleDoctorInputChange}
                                         placeholder={t('doctorManagement.pricePlaceholder')}
