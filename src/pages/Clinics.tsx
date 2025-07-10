@@ -1,5 +1,5 @@
 // pages/Clinics.tsx
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -99,46 +99,66 @@ const Clinics = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const isFetchingRef = useRef(false);
 
     useEffect(() => {
-        loadData();
-    }, []);
+        let isMounted = true;
 
+        const initializeComponent = async () => {
+            if (isMounted) {
+                await loadData();
+            }
+        };
+
+        initializeComponent();
+
+        return () => {
+            isMounted = false;
+            isFetchingRef.current = false;
+        };
+    }, []);
+    useEffect(() => {
+        return () => {
+            isFetchingRef.current = false;
+        };
+    }, []);
     const loadData = async () => {
-        setLoadError(null);
+        if (isFetchingRef.current) return;
+
         try {
+            isFetchingRef.current = true;
             setIsLoading(true);
+            setLoadError(null);
 
             // Single optimized query instead of multiple queries
             const [categoryResult, clinicResult] = await Promise.all([
                 supabase
                     .from('clinic_categories')
                     .select('id, name, name_en, name_ar')
-
                     .eq('is_active', true)
                     .order('display_order', { ascending: true })
                     .order('name', { ascending: true }),
                 supabase
                     .from('clinics')
                     .select(`
+                id,
+                name,
+                category,
+                description,
+                doctors(
                     id,
                     name,
-                    category,
-                    description,
-                    doctors(
+                    specialty,
+                    price,
+                    is_available,
+                    doctor_availability(
                         id,
-                        name,
-                        specialty,
-                        price,
-                        is_available,
-                        doctor_availability(
-                            id,
-                            day,
-                            start_time,
-                            end_time
-                        )
+                        day,
+                        start_time,
+                        end_time
                     )
-                `)
+                )
+            `)
                     .eq('is_active', true)
                     .eq('doctors.is_available', true)
                     .order('display_order', { ascending: true })
@@ -151,14 +171,13 @@ const Clinics = () => {
             setCategories(categoryResult.data || []);
 
             // Transform data to match expected structure
-            // Transform data to match expected structure
             const transformedClinics = (clinicResult.data || []).map(clinic => ({
                 id: clinic.id,
                 name: clinic.name,
                 category: clinic.category,
                 description: clinic.description,
                 doctors: (clinic.doctors || [])
-                    .filter(doctor => doctor.is_available)  // ← Add this filter
+                    .filter(doctor => doctor.is_available)
                     .map(doctor => ({
                         id: doctor.id,
                         name: doctor.name,
@@ -179,6 +198,7 @@ const Clinics = () => {
             });
         } finally {
             setIsLoading(false);
+            isFetchingRef.current = false;
         }
     };
 

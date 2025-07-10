@@ -212,6 +212,7 @@ const Labs = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { language, isRTL } = useContext(LanguageContext);
+  const isFetchingRef = useRef(false);
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -335,14 +336,40 @@ const Labs = () => {
 
   // Fetch patients on component mount
   useEffect(() => {
+    let isMounted = true;
+
     const initializeComponent = async () => {
+      if (!user) {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      const userRole = user.role?.toLowerCase();
+      if (userRole !== 'lab' && userRole !== 'admin') {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       await createLabResultsTableIfNotExists();
       await fetchPatients();
     };
 
     initializeComponent();
-  }, []);
 
+    return () => {
+      isMounted = false;
+      isFetchingRef.current = false;
+    };
+  }, [user]);
+  useEffect(() => {
+    return () => {
+      isFetchingRef.current = false;
+    };
+  }, []);
   const createLabResultsTableIfNotExists = async () => {
     try {
       // Check if lab_results table exists by trying to select from it
@@ -378,26 +405,29 @@ const Labs = () => {
   };
 
   const fetchPatients = async () => {
+    if (isFetchingRef.current) return;
+
     try {
+      isFetchingRef.current = true;
       setIsLoading(true);
       setError(null);
 
       const { data, error } = await supabase
         .from('userinfo')
         .select(`
-  userid, 
-  english_username_a, 
-  english_username_d,
-  arabic_username_a, 
-  arabic_username_d,
-  user_email, 
-  user_roles, 
-  date_of_birth, 
-  blood_type, 
-  phone_number, 
-  address
-`)
-        .eq('user_roles', 'Patient')  // Only fetch users with Patient role
+                userid, 
+                english_username_a, 
+                english_username_d,
+                arabic_username_a, 
+                arabic_username_d,
+                user_email, 
+                user_roles, 
+                date_of_birth, 
+                blood_type, 
+                phone_number, 
+                address
+            `)
+        .eq('user_roles', 'Patient')
         .order('english_username_a');
 
       if (error) {
@@ -406,7 +436,7 @@ const Labs = () => {
       }
 
       console.log('Patients loaded:', data?.length || 0);
-      console.log('Sample patient data:', data?.[0]); // Debug log
+      console.log('Sample patient data:', data?.[0]);
       setPatients(data || []);
 
     } catch (error) {
@@ -414,6 +444,7 @@ const Labs = () => {
       setError(`Failed to load patients: ${error.message}`);
     } finally {
       setIsLoading(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -602,7 +633,9 @@ const Labs = () => {
     } catch (error: unknown) {
       console.error('Error saving lab results:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
-
+      if (isFetchingRef.current) {
+        isFetchingRef.current = false;
+      }
       if (error instanceof Error) {
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);

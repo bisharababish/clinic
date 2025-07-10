@@ -1,5 +1,5 @@
 // DoctorLabsPage.tsx - Now with comprehensive skeleton loading
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, FileText, Calendar, User, Filter, Download, Eye, AlertCircle, File } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
@@ -153,10 +153,14 @@ const DoctorLabsPage: React.FC = () => {
     const [filterDate, setFilterDate] = useState<string>('');
     const [filterType, setFilterType] = useState<string>('');
     const [initializing, setInitializing] = useState<boolean>(true);
+    const isFetchingRef = useRef(false);
 
     // Fetch lab results from database
     const fetchLabResults = async () => {
+        if (isFetchingRef.current) return;
+
         try {
+            isFetchingRef.current = true;
             setLoading(true);
             setError(null);
 
@@ -182,9 +186,9 @@ const DoctorLabsPage: React.FC = () => {
             setError('Failed to load lab results. Please try again.');
         } finally {
             setLoading(false);
+            isFetchingRef.current = false;
         }
     };
-    // Fetch attachments for each lab result
 
 
     const formatFileSize = (bytes: number) => {
@@ -217,30 +221,45 @@ const DoctorLabsPage: React.FC = () => {
             console.error('Failed to download file:', error);
         }
     };
-    // Initialize and fetch data
+
     useEffect(() => {
+        let isMounted = true;
+
         const initializeComponent = async () => {
-            // Check if user is authenticated and is a doctor
             if (!user) {
-                setInitializing(false);
+                if (isMounted) {
+                    setInitializing(false);
+                }
                 return;
             }
 
             if (user.role !== 'doctor' && user.role !== 'admin') {
-                setError('Access denied. Only doctors and administrators can view lab results.');
-                setInitializing(false);
-                setLoading(false);
+                if (isMounted) {
+                    setError('Access denied. Only doctors and administrators can view lab results.');
+                    setInitializing(false);
+                    setLoading(false);
+                }
                 return;
             }
 
-            // Fetch lab results
             await fetchLabResults();
-            setInitializing(false);
+            if (isMounted) {
+                setInitializing(false);
+            }
         };
 
         initializeComponent();
-    }, [user]);
 
+        return () => {
+            isMounted = false;
+            isFetchingRef.current = false;
+        };
+    }, [user]);
+    useEffect(() => {
+        return () => {
+            isFetchingRef.current = false;
+        };
+    }, []);
     // Filter results based on search and filters
     const filteredResults: LabResult[] = labResults.filter(result => {
         const matchesSearch = result.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -294,6 +313,8 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
         fetchLabResults();
     };
 
+
+
     // Show auth skeleton while checking user
     if (!user && initializing) {
         return <AuthSkeletonLoading isRTL={isRTL} />;
@@ -326,7 +347,6 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
             </div>
         );
     }
-
     return (
         <div className={`min-h-screen bg-gray-50 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Header */}

@@ -1,5 +1,5 @@
 // pages/Index.tsx - Enhanced version with nurse patient creation functionality and sidebar
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePatientHealth, PatientHealthData } from "@/hooks/usePatientHealth";
 import { Button } from "@/components/ui/button";
@@ -270,6 +270,7 @@ const Index = () => {
 
   // NEW: Store complete health data for user tracking display
   const [healthData, setHealthData] = useState<PatientHealthData | null>(null);
+  const isFetchingRef = useRef(false); // Add this line
 
   // FIXED: Updated disease keys to match database schema
   const commonDiseases = [
@@ -598,12 +599,14 @@ const Index = () => {
   };
 
   // NEW: Load all patients for sidebar (for nurses)
+  // NEW: Load all patients for sidebar (for nurses)
   const loadAllPatients = async () => {
-    if (!canSearchPatients()) return;
-
-    setIsLoadingPatients(true);
+    if (!canSearchPatients() || isFetchingRef.current) return;
 
     try {
+      isFetchingRef.current = true;
+      setIsLoadingPatients(true);
+
       console.log('📋 Loading all patients for sidebar...');
 
       // Get all patients from database
@@ -669,6 +672,7 @@ const Index = () => {
 
     } finally {
       setIsLoadingPatients(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -883,11 +887,14 @@ const Index = () => {
       return;
     }
 
-    setIsSearching(true);
-    setSearchError(null);
-    setSearchResults([]);
+    if (isFetchingRef.current) return;
 
     try {
+      isFetchingRef.current = true;
+      setIsSearching(true);
+      setSearchError(null);
+      setSearchResults([]);
+
       console.log('🔍 Searching for patients with term:', searchTerm);
 
       // Search in userinfo table with multiple criteria
@@ -963,6 +970,7 @@ const Index = () => {
       });
     } finally {
       setIsSearching(false);
+      isFetchingRef.current = false;
     }
   };
 
@@ -1074,11 +1082,24 @@ const Index = () => {
 
   // Load all patients when component mounts (for nurses/doctors/admins)
   useEffect(() => {
-    if (canSearchPatients()) {
-      loadAllPatients();
-    }
+    let isMounted = true;
+
+    const initializeComponent = async () => {
+      if (canSearchPatients() && isMounted) {
+        await loadAllPatients();
+      }
+    };
+
+    initializeComponent();
+
+    return () => {
+      isMounted = false;
+      isFetchingRef.current = false;
+    };
   }, []);
-  // Clear search results when search term is cleared
+
+
+
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setSearchResults([]);
@@ -1086,6 +1107,13 @@ const Index = () => {
       setSelectedPatient(null);
     }
   }, [searchTerm]);
+
+
+  useEffect(() => {
+    return () => {
+      isFetchingRef.current = false;
+    };
+  }, []);
   const [customAllergy, setCustomAllergy] = useState("");
 
   // Filter patients based on search term
