@@ -83,25 +83,25 @@ const Footer: React.FC = () => {
                 <div className="flex items-center gap-2 text-xs text-primary/80">
                   <Award className="h-3 w-3" />
                   <span className="font-medium">
-                    {isRTL ? "خبرة طبية متميزة" : "Medical Excellence"}
+                    {isRTL ? "خبرة طبية متميزة." : "Medical Excellence."}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-primary/80">
                   <Shield className="h-3 w-3" />
                   <span className="font-medium">
-                    {isRTL ? "معايير سلامة عالية" : "High Safety Standards"}
+                    {isRTL ? "معايير سلامة عالية." : "High Safety Standards."}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-primary/80">
                   <Users className="h-3 w-3" />
                   <span className="font-medium">
-                    {isRTL ? "فريق طبي متخصص" : "Expert Medical Team"}
+                    {isRTL ? "فريق طبي متخصص." : "Expert Medical Team."}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-primary/80">
                   <Building className="h-3 w-3" />
                   <span className="font-medium">
-                    {isRTL ? "مرافق حديثة" : "Modern Facilities"}
+                    {isRTL ? "مرافق حديثة." : "Modern Facilities."}
                   </span>
                 </div>
                 {/* Hours */}
@@ -256,8 +256,8 @@ const Footer: React.FC = () => {
 
               <p className="text-sm text-primary/85 leading-relaxed font-medium mb-3">
                 {isRTL
-                  ? "مرافق حديثة مجهزة بأحدث التقنيات الطبية"
-                  : "Modern facilities equipped with the latest medical technology"
+                  ? "مرافق حديثة مجهزة بأحدث التقنيات الطبية."
+                  : "Modern facilities equipped with the latest medical technology."
                 }
               </p>
 
@@ -265,19 +265,19 @@ const Footer: React.FC = () => {
                 {[
                   {
                     icon: "🏥",
-                    text: isRTL ? "غرف فحص متطورة" : "Advanced Examination Rooms"
+                    text: isRTL ? "غرف فحص متطورة." : "Advanced Examination Rooms."
                   },
                   {
                     icon: "🔬",
-                    text: isRTL ? "مختبر طبي شامل" : "Comprehensive Lab Services"
+                    text: isRTL ? "مختبر طبي شامل." : "Comprehensive Lab Services."
                   },
                   {
                     icon: "📱",
-                    text: isRTL ? "مركز تصوير حديث" : "Modern Imaging Center"
+                    text: isRTL ? "مركز تصوير حديث." : "Modern Imaging Center."
                   },
                   {
                     icon: "♿",
-                    text: isRTL ? "تسهيلات لذوي الاحتياجات الخاصة" : "Accessibility Features"
+                    text: isRTL ? "تسهيلات لذوي الاحتياجات الخاصة." : "Accessibility Features."
                   }
                 ].map((feature, index) => (
                   <div key={index} className="flex items-center gap-2 p-2 bg-white/50 rounded-lg border border-primary/20">

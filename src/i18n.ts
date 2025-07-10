@@ -346,8 +346,8 @@ const enTranslations = {
     },
     footer: {
         rights: 'All rights reserved',
-        privacyPolicy: 'Privacy & Cookies Policy',
-        termsOfUse: 'Terms & Conditions',
+        privacyPolicy: 'Privacy & Cookies Policy.',
+        termsOfUse: 'Terms & Conditions.',
         contactUs: 'Contact Us',
         quickLinks: 'Terms of Use and Policies',
         clinicDescription: 'Providing quality healthcare services since 2025',
@@ -1836,8 +1836,8 @@ const arTranslations = {
     },
     footer: {
         rights: 'جميع الحقوق محفوظة',
-        privacyPolicy: 'سياسة الخصوصية وملفات تعريف الارتباط',
-        termsOfUse: 'الشروط والأحكام',
+        privacyPolicy: 'سياسة الخصوصية وملفات تعريف الارتباط.',
+        termsOfUse: 'الشروط والأحكام.',
         contactUs: 'اتصل بنا',
         quickLinks: 'شروط الاستخدام والسياسات',
         clinicDescription: 'نقدم خدمات الرعاية الصحية عالية الجودة منذ عام 2025',
