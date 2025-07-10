@@ -1,5 +1,5 @@
 // DoctorXRayPage.tsx - With comprehensive skeleton loading
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Image, Calendar, User, Filter, Download, Eye, ZoomIn, ZoomOut, RotateCw, AlertCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
@@ -174,6 +174,7 @@ const DoctorXRayPage: React.FC = () => {
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [confirmDeleteImage, setConfirmDeleteImage] = useState<XRayImage | null>(null);
     const { toast } = useToast();
+    const isFetchingRef = useRef(false);
 
     // Helper function to get image URL from Supabase storage
     const getImageUrl = (imagePath: string): string => {
@@ -193,25 +194,27 @@ const DoctorXRayPage: React.FC = () => {
 
     // Fetch X-ray images from database
     const fetchXrayImages = async () => {
+        if (isFetchingRef.current) return; // Prevent concurrent fetches
+
+        isFetchingRef.current = true;
         try {
             setLoading(true);
-            setError(null);
+            setError(null); // Reset error state
             console.log('Fetching X-ray images...');
 
-            // Fetch X-ray images from your database
             const { data: xrayData, error: xrayError } = await supabase
-                .from('xray_images') // Make sure this matches your table name
+                .from('xray_images')
                 .select(`
-                    id,
-                    patient_id,
-                    patient_name,
-                    date_of_birth,
-                    body_part,
-                    indication,
-                    requesting_doctor,
-                    image_url,
-                    created_at
-                `)
+                id,
+                patient_id,
+                patient_name,
+                date_of_birth,
+                body_part,
+                indication,
+                requesting_doctor,
+                image_url,
+                created_at
+            `)
                 .order('created_at', { ascending: false });
 
             if (xrayError) {
@@ -222,20 +225,17 @@ const DoctorXRayPage: React.FC = () => {
             console.log('Raw X-ray data:', xrayData);
 
             if (xrayData && xrayData.length > 0) {
-                // Transform the data to match the component interface
                 const transformedData: XRayImage[] = xrayData.map(item => {
-                    // Get the full image URL from Supabase storage
                     const imageUrl = getImageUrl(item.image_url);
 
                     return {
                         ...item,
-                        // Map database fields to component fields
                         imageUrl,
                         patientName: item.patient_name,
                         patientId: item.patient_id.toString(),
                         xrayDate: item.created_at,
                         radiologist: item.requesting_doctor || 'Unknown',
-                        status: 'Completed', // Default status
+                        status: 'Completed',
                         findings: item.indication || '',
                         impression: ''
                     };
@@ -252,6 +252,7 @@ const DoctorXRayPage: React.FC = () => {
             setError(err instanceof Error ? err.message : 'Failed to load X-ray images');
         } finally {
             setLoading(false);
+            isFetchingRef.current = false; // Reset the flag
         }
     };
 
@@ -259,9 +260,14 @@ const DoctorXRayPage: React.FC = () => {
     useEffect(() => {
         const initializeComponent = async () => {
             try {
+                setInitializing(true);
+                setLoading(true);
+                setError(null); // Reset error state
+
                 // Check if user is authenticated and is a doctor
                 if (!user) {
                     setInitializing(false);
+                    setLoading(false);
                     return;
                 }
 
@@ -279,12 +285,25 @@ const DoctorXRayPage: React.FC = () => {
                 setError(err instanceof Error ? err.message : 'Failed to initialize');
             } finally {
                 setInitializing(false);
+                setLoading(false); // Always reset loading
             }
         };
 
-        initializeComponent();
+        // Only run if user is defined (not undefined)
+        if (user !== undefined) {
+            initializeComponent();
+        }
     }, [user, t]);
-
+    // ADD THIS NEW useEffect:
+    useEffect(() => {
+        return () => {
+            // Cleanup function to reset states when component unmounts
+            setLoading(false);
+            setInitializing(false);
+            setError(null);
+            isFetchingRef.current = false;
+        };
+    }, []);
     // Filter images based on search and filters
     const filteredImages: XRayImage[] = xrayImages.filter(image => {
         const matchesSearch =
@@ -377,12 +396,16 @@ const DoctorXRayPage: React.FC = () => {
     };
 
     const handleRefresh = async (): Promise<void> => {
+        setError(null); // Clear any previous errors
+
         await fetchXrayImages();
     };
 
     // 2. Add delete handler function
     const handleDeleteImage = async (image: XRayImage): Promise<void> => {
         setDeletingId(image.id);
+        setError(null); // ADD THIS LINE
+
         try {
             // Delete from database
             const { error: dbError } = await supabase
@@ -424,19 +447,19 @@ const DoctorXRayPage: React.FC = () => {
     }
 
     // Show skeleton loading while data is being fetched
-    if (loading && initializing) {
+    if (loading) {
         return <LoadingSkeletonWithText text={t('doctorPages.loadingXrayImages') || 'Loading X-ray images...'} />;
     }
 
     // Show error state
-    if (error) {
+    if (error && (error.includes('Access denied') || !user)) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center max-w-md">
                     <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('common.error') || 'Error'}</h2>
                     <p className="text-gray-600 mb-4">{error}</p>
-                    {!error.includes('Access denied') && (
+                    {!error.includes('Access denied') && !error.includes('Please log in') && (
                         <button
                             onClick={handleRefresh}
                             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
@@ -490,8 +513,10 @@ const DoctorXRayPage: React.FC = () => {
                                 type="text"
                                 placeholder={t('doctorPages.searchPatientsXray') || 'Search patients or body parts...'}
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                disabled={loading}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    if (error && !error.includes('Access denied')) setError(null);
+                                }} disabled={loading}
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
@@ -499,8 +524,10 @@ const DoctorXRayPage: React.FC = () => {
                             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <select
                                 value={filterBodyPart}
-                                onChange={(e) => setFilterBodyPart(e.target.value)}
-                                disabled={loading}
+                                onChange={(e) => {
+                                    setFilterBodyPart(e.target.value);
+                                    if (error && !error.includes('Access denied')) setError(null);
+                                }} disabled={loading}
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <option value="">{t('doctorPages.allBodyParts') || 'All Body Parts'}</option>
@@ -523,8 +550,10 @@ const DoctorXRayPage: React.FC = () => {
                             <input
                                 type="date"
                                 value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
-                                disabled={loading}
+                                onChange={(e) => {
+                                    setFilterDate(e.target.value);
+                                    if (error && !error.includes('Access denied')) setError(null);
+                                }} disabled={loading}
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>

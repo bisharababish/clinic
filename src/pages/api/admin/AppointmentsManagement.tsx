@@ -457,7 +457,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 description: t('appointmentsManagement.failedToDelete'),
                 variant: "destructive",
             });
-        } 
+        }
     };
 
     // 🚀 OPTIMIZED: Add appointment with collision detection
@@ -517,7 +517,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     description: t('appointmentsManagement.timeSlotConflict') || 'This clinic already has an appointment at this time.',
                     variant: "destructive",
                 });
-                                return;
+                return;
             }
 
             // Create the appointment
@@ -566,7 +566,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             });
 
             // Refresh appointments in real time
-            await loadAppointments();
+            await refreshAll();
 
             // Reset form
             setSelectedClinicId("");
@@ -586,12 +586,12 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 description: t('appointmentsManagement.failedToCreate'),
                 variant: "destructive",
             });
-        } 
+        }
     };
 
     // 🚀 OPTIMIZED: Export to CSV with better performance
     const exportToCSV = () => {
-        const dataToExport = getFilteredAppointments; // Fixed: Removed parentheses
+        const dataToExport = getFilteredAppointments;
 
         if (dataToExport.length === 0) {
             toast({
@@ -1734,11 +1734,8 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         {/* Clinic Selection */}
                         <div>
                             <Label htmlFor="clinic-select">{t('appointmentsManagement.selectClinic')}</Label>
-                            <Select
-                                value={selectedClinicId}
-                                onValueChange={setSelectedClinicId}
-                            >
-                                <SelectTrigger className={`form-select ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                            <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
+                                <SelectTrigger id="clinic-select">
                                     <SelectValue placeholder={t('appointmentsManagement.chooseClinic')} />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1758,13 +1755,9 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         {/* Doctor Selection (filtered by clinic) */}
                         <div>
                             <Label htmlFor="doctor-select">{t('appointmentsManagement.selectDoctor')}</Label>
-                            <Select
-                                value={selectedDoctorId}
-                                onValueChange={setSelectedDoctorId}
-                                disabled={!selectedClinicId}
-                            >
-                                <SelectTrigger className={`form-select ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                                    <SelectValue placeholder={selectedClinicId ? t('appointmentsManagement.chooseDoctor') : t('appointmentsManagement.selectClinicFirst')} />
+                            <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
+                                <SelectTrigger id="doctor-select">
+                                    <SelectValue placeholder={t('appointmentsManagement.chooseDoctor')} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {availableDoctorsForClinic.map(doctor => (
@@ -1782,7 +1775,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         </div>
                         {/* Patient Selection with search */}
                         <div>
-                            <Label htmlFor="patient-select">{t('appointmentsManagement.selectPatient')}</Label>
+                            <Label>{t('appointmentsManagement.selectPatient')}</Label>
                             <div className="space-y-2">
                                 <Input
                                     placeholder={t('appointmentsManagement.searchPatients')}

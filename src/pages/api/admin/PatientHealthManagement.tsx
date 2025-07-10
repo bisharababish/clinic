@@ -954,7 +954,7 @@ const PatientHealthForm: React.FC<{
                                                     value={formData.blood_type}
                                                     onValueChange={(value) => setFormData(prev => ({ ...prev, blood_type: value }))}
                                                 >
-                                                    <SelectTrigger>
+                                                    <SelectTrigger id="blood_type">
                                                         <SelectValue placeholder={isRTL ? "اختر فصيلة الدم" : "Select blood type"} />
                                                     </SelectTrigger>
                                                     <SelectContent className={isRTL ? 'text-right [&>div]:text-right' : ''}>
@@ -1261,7 +1261,7 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             required
                                             placeholder={isRTL ? "الأول (إنجليزي فقط)" : "First (English only)"}
-                                            pattern="^[A-Za-z\s'-]+$"
+                                            pattern="^[A-Za-z '\-]+$"
                                             title={isRTL ? "أحرف إنجليزية فقط مسموحة" : "Only English letters allowed"}
                                         />
                                     </div>
@@ -1273,7 +1273,7 @@ const PatientHealthForm: React.FC<{
                                             value={createPatientForm.english_username_b}
                                             onChange={handleCreatePatientFormChange}
                                             placeholder={isRTL ? "الثاني (إنجليزي فقط)" : "Second (English only)"}
-                                            pattern="^[A-Za-z\s'-]+$"
+                                            pattern="^[A-Za-z '\-]+$"
                                             title={isRTL ? "أحرف إنجليزية فقط مسموحة" : "Only English letters allowed"}
                                         />
                                     </div>
@@ -1285,7 +1285,7 @@ const PatientHealthForm: React.FC<{
                                             value={createPatientForm.english_username_c}
                                             onChange={handleCreatePatientFormChange}
                                             placeholder={isRTL ? "الثالث (إنجليزي فقط)" : "Third (English only)"}
-                                            pattern="^[A-Za-z\s'-]+$"
+                                            pattern="^[A-Za-z '\-]+$"
                                             title={isRTL ? "أحرف إنجليزية فقط مسموحة" : "Only English letters allowed"}
                                         />
                                     </div>
@@ -1298,7 +1298,7 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             required
                                             placeholder={isRTL ? "الأخير (إنجليزي فقط)" : "Last (English only)"}
-                                            pattern="^[A-Za-z\s'-]+$"
+                                            pattern="^[A-Za-z '\-]+$"
                                             title={isRTL ? "أحرف إنجليزية فقط مسموحة" : "Only English letters allowed"}
                                         />
                                     </div>
@@ -1319,7 +1319,6 @@ const PatientHealthForm: React.FC<{
                                             required
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={isRTL ? "الأول (عربي فقط)" : "First (Arabic only)"}
-                                            pattern="^[\u0600-\u06FF\s'-]+$"
                                             title={isRTL ? "أحرف عربية فقط مسموحة" : "Only Arabic letters allowed"}
                                             dir={isRTL ? "rtl" : "ltr"}
                                         />
@@ -1333,7 +1332,6 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={isRTL ? "الثاني (عربي فقط)" : "Second (Arabic only)"}
-                                            pattern="^[\u0600-\u06FF\s'-]+$"
                                             title={isRTL ? "أحرف عربية فقط مسموحة" : "Only Arabic letters allowed"}
                                             dir={isRTL ? "rtl" : "ltr"}
                                         />
@@ -1347,7 +1345,6 @@ const PatientHealthForm: React.FC<{
                                             onChange={handleCreatePatientFormChange}
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={isRTL ? "الثالث (عربي فقط)" : "Third (Arabic only)"}
-                                            pattern="^[\u0600-\u06FF\s'-]+$"
                                             title={isRTL ? "أحرف عربية فقط مسموحة" : "Only Arabic letters allowed"}
                                             dir={isRTL ? "rtl" : "ltr"}
                                         />
@@ -1362,7 +1359,6 @@ const PatientHealthForm: React.FC<{
                                             required
                                             className={isRTL ? "text-right placeholder:text-right" : "text-left placeholder:text-left"}
                                             placeholder={isRTL ? "الأخير (عربي فقط)" : "Last (Arabic only)"}
-                                            pattern="^[\u0600-\u06FF\s'-]+$"
                                             title={isRTL ? "أحرف عربية فقط مسموحة" : "Only Arabic letters allowed"}
                                             dir={isRTL ? "rtl" : "ltr"}
                                         />

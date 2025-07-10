@@ -380,7 +380,8 @@ const XRay = () => {
   });
 
   const fileInputRef = useRef(null);
-
+  const isFetchingRef = useRef(false);
+  const isInitializedRef = useRef(false);
   const getImageUrl = (imagePath) => {
     const { data } = supabase.storage
       .from("xray-images")
@@ -391,16 +392,19 @@ const XRay = () => {
   // Check auth status and initialize
   useEffect(() => {
     const initializeComponent = async () => {
+      if (isInitializedRef.current) return; // Prevent multiple initializations
+
+      isFetchingRef.current = true;
       try {
         setIsLoading(true);
+        setIsInitializing(true);
+        setError(""); // Reset error
 
         // Check authentication
         const { data: { user } } = await supabase.auth.getUser();
         console.log("Current user:", user);
         if (!user) {
           setError("Please log in to upload X-ray images");
-          setIsInitializing(false);
-          setIsLoading(false);
           return;
         }
 
@@ -410,20 +414,34 @@ const XRay = () => {
           fetchDoctors()
         ]);
 
+        isInitializedRef.current = true; // Mark as initialized
+
       } catch (err) {
         console.error("Error initializing component:", err);
         setError(`Failed to initialize: ${err.message}`);
       } finally {
         setIsInitializing(false);
         setIsLoading(false);
+        isFetchingRef.current = false;
       }
     };
 
     initializeComponent();
+  }, []); // Empty dependency array to run only once
+  // ADD THIS NEW useEffect after the initialization one:
+  useEffect(() => {
+    return () => {
+      // Cleanup function
+      setIsLoading(false);
+      setIsInitializing(false);
+      setError("");
+      isFetchingRef.current = false;
+      isInitializedRef.current = false;
+    };
   }, []);
-
   // Fetch patients
   const fetchPatients = async () => {
+
     try {
       const { data, error } = await supabase
         .from("userinfo")
@@ -445,6 +463,7 @@ const XRay = () => {
 
   // Fetch doctors
   const fetchDoctors = async () => {
+
     try {
       const { data, error } = await supabase
         .from("userinfo")
@@ -466,6 +485,8 @@ const XRay = () => {
 
   const handleDoctorSearch = (e) => {
     setDoctorSearchTerm(e.target.value);
+    if (error && !error.includes('Please log in')) setError("");
+
   };
 
   const handleSelectDoctor = (doctor) => {
@@ -479,6 +500,8 @@ const XRay = () => {
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
+    if (error && !error.includes('Please log in')) setError("");
+
   };
 
   const handleSelectPatient = (patient) => {
@@ -493,11 +516,15 @@ const XRay = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormFields((prev) => ({ ...prev, [name]: value }));
+    if (error && !error.includes('Please log in')) setError("");
+
   };
 
   // Handle body part selection from skeleton
   const handleBodyPartSelect = (bodyPart) => {
     setFormFields((prev) => ({ ...prev, bodyPart }));
+        if (error && !error.includes('Please log in')) setError("");
+
   };
 
   const handleFileChange = (e) => {
@@ -553,6 +580,8 @@ const XRay = () => {
   };
 
   const handleSave = async () => {
+    setError(""); // ADD THIS LINE
+
     // Validation
     if (!selectedPatient) {
       setError(t('xray.fillRequiredFields') || "Please select a patient");
@@ -708,14 +737,7 @@ const XRay = () => {
 
       // Reset form after 3 seconds
       setTimeout(() => {
-        setSelectedPatient(null);
-        setSelectedDoctor(null);
-        setFile(null);
-        setFormFields({ bodyPart: "", requestingDoctor: "", indication: "" });
-        setIsSaved(false);
-        setAnnouncement("");
-        setDoctorSearchTerm("");
-        setSearchTerm("");
+        resetForm(); // Use the new reset function
       }, 3000);
 
     } catch (err) {
@@ -725,7 +747,17 @@ const XRay = () => {
       setIsUploading(false);
     }
   };
-
+  const resetForm = () => {
+    setSelectedPatient(null);
+    setSelectedDoctor(null);
+    setFile(null);
+    setFormFields({ bodyPart: "", requestingDoctor: "", indication: "" });
+    setIsSaved(false);
+    setAnnouncement("");
+    setDoctorSearchTerm("");
+    setSearchTerm("");
+    setError("");
+  };
   // Show auth skeleton while checking user
   if (isInitializing) {
     return <AuthSkeletonLoading />;
@@ -737,7 +769,7 @@ const XRay = () => {
   }
 
   // Show error state if there's a critical error
-  if (error && patients.length === 0 && doctors.length === 0) {
+  if (error && (error.includes('Please log in') || (patients.length === 0 && doctors.length === 0 && !isInitializing))) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center">
         <div className="text-center max-w-md bg-white rounded-xl shadow-lg border border-gray-200 p-8">

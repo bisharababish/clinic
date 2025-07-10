@@ -115,44 +115,113 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         let mounted = true;
+        const authTimeoutId: number | null = null;
+        let forceTimeoutId: number | null = null;
+        let isCurrentlyInitializing = false; // Track initialization state
+
+        const forceLoadingComplete = () => {
+            if (mounted && isCurrentlyInitializing) {
+                console.log("[useAuth] FORCE: Loading complete due to timeout");
+                setIsLoading(false);
+                setIsInitialized(true);
+                isCurrentlyInitializing = false;
+            }
+        };
+
+        const resetAuthState = () => {
+            if (mounted) {
+                console.log("[useAuth] RESET: Forcing auth state reset");
+                setIsLoading(false);
+                setIsInitialized(true);
+                isCurrentlyInitializing = false;
+
+                // Clear any running timeouts
+                if (forceTimeoutId) {
+                    clearTimeout(forceTimeoutId);
+                    forceTimeoutId = null;
+                }
+            }
+        };
 
         const initializeAuth = async () => {
+            if (isCurrentlyInitializing) return; // Prevent multiple concurrent initializations
+
             try {
-                console.log("[useAuth] Initializing authentication...");
+                isCurrentlyInitializing = true;
+                console.log("[useAuth] Starting auth initialization");
 
-                // Set a timeout for initialization
-                const timeoutPromise = new Promise<never>((_, reject) => {
-                    setTimeout(() => reject(new Error('Auth initialization timeout')), 5000);
-                });
+                // AGGRESSIVE timeout - force complete after 2 seconds
+                forceTimeoutId = setTimeout(forceLoadingComplete, 2000) as unknown as number;
 
+                // Try to get session with a shorter timeout
                 const sessionPromise = supabase.auth.getSession();
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Session timeout')), 1500)
+                );
 
-                const result = await Promise.race([sessionPromise, timeoutPromise]);
-                const { data: { session }, error } = result;
+                let session = null;
+                let error = null;
+
+                try {
+                    const result = await Promise.race([
+                        sessionPromise,
+                        timeoutPromise
+                    ]) as Awaited<ReturnType<typeof supabase.auth.getSession>>;
+                    session = result.data?.session || null;
+                    error = result.error || null;
+                } catch (timeoutError) {
+                    console.log("[useAuth] Session check timed out, proceeding without session");
+                    session = null;
+                    error = null;
+                }
+
+                // Clear the force timeout since we got a response
+                if (forceTimeoutId) {
+                    clearTimeout(forceTimeoutId);
+                    forceTimeoutId = null;
+                }
+
+                if (!mounted) return;
 
                 if (error) {
-                    console.error("[useAuth] Session error on init:", error);
-                    if (mounted) {
-                        updateUserState(null);
-                        setIsLoading(false);
-                        setIsInitialized(true);
-                    }
+                    console.error("[useAuth] Session error:", error);
+                    updateUserState(null);
+                    setIsLoading(false);
+                    setIsInitialized(true);
+                    isCurrentlyInitializing = false;
                     return;
                 }
 
                 if (session?.user) {
-                    console.log("[useAuth] Session found on init, fetching user data for:", session.user.email);
+                    console.log("[useAuth] Session found, fetching user data");
 
                     try {
-                        const userData = await fetchUserData(session.user.email || '');
+                        // Fetch user data with timeout
+                        const userDataPromise = fetchUserData(session.user.email || '');
+                        const userTimeoutPromise = new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('User data timeout')), 1500)
+                        );
+
+                        let userData;
+                        try {
+                            userData = await Promise.race([userDataPromise, userTimeoutPromise]);
+                        } catch (userTimeoutError) {
+                            console.log("[useAuth] User data fetch timed out, using fallback");
+                            userData = {
+                                id: session.user.id,
+                                email: session.user.email || '',
+                                name: session.user.email?.split('@')[0] || 'User',
+                                role: 'patient' as UserRole,
+                                full_name: session.user.email || ''
+                            };
+                        }
+
                         if (mounted) {
-                            console.log("[useAuth] User data fetched on init:", userData);
                             updateUserState(userData);
                         }
                     } catch (fetchError) {
-                        console.error("[useAuth] Error fetching user data on init:", fetchError);
+                        console.error("[useAuth] Error fetching user data:", fetchError);
                         if (mounted) {
-                            // Create fallback user if fetch fails
                             const fallbackUser: User = {
                                 id: session.user.id,
                                 email: session.user.email || '',
@@ -164,11 +233,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         }
                     }
                 } else {
-                    console.log("[useAuth] No session found on init.");
+                    console.log("[useAuth] No session found");
                     if (mounted) {
                         updateUserState(null);
                     }
                 }
+
             } catch (error) {
                 console.error("[useAuth] Initialization error:", error);
                 if (mounted) {
@@ -178,32 +248,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 if (mounted) {
                     setIsLoading(false);
                     setIsInitialized(true);
-                    console.log("[useAuth] Auth initialization complete.");
+                    isCurrentlyInitializing = false;
+                    console.log("[useAuth] Auth initialization complete");
                 }
             }
         };
 
+        // Handle tab visibility changes - IMMEDIATE reset
+        const handleVisibilityChange = () => {
+            if (!document.hidden && mounted) {
+                console.log("[useAuth] Tab became visible - IMMEDIATE RESET");
+                resetAuthState();
+            }
+        };
+
+        // Handle window focus - IMMEDIATE reset
+        const handleFocus = () => {
+            if (mounted) {
+                console.log("[useAuth] Window focused - IMMEDIATE RESET");
+                resetAuthState();
+            }
+        };
+
+        // Add event listeners BEFORE initialization
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', handleFocus);
+
+        // Start initialization
         initializeAuth();
 
         // Set up auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 if (!mounted) return;
-                console.log("[useAuth] Auth state change event:", event);
+                console.log("[useAuth] Auth state change:", event);
 
-                // Only handle auth changes after initial load
-                if (!isInitialized) return;
+                // Don't interfere with login process
+                if (event === 'SIGNED_IN') {
+                    // Small delay to let login complete
+                    setTimeout(() => {
+                        if (mounted && session?.user) {
+                            fetchUserData(session.user.email || '').then(userData => {
+                                if (mounted && userData) {
+                                    updateUserState(userData);
+                                }
+                            });
+                        }
+                    }, 100);
+                    return;
+                }
 
                 try {
                     if (session?.user) {
-                        console.log("[useAuth] Auth state change - session user found, fetching data for:", session.user.email);
                         const userData = await fetchUserData(session.user.email || '');
                         if (mounted) {
-                            console.log("[useAuth] Auth state change - user data fetched:", userData);
                             updateUserState(userData);
                         }
                     } else {
-                        console.log("[useAuth] Auth state change - no session user.");
                         if (mounted) {
                             updateUserState(null);
                         }
@@ -219,10 +320,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         return () => {
             mounted = false;
+            isCurrentlyInitializing = false;
+            if (authTimeoutId) clearTimeout(authTimeoutId);
+            if (forceTimeoutId) clearTimeout(forceTimeoutId);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('focus', handleFocus);
             subscription.unsubscribe();
         };
-    }, [isInitialized]);
+    }, []);
 
+    // Your existing login, signup, logout functions stay EXACTLY the same
     const login = async (email: string, password: string): Promise<User> => {
         setIsLoading(true);
 
@@ -253,6 +360,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log('Database lookup result:', userData ? 'Found' : 'Not found');
 
             // Handle admin special case
+            // Handle admin special case
             if (userData && userData.role === 'admin') {
                 console.log('Admin user detected');
 
@@ -262,6 +370,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 // Cache user profile for faster access
                 localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
                 setUser(userData);
+
+                await new Promise(resolve => setTimeout(resolve, 500));
 
                 return userData;
             }
@@ -330,10 +440,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             localStorage.setItem('clinic_user_profile', JSON.stringify(userData));
             setUser(userData);
 
-            return userData;
+            // Add small delay to let auth state propagate
+            await new Promise(resolve => setTimeout(resolve, 100));
 
+            return userData;
         } catch (error) {
-            setIsLoading(false);
             console.error('Login error:', error);
             throw error;
         } finally {
