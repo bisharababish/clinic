@@ -1089,12 +1089,12 @@ const DoctorManagement = () => {
 
             {/* Confirmation Dialog for Slot Deletion */}
             <Dialog open={showSlotDeleteDialog} onOpenChange={setShowSlotDeleteDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
+                <DialogContent className={isRTL ? 'rtl [&>button]:left-4 [&>button]:right-auto' : ''} dir={isRTL ? 'rtl' : 'ltr'}>
+                    <DialogHeader className={isRTL ? 'text-right' : ''}>
+                        <DialogTitle className={isRTL ? 'text-right' : ''}>
                             {t('doctorManagement.confirmSlotDeletionTitle')}
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className={isRTL ? 'text-right' : ''}>
                             {t('doctorManagement.confirmSlotDeletionDesc', {
                                 day: slotToDelete ? getDayName(slotToDelete.day) : '',
                                 start: slotToDelete ? formatTime(slotToDelete.start_time) : '',
@@ -1102,7 +1102,7 @@ const DoctorManagement = () => {
                             })}
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter>
+                    <DialogFooter className={isRTL ? 'flex-row-reverse' : ''}>
                         <DialogClose asChild>
                             <Button variant="outline">{t('common.cancel')}</Button>
                         </DialogClose>
