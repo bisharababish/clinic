@@ -92,6 +92,7 @@ const ClinicManagement = () => {
     const [activeTab, setActiveTab] = useState<"clinics" | "categories">(
         isRTL ? "clinics" : "categories"
     );
+    const { setClinics, setCategories } = useAdminState();
 
     // State for clinic form
     const [clinicFormMode, setClinicFormMode] = useState<"create" | "edit">("create");
@@ -519,7 +520,7 @@ const ClinicManagement = () => {
                 }
 
                 if (data && data.length > 0) {
-                    // ✅ Let real-time subscription handle the update
+                    setClinics(prev => [...prev, data[0]]);
 
                     toast({
                         title: t('common.success'),
@@ -557,8 +558,9 @@ const ClinicManagement = () => {
                 }
 
                 if (data && data.length > 0) {
-                    // ✅ Let real-time subscription handle the update
-
+                    setClinics(prev => prev.map(clinic =>
+                        clinic.id === selectedClinic ? data[0] : clinic
+                    ));
                     toast({
                         title: t('common.success'),
                         description: t('clinicManagement.clinicUpdatedSuccessfully'),
