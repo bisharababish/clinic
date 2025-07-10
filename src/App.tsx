@@ -9,7 +9,6 @@ import { getDefaultRouteForRole } from "./lib/rolePermissions";
 import { supabase } from "./lib/supabase";
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { comma } from "postcss/lib/list";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -24,13 +23,11 @@ const XRay = lazy(() => import("./pages/XRay"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
-
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
 
 
 
 
-// Loading component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="text-center">
@@ -41,17 +38,13 @@ const PageLoader = () => (
   </div>
 );
 
-// Home Route with Role-Based Redirect
-// Home Route with Role-Based Redirect
 function HomeRoute() {
   const { user } = useAuth();
 
-  // If no user, don't render anything (ProtectedRoute will handle redirect)
   if (!user) {
     return null;
   }
 
-  // Just render the home page - no redirects here
   return (
     <MainLayout>
       <Index />
@@ -59,7 +52,6 @@ function HomeRoute() {
   );
 }
 
-// Default Redirect Component for unknown routes
 function DefaultRedirect() {
   const { user } = useAuth();
 
@@ -72,7 +64,6 @@ function DefaultRedirect() {
   return <Navigate to={defaultRoute} replace />;
 }
 
-// Global Error Boundary
 class GlobalErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean; error: unknown }
@@ -121,7 +112,6 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Initialize global subscriptions
 
         setTimeout(() => {
           if (isInitializing) {
@@ -130,7 +120,6 @@ function App() {
           }
         }, 3000);
 
-        // Your existing initialization logic
         await new Promise(resolve => setTimeout(resolve, 100));
 
       } catch (error) {
