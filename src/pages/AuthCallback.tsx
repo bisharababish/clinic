@@ -12,51 +12,43 @@ const AuthCallback = () => {
         const handleCallback = async () => {
             try {
                 console.log("Processing auth callback...");
+                console.log("Current URL:", window.location.href);
 
-                // Check for token in the URL hash (Supabase format)
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = hashParams.get('access_token');
-                const refreshToken = hashParams.get('refresh_token');
-                const type = hashParams.get('type');
-
-                console.log("Auth callback type:", type, "Has token:", !!accessToken);
-
-                // Handle password reset flow
-                // Handle password reset flow
-                if (type === 'recovery' && accessToken) {
-                    console.log("Password reset flow detected, redirecting to reset page");
-
-                    try {
-                        // Set up the session with the token
-                        const { error: sessionError } = await supabase.auth.setSession({
-                            access_token: accessToken,
-                            refresh_token: refreshToken || '',
-                        });
-
-                        if (sessionError) {
-                            console.error("Error setting session:", sessionError);
-                            throw sessionError;
-                        }
-
-                        // Add a small delay to ensure session is fully set
-                        await new Promise(resolve => setTimeout(resolve, 500));
-
-                        // Navigate to reset password page
-                        navigate("/auth/reset-password", { replace: true });
-                        return;
-                    } catch (sessionError) {
-                        console.error("Error setting session:", sessionError);
-                        throw sessionError;
-                    }
-                }
-
-                // Normal auth flow - check for session
+                // Check for Supabase auth callback
                 const { data, error } = await supabase.auth.getSession();
 
                 if (error) {
                     console.error("Session error:", error);
                     throw error;
                 }
+
+                // Check URL for recovery type
+                const urlParams = new URLSearchParams(window.location.search);
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+                const type = urlParams.get('type') || hashParams.get('type');
+
+                console.log("Auth callback type:", type);
+                console.log("Has session:", !!data.session);
+
+                // Handle password recovery
+                if (type === 'recovery') {
+                    console.log("Password recovery detected, redirecting to reset page");
+
+                    if (data.session) {
+                        // Session is already set by Supabase
+                        navigate("/auth/reset-password", { replace: true });
+                        return;
+                    } else {
+                        console.log("No session found for recovery");
+                        setError("Invalid recovery link. Please try again.");
+                        setTimeout(() => {
+                            navigate("/auth", { replace: true });
+                        }, 3000);
+                        return;
+                    }
+                }
+
 
                 if (data.session) {
                     console.log("Session found, processing user data...");
@@ -74,16 +66,12 @@ const AuthCallback = () => {
                             .single();
 
                         if (userData) {
-                            // Cache user profile for the app
                             localStorage.setItem('clinic_user_profile', JSON.stringify({
                                 ...userData,
                                 role: userData.user_roles.toLowerCase()
                             }));
 
-                            // Set role-specific flags
                             if (userData.user_roles === 'Admin' || userData.user_roles === 'admin') {
-                                console.log("Admin user detected, redirecting to admin page.");
-                                // Small delay to ensure state is properly set
                                 setTimeout(() => {
                                     sessionStorage.removeItem('login_in_progress');
                                     navigate("/admin", { replace: true });
@@ -93,36 +81,24 @@ const AuthCallback = () => {
                         }
                     } catch (userError) {
                         console.error("Error getting user data:", userError);
-                        // Continue with default behavior
                     }
 
-                    // Regular user or error getting user data - redirect to home
-                    console.log("Regular user, redirecting to home");
                     setTimeout(() => {
                         sessionStorage.removeItem('login_in_progress');
                         navigate("/", { replace: true });
                     }, 100);
                 } else {
                     console.log("No session found, redirecting to login...");
-                    // Clear any auth flags and redirect to login
-                    localStorage.removeItem('auth_success');
-                    sessionStorage.removeItem('login_in_progress');
                     navigate("/auth", { replace: true });
                 }
             } catch (error) {
                 console.error('Error handling auth callback:', error);
                 setError(error instanceof Error ? error.message : 'Authentication error');
-
-                // Clear auth flags on error
-                localStorage.removeItem('auth_success');
-                sessionStorage.removeItem('login_in_progress');
-                sessionStorage.removeItem('admin_login_success');
-
-                // Redirect back to auth page after 3 seconds using React Router
                 setTimeout(() => {
                     navigate("/auth", { replace: true });
                 }, 3000);
             }
+
         };
 
         handleCallback();
