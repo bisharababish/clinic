@@ -1,4 +1,4 @@
-// pages/admin/ClinicManagement.tsx
+
 import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { useTranslation } from 'react-i18next';
 import { useToast } from "@/hooks/use-toast";
@@ -40,8 +40,7 @@ import { useAdminState } from "../../../hooks/useAdminState";
 interface ClinicInfo {
     id: string;
     name: string;
-    category: string;
-    description?: st    name_ar?: string; // Add this line
+    name_ar?: string; // Add this line
     category: string;
     description?: string;
     display_order?: number;  // ADD THIS LINE
@@ -144,7 +143,6 @@ const ClinicManagement = () => {
     // Load doctors from database
     const loadDoctors = async () => {
         try {
-
             // Check if doctors table exists
             const { error: tableCheckError } = await supabase
                 .from('doctors')
@@ -157,25 +155,32 @@ const ClinicManagement = () => {
                 return;
             }
 
-            // Query doctors with their related clinic
+            // Query doctors with their related clinic (fetch name and name_ar only once)
             const { data, error } = await supabase
                 .from('doctors')
-                .select(`
-                    *,
-                    clinics:clinic_id (name, name_ar)
-                `)
+                .select(`*, clinics:clinic_id (name, name_ar)`)
                 .order('name', { ascending: true });
 
             if (error) throw error;
 
             // Transform to match our interface
-            const mappedDoctors: DoctorInfo[] = data.map(doctor => ({
+            type SupabaseDoctor = {
+                id: string;
+                name: string;
+                specialty: string;
+                clinic_id: string;
+                clinics?: { name?: string; name_ar?: string };
+                email: string;
+                phone?: string;
+                is_available: boolean;
+                price: number;
+            };
+            const mappedDoctors: DoctorInfo[] = (data || []).map((doctor: SupabaseDoctor) => ({
                 id: doctor.id,
                 name: doctor.name,
                 specialty: doctor.specialty,
                 clinic_id: doctor.clinic_id,
                 clinic_name: doctor.clinics?.name || "Unknown Clinic",
-                name_ar: doctor.clinics?.name_ar || doctor.name, // Include name_ar if available
                 email: doctor.email,
                 phone: doctor.phone || '',
                 is_available: doctor.is_available,
@@ -307,17 +312,11 @@ const ClinicManagement = () => {
         return text + ' (AR)';
     };
     // Clinic form handlers
-    const handleClinicInputChange = async (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleClinicInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
 
-        if (name === 'name') {
-            const arabicName = await translateToArabic(value);
-            setClinicFormData(prev => ({
-                ...prev,
-                name: value,
-                name_ar: arabicName
-            }));
-        } else if (name === 'display_order') {
+        // Handle number inputs properly
+        if (name === 'display_order') {
             setClinicFormData(prev => ({
                 ...prev,
                 [name]: value === '' ? 0 : Number(value)
@@ -378,7 +377,7 @@ const ClinicManagement = () => {
         setSelectedClinic(id);
         setClinicFormData({
             name: clinicToEdit.name,
-            name_ar: clinicToEdit.name_ar || '', // Use saved Arabic name or empty
+            name_ar: (clinicToEdit as ClinicInfo).name_ar || '',
             category_id: clinicToEdit.category,
             description: clinicToEdit.description || "",
             is_active: clinicToEdit.is_active,
@@ -953,6 +952,7 @@ const ClinicManagement = () => {
                                         {filteredClinics.map((clinic) => (
                                             <div key={clinic.id} className={`clinic-item ${isRTL ? 'rtl' : ''}`}>
                                                 <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+                                                    <h3 className="font-medium">{clinic.name}</h3>
                                                     <h3 className="font-medium">{getClinicDisplayName(clinic)}</h3>
                                                     <div className="text-sm text-gray-500 capitalize">
                                                         {t('clinicManagement.category')}: {clinic.category}
@@ -1049,7 +1049,32 @@ const ClinicManagement = () => {
                                                 dir="rtl"
                                             />
                                             <p className="text-sm text-gray-500">{t('clinicManagement.clinicNameArabicAuto')}</p>
-                                         {categories.length === 0 && (
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="category_id" className={isRTL ? 'text-left block' : ''}>
+                                                {t('clinicManagement.category')}
+                                            </Label>
+                                            <select
+                                                id="category_id"
+                                                name="category_id"
+                                                value={clinicFormData.category_id}
+                                                onChange={(e) => handleClinicCategoryChange(e.target.value)}
+                                                className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-right' : ''}`}
+                                                required
+                                                dir={isRTL ? 'rtl' : 'ltr'}
+                                                style={{ textAlign: isRTL ? 'right' : 'left' }}
+                                            >
+                                                <option value="">{t('clinicManagement.selectCategory')}</option>
+                                                {categories
+                                                    .filter(cat => cat.is_active)
+                                                    .map(category => (
+                                                        <option key={category.id} value={category.id}>
+                                                            {category.name}
+                                                        </option>
+                                                    ))}
+                                            </select>
+
+                                            {categories.length === 0 && (
                                                 <div className={`bg-amber-50 border border-amber-200 rounded-md p-4 mt-2 ${isRTL ? 'text-right' : ''}`}>
                                                     <h4 className="font-medium text-amber-800">{t('clinicManagement.noCategoriesAvailable')}</h4>
                                                     <p className="text-amber-700 text-sm mb-3">
@@ -1427,5 +1452,6 @@ const ClinicManagement = () => {
         </div>
     );
 };
+
 
 export default ClinicManagement;
