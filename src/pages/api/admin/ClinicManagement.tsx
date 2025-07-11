@@ -40,6 +40,8 @@ import { useAdminState } from "../../../hooks/useAdminState";
 interface ClinicInfo {
     id: string;
     name: string;
+    name_en?: string; // Add this
+    name_ar?: string; // Add this
     category: string;
     description?: string;
     display_order?: number;  // ADD THIS LINE
@@ -937,7 +939,9 @@ const ClinicManagement = () => {
                                         {filteredClinics.map((clinic) => (
                                             <div key={clinic.id} className={`clinic-item ${isRTL ? 'rtl' : ''}`}>
                                                 <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-                                                    <h3 className="font-medium">{clinic.name}</h3>
+                                                    <h3 className="font-medium">
+                                                        {isRTL && clinic.name_ar ? clinic.name_ar : (clinic.name_en || clinic.name)}
+                                                    </h3>
                                                     <div className="text-sm text-gray-500 capitalize">
                                                         {t('clinicManagement.category')}: {clinic.category}
                                                     </div>

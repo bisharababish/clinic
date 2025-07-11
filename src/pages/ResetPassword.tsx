@@ -38,7 +38,15 @@ export default function ResetPassword() {
                     const { data: { subscription } } = supabase.auth.onAuthStateChange(
                         (event, session) => {
                             console.log("Auth state change:", event, !!session);
-
+                            if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+                                if (session) {
+                                    console.log("Session established via auth state change");
+                                    setHasSession(true);
+                                    setInitializing(false);
+                                    subscription.unsubscribe();
+                                    return;
+                                }
+                            }
                             if (session) {
                                 console.log("Session established via auth state change");
                                 setHasSession(true);
@@ -55,15 +63,24 @@ export default function ResetPassword() {
                             }
                         }
                     );
-
-                    // Set a timeout to prevent infinite waiting
+                    setTimeout(async () => {
+                        const { data } = await supabase.auth.getSession();
+                        if (data.session) {
+                            console.log("Found existing session during recovery");
+                            setHasSession(true);
+                            setInitializing(false);
+                            subscription.unsubscribe();
+                        }
+                    }, 100);
                     setTimeout(() => {
+                        console.log("Timeout reached, hasSession:", hasSession);
                         subscription.unsubscribe();
                         if (!hasSession) {
+                            console.log("No session established in 10 seconds");
                             setError('Recovery session timeout. Please request a new password reset.');
                             setInitializing(false);
                         }
-                    }, 5000);
+                    }, 10000); // Increased to 10 seconds
 
                     return; // Don't proceed to regular session check
                 }
