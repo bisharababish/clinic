@@ -25,57 +25,41 @@ export default function ResetPassword() {
         const checkSession = async () => {
             try {
                 console.log("Checking for session in ResetPassword");
-                console.log("Current URL:", window.location.href);
 
-                // Check URL for recovery tokens
+                // Get URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
-                const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
-                const type = urlParams.get('type') || hashParams.get('type');
+                const type = urlParams.get('type');
+                const accessToken = urlParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token');
 
                 console.log("URL Params:", { type, hasAccessToken: !!accessToken });
 
-                if (type === 'recovery') {
-                    console.log("Recovery type detected, checking for valid session");
+                if (type === 'recovery' && accessToken) {
+                    // Set the session using the tokens from URL
+                    const { data, error } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken || ''
+                    });
 
-                    // For recovery, just check if we have any session at all
-                    const { data: sessionData } = await supabase.auth.getSession();
+                    if (error) {
+                        console.error("Error setting session:", error);
+                        throw error;
+                    }
 
-                    if (sessionData.session) {
-                        console.log("Valid session found for recovery");
+                    if (data.session) {
+                        console.log("Session set successfully");
                         setHasSession(true);
                         return;
                     }
-
-                    // If no session, try to get one from the URL hash
-                    const hash = window.location.hash;
-                    if (hash.includes('access_token')) {
-                        console.log("Found hash with access_token, letting Supabase handle it");
-
-                        // Wait a bit for Supabase to process the hash
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-
-                        const { data: newSessionData } = await supabase.auth.getSession();
-                        if (newSessionData.session) {
-                            console.log("Session established from hash");
-                            setHasSession(true);
-                            return;
-                        }
-                    }
-
-                    // If we get here, the recovery failed
-                    console.log("Recovery session could not be established");
                 }
 
-                // Check for existing session
-                const { data, error } = await supabase.auth.getSession();
-
-                if (data.session) {
+                // Fallback: check for existing session
+                const { data: sessionData } = await supabase.auth.getSession();
+                if (sessionData.session) {
                     console.log("Found existing session");
                     setHasSession(true);
                 } else {
-                    console.log("No session found anywhere");
+                    console.log("No valid session found");
                     setError('No valid password reset session found. Please try the reset password process again.');
                 }
             } catch (error) {
@@ -84,6 +68,7 @@ export default function ResetPassword() {
             } finally {
                 setInitializing(false);
             }
+
         };
         checkSession();
     }, [location]);
