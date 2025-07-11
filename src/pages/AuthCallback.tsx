@@ -27,40 +27,11 @@ const AuthCallback = () => {
                 // Handle password recovery FIRST
                 // Handle password recovery FIRST
                 if (type === 'recovery') {
-                    console.log("Password recovery detected");
-                    console.log("Access token exists:", !!accessToken);
-
-                    try {
-                        if (accessToken) {
-                            console.log("Setting session manually with tokens");
-                            const { data, error } = await supabase.auth.setSession({
-                                access_token: accessToken,
-                                refresh_token: refreshToken || '',
-                            });
-
-                            if (error) {
-                                console.error("Set session error:", error);
-                                throw error;
-                            }
-
-                            if (data.session) {
-                                console.log("Session set successfully, redirecting");
-                                navigate("/auth/reset-password", { replace: true });
-                                return;
-                            } else {
-                                throw new Error("Session data is null");
-                            }
-                        } else {
-                            throw new Error("No access token found in URL");
-                        }
-                    } catch (recoveryError) {
-                        console.error("Recovery failed:", recoveryError);
-                        setError("Invalid recovery link. Please try again.");
-                        setTimeout(() => {
-                            navigate("/auth", { replace: true });
-                        }, 3000);
-                        return;
-                    }
+                    console.log("Password recovery detected, redirecting directly to reset page");
+                    // For password recovery, redirect immediately to reset page
+                    // The reset page will handle session validation
+                    navigate("/auth/reset-password", { replace: true });
+                    return;
                 }
 
                 // Handle normal auth flow

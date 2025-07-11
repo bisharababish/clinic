@@ -40,6 +40,7 @@ import { useAdminState } from "../../../hooks/useAdminState";
 interface ClinicInfo {
     id: string;
     name: string;
+    name_ar?: string; // Add this line
     category: string;
     description?: string;
     display_order?: number;  // ADD THIS LINE
@@ -99,6 +100,7 @@ const ClinicManagement = () => {
     const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
     const [clinicFormData, setClinicFormData] = useState({
         name: "",
+        name_ar: "", // Add this
         category_id: "",
         description: "",
         is_active: false,
@@ -159,7 +161,7 @@ const ClinicManagement = () => {
                 .from('doctors')
                 .select(`
                     *,
-                    clinics:clinic_id (name)
+                    clinics:clinic_id (name, name_ar)
                 `)
                 .order('name', { ascending: true });
 
@@ -172,6 +174,7 @@ const ClinicManagement = () => {
                 specialty: doctor.specialty,
                 clinic_id: doctor.clinic_id,
                 clinic_name: doctor.clinics?.name || "Unknown Clinic",
+                name_ar: doctor.clinics?.name_ar || doctor.name, // Include name_ar if available
                 email: doctor.email,
                 phone: doctor.phone || '',
                 is_available: doctor.is_available,
@@ -295,15 +298,28 @@ const ClinicManagement = () => {
             });
         }
     };
+    // Add a general translation function (placeholder for now)
+    const translateToArabic = async (text: string) => {
+        // TODO: Replace with real translation API call
+        // For now, just return the same text with ' (AR)' appended for demo
+        if (!text) return '';
+        return text + ' (AR)';
+    };
     // Clinic form handlers
-    const handleClinicInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleClinicInputChange = async (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
 
-        // Handle number inputs properly
-        if (name === 'display_order') {
+        if (name === 'name') {
+            const arabicName = await translateToArabic(value);
             setClinicFormData(prev => ({
                 ...prev,
-                [name]: value === '' ? 0 : Number(value)  // CHANGE THIS LINE - use Number() instead of parseInt()
+                name: value,
+                name_ar: arabicName
+            }));
+        } else if (name === 'display_order') {
+            setClinicFormData(prev => ({
+                ...prev,
+                [name]: value === '' ? 0 : Number(value)
             }));
         } else {
             setClinicFormData(prev => ({ ...prev, [name]: value }));
@@ -336,6 +352,7 @@ const ClinicManagement = () => {
         setSelectedClinic(null);
         setClinicFormData({
             name: "",
+            name_ar: "", // Reset Arabic name
             category_id: "",
             description: "",
             is_active: false,
@@ -360,6 +377,7 @@ const ClinicManagement = () => {
         setSelectedClinic(id);
         setClinicFormData({
             name: clinicToEdit.name,
+            name_ar: clinicToEdit.name_ar || '', // Use saved Arabic name or empty
             category_id: clinicToEdit.category,
             description: clinicToEdit.description || "",
             is_active: clinicToEdit.is_active,
@@ -483,6 +501,7 @@ const ClinicManagement = () => {
             // ✅ FIX: Create the object with conditional properties
             const clinicData = {
                 name: clinicFormData.name,
+                name_ar: clinicFormData.name_ar, // Save Arabic name
                 category_id: selectedCategory.id,
                 category: selectedCategory.name,
                 description: clinicFormData.description || null,
@@ -534,6 +553,7 @@ const ClinicManagement = () => {
                     .from('clinics')
                     .update({
                         name: clinicFormData.name,
+                        name_ar: clinicFormData.name_ar, // Save Arabic name
                         category_id: selectedCategory.id,
                         category: selectedCategory.name,
                         description: clinicFormData.description || null,
@@ -848,6 +868,9 @@ const ClinicManagement = () => {
     };
 
     // Main render
+    const getClinicDisplayName = (clinic: ClinicInfo) => {
+        return i18n.language === 'ar' && clinic.name_ar ? clinic.name_ar : clinic.name;
+    };
     return (
         <div className={`clinic-management-container ${isRTL ? 'rtl' : ''}`}>
             <Tabs
@@ -929,7 +952,7 @@ const ClinicManagement = () => {
                                         {filteredClinics.map((clinic) => (
                                             <div key={clinic.id} className={`clinic-item ${isRTL ? 'rtl' : ''}`}>
                                                 <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-                                                    <h3 className="font-medium">{clinic.name}</h3>
+                                                    <h3 className="font-medium">{getClinicDisplayName(clinic)}</h3>
                                                     <div className="text-sm text-gray-500 capitalize">
                                                         {t('clinicManagement.category')}: {clinic.category}
                                                     </div>
@@ -1010,6 +1033,21 @@ const ClinicManagement = () => {
                                                 className={isRTL ? 'text-left' : ''}
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
+                                        </div>
+                                        {/* Show auto-translated Arabic name (read-only) */}
+                                        <div className="space-y-2">
+                                            <Label htmlFor="name_ar" className={isRTL ? 'text-left block' : ''}>
+                                                {t('clinicManagement.clinicNameArabic')}
+                                            </Label>
+                                            <Input
+                                                id="name_ar"
+                                                name="name_ar"
+                                                value={clinicFormData.name_ar}
+                                                readOnly
+                                                className={isRTL ? 'text-left' : ''}
+                                                dir="rtl"
+                                            />
+                                            <p className="text-sm text-gray-500">{t('clinicManagement.clinicNameArabicAuto')}</p>
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="category_id" className={isRTL ? 'text-left block' : ''}>
