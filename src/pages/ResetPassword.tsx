@@ -26,65 +26,57 @@ export default function ResetPassword() {
 
     // Replace the auth state listener useEffect with this:
     useEffect(() => {
-        const processRecoveryTokens = async () => {
+        const processRecoveryURL = async () => {
             try {
-                console.log("Processing recovery tokens manually");
+                console.log("Processing recovery URL with Supabase");
 
-                // Get tokens from URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const accessToken = urlParams.get('access_token');
-                const refreshToken = urlParams.get('refresh_token');
-                const type = urlParams.get('type');
+                // Let Supabase automatically handle the callback URL
+                const { data, error } = await supabase.auth.getSession();
 
-                console.log("Recovery tokens:", {
-                    hasAccessToken: !!accessToken,
-                    hasRefreshToken: !!refreshToken,
-                    type
-                });
+                if (data.session) {
+                    console.log("Session found immediately");
+                    setHasSession(true);
+                    setInitializing(false);
+                    return;
+                }
 
-                if (type === 'recovery' && accessToken && refreshToken) {
-                    console.log("Setting session with recovery tokens");
+                // If no immediate session, wait for Supabase to process the URL
+                console.log("Waiting for Supabase to process recovery URL...");
 
-                    const { data, error } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken
-                    });
+                // Listen for auth state changes
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                    console.log("Auth state change during recovery:", event, !!session);
 
-                    if (error) {
-                        console.error("Error setting session:", error);
-                        throw error;
-                    }
-
-                    if (data.session) {
-                        console.log("Recovery session established successfully");
+                    if (session) {
+                        console.log("Recovery session established");
                         setHasSession(true);
                         setInitializing(false);
-                        return;
+                        subscription.unsubscribe();
                     }
-                }
+                });
 
-                // If no recovery tokens or session failed, fall back to regular check
-                console.log("No recovery tokens found, checking for existing session");
-                const { data: sessionData } = await supabase.auth.getSession();
-
-                if (sessionData.session) {
-                    console.log("Existing session found");
-                    setHasSession(true);
-                } else {
-                    console.log("No valid session found");
-                    setError('Invalid or expired reset link. Please request a new password reset.');
-                }
+                // Also wait with timeout
+                setTimeout(async () => {
+                    const { data: laterSession } = await supabase.auth.getSession();
+                    if (laterSession.session) {
+                        console.log("Session found after timeout");
+                        setHasSession(true);
+                    } else {
+                        console.log("No session after timeout");
+                        setError('Invalid or expired reset link. Please request a new password reset.');
+                    }
+                    setInitializing(false);
+                    subscription.unsubscribe();
+                }, 5000);
 
             } catch (error) {
-                console.error("Error processing recovery:", error);
+                console.error("Error during recovery processing:", error);
                 setError('Invalid or expired reset link. Please request a new password reset.');
-            } finally {
                 setInitializing(false);
             }
         };
 
-        // Process immediately when component mounts
-        processRecoveryTokens();
+        processRecoveryURL();
     }, []);
 
     const handlePasswordReset = async (e: React.FormEvent) => {
