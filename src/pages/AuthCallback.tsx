@@ -14,18 +14,13 @@ const AuthCallback = () => {
                 console.log("Processing auth callback...");
                 console.log("Current URL:", window.location.href);
 
-                // Check URL for recovery type and tokens
                 const urlParams = new URLSearchParams(window.location.search);
                 const hashParams = new URLSearchParams(window.location.hash.substring(1));
-
                 const type = urlParams.get('type') || hashParams.get('type');
-                const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
-                const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
-
-                console.log("Auth callback:", { type, hasAccessToken: !!accessToken });
 
                 if (type === 'recovery') {
                     console.log("Password recovery detected, redirecting with params");
+                    // Preserve all URL parameters when redirecting
                     const searchParams = window.location.search;
                     const hashParams = window.location.hash;
                     navigate(`/auth/reset-password${searchParams}${hashParams}`, { replace: true });

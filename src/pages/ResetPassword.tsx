@@ -18,65 +18,50 @@ export default function ResetPassword() {
     const navigate = useNavigate();
     const location = useLocation();
     const { toast } = useToast();
+    useEffect(() => {
+        console.log("Full URL:", window.location.href);
+        console.log("Search params:", window.location.search);
+        console.log("Hash params:", window.location.hash);
+    }, []);
 
+    // Add this new useEffect after your URL logging useEffect
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log("Auth state changed:", event, session?.user?.id);
+
+            if (event === 'PASSWORD_RECOVERY' && session) {
+                console.log("Password recovery session established");
+                setHasSession(true);
+                setInitializing(false);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
     // Check if we have a valid session for reset
     useEffect(() => {
         // Replace the entire checkSession function with this:
         const checkSession = async () => {
             try {
                 console.log("Checking for session in ResetPassword");
-                console.log("Current URL:", window.location.href);
 
-                // Get URL parameters from both search and hash
-                const urlParams = new URLSearchParams(window.location.search);
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                // Check for immediate session first
+                const { data: sessionData } = await supabase.auth.getSession();
 
-                const type = urlParams.get('type') || hashParams.get('type');
-                const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
-                const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
-
-                console.log("URL Params:", { type, hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
-
-                if (type === 'recovery') {
-                    if (accessToken && refreshToken) {
-                        console.log("accessToken:", accessToken);
-                        console.log("refreshToken:", refreshToken);
-                        console.log("Setting session with tokens");
-                        try {
-                            const { data, error } = await supabase.auth.setSession({
-                                access_token: accessToken,
-                                refresh_token: refreshToken
-                            });
-
-                            if (error) throw error;
-
-                            if (data.session) {
-                                console.log("Session set successfully");
-                                setHasSession(true);
-                                return;
-                            }
-                        } catch (sessionError) {
-                            console.error("Error setting session:", sessionError);
-                            // Continue to fallback below
-                        }
-                    }
-
-                    // If we have recovery type but tokens failed, wait for Supabase to handle the URL
-                    console.log("Waiting for Supabase to process recovery URL");
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-
-                    const { data: sessionData } = await supabase.auth.getSession();
-                    if (sessionData.session) {
-                        console.log("Session found after waiting");
-                        setHasSession(true);
-                        return;
-                    }
+                if (sessionData.session) {
+                    console.log("Immediate session found");
+                    setHasSession(true);
+                    setInitializing(false);
+                    return;
                 }
 
-                // Fallback: check for existing session
-                const { data: sessionData } = await supabase.auth.getSession();
-                if (sessionData.session) {
-                    console.log("Found existing session");
+                // Wait longer for Supabase to process the recovery URL
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                const { data: sessionData2 } = await supabase.auth.getSession();
+
+                if (sessionData2.session) {
+                    console.log("Session found after waiting");
                     setHasSession(true);
                 } else {
                     console.log("No valid session found");
@@ -107,7 +92,7 @@ export default function ResetPassword() {
 
         setLoading(true);
         setButtonText('Updating...');
-        setButtonText('Password Changed!');
+        // setButtonText('Password Changed!');
         setError(null);
 
         try {
