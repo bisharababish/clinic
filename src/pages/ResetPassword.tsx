@@ -29,79 +29,61 @@ export default function ResetPassword() {
 
                 // Check URL for recovery tokens
                 const urlParams = new URLSearchParams(window.location.search);
+                const accessToken = urlParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token');
                 const type = urlParams.get('type');
 
-                if (type === 'recovery') {
-                    console.log("Recovery type detected, setting up auth listener");
+                console.log("URL Params:", { type, hasAccessToken: !!accessToken });
 
-                    // Set up auth state listener for recovery
-                    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-                        (event, session) => {
-                            console.log("Auth state change:", event, !!session);
-                            if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-                                if (session) {
-                                    console.log("Session established via auth state change");
-                                    setHasSession(true);
-                                    setInitializing(false);
-                                    subscription.unsubscribe();
-                                    return;
-                                }
-                            }
-                            if (session) {
-                                console.log("Session established via auth state change");
-                                setHasSession(true);
-                                setInitializing(false);
-                                subscription.unsubscribe();
-                                return;
-                            }
+                if (type === 'recovery' && accessToken) {
+                    console.log("Found recovery tokens, setting session manually");
 
-                            if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-                                console.log("Auth event handled:", event);
-                                subscription.unsubscribe();
-                                setError('Invalid or expired reset link. Please request a new password reset.');
-                                setInitializing(false);
-                            }
-                        }
-                    );
-                    setTimeout(async () => {
-                        const { data } = await supabase.auth.getSession();
+                    try {
+                        // Use a different approach - refresh the session
+                        const { data, error } = await supabase.auth.refreshSession({
+                            refresh_token: refreshToken || accessToken // Try using access token as refresh token
+                        });
+
                         if (data.session) {
-                            console.log("Found existing session during recovery");
+                            console.log("Session refreshed successfully");
                             setHasSession(true);
-                            setInitializing(false);
-                            subscription.unsubscribe();
+                            return;
                         }
-                    }, 100);
-                    setTimeout(() => {
-                        console.log("Timeout reached, hasSession:", hasSession);
-                        subscription.unsubscribe();
-                        if (!hasSession) {
-                            console.log("No session established in 10 seconds");
-                            setError('Recovery session timeout. Please request a new password reset.');
-                            setInitializing(false);
-                        }
-                    }, 10000); // Increased to 10 seconds
 
-                    return; // Don't proceed to regular session check
+                        // If refresh doesn't work, try direct session setting
+                        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken || '',
+                        });
+
+                        if (sessionData.session) {
+                            console.log("Session set successfully");
+                            setHasSession(true);
+                            return;
+                        }
+
+                        console.log("Both methods failed, proceeding without session");
+
+                    } catch (sessionError) {
+                        console.error("Session setup failed:", sessionError);
+                    }
                 }
 
-                // Regular session check for non-recovery
+                // Check for existing session
                 const { data, error } = await supabase.auth.getSession();
 
                 if (data.session) {
+                    console.log("Found existing session");
                     setHasSession(true);
                 } else {
+                    console.log("No session found anywhere");
                     setError('No valid password reset session found. Please try the reset password process again.');
                 }
             } catch (error) {
                 console.error("Error in checkSession:", error);
                 setError('Invalid or expired reset link. Please request a new password reset.');
             } finally {
-                // Check if it's not a recovery type before setting initializing to false
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('type') !== 'recovery') {
-                    setInitializing(false);
-                }
+                setInitializing(false);
             }
         };
         checkSession();

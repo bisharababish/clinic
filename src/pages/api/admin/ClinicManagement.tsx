@@ -71,6 +71,33 @@ interface DoctorInfo {
     price: number;
 }
 
+// --- GOOGLE TRANSLATE UTILITY ---
+const GOOGLE_TRANSLATE_API_KEY = "YOUR_GOOGLE_TRANSLATE_API_KEY_HERE"; // <-- Replace with your key
+async function translateTextToArabic(text: string): Promise<string> {
+    if (!text) return "";
+    try {
+        const response = await fetch(
+            `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_TRANSLATE_API_KEY}`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    q: text,
+                    target: "ar"
+                })
+            }
+        );
+        const data = await response.json();
+        if (data && data.data && data.data.translations && data.data.translations[0]) {
+            return data.data.translations[0].translatedText;
+        }
+        return text;
+    } catch (err) {
+        console.error("Translation error:", err);
+        return text;
+    }
+}
+
 const ClinicManagement = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
@@ -101,6 +128,7 @@ const ClinicManagement = () => {
     const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
     const [clinicFormData, setClinicFormData] = useState({
         name: "",
+        name_ar: "", // Add this
         category_id: "",
         description: "",
         is_active: false,
@@ -298,15 +326,19 @@ const ClinicManagement = () => {
         }
     };
     // Clinic form handlers
-    const handleClinicInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleClinicInputChange = async (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
 
-        // Handle number inputs properly
         if (name === 'display_order') {
             setClinicFormData(prev => ({
                 ...prev,
-                [name]: value === '' ? 0 : Number(value)  // CHANGE THIS LINE - use Number() instead of parseInt()
+                [name]: value === '' ? 0 : Number(value)
             }));
+        } else if (name === 'name') {
+            setClinicFormData(prev => ({ ...prev, name: value }));
+            // Auto-translate to Arabic
+            const translated = await translateTextToArabic(value);
+            setClinicFormData(prev => ({ ...prev, name_ar: translated }));
         } else {
             setClinicFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -338,6 +370,7 @@ const ClinicManagement = () => {
         setSelectedClinic(null);
         setClinicFormData({
             name: "",
+            name_ar: "", // Add this
             category_id: "",
             description: "",
             is_active: false,
@@ -362,6 +395,7 @@ const ClinicManagement = () => {
         setSelectedClinic(id);
         setClinicFormData({
             name: clinicToEdit.name,
+            name_ar: clinicToEdit.name_ar || "", // Add this
             category_id: clinicToEdit.category,
             description: clinicToEdit.description || "",
             is_active: clinicToEdit.is_active,
@@ -482,15 +516,11 @@ const ClinicManagement = () => {
 
             console.log("Found category:", selectedCategory);
 
-            // --- AUTO TRANSLATE CLINIC NAME TO ARABIC ---
-            const clinicNameEn = clinicFormData.name;
-            const clinicNameAr = translateMedicalCategory(clinicFormData.name, 'ar');
-
-            // ✅ FIX: Create the object with conditional properties
+            // Use the translated Arabic name
             const clinicData = {
-                name: clinicFormData.name, // main display name
-                name_en: clinicNameEn,
-                name_ar: clinicNameAr !== clinicNameEn ? clinicNameAr : clinicNameEn,
+                name: clinicFormData.name,
+                name_en: clinicFormData.name,
+                name_ar: clinicFormData.name_ar || clinicFormData.name,
                 category_id: selectedCategory.id,
                 category: selectedCategory.name,
                 description: clinicFormData.description || null,
@@ -542,8 +572,8 @@ const ClinicManagement = () => {
                     .from('clinics')
                     .update({
                         name: clinicFormData.name,
-                        name_en: clinicNameEn,
-                        name_ar: clinicNameAr !== clinicNameEn ? clinicNameAr : clinicNameEn,
+                        name_en: clinicFormData.name,
+                        name_ar: clinicFormData.name_ar || clinicFormData.name,
                         category_id: selectedCategory.id,
                         category: selectedCategory.name,
                         description: clinicFormData.description || null,
