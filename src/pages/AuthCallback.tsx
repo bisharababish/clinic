@@ -25,24 +25,33 @@ const AuthCallback = () => {
                 console.log("Auth callback:", { type, hasAccessToken: !!accessToken });
 
                 // Handle password recovery FIRST
+                // Handle password recovery FIRST
                 if (type === 'recovery') {
                     console.log("Password recovery detected");
+                    console.log("Access token exists:", !!accessToken);
 
-                    // Let Supabase handle the session automatically
                     try {
-                        // Wait a moment for Supabase to process the URL
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        if (accessToken) {
+                            console.log("Setting session manually with tokens");
+                            const { data, error } = await supabase.auth.setSession({
+                                access_token: accessToken,
+                                refresh_token: refreshToken || '',
+                            });
 
-                        // Check if session exists now
-                        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                            if (error) {
+                                console.error("Set session error:", error);
+                                throw error;
+                            }
 
-                        if (sessionData?.session) {
-                            console.log("Recovery session established, redirecting");
-                            navigate("/auth/reset-password", { replace: true });
-                            return;
+                            if (data.session) {
+                                console.log("Session set successfully, redirecting");
+                                navigate("/auth/reset-password", { replace: true });
+                                return;
+                            } else {
+                                throw new Error("Session data is null");
+                            }
                         } else {
-                            console.log("No session found after recovery");
-                            throw new Error("Failed to establish recovery session");
+                            throw new Error("No access token found in URL");
                         }
                     } catch (recoveryError) {
                         console.error("Recovery failed:", recoveryError);
