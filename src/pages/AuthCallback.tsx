@@ -25,7 +25,7 @@ const AuthCallback = () => {
                 console.log("Auth callback:", { type, hasAccessToken: !!accessToken });
 
                 // Handle password recovery FIRST
-                if (type === 'recovery' && accessToken) {
+                if (type === 'recovery') {
                     console.log("Password recovery detected, setting session");
 
                     try {
