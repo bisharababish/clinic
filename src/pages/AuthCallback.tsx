@@ -20,10 +20,8 @@ const AuthCallback = () => {
 
                 if (type === 'recovery') {
                     console.log("Password recovery detected, redirecting with params");
-                    // Preserve all URL parameters when redirecting
-                    const searchParams = window.location.search;
-                    const hashParams = window.location.hash;
-                    navigate(`/auth/reset-password${searchParams}${hashParams}`, { replace: true });
+                    // Skip callback entirely - go directly to reset password page
+                    navigate('/auth/reset-password', { replace: true });
                     return;
                 }
 
