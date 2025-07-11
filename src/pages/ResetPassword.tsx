@@ -25,29 +25,47 @@ export default function ResetPassword() {
         const checkSession = async () => {
             try {
                 console.log("Checking for session in ResetPassword");
+                console.log("Current URL:", window.location.href);
 
-                // Get URL parameters
+                // Get URL parameters from both search and hash
                 const urlParams = new URLSearchParams(window.location.search);
-                const type = urlParams.get('type');
-                const accessToken = urlParams.get('access_token');
-                const refreshToken = urlParams.get('refresh_token');
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
 
-                console.log("URL Params:", { type, hasAccessToken: !!accessToken });
+                const type = urlParams.get('type') || hashParams.get('type');
+                const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
 
-                if (type === 'recovery' && accessToken) {
-                    // Set the session using the tokens from URL
-                    const { data, error } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken || ''
-                    });
+                console.log("URL Params:", { type, hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
 
-                    if (error) {
-                        console.error("Error setting session:", error);
-                        throw error;
+                if (type === 'recovery') {
+                    if (accessToken && refreshToken) {
+                        console.log("Setting session with tokens");
+                        try {
+                            const { data, error } = await supabase.auth.setSession({
+                                access_token: accessToken,
+                                refresh_token: refreshToken
+                            });
+
+                            if (error) throw error;
+
+                            if (data.session) {
+                                console.log("Session set successfully");
+                                setHasSession(true);
+                                return;
+                            }
+                        } catch (sessionError) {
+                            console.error("Error setting session:", sessionError);
+                            // Continue to fallback below
+                        }
                     }
 
-                    if (data.session) {
-                        console.log("Session set successfully");
+                    // If we have recovery type but tokens failed, wait for Supabase to handle the URL
+                    console.log("Waiting for Supabase to process recovery URL");
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    const { data: sessionData } = await supabase.auth.getSession();
+                    if (sessionData.session) {
+                        console.log("Session found after waiting");
                         setHasSession(true);
                         return;
                     }
@@ -60,7 +78,7 @@ export default function ResetPassword() {
                     setHasSession(true);
                 } else {
                     console.log("No valid session found");
-                    setError('No valid password reset session found. Please try the reset password process again.');
+                    setError('Invalid or expired reset link. Please request a new password reset.');
                 }
             } catch (error) {
                 console.error("Error in checkSession:", error);
@@ -68,7 +86,6 @@ export default function ResetPassword() {
             } finally {
                 setInitializing(false);
             }
-
         };
         checkSession();
     }, [location]);
