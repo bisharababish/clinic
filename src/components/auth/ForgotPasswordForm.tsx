@@ -55,22 +55,9 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
 
       console.log("Using redirect URL:", redirectUrl);
 
-      // First, check if the user exists in your database
-      const { data: userData, error: userCheckError } = await supabase
-        .from('userinfo')
-        .select('user_email')
-        .eq('user_email', email)
-        .single();
 
-      if (userCheckError && userCheckError.code !== 'PGRST116') {
-        console.error("Error checking user:", userCheckError);
-      }
-
-      if (!userData) {
-        // User doesn't exist in database - still send "success" message for security
-        console.log("User not found in database, but showing success message for security");
-      }
-
+      // Skip database check - Supabase will handle email validation
+      console.log("Sending password reset email to:", email);
       // Send password reset email using Supabase (always attempt this)
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
