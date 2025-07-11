@@ -36,32 +36,33 @@ export default function ResetPassword() {
 
                 console.log("URL Params:", { type, hasAccessToken: !!accessToken });
 
-                if (type === 'recovery' && accessToken) {
-                    console.log("Found recovery token, verifying OTP");
+               if (type === 'recovery' && accessToken) {
+    console.log("Found recovery token, exchanging for session");
 
-                    try {
-                        // Verify the OTP token for password recovery
-                        const { data, error } = await supabase.auth.verifyOtp({
-                            token_hash: accessToken,
-                            type: 'recovery'
-                        });
+    try {
+        // Use verifyOtp to exchange the recovery token for a session
+        const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: accessToken,
+            type: 'recovery'
+        });
 
-                        if (error) {
-                            console.error("OTP verification failed:", error);
-                            throw error;
-                        }
+        if (error) {
+            console.error("Recovery token verification failed:", error);
+            throw error;
+        }
 
-                        if (data.session) {
-                            console.log("OTP verified successfully, session established");
-                            setHasSession(true);
-                            return;
-                        }
+        if (data.session) {
+            console.log("Recovery token exchanged for session successfully");
+            setHasSession(true);
+            return;
+        }
 
-                    } catch (verifyError) {
-                        console.error("Recovery verification failed:", verifyError);
-                        setError('Invalid or expired reset link. Please request a new password reset.');
-                    }
-                }
+        console.log("No session returned from recovery token exchange");
+
+    } catch (sessionError) {
+        console.error("Recovery token exchange failed:", sessionError);
+    }
+}
 
                 // Check for existing session
                 const { data, error } = await supabase.auth.getSession();
