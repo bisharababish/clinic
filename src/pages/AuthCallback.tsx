@@ -22,17 +22,26 @@ const AuthCallback = () => {
                 console.log("Auth callback type:", type, "Has token:", !!accessToken);
 
                 // Handle password reset flow
+                // Handle password reset flow
                 if (type === 'recovery' && accessToken) {
                     console.log("Password reset flow detected, redirecting to reset page");
 
                     try {
                         // Set up the session with the token
-                        await supabase.auth.setSession({
+                        const { error: sessionError } = await supabase.auth.setSession({
                             access_token: accessToken,
                             refresh_token: refreshToken || '',
                         });
 
-                        // Use React Router navigation instead of window.location
+                        if (sessionError) {
+                            console.error("Error setting session:", sessionError);
+                            throw sessionError;
+                        }
+
+                        // Add a small delay to ensure session is fully set
+                        await new Promise(resolve => setTimeout(resolve, 500));
+
+                        // Navigate to reset password page
                         navigate("/auth/reset-password", { replace: true });
                         return;
                     } catch (sessionError) {

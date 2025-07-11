@@ -21,46 +21,44 @@ export default function ResetPassword() {
 
     // Check if we have a valid session for reset
     useEffect(() => {
+        // Replace the entire checkSession function with this:
         const checkSession = async () => {
             try {
                 console.log("Checking for session in ResetPassword");
 
-                const { data, error } = await supabase.auth.getSession();
+                // First check URL hash for recovery tokens
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = hashParams.get('access_token');
+                const refreshToken = hashParams.get('refresh_token');
+                const type = hashParams.get('type');
 
-                if (error) {
-                    throw error;
+                if (type === 'recovery' && accessToken) {
+                    console.log("Setting session from URL hash");
+                    const { error: sessionError } = await supabase.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken || '',
+                    });
+
+                    if (sessionError) {
+                        throw sessionError;
+                    }
+                    setHasSession(true);
+                    return;
                 }
+
+                // Then check existing session
+                const { data, error } = await supabase.auth.getSession();
+                if (error) throw error;
 
                 if (data.session) {
                     console.log("Valid session found for password reset");
                     setHasSession(true);
                 } else {
-                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                    const accessToken = hashParams.get('access_token');
-                    const refreshToken = hashParams.get('refresh_token');
-                    const type = hashParams.get('type');
-
-                    console.log("URL hash check:", { type, hasToken: !!accessToken });
-
-                    if (type === 'recovery' && accessToken) {
-                        const { error: sessionError } = await supabase.auth.setSession({
-                            access_token: accessToken,
-                            refresh_token: refreshToken || '',
-                        });
-
-                        if (sessionError) {
-                            throw sessionError;
-                        }
-
-                        console.log("Session set from URL hash");
-                        setHasSession(true);
-                    } else {
-                        setError('No valid password reset session found. Please try the reset password process again.');
-                    }
+                    setError('No valid password reset session found. Please try the reset password process again.');
                 }
             } catch (error) {
                 console.error("Error checking session:", error);
-                setError(error instanceof Error ? error.message : 'Failed to validate reset session');
+                setError('Invalid or expired reset link. Please request a new password reset.');
             } finally {
                 setInitializing(false);
             }
