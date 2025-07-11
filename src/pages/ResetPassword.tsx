@@ -39,6 +39,8 @@ export default function ResetPassword() {
 
                 if (type === 'recovery') {
                     if (accessToken && refreshToken) {
+                        console.log("accessToken:", accessToken);
+                        console.log("refreshToken:", refreshToken);
                         console.log("Setting session with tokens");
                         try {
                             const { data, error } = await supabase.auth.setSession({
