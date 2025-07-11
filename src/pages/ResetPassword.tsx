@@ -37,24 +37,29 @@ export default function ResetPassword() {
                 console.log("URL Params:", { type, hasAccessToken: !!accessToken });
 
                 if (type === 'recovery' && accessToken) {
-                    console.log("Found recovery tokens, setting session manually");
+                    console.log("Found recovery token, verifying OTP");
 
                     try {
-                        // Skip refresh, go straight to setSession
-                        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                            access_token: accessToken,
-                            refresh_token: refreshToken || '',
+                        // Verify the OTP token for password recovery
+                        const { data, error } = await supabase.auth.verifyOtp({
+                            token_hash: accessToken,
+                            type: 'recovery'
                         });
-                        if (sessionData.session) {
-                            console.log("Session set successfully");
+
+                        if (error) {
+                            console.error("OTP verification failed:", error);
+                            throw error;
+                        }
+
+                        if (data.session) {
+                            console.log("OTP verified successfully, session established");
                             setHasSession(true);
                             return;
                         }
 
-                        console.log("Both methods failed, proceeding without session");
-
-                    } catch (sessionError) {
-                        console.error("Session setup failed:", sessionError);
+                    } catch (verifyError) {
+                        console.error("Recovery verification failed:", verifyError);
+                        setError('Invalid or expired reset link. Please request a new password reset.');
                     }
                 }
 
