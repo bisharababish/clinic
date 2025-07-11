@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Calendar, Clock, User, MapPin, Plus, Eye, TrendingUp, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../../lib/supabase';
 
 interface Doctor {
     id: string;
@@ -56,7 +57,13 @@ interface DayAppointment {
     fullDate: Date;
     appointments: Appointment[];
 }
-
+interface AvailabilitySlot {
+    id: string;
+    doctor_id: string;
+    day: string;
+    start_time: string;
+    end_time: string;
+}
 // Helper: Check if two time intervals overlap
 function isTimeOverlap(start1: string, end1: string, start2: string, end2: string) {
     return (start1 < end2) && (start2 < end1);
@@ -75,6 +82,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
     const [selectedDayAppointments, setSelectedDayAppointments] = useState<Appointment[]>([]);
     const [showDayDialog, setShowDayDialog] = useState(false);
     const [selectedDateStr, setSelectedDateStr] = useState('');
+    const [doctorAvailability, setDoctorAvailability] = useState<AvailabilitySlot[]>([]);
 
     // Get current month and year
     const currentMonth = currentDate.getMonth();
@@ -101,7 +109,20 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
             .filter(apt => apt.date > today && apt.status === 'scheduled')
             .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
     }, [appointments]);
+    const loadDoctorAvailability = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('doctor_availability')
+                .select('*')
+                .order('day', { ascending: true })
+                .order('start_time', { ascending: true });
 
+            if (error) throw error;
+            setDoctorAvailability(data || []);
+        } catch (error) {
+            console.error("Error loading doctor availability:", error);
+        }
+    };
     // Memoized doctor statistics
     const doctorStats = useMemo(() => {
         const totalDoctors = doctors.length;
@@ -122,8 +143,37 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
             totalRevenue
         };
     }, [doctors, filteredAppointments]);
+    useEffect(() => {
+        loadDoctorAvailability();
+    }, []);
 
-    // Generate calendar days with appointments
+
+    const timeSlots = useMemo(() => {
+        const slots = new Set<string>();
+
+        doctorAvailability.forEach(avail => {
+            if (selectedDoctor === 'all' || avail.doctor_id === selectedDoctor) {
+                slots.add(avail.start_time);
+            }
+        });
+
+        if (slots.size === 0) {
+            return ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+        }
+
+        return Array.from(slots).sort();
+    }, [doctorAvailability, selectedDoctor]);
+
+    useEffect(() => {
+        loadDoctorAvailability();
+    }, []);
+
+    // 🔍 ADD DEBUG CODE HERE:
+    useEffect(() => {
+        console.log('🔍 Doctor Availability Data:', doctorAvailability);
+        console.log('🔍 Generated Time Slots:', timeSlots);
+        console.log('🔍 Selected Doctor:', selectedDoctor);
+    }, [doctorAvailability, timeSlots, selectedDoctor]);
     const generateCalendarDays = useMemo(() => {
         const firstDay = new Date(currentYear, currentMonth, 1);
         const lastDay = new Date(currentYear, currentMonth + 1, 0);
@@ -300,12 +350,8 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
             t('admin.saturday') || 'Sat',
         ], [i18n.language]);
 
-    // Time slots (customize as needed)
-    const timeSlots = [
-        '08:00', '09:00', '10:00', '11:00', '12:00',
-        '13:00', '14:00', '15:00', '16:00', '17:00',
-        '18:00', '19:00', '20:00'
-    ];
+
+
     // For Arabic, reverse the time slots
     const displayTimeSlots = i18n.language === 'ar' ? [...timeSlots].reverse() : timeSlots;
     // Helper to format time in Arabic
@@ -528,13 +574,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                             d.setDate(weekStart.getDate() + i);
                             return d;
                         });
-                        // Time slots (customize as needed)
-                        const timeSlots = [
-                            '08:00', '09:00', '10:00', '11:00', '12:00',
-                            '13:00', '14:00', '15:00', '16:00', '17:00',
-                            '18:00', '19:00', '20:00'
-                        ];
-                        // For Arabic, reverse the time slots
+
                         const displayTimeSlots = i18n.language === 'ar' ? [...timeSlots].reverse() : timeSlots;
                         // Helper to format time in Arabic
                         function formatTimeArabic(time) {
@@ -600,8 +640,16 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                                         <>
                                                             <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
                                                             {displayTimeSlots.map((slot, slotIdx) => {
-                                                                const cellApts = filteredAppointments.filter(apt => apt.date === dateStr && apt.time.startsWith(slot));
-                                                                let hasConflict = false;
+                                                                const cellApts = filteredAppointments.filter(apt => {
+                                                                    if (apt.date !== dateStr) return false;
+
+                                                                    // Check if appointment matches availability slot
+                                                                    return doctorAvailability.some(avail => {
+                                                                        return avail.doctor_id === apt.doctor_id &&
+                                                                            avail.start_time === apt.time &&
+                                                                            (selectedDoctor === 'all' || avail.doctor_id === selectedDoctor);
+                                                                    });
+                                                                }); let hasConflict = false;
                                                                 for (let i = 0; i < cellApts.length; i++) {
                                                                     for (let j = 0; j < cellApts.length; j++) {
                                                                         if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
@@ -629,8 +677,16 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                                         <>
                                                             <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
                                                             {displayTimeSlots.map((slot, slotIdx) => {
-                                                                const cellApts = filteredAppointments.filter(apt => apt.date === dateStr && apt.time.startsWith(slot));
-                                                                let hasConflict = false;
+                                                                const cellApts = filteredAppointments.filter(apt => {
+                                                                    if (apt.date !== dateStr) return false;
+
+                                                                    // Check if appointment matches availability slot
+                                                                    return doctorAvailability.some(avail => {
+                                                                        return avail.doctor_id === apt.doctor_id &&
+                                                                            avail.start_time === apt.time &&
+                                                                            (selectedDoctor === 'all' || avail.doctor_id === selectedDoctor);
+                                                                    });
+                                                                }); let hasConflict = false;
                                                                 for (let i = 0; i < cellApts.length; i++) {
                                                                     for (let j = 0; j < cellApts.length; j++) {
                                                                         if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
