@@ -59,7 +59,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
       const { data: userData, error: userCheckError } = await supabase
         .from('userinfo')
         .select('user_email')
-        .ilike('user_email', email)
+        .eq('user_email', email)
         .single();
 
       if (userCheckError && userCheckError.code !== 'PGRST116') {
