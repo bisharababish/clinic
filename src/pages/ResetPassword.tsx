@@ -30,39 +30,38 @@ export default function ResetPassword() {
                 // Check URL for recovery tokens
                 const urlParams = new URLSearchParams(window.location.search);
                 const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+                const tokenHash = urlParams.get('token_hash') || hashParams.get('token_hash');
                 const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
                 const type = urlParams.get('type') || hashParams.get('type');
 
-                console.log("URL Params:", { type, hasAccessToken: !!accessToken });
+                console.log("URL Params:", { type, hasTokenHash: !!tokenHash });
 
-               if (type === 'recovery' && accessToken) {
-    console.log("Found recovery token, exchanging for session");
+                if (type === 'recovery' && tokenHash) {
+                    console.log("Found recovery token, exchanging for session");
 
-    try {
-        // Use verifyOtp to exchange the recovery token for a session
-        const { data, error } = await supabase.auth.verifyOtp({
-            token_hash: accessToken,
-            type: 'recovery'
-        });
+                    try {
+                        const { data, error } = await supabase.auth.verifyOtp({
+                            token_hash: tokenHash,
+                            type: 'recovery'
+                        });
 
-        if (error) {
-            console.error("Recovery token verification failed:", error);
-            throw error;
-        }
+                        if (error) {
+                            console.error("Recovery token verification failed:", error);
+                            throw error;
+                        }
 
-        if (data.session) {
-            console.log("Recovery token exchanged for session successfully");
-            setHasSession(true);
-            return;
-        }
+                        if (data.session) {
+                            console.log("Recovery token exchanged for session successfully");
+                            setHasSession(true);
+                            return;
+                        }
 
-        console.log("No session returned from recovery token exchange");
+                        console.log("No session returned from recovery token exchange");
 
-    } catch (sessionError) {
-        console.error("Recovery token exchange failed:", sessionError);
-    }
-}
+                    } catch (sessionError) {
+                        console.error("Recovery token exchange failed:", sessionError);
+                    }
+                }
 
                 // Check for existing session
                 const { data, error } = await supabase.auth.getSession();
