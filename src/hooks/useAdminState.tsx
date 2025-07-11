@@ -27,8 +27,6 @@ interface UserInfo {
 interface ClinicInfo {
     id: string;
     name: string;
-    name_en?: string; // Add this
-    name_ar?: string; // Add this
     category: string;
     category_name_en?: string;  // Add this
     category_name_ar?: string;  // Add this
@@ -235,8 +233,6 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 .from('clinics')
                 .select(`
                 *,
-                name_en,
-                name_ar,
                 clinic_categories!clinics_category_id_fkey (
                     name_ar
                 )
@@ -247,8 +243,6 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
             const transformedClinics = (data || []).map(clinic => ({
                 ...clinic,
-                name_en: clinic.name_en,
-                name_ar: clinic.name_ar,
                 category_name_ar: clinic.clinic_categories?.name_ar
             }));
 

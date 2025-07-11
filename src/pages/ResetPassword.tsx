@@ -39,21 +39,10 @@ export default function ResetPassword() {
                     console.log("Found recovery tokens, setting session manually");
 
                     try {
-                        // Use a different approach - refresh the session
-                        const { data, error } = await supabase.auth.refreshSession({
-                            refresh_token: refreshToken || accessToken // Try using access token as refresh token
-                        });
-
-                        if (data.session) {
-                            console.log("Session refreshed successfully");
-                            setHasSession(true);
-                            return;
-                        }
-
-                        // If refresh doesn't work, try direct session setting
+                        // Skip refresh, go straight to setSession
                         const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
                             access_token: accessToken,
-                            refresh_token: refreshToken || '',
+                            refresh_token: '',
                         });
 
                         if (sessionData.session) {
