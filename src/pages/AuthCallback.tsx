@@ -27,7 +27,8 @@ const AuthCallback = () => {
                 if (type === 'recovery') {
                     console.log("Password recovery detected, redirecting with params");
                     const searchParams = window.location.search;
-                    navigate(`/auth/reset-password${searchParams}`, { replace: true });
+                    const hashParams = window.location.hash;
+                    navigate(`/auth/reset-password${searchParams}${hashParams}`, { replace: true });
                     return;
                 }
 
