@@ -24,13 +24,10 @@ const AuthCallback = () => {
 
                 console.log("Auth callback:", { type, hasAccessToken: !!accessToken });
 
-                // Handle password recovery FIRST
-                // Handle password recovery FIRST
                 if (type === 'recovery') {
-                    console.log("Password recovery detected, redirecting directly to reset page");
-                    // For password recovery, redirect immediately to reset page
-                    // The reset page will handle session validation
-                    navigate("/auth/reset-password", { replace: true });
+                    console.log("Password recovery detected, redirecting with params");
+                    const searchParams = window.location.search;
+                    navigate(`/auth/reset-password${searchParams}`, { replace: true });
                     return;
                 }
 

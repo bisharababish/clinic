@@ -27,7 +27,6 @@ interface UserInfo {
 interface ClinicInfo {
     id: string;
     name: string;
-    name_ar?: string; // Add this line for Arabic name
     category: string;
     category_name_en?: string;  // Add this
     category_name_ar?: string;  // Add this
@@ -244,7 +243,6 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
             const transformedClinics = (data || []).map(clinic => ({
                 ...clinic,
-                name_ar: clinic.name_ar, // Ensure name_ar is mapped
                 category_name_ar: clinic.clinic_categories?.name_ar
             }));
 
