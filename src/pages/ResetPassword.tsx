@@ -26,29 +26,11 @@ export default function ResetPassword() {
             try {
                 console.log("Checking for session in ResetPassword");
 
-                // First check URL hash for recovery tokens
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const accessToken = hashParams.get('access_token');
-                const refreshToken = hashParams.get('refresh_token');
-                const type = hashParams.get('type');
-
-                if (type === 'recovery' && accessToken) {
-                    console.log("Setting session from URL hash");
-                    const { error: sessionError } = await supabase.auth.setSession({
-                        access_token: accessToken,
-                        refresh_token: refreshToken || '',
-                    });
-
-                    if (sessionError) {
-                        throw sessionError;
-                    }
-                    setHasSession(true);
-                    return;
-                }
-
-                // Then check existing session
                 const { data, error } = await supabase.auth.getSession();
-                if (error) throw error;
+
+                if (error) {
+                    throw error;
+                }
 
                 if (data.session) {
                     console.log("Valid session found for password reset");
@@ -63,7 +45,6 @@ export default function ResetPassword() {
                 setInitializing(false);
             }
         };
-
         checkSession();
     }, [location]);
 
