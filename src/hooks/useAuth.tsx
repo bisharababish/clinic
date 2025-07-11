@@ -569,14 +569,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = async () => {
         try {
-            await supabase.auth.signOut();
-            // Clear user data
             localStorage.removeItem('clinic_user_profile');
             sessionStorage.removeItem('login_in_progress');
             sessionStorage.removeItem('admin_login_success');
             setUser(null);
+            await supabase.auth.signOut();
         } catch (error) {
             console.error('Error logging out:', error);
+            setUser(null);
             throw error;
         }
     };

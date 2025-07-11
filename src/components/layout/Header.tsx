@@ -95,8 +95,7 @@ export function Header() {
                 }
 
                 console.log("No authentication found");
-                setIsAuthenticated(false);
-                setEffectiveRole(null);
+      
             } catch (error) {
                 console.error("Error checking auth status:", error);
                 setIsAuthenticated(false);
@@ -187,48 +186,15 @@ export function Header() {
 
     // Handle logout click
     const handleLogout = async () => {
-        try {
-            console.log("Starting logout process...");
-
-            // First clear any local storage and session storage items
-            localStorage.removeItem('clinic_user_profile');
-            localStorage.removeItem('supabase.auth.token');
-            sessionStorage.removeItem('login_in_progress');
-            sessionStorage.removeItem('admin_login_success');
-
-            // Force state update immediately
-            setIsAuthenticated(false);
-            setEffectiveRole(null);
-
-            // Close mobile menu if open
-            closeMobileMenu();
-
-            // Then try to logout through the hook
-            if (logout) {
-                await logout();
-            } else {
-                // Fallback to direct Supabase logout
-                await supabase.auth.signOut();
-            }
-
-            console.log("Logout successful, navigating to auth page...");
-
-            // Use React Router navigation instead of window.location.href
-            navigate('/auth', { replace: true });
-
-        } catch (error) {
-            console.error('Logout error:', error);
-
-            // Even on error, clear everything and navigate
-            localStorage.clear();
-            sessionStorage.clear();
-            setIsAuthenticated(false);
-            setEffectiveRole(null);
-
-            // Force navigation even if logout failed
-            navigate('/auth', { replace: true });
-        }
-    };
+    try {
+        closeMobileMenu();
+        await logout();
+        navigate('/auth', { replace: true });
+    } catch (error) {
+        console.error('Logout error:', error);
+        navigate('/auth', { replace: true });
+    }
+};
 
     // Function to get role display name with translation
     const getRoleDisplayName = (role: string) => {
