@@ -221,36 +221,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
         return;
       }
 
-      // If bypass didn't work, try the hook method (fallback)
-      console.log("Bypass login failed, trying hook method...");
-
-      const userData = await login(email, password);
-
-      if (userData && userData.role) {
-        const redirectPath = getRoleBasedRedirect(userData.role);
-        console.log(`Hook login successful for ${userData.role}, redirecting to: ${redirectPath}`);
-
-        // Show success message
-        toast({
-          title: t("common.login") || "Login Successful",
-          description: `${t("auth.welcomeBack") || "Welcome back"}, ${userData.name}!`
-        });
-
-        setTimeout(() => {
-          sessionStorage.removeItem('login_in_progress');
-
-          if (onLoginSuccess) {
-            onLoginSuccess(userData.role);
-          }
-
-          navigate(redirectPath, { replace: true });
-        }, 1000);
-
-        return;
-      }
-
-      // If we get here, login failed
-      throw new Error("Login failed - no user data returned");
+      // If bypass didn't work, throw an error
+      console.log("Bypass login failed");
+      throw new Error(bypassResult.error?.message || "Login failed");
 
     } catch (error: unknown) {
       console.error("Login error:", error);
