@@ -26,57 +26,58 @@ export default function ResetPassword() {
 
     // Replace the auth state listener useEffect with this:
     useEffect(() => {
-        const processRecoveryURL = async () => {
+        const processRecoveryToken = async () => {
             try {
-                console.log("Processing recovery URL with Supabase");
+                console.log("Processing recovery token manually");
 
-                // Let Supabase automatically handle the callback URL
-                const { data, error } = await supabase.auth.getSession();
+                // Get token from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const tokenHash = urlParams.get('token_hash');
+                const type = urlParams.get('type');
 
-                if (data.session) {
-                    console.log("Session found immediately");
-                    setHasSession(true);
-                    setInitializing(false);
-                    return;
-                }
+                console.log("Token info:", { tokenHash, type });
 
-                // If no immediate session, wait for Supabase to process the URL
-                console.log("Waiting for Supabase to process recovery URL...");
+                if (type === 'recovery' && tokenHash) {
+                    console.log("Verifying recovery token with Supabase");
 
-                // Listen for auth state changes
-                const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                    console.log("Auth state change during recovery:", event, !!session);
+                    // Use verifyOtp for password recovery
+                    const { data, error } = await supabase.auth.verifyOtp({
+                        token_hash: tokenHash,
+                        type: 'recovery'
+                    });
 
-                    if (session) {
-                        console.log("Recovery session established");
+                    if (error) {
+                        console.error("Token verification error:", error);
+                        throw error;
+                    }
+
+                    if (data.session) {
+                        console.log("Recovery token verified successfully");
                         setHasSession(true);
                         setInitializing(false);
-                        subscription.unsubscribe();
+                        return;
                     }
-                });
+                }
 
-                // Also wait with timeout
-                setTimeout(async () => {
-                    const { data: laterSession } = await supabase.auth.getSession();
-                    if (laterSession.session) {
-                        console.log("Session found after timeout");
-                        setHasSession(true);
-                    } else {
-                        console.log("No session after timeout");
-                        setError('Invalid or expired reset link. Please request a new password reset.');
-                    }
-                    setInitializing(false);
-                    subscription.unsubscribe();
-                }, 5000);
+                // Fallback check
+                const { data: sessionData } = await supabase.auth.getSession();
+                if (sessionData.session) {
+                    console.log("Found existing session");
+                    setHasSession(true);
+                } else {
+                    console.log("No valid session or token");
+                    setError('Invalid or expired reset link. Please request a new password reset.');
+                }
 
             } catch (error) {
-                console.error("Error during recovery processing:", error);
+                console.error("Error processing recovery token:", error);
                 setError('Invalid or expired reset link. Please request a new password reset.');
+            } finally {
                 setInitializing(false);
             }
         };
 
-        processRecoveryURL();
+        processRecoveryToken();
     }, []);
 
     const handlePasswordReset = async (e: React.FormEvent) => {
