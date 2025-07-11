@@ -51,7 +51,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
       console.log("Sending password reset email to:", email);
 
       // Use the specific redirect URLs that match your Supabase configuration
-      const redirectUrl = `https://www.bethlehemmedcenter.com/auth/callback`;
+      const redirectUrl = `https://www.bethlehemmedcenter.com/auth/reset-password`;
 
       console.log("Using redirect URL:", redirectUrl);
 
