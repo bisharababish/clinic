@@ -29,9 +29,10 @@ export default function ResetPassword() {
 
                 // Check URL for recovery tokens
                 const urlParams = new URLSearchParams(window.location.search);
-                const accessToken = urlParams.get('access_token');
-                const refreshToken = urlParams.get('refresh_token');
-                const type = urlParams.get('type');
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
+                const type = urlParams.get('type') || hashParams.get('type');
 
                 console.log("URL Params:", { type, hasAccessToken: !!accessToken });
 
@@ -42,9 +43,8 @@ export default function ResetPassword() {
                         // Skip refresh, go straight to setSession
                         const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
                             access_token: accessToken,
-                            refresh_token: '',
+                            refresh_token: refreshToken || '',
                         });
-
                         if (sessionData.session) {
                             console.log("Session set successfully");
                             setHasSession(true);
