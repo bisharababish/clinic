@@ -95,7 +95,7 @@ export default function ResetPassword() {
 
         setLoading(true);
         setButtonText('Updating...');
-        // setButtonText('Password Changed!');
+        setButtonText('Password Changed!');
         setError(null);
 
         try {
