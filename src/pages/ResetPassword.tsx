@@ -30,37 +30,42 @@ export default function ResetPassword() {
                 // Check URL for recovery tokens
                 const urlParams = new URLSearchParams(window.location.search);
                 const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const tokenHash = urlParams.get('token_hash') || hashParams.get('token_hash');
+                const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
                 const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
                 const type = urlParams.get('type') || hashParams.get('type');
 
-                console.log("URL Params:", { type, hasTokenHash: !!tokenHash });
+                console.log("URL Params:", { type, hasAccessToken: !!accessToken });
 
-                if (type === 'recovery' && tokenHash) {
-                    console.log("Found recovery token, exchanging for session");
+                if (type === 'recovery') {
+                    console.log("Recovery type detected, checking for valid session");
 
-                    try {
-                        const { data, error } = await supabase.auth.verifyOtp({
-                            token_hash: tokenHash,
-                            type: 'recovery'
-                        });
+                    // For recovery, just check if we have any session at all
+                    const { data: sessionData } = await supabase.auth.getSession();
 
-                        if (error) {
-                            console.error("Recovery token verification failed:", error);
-                            throw error;
-                        }
+                    if (sessionData.session) {
+                        console.log("Valid session found for recovery");
+                        setHasSession(true);
+                        return;
+                    }
 
-                        if (data.session) {
-                            console.log("Recovery token exchanged for session successfully");
+                    // If no session, try to get one from the URL hash
+                    const hash = window.location.hash;
+                    if (hash.includes('access_token')) {
+                        console.log("Found hash with access_token, letting Supabase handle it");
+
+                        // Wait a bit for Supabase to process the hash
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                        const { data: newSessionData } = await supabase.auth.getSession();
+                        if (newSessionData.session) {
+                            console.log("Session established from hash");
                             setHasSession(true);
                             return;
                         }
-
-                        console.log("No session returned from recovery token exchange");
-
-                    } catch (sessionError) {
-                        console.error("Recovery token exchange failed:", sessionError);
                     }
+
+                    // If we get here, the recovery failed
+                    console.log("Recovery session could not be established");
                 }
 
                 // Check for existing session
