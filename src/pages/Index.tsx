@@ -265,6 +265,8 @@ const Index = () => {
   // Changed from single disease to multiple diseases (checkboxes)
   const [selectedDiseases, setSelectedDiseases] = useState<string[]>([]);
   const [showPassword, setShowPassword] = useState(false);
+  const [showCreatePassword, setShowCreatePassword] = useState(false);
+
   const [selectedMedicines, setSelectedMedicines] = useState<string[]>([]);
   const [patientLogs, setPatientLogs] = useState<LogEntry[]>([]);
 
@@ -598,7 +600,6 @@ const Index = () => {
     return id;
   };
 
-  // NEW: Load all patients for sidebar (for nurses)
   // NEW: Load all patients for sidebar (for nurses)
   const loadAllPatients = async () => {
     if (!canSearchPatients() || isFetchingRef.current) return;
@@ -2398,16 +2399,27 @@ const Index = () => {
                               {isRTL ? "كلمة المرور" : "Password"}
                             </Label>
                             <div className="relative">
-                              <Lock className={`absolute right-3 top-3 h-4 w-4 text-muted-foreground`} />
+                              <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                               <Input
                                 id="create_password"
                                 name="user_password"
-                                type="password"
+                                type={showCreatePassword ? "text" : "password"}
                                 value={createPatientForm.user_password}
                                 onChange={handleCreatePatientFormChange}
-                                className={isRTL ? 'pr-10' : 'pl-10'}
+                                className={isRTL ? 'pr-10 pl-10' : 'pl-10 pr-10'}
                                 placeholder={isRTL ? "اتركها فارغة للإنشاء التلقائي" : "Leave empty for auto-generation"}
                               />
+                              <button
+                                type="button"
+                                onClick={() => setShowCreatePassword(!showCreatePassword)}
+                                className={`absolute ${isRTL ? 'left-3' : 'right-3'} top-3 text-muted-foreground hover:text-gray-700`}
+                              >
+                                {showCreatePassword ? (
+                                  <EyeOffIcon className="h-4 w-4" />
+                                ) : (
+                                  <EyeIcon className="h-4 w-4" />
+                                )}
+                              </button>
                             </div>
                           </div>
                         </div>
