@@ -14,33 +14,41 @@ const AuthCallback = () => {
                 console.log("Processing auth callback...");
                 console.log("Current URL:", window.location.href);
 
-                // Check for Supabase auth callback
-                const { data, error } = await supabase.auth.getSession();
-
-                if (error) {
-                    console.error("Session error:", error);
-                    throw error;
-                }
-
-                // Check URL for recovery type
+                // Check URL for recovery type and tokens
                 const urlParams = new URLSearchParams(window.location.search);
                 const hashParams = new URLSearchParams(window.location.hash.substring(1));
 
                 const type = urlParams.get('type') || hashParams.get('type');
+                const accessToken = urlParams.get('access_token') || hashParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token') || hashParams.get('refresh_token');
 
-                console.log("Auth callback type:", type);
-                console.log("Has session:", !!data.session);
+                console.log("Auth callback:", { type, hasAccessToken: !!accessToken });
 
-                // Handle password recovery
-                if (type === 'recovery') {
-                    console.log("Password recovery detected, redirecting to reset page");
+                // Handle password recovery FIRST
+                if (type === 'recovery' && accessToken) {
+                    console.log("Password recovery detected, setting session");
 
-                    if (data.session) {
-                        // Session is already set by Supabase
-                        navigate("/auth/reset-password", { replace: true });
-                        return;
-                    } else {
-                        console.log("No session found for recovery");
+                    try {
+                        // Set the session with the tokens from URL
+                        const { data, error } = await supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken || '',
+                        });
+
+                        if (error) {
+                            console.error("Error setting recovery session:", error);
+                            throw error;
+                        }
+
+                        if (data.session) {
+                            console.log("Recovery session set successfully, redirecting");
+                            navigate("/auth/reset-password", { replace: true });
+                            return;
+                        } else {
+                            throw new Error("Failed to create session from recovery tokens");
+                        }
+                    } catch (sessionError) {
+                        console.error("Session setup failed:", sessionError);
                         setError("Invalid recovery link. Please try again.");
                         setTimeout(() => {
                             navigate("/auth", { replace: true });
@@ -49,15 +57,20 @@ const AuthCallback = () => {
                     }
                 }
 
+                // Handle normal auth flow
+                const { data, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    console.error("Session error:", error);
+                    throw error;
+                }
 
                 if (data.session) {
                     console.log("Session found, processing user data...");
 
-                    // Set authentication flags for the app
                     localStorage.setItem('auth_success', 'true');
                     sessionStorage.setItem('login_in_progress', 'true');
 
-                    // Get user profile to check role
                     try {
                         const { data: userData } = await supabase
                             .from('userinfo')
@@ -98,7 +111,6 @@ const AuthCallback = () => {
                     navigate("/auth", { replace: true });
                 }, 3000);
             }
-
         };
 
         handleCallback();
