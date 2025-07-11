@@ -142,8 +142,8 @@ const Footer: React.FC = () => {
               <div className="space-y-2">
                 {/* Phone */}
                 <div className={`flex items-center gap-2 p-2 rounded-lg bg-white/50 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Phone className="h-4 w-4 text-primary/80" />
-                  <div className="flex-1">
+                  <Phone className={`h-4 w-4 text-primary/80 ${isRTL ? 'order-2' : ''}`} />
+                  <div className={`flex-1 ${isRTL ? 'order-1 text-right' : ''}`}>
                     <a href="tel:+97022744444" className="text-sm font-bold text-primary/85 hover:text-primary transition-colors" dir="ltr">
                       +970 2 274 4444
                     </a>
@@ -152,9 +152,8 @@ const Footer: React.FC = () => {
 
                 {/* Email */}
                 <div className={`flex items-center gap-2 p-2 rounded-lg bg-white/50 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Mail className="h-4 w-4 text-primary/80 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-
+                  <Mail className={`h-4 w-4 text-primary/80 flex-shrink-0 ${isRTL ? 'order-2' : ''}`} />
+                  <div className={`flex-1 min-w-0 ${isRTL ? 'order-1' : ''}`}>
                     <a
                       href="mailto:info@bethlehemmedcenter.com"
                       className={`text-xs font-bold text-primary/85 hover:text-primary transition-colors block break-all ${isRTL ? 'text-right' : 'text-left'}`}
@@ -167,8 +166,8 @@ const Footer: React.FC = () => {
 
                 {/* Address */}
                 <div className={`flex items-start gap-2 p-2 rounded-lg bg-white/50 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <MapPin className="h-4 w-4 text-primary/80 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
+                  <MapPin className={`h-4 w-4 text-primary/80 mt-0.5 flex-shrink-0 ${isRTL ? 'order-2' : ''}`} />
+                  <div className={`flex-1 ${isRTL ? 'order-1' : ''}`}>
                     <a
                       href="https://www.google.com/maps/search/?api=1&query=Wadi+Musalam+Street+Najib+Nasser+Building+Bethlehem+Palestine"
                       target="_blank"

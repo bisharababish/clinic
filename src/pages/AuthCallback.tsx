@@ -25,30 +25,49 @@ const AuthCallback = () => {
                 console.log("Auth callback:", { type, hasAccessToken: !!accessToken });
 
                 // Handle password recovery FIRST
+                // Handle password recovery FIRST
                 if (type === 'recovery') {
-                    console.log("Password recovery detected, setting session");
+                    console.log("Password recovery detected");
+                    console.log("Raw URL:", window.location.href);
+                    console.log("Search params:", window.location.search);
+                    console.log("Hash params:", window.location.hash);
 
+                    // Try Supabase's built-in session handling first
                     try {
-                        // Set the session with the tokens from URL
-                        const { data, error } = await supabase.auth.setSession({
-                            access_token: accessToken,
-                            refresh_token: refreshToken || '',
-                        });
+                        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                        console.log("Supabase session check:", { hasSession: !!sessionData?.session, error: sessionError });
 
-                        if (error) {
-                            console.error("Error setting recovery session:", error);
-                            throw error;
-                        }
-
-                        if (data.session) {
-                            console.log("Recovery session set successfully, redirecting");
+                        if (sessionData?.session) {
+                            console.log("Recovery session found automatically, redirecting");
                             navigate("/auth/reset-password", { replace: true });
                             return;
-                        } else {
-                            throw new Error("Failed to create session from recovery tokens");
                         }
-                    } catch (sessionError) {
-                        console.error("Session setup failed:", sessionError);
+
+                        // If no session, try to set one with URL tokens
+                        if (accessToken) {
+                            console.log("Attempting to set session with URL tokens");
+                            const { data, error } = await supabase.auth.setSession({
+                                access_token: accessToken,
+                                refresh_token: refreshToken || '',
+                            });
+
+                            if (error) {
+                                console.error("Error setting session:", error);
+                                throw error;
+                            }
+
+                            if (data.session) {
+                                console.log("Session set from tokens, redirecting");
+                                navigate("/auth/reset-password", { replace: true });
+                                return;
+                            }
+                        }
+
+                        // If we get here, recovery failed
+                        throw new Error("No session or tokens found for recovery");
+
+                    } catch (recoveryError) {
+                        console.error("Recovery failed:", recoveryError);
                         setError("Invalid recovery link. Please try again.");
                         setTimeout(() => {
                             navigate("/auth", { replace: true });
