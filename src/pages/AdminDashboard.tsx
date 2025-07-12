@@ -254,11 +254,7 @@ const AdminDashboardContent = () => {
                                     {t('admin.doctors') || 'Doctors'}
                                 </TabsTrigger>
                             )}
-                            {canViewDeletionRequests && (
-                                <TabsTrigger value="deletion-requests" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                    {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
-                                </TabsTrigger>
-                            )}
+
                         </TabsList>
                         <TabsList className={`flex w-full gap-0.5 mt-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewPatientHealthTab && (

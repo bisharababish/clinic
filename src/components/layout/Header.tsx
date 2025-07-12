@@ -362,7 +362,7 @@ export function Header() {
                             {isAuthenticated ? (
                                 <>
                                     {/* NotificationBell temporarily disabled due to subscription issue */}
-                                    { <NotificationBell /> }
+                                    {<NotificationBell />}
                                     {canChangePassword && (
                                         <Button
                                             variant="outline"
@@ -391,30 +391,30 @@ export function Header() {
                         </div>
 
                         {/* Mobile: Language switcher + Role + Menu button */}
-                        <div className="lg:hidden flex items-center gap-2">
-                            {/* Mobile Language Switcher */}
-                            <div className="sm:hidden">
+                        <div className="lg:hidden flex items-center gap-1">
+                            {/* Mobile Language Switcher - only show on very small screens */}
+                            <div className="xs:hidden">
                                 <LanguageSwitcher />
                             </div>
 
-                            {/* Mobile Role Badge */}
+                            {/* Mobile Role Badge - hide on small screens to save space */}
                             {effectiveRole && isAuthenticated && (
-                                <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getRoleBadgeClass(effectiveRole).replace('gradient-to-r from-', '').replace(' to-', '').replace(' hover:from-', '').replace(' hover:to-', '')}`}>
+                                <span className={`hidden sm:inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getRoleBadgeClass(effectiveRole).replace('gradient-to-r from-', '').replace(' to-', '').replace(' hover:from-', '').replace(' hover:to-', '')}`}>
                                     {getRoleDisplayName(effectiveRole)}
                                 </span>
                             )}
 
                             {/* Mobile NotificationBell */}
-                             {isAuthenticated && <NotificationBell />} 
+                            {isAuthenticated && <NotificationBell />}
 
-                            {/* Mobile Menu Button */}
+                            {/* Mobile Menu Button - always visible */}
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={toggleMobileMenu}
                                 aria-label={isMobileMenuOpen ? (t('header.closeMenu') || 'Close Menu') : (t('header.toggleMenu') || 'Toggle Menu')}
                                 aria-expanded={isMobileMenuOpen}
-                                className="p-2 hover:bg-gray-100 transition-colors duration-200"
+                                className="p-2 hover:bg-gray-100 transition-colors duration-200 flex-shrink-0"
                                 data-mobile-menu
                             >
                                 {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
