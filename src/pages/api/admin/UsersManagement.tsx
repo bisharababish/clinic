@@ -12,9 +12,10 @@ import {
     Edit,
     UserPlus,
     RefreshCw,
-    Search
+    Search,
+    Clock
 } from "lucide-react";
-import { UserRole } from "../../../hooks/useAuth";
+import { useAuth, UserRole } from "../../../hooks/useAuth";
 import UserRoleBadge from '../../../components/auth/UserRoleBadge';
 import { useTranslation } from 'react-i18next';
 import "../../styles/usersmanagement.css"
@@ -22,7 +23,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from '@supabase/supabase-js';
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useAdminState } from "../../../hooks/useAdminState";
-
+import DeletionRequestModal from '../../../components/DeletionRequestModal';
+import { createDeletionRequest } from '../../../lib/deletionRequests';
+import { hasPermission } from '../../../lib/rolePermissions';
 interface UserInfo {
     user_id: string; // uuid/text primary key
     userid: number;
@@ -81,8 +84,20 @@ const UsersManagement = () => {
         user_roles: "patient" as UserRole,
         user_password: "",
     });
+    // Deletion request state
+    const [showDeletionModal, setShowDeletionModal] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<UserInfo | null>(null);
+    const [isDeletionLoading, setIsDeletionLoading] = useState(false);
 
-    // Handle search filtering
+    // Get current user info for permissions
+    const { user: currentUser } = useAuth();
+    const currentUserRole = currentUser?.role?.toLowerCase() || '';
+    const canDirectDelete = hasPermission(currentUserRole, 'canApproveUserDeletion');
+    const canRequestDeletion = hasPermission(currentUserRole, 'canRequestUserDeletion');
+    // Add this near the other permission checks:
+    const canCreateUsers = hasPermission(currentUserRole, 'canManageUsers');
+    const canEditUsers = hasPermission(currentUserRole, 'canManageUsers');
+
     useEffect(() => {
         if (searchQuery.trim() === '') {
             setFilteredUsers(users);
@@ -370,7 +385,7 @@ const UsersManagement = () => {
                 }
             }
 
-          
+
 
             toast({
                 title: t('common.success'),
@@ -397,9 +412,81 @@ const UsersManagement = () => {
                 variant: "destructive",
             });
 
-        } 
+        }
     };
-    // Password validation function
+    const handleDeletionRequest = async (reason: string) => {
+        if (!userToDelete || !currentUser?.email) return;
+
+        setIsDeletionLoading(true);
+
+        try {
+            const userDetails = {
+                english_name: `${userToDelete.english_username_a} ${userToDelete.english_username_d || ''}`.trim(),
+                arabic_name: userToDelete.arabic_username_a ?
+                    `${userToDelete.arabic_username_a} ${userToDelete.arabic_username_d || ''}`.trim() :
+                    undefined,
+                email: userToDelete.user_email,
+                role: userToDelete.user_roles,
+                id_number: userToDelete.id_number,
+                phone: userToDelete.user_phonenumber
+            };
+
+            const result = await createDeletionRequest(
+                userToDelete.userid,
+                userDetails,
+                reason,
+                currentUser.email,
+                currentUserRole
+            );
+
+            if (result.success) {
+                toast({
+                    title: t('common.success'),
+                    description: t('deletionRequest.requestSubmitted') || 'Deletion request submitted successfully. An admin will review it.',
+                });
+
+                logActivity(
+                    'Deletion Request Created',
+                    currentUser.email,
+                    `Deletion request for user ${userToDelete.user_email} (ID: ${userToDelete.userid})`,
+                    'success'
+                );
+            } else {
+                throw new Error(result.error || 'Failed to create deletion request');
+            }
+        } catch (error) {
+            console.error('Error creating deletion request:', error);
+            toast({
+                title: t('common.error'),
+                description: error instanceof Error ? error.message : 'Failed to create deletion request',
+                variant: "destructive",
+            });
+        } finally {
+            setIsDeletionLoading(false);
+            setShowDeletionModal(false);
+            setUserToDelete(null);
+        }
+    };
+
+    const handleDeleteButtonClick = (userid: number) => {
+        const user = users.find(u => u.userid === userid);
+        if (!user) return;
+
+        if (canDirectDelete) {
+            // Admin can delete directly (existing behavior)
+            handleDeleteUser(userid);
+        } else if (canRequestDeletion) {
+            // Secretary must request deletion
+            setUserToDelete(user);
+            setShowDeletionModal(true);
+        } else {
+            toast({
+                title: t('common.error'),
+                description: t('usersManagement.noDeletePermission') || 'You do not have permission to delete users',
+                variant: "destructive",
+            });
+        }
+    };
     const validatePassword = (password: string): boolean => {
         const hasUpperCase = /[A-Z]/.test(password);
         const hasLowerCase = /[a-z]/.test(password);
@@ -562,7 +649,7 @@ const UsersManagement = () => {
                     description: t('usersManagement.unexpectedError'),
                     variant: "destructive",
                 });
-            } 
+            }
         } else if (userFormMode === "edit" && selectedUser !== null) {
             try {
 
@@ -706,7 +793,7 @@ const UsersManagement = () => {
                     description: t('usersManagement.unexpectedError'),
                     variant: "destructive",
                 });
-            } 
+            }
         }
     };
 
@@ -774,10 +861,12 @@ const UsersManagement = () => {
                                     <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                     {t('common.refresh')}
                                 </Button>
-                                <Button size="sm" onClick={() => resetUserForm()}>
-                                    <UserPlus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                    {t('usersManagement.addUser')}
-                                </Button>
+                                {canCreateUsers && (
+                                    <Button size="sm" onClick={() => resetUserForm()}>
+                                        <UserPlus className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                        {t('usersManagement.addUser')}
+                                    </Button>
+                                )}
                             </div>
                         </div>
                         <CardDescription
@@ -814,17 +903,29 @@ const UsersManagement = () => {
                                             </div>
                                         </div>
                                         <div className={`user-actions ${isRTL ? 'rtl' : ''}`}>
-                                            <Button variant="outline" size="sm" onClick={() => handleEditUser(u.userid)}>
-                                                <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                {t('common.edit')}
-                                            </Button>
+                                            {canEditUsers && (
+                                                <Button variant="outline" size="sm" onClick={() => handleEditUser(u.userid)}>
+                                                    <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                    {t('common.edit')}
+                                                </Button>
+                                            )}
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
-                                                onClick={() => handleDeleteUser(u.userid)}
+                                                onClick={() => handleDeleteButtonClick(u.userid)}
+                                                disabled={!canDirectDelete && !canRequestDeletion}
                                             >
-                                                <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                {t('common.delete')}
+                                                {canDirectDelete ? (
+                                                    <>
+                                                        <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                        {isRTL ? 'حذف' : 'Delete'}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Clock className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                        {isRTL ? 'طلب حذف' : 'Request Deletion'}
+                                                    </>
+                                                )}
                                             </Button>
                                         </div>
                                     </div>
@@ -841,371 +942,384 @@ const UsersManagement = () => {
                     <CardFooter />
                 </Card>
             </div>
-
-            <div className="form-section">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className={isRTL ? 'text-left' : ''}>
-                            {userFormMode === "create" ? t('usersManagement.createNewUser') : t('usersManagement.editUser')}
-                        </CardTitle>
-                        <CardDescription className={isRTL ? 'text-left' : ''}>
-                            {userFormMode === "create"
-                                ? t('usersManagement.addNewUserDesc')
-                                : t('usersManagement.modifyUserDesc')}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="max-h-[60vh] overflow-y-auto p-4" style={{ overflowY: 'auto', scrollBehavior: 'smooth' }}>
-                        <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4 h-full" dir={isRTL ? 'rtl' : 'ltr'} style={{ minHeight: 'fit-content' }}>
-                            <div>
-                                <div className="form-grid">
-                                    {/* First Row */}
-                                    <div>
-                                        <Label htmlFor="english_username_a" className="text-xs">
-                                            {t('usersManagement.firstName')}
-                                        </Label>
-                                        <Input
-                                            id="english_username_a"
-                                            name="english_username_a"
-                                            value={userFormData.english_username_a}
-                                            onChange={handleUserInputChange}
-                                            placeholder={t('usersManagement.firstPlaceholder')}
-                                            required
-                                            dir="ltr"
-                                            className="text-left"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label htmlFor="english_username_b" className="text-xs">
-                                            {t('usersManagement.secondName')}
-                                        </Label>
-                                        <Input
-                                            id="english_username_b"
-                                            name="english_username_b"
-                                            value={userFormData.english_username_b}
-                                            onChange={handleUserInputChange}
-                                            placeholder={t('usersManagement.secondPlaceholder')}
-                                            dir="ltr"
-                                            className="text-left"
-                                        />
-                                    </div>
-
-                                    {/* Second Row */}
-                                    <div>
-                                        <Label htmlFor="english_username_c" className="text-xs">
-                                            {t('usersManagement.thirdName')}
-                                        </Label>
-                                        <Input
-                                            id="english_username_c"
-                                            name="english_username_c"
-                                            value={userFormData.english_username_c}
-                                            onChange={handleUserInputChange}
-                                            placeholder={t('usersManagement.thirdPlaceholder')}
-                                            dir="ltr"
-                                            className="text-left"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="english_username_d" className="text-xs">
-                                            {t('usersManagement.lastName')}
-                                        </Label>
-                                        <Input
-                                            id="english_username_d"
-                                            name="english_username_d"
-                                            value={userFormData.english_username_d}
-                                            onChange={handleUserInputChange}
-                                            placeholder={t('usersManagement.lastPlaceholder')}
-                                            required
-                                            dir="ltr"
-                                            className="text-left"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                {/* Arabic Names Section - ALWAYS RTL regardless of interface language */}
-                                <div className="arabic-names-container" dir="rtl" style={{ direction: 'rtl' }}>
+            {canCreateUsers && (
+                <div className="form-section">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className={isRTL ? 'text-left' : ''}>
+                                {userFormMode === "create" ? t('usersManagement.createNewUser') : t('usersManagement.editUser')}
+                            </CardTitle>
+                            <CardDescription className={isRTL ? 'text-left' : ''}>
+                                {userFormMode === "create"
+                                    ? t('usersManagement.addNewUserDesc')
+                                    : t('usersManagement.modifyUserDesc')}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="max-h-[60vh] overflow-y-auto p-4" style={{ overflowY: 'auto', scrollBehavior: 'smooth' }}>
+                            <form onSubmit={handleUserSubmit} id="userForm" className="space-y-4 h-full" dir={isRTL ? 'rtl' : 'ltr'} style={{ minHeight: 'fit-content' }}>
+                                <div>
                                     <div className="form-grid">
-                                        {/* Row 1: First Name (right) | Second Name (left) in RTL layout */}
+                                        {/* First Row */}
                                         <div>
-                                            <Label htmlFor="arabic_username_a" className="text-xs" dir="rtl">
-                                                {t('usersManagement.firstNameAr')}
+                                            <Label htmlFor="english_username_a" className="text-xs">
+                                                {t('usersManagement.firstName')}
                                             </Label>
                                             <Input
-                                                id="arabic_username_a"
-                                                name="arabic_username_a"
-                                                value={userFormData.arabic_username_a}
+                                                id="english_username_a"
+                                                name="english_username_a"
+                                                value={userFormData.english_username_a}
                                                 onChange={handleUserInputChange}
-                                                dir="rtl"
-                                                placeholder={t('usersManagement.firstPlaceholderAr')}
+                                                placeholder={t('usersManagement.firstPlaceholder')}
                                                 required
-                                                className="text-align-left, direction: rtl"
+                                                dir="ltr"
+                                                className="text-left"
                                             />
                                         </div>
                                         <div>
-                                            <Label htmlFor="arabic_username_b" className="text-xs" dir="rtl">
-                                                {t('usersManagement.secondNameAr')}
+                                            <Label htmlFor="english_username_b" className="text-xs">
+                                                {t('usersManagement.secondName')}
                                             </Label>
                                             <Input
-                                                id="arabic_username_b"
-                                                name="arabic_username_b"
-                                                value={userFormData.arabic_username_b}
+                                                id="english_username_b"
+                                                name="english_username_b"
+                                                value={userFormData.english_username_b}
                                                 onChange={handleUserInputChange}
-                                                dir="rtl"
-                                                placeholder={t('usersManagement.secondPlaceholderAr')}
-                                                required
-                                                className="text-align-left, direction: rtl"
+                                                placeholder={t('usersManagement.secondPlaceholder')}
+                                                dir="ltr"
+                                                className="text-left"
                                             />
                                         </div>
 
-                                        {/* Row 2: Third Name (right) | Fourth Name (left) in RTL layout */}
+                                        {/* Second Row */}
                                         <div>
-                                            <Label htmlFor="arabic_username_c" className="text-xs" dir="rtl">
-                                                {t('usersManagement.thirdNameAr')}
+                                            <Label htmlFor="english_username_c" className="text-xs">
+                                                {t('usersManagement.thirdName')}
                                             </Label>
                                             <Input
-                                                id="arabic_username_c"
-                                                name="arabic_username_c"
-                                                value={userFormData.arabic_username_c}
+                                                id="english_username_c"
+                                                name="english_username_c"
+                                                value={userFormData.english_username_c}
                                                 onChange={handleUserInputChange}
-                                                dir="rtl"
-                                                placeholder={t('usersManagement.thirdPlaceholderAr')}
-                                                required
-                                                className="text-align-left, direction: rtl"
+                                                placeholder={t('usersManagement.thirdPlaceholder')}
+                                                dir="ltr"
+                                                className="text-left"
                                             />
                                         </div>
+
                                         <div>
-                                            <Label htmlFor="arabic_username_d" className="text-xs" dir="rtl">
-                                                {t('usersManagement.lastNameAr')}
+                                            <Label htmlFor="english_username_d" className="text-xs">
+                                                {t('usersManagement.lastName')}
                                             </Label>
                                             <Input
-                                                id="arabic_username_d"
-                                                name="arabic_username_d"
-                                                value={userFormData.arabic_username_d}
+                                                id="english_username_d"
+                                                name="english_username_d"
+                                                value={userFormData.english_username_d}
                                                 onChange={handleUserInputChange}
-                                                dir="rtl"
-                                                placeholder={t('usersManagement.lastPlaceholderAr')}
+                                                placeholder={t('usersManagement.lastPlaceholder')}
                                                 required
-                                                className="text-align-left, direction: rtl"
+                                                dir="ltr"
+                                                className="text-left"
                                             />
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="user_email">{t('common.email')}</Label>
-                                <Input
-                                    id="user_email"
-                                    name="user_email"
-                                    type="email"
-                                    value={userFormData.user_email}
-                                    onChange={handleUserInputChange}
-                                    required
-                                    placeholder={t('usersManagement.emailPlaceholder')}
-                                    dir="ltr"
-                                    className={isRTL ? 'text-left' : ''}
-                                />
-                            </div>
+                                <div>
+                                    {/* Arabic Names Section - ALWAYS RTL regardless of interface language */}
+                                    <div className="arabic-names-container" dir="rtl" style={{ direction: 'rtl' }}>
+                                        <div className="form-grid">
+                                            {/* Row 1: First Name (right) | Second Name (left) in RTL layout */}
+                                            <div>
+                                                <Label htmlFor="arabic_username_a" className="text-xs" dir="rtl">
+                                                    {t('usersManagement.firstNameAr')}
+                                                </Label>
+                                                <Input
+                                                    id="arabic_username_a"
+                                                    name="arabic_username_a"
+                                                    value={userFormData.arabic_username_a}
+                                                    onChange={handleUserInputChange}
+                                                    dir="rtl"
+                                                    placeholder={t('usersManagement.firstPlaceholderAr')}
+                                                    required
+                                                    className="text-align-left, direction: rtl"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="arabic_username_b" className="text-xs" dir="rtl">
+                                                    {t('usersManagement.secondNameAr')}
+                                                </Label>
+                                                <Input
+                                                    id="arabic_username_b"
+                                                    name="arabic_username_b"
+                                                    value={userFormData.arabic_username_b}
+                                                    onChange={handleUserInputChange}
+                                                    dir="rtl"
+                                                    placeholder={t('usersManagement.secondPlaceholderAr')}
+                                                    required
+                                                    className="text-align-left, direction: rtl"
+                                                />
+                                            </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="id_number">{t('auth.idNumber')}</Label>
-                                <Input
-                                    id="id_number"
-                                    name="id_number"
-                                    type="text"
-                                    value={userFormData.id_number}
-                                    onChange={handleUserInputChange}
-                                    required
-                                    placeholder="123456789"
-                                    dir="ltr"
-                                    className={isRTL ? 'text-left' : ''}
-                                />
-                            </div>
+                                            {/* Row 2: Third Name (right) | Fourth Name (left) in RTL layout */}
+                                            <div>
+                                                <Label htmlFor="arabic_username_c" className="text-xs" dir="rtl">
+                                                    {t('usersManagement.thirdNameAr')}
+                                                </Label>
+                                                <Input
+                                                    id="arabic_username_c"
+                                                    name="arabic_username_c"
+                                                    value={userFormData.arabic_username_c}
+                                                    onChange={handleUserInputChange}
+                                                    dir="rtl"
+                                                    placeholder={t('usersManagement.thirdPlaceholderAr')}
+                                                    required
+                                                    className="text-align-left, direction: rtl"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="arabic_username_d" className="text-xs" dir="rtl">
+                                                    {t('usersManagement.lastNameAr')}
+                                                </Label>
+                                                <Input
+                                                    id="arabic_username_d"
+                                                    name="arabic_username_d"
+                                                    value={userFormData.arabic_username_d}
+                                                    onChange={handleUserInputChange}
+                                                    dir="rtl"
+                                                    placeholder={t('usersManagement.lastPlaceholderAr')}
+                                                    required
+                                                    className="text-align-left, direction: rtl"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="user_phonenumber">{t('usersManagement.phoneNumber')}</Label>
-                                <Input
-                                    id="user_phonenumber"
-                                    name="user_phonenumber"
-                                    value={userFormData.user_phonenumber}
-                                    onChange={handleUserInputChange}
-                                    placeholder={isRTL ? "٩٧٠/٩٧٢ + أرقام" : "+970/+972 + digits"} dir={isRTL ? "rtl" : "ltr"}
-                                    className={isRTL ? 'text-left' : ''}
-                                />
-                            </div>
-
-                            <div className="two-column-grid">
                                 <div className="space-y-2">
-                                    <Label htmlFor="date_of_birth">{t('auth.dateOfBirth')}</Label>
+                                    <Label htmlFor="user_email">{t('common.email')}</Label>
                                     <Input
-                                        id="date_of_birth"
-                                        name="date_of_birth"
-                                        type="date"
-                                        value={userFormData.date_of_birth}
+                                        id="user_email"
+                                        name="user_email"
+                                        type="email"
+                                        value={userFormData.user_email}
                                         onChange={handleUserInputChange}
+                                        required
+                                        placeholder={t('usersManagement.emailPlaceholder')}
                                         dir="ltr"
+                                        className={isRTL ? 'text-left' : ''}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="gender_select">{t('auth.gender')}</Label>
+                                    <Label htmlFor="id_number">{t('auth.idNumber')}</Label>
+                                    <Input
+                                        id="id_number"
+                                        name="id_number"
+                                        type="text"
+                                        value={userFormData.id_number}
+                                        onChange={handleUserInputChange}
+                                        required
+                                        placeholder="123456789"
+                                        dir="ltr"
+                                        className={isRTL ? 'text-left' : ''}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="user_phonenumber">{t('usersManagement.phoneNumber')}</Label>
+                                    <Input
+                                        id="user_phonenumber"
+                                        name="user_phonenumber"
+                                        value={userFormData.user_phonenumber}
+                                        onChange={handleUserInputChange}
+                                        placeholder={isRTL ? "٩٧٠/٩٧٢ + أرقام" : "+970/+972 + digits"} dir={isRTL ? "rtl" : "ltr"}
+                                        className={isRTL ? 'text-left' : ''}
+                                    />
+                                </div>
+
+                                <div className="two-column-grid">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="date_of_birth">{t('auth.dateOfBirth')}</Label>
+                                        <Input
+                                            id="date_of_birth"
+                                            name="date_of_birth"
+                                            type="date"
+                                            value={userFormData.date_of_birth}
+                                            onChange={handleUserInputChange}
+                                            dir="ltr"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="gender_select">{t('auth.gender')}</Label>
+                                        <Select
+                                            value={userFormData.gender_user}
+                                            onValueChange={handleGenderChange}
+                                        >
+                                            <SelectTrigger id="gender_select" dir={isRTL ? 'rtl' : 'ltr'}>
+                                                <SelectValue placeholder={t('usersManagement.selectGender')} />
+                                            </SelectTrigger>
+                                            <SelectContent
+                                                className={isRTL ? 'text-right' : 'text-left'}
+                                                style={isRTL ? { direction: 'rtl' } : {}}
+                                            >
+                                                <SelectItem
+                                                    value="male"
+                                                    className={isRTL ? 'text-right justify-start pr-8' : 'text-left'}
+                                                    style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}
+                                                >
+                                                    {t('auth.male')}
+                                                </SelectItem>
+                                                <SelectItem
+                                                    value="female"
+                                                    className={isRTL ? 'text-right justify-start pr-8' : 'text-left'}
+                                                    style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}
+                                                >
+                                                    {t('auth.female')}
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="role_select">{t('usersManagement.role')}</Label>
                                     <Select
-                                        value={userFormData.gender_user}
-                                        onValueChange={handleGenderChange}
+                                        value={userFormData.user_roles}
+                                        onValueChange={handleUserRoleChange}
                                     >
-                                        <SelectTrigger id="gender_select" dir={isRTL ? 'rtl' : 'ltr'}>
-                                            <SelectValue placeholder={t('usersManagement.selectGender')} />
+                                        <SelectTrigger id="role_select" dir={isRTL ? 'rtl' : 'ltr'}>
+                                            <SelectValue placeholder={t('usersManagement.selectRole')} />
                                         </SelectTrigger>
                                         <SelectContent
                                             className={isRTL ? 'text-right' : 'text-left'}
                                             style={isRTL ? { direction: 'rtl' } : {}}
                                         >
-                                            <SelectItem
-                                                value="male"
-                                                className={isRTL ? 'text-right justify-start pr-8' : 'text-left'}
-                                                style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}
-                                            >
-                                                {t('auth.male')}
+                                            <SelectItem value="Patient" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.patient')}
                                             </SelectItem>
-                                            <SelectItem
-                                                value="female"
-                                                className={isRTL ? 'text-right justify-start pr-8' : 'text-left'}
-                                                style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}
-                                            >
-                                                {t('auth.female')}
+                                            <SelectItem value="doctor" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.doctor')}
+                                            </SelectItem>
+                                            <SelectItem value="Secretary" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.secretary')}
+                                            </SelectItem>
+                                            <SelectItem value="Nurse" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.nurse')}
+                                            </SelectItem>
+                                            <SelectItem value="Lab" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.lab')}
+                                            </SelectItem>
+                                            <SelectItem value="Admin" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.admin')}
+                                            </SelectItem>
+                                            <SelectItem value="X Ray" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.xray')}
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
-                            </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="role_select">{t('usersManagement.role')}</Label>
-                                <Select
-                                    value={userFormData.user_roles}
-                                    onValueChange={handleUserRoleChange}
-                                >
-                                    <SelectTrigger id="role_select" dir={isRTL ? 'rtl' : 'ltr'}>
-                                        <SelectValue placeholder={t('usersManagement.selectRole')} />
-                                    </SelectTrigger>
-                                    <SelectContent
-                                        className={isRTL ? 'text-right' : 'text-left'}
-                                        style={isRTL ? { direction: 'rtl' } : {}}
-                                    >
-                                        <SelectItem value="Patient" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
-                                            {t('roles.patient')}
-                                        </SelectItem>
-                                        <SelectItem value="doctor" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
-                                            {t('roles.doctor')}
-                                        </SelectItem>
-                                        <SelectItem value="Secretary" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
-                                            {t('roles.secretary')}
-                                        </SelectItem>
-                                        <SelectItem value="Nurse" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
-                                            {t('roles.nurse')}
-                                        </SelectItem>
-                                        <SelectItem value="Lab" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
-                                            {t('roles.lab')}
-                                        </SelectItem>
-                                        <SelectItem value="Admin" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
-                                            {t('roles.admin')}
-                                        </SelectItem>
-                                        <SelectItem value="X Ray" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
-                                            {t('roles.xray')}
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="user_password">
-                                    {userFormMode === "create" ? t('common.password') : t('usersManagement.newPassword')}
-                                </Label>
-                                <div className="relative">
-                                    <Input
-                                        id="user_password"
-                                        name="user_password"
-                                        type={showEditPassword ? "text" : "password"}
-                                        value={userFormData.user_password}
-                                        onChange={handleUserInputChange}
-                                        placeholder="••••••••"
-                                        required={userFormMode === "create"}
-                                        className="pr-10"
-                                        dir={isRTL ? "rtl" : "ltr"}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowEditPassword(!showEditPassword)}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
-                                    >
-                                        {showEditPassword ? (
-                                            <EyeOffIcon className="h-4 w-4" />
-                                        ) : (
-                                            <EyeIcon className="h-4 w-4" />
-                                        )}
-                                    </button>
-                                </div>
-                                {userFormData.user_password && (
-                                    <div className="text-xs text-gray-600">
-                                        {isRTL ? "كلمة المرور يجب أن تحتوي على:" : "Password must contain:"}
-                                        <ul className="mt-1 space-y-1">
-                                            <li className={/[A-Z]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
-                                                {isRTL ? "• حرف كبير واحد على الأقل" : "• At least one uppercase letter"}
-                                            </li>
-                                            <li className={/[a-z]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
-                                                {isRTL ? "• حرف صغير واحد على الأقل" : "• At least one lowercase letter"}
-                                            </li>
-                                            <li className={/\d/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
-                                                {isRTL ? "• رقم واحد على الأقل" : "• At least one number"}
-                                            </li>
-                                            <li className={/[!@#$%^&*(),.?":{}|<>]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
-                                                {isRTL ? "• رمز خاص واحد على الأقل" : "• At least one special character"}
-                                            </li>
-                                            <li className={userFormData.user_password.length >= 8 ? 'text-green-600' : 'text-red-600'}>
-                                                {isRTL ? "• 8 أحرف على الأقل" : "• At least 8 characters"}
-                                            </li>
-                                        </ul>
-                                        {userFormMode === "edit" && (
-                                            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-blue-700">
-                                                <strong>{isRTL ? "ملاحظة:" : "Note:"}</strong> {isRTL ?
-                                                    "سيتم تحديث كلمة المرور في قاعدة البيانات وإرسال رابط إعادة تعيين كلمة المرور إلى بريد المستخدم الإلكتروني." :
-                                                    "Password will be updated in database and a password reset link will be sent to the user's email."
-                                                }
-                                            </div>
-                                        )}
+                                <div className="space-y-2">
+                                    <Label htmlFor="user_password">
+                                        {userFormMode === "create" ? t('common.password') : t('usersManagement.newPassword')}
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="user_password"
+                                            name="user_password"
+                                            type={showEditPassword ? "text" : "password"}
+                                            value={userFormData.user_password}
+                                            onChange={handleUserInputChange}
+                                            placeholder="••••••••"
+                                            required={userFormMode === "create"}
+                                            className="pr-10"
+                                            dir={isRTL ? "rtl" : "ltr"}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowEditPassword(!showEditPassword)}
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                                        >
+                                            {showEditPassword ? (
+                                                <EyeOffIcon className="h-4 w-4" />
+                                            ) : (
+                                                <EyeIcon className="h-4 w-4" />
+                                            )}
+                                        </button>
                                     </div>
-                                )}
-                            </div>
-                        </form>
-                    </CardContent>
-                    <CardFooter className={`card-footer ${isRTL ? 'rtl' : ''} ${userFormMode === "create" ? 'create-mode' : ''}`}>
-                        {userFormMode === "edit" && (
+                                    {userFormData.user_password && (
+                                        <div className="text-xs text-gray-600">
+                                            {isRTL ? "كلمة المرور يجب أن تحتوي على:" : "Password must contain:"}
+                                            <ul className="mt-1 space-y-1">
+                                                <li className={/[A-Z]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
+                                                    {isRTL ? "• حرف كبير واحد على الأقل" : "• At least one uppercase letter"}
+                                                </li>
+                                                <li className={/[a-z]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
+                                                    {isRTL ? "• حرف صغير واحد على الأقل" : "• At least one lowercase letter"}
+                                                </li>
+                                                <li className={/\d/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
+                                                    {isRTL ? "• رقم واحد على الأقل" : "• At least one number"}
+                                                </li>
+                                                <li className={/[!@#$%^&*(),.?":{}|<>]/.test(userFormData.user_password) ? 'text-green-600' : 'text-red-600'}>
+                                                    {isRTL ? "• رمز خاص واحد على الأقل" : "• At least one special character"}
+                                                </li>
+                                                <li className={userFormData.user_password.length >= 8 ? 'text-green-600' : 'text-red-600'}>
+                                                    {isRTL ? "• 8 أحرف على الأقل" : "• At least 8 characters"}
+                                                </li>
+                                            </ul>
+                                            {userFormMode === "edit" && (
+                                                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-blue-700">
+                                                    <strong>{isRTL ? "ملاحظة:" : "Note:"}</strong> {isRTL ?
+                                                        "سيتم تحديث كلمة المرور في قاعدة البيانات وإرسال رابط إعادة تعيين كلمة المرور إلى بريد المستخدم الإلكتروني." :
+                                                        "Password will be updated in database and a password reset link will be sent to the user's email."
+                                                    }
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </form>
+                        </CardContent>
+                        <CardFooter className={`card-footer ${isRTL ? 'rtl' : ''} ${userFormMode === "create" ? 'create-mode' : ''}`}>
+                            {userFormMode === "edit" && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={resetUserForm}
+                                >
+                                    {t('common.cancel')}
+                                </Button>
+                            )}
                             <Button
-                                type="button"
-                                variant="outline"
-                                onClick={resetUserForm}
+                                type="submit"
+                                form="userForm"
+                                className={userFormMode === "edit" ? "" : "w-full"}
+                                disabled={isLoading}
                             >
-                                {t('common.cancel')}
+                                {isLoading
+                                    ? t('usersManagement.saving')
+                                    : userFormMode === "create"
+                                        ? t('usersManagement.createUser')
+                                        : t('usersManagement.updateUser')
+                                }
                             </Button>
-                        )}
-                        <Button
-                            type="submit"
-                            form="userForm"
-                            className={userFormMode === "edit" ? "" : "w-full"}
-                            disabled={isLoading}
-                        >
-                            {isLoading
-                                ? t('usersManagement.saving')
-                                : userFormMode === "create"
-                                    ? t('usersManagement.createUser')
-                                    : t('usersManagement.updateUser')
-                            }
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </div>
+                        </CardFooter>
+                    </Card>
+                </div>
+            )}
+            {/* Deletion Request Modal */}
+            <DeletionRequestModal
+                isOpen={showDeletionModal}
+                onClose={() => {
+                    setShowDeletionModal(false);
+                    setUserToDelete(null);
+                }}
+                onConfirm={handleDeletionRequest}
+                userName={userToDelete ? getUserDisplayName(userToDelete) : ''}
+                userEmail={userToDelete?.user_email || ''}
+                isLoading={isDeletionLoading}
+            />
         </div>
     );
 };

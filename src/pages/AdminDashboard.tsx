@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CalendarTab from "./api/admin/CalenderTab";
 import { hasPermission } from "@/lib/rolePermissions";
 import PatientHealthManagement from "./api/admin/PatientHealthManagement";
+import DeletionRequestsTab from "./api/admin/DeletionRequestsTab";
 
 // The actual dashboard component that uses the state
 const AdminDashboardContent = () => {
@@ -37,28 +38,30 @@ const AdminDashboardContent = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
-    const [activeTab, setActiveTab] = useState("");
-    const [error, setError] = useState<string | null>(null);
-
     // Get user role and permissions
     const userRole = user?.role?.toLowerCase() || '';
     const userPermissions = getRolePermissions(userRole);
+    const canViewDeletionRequests = userRole === 'admin';
+
+    const [activeTab, setActiveTab] = useState("");
+    const [error, setError] = useState<string | null>(null);
 
     // Define which tabs each role can see
     const canViewOverviewTab = userPermissions.canViewOverview;
-    const canViewUsersTab = userRole === 'admin';
+    const canViewUsersTab = userRole === 'admin' || userRole === 'secretary';
     const canViewClinicsTab = hasPermission(userRole, 'canManageClinics');
     const canViewDoctorsTab = userPermissions.canViewDoctors;
     const canViewAppointmentsTab = userPermissions.canViewAppointments;
     const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole);
     const canViewCalendarTab = hasPermission(userRole, 'canViewCalendar');
+    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab || canViewDeletionRequests;
 
     // Get default tab for user role
     const getDefaultTab = () => {
         if (userRole === 'secretary') {
             return 'appointments';
         } else if (userRole === 'admin') {
-            return 'overview';
+            return 'overview'; // Prioritize deletion requests for admins
         } else {
             if (canViewAppointmentsTab) return 'appointments';
             if (canViewOverviewTab) return 'overview';
@@ -131,7 +134,9 @@ const AdminDashboardContent = () => {
             'doctors': canViewDoctorsTab,
             'appointments': canViewAppointmentsTab,
             'patient-health': canViewPatientHealthTab,
-            'calendar': canViewCalendarTab
+            'calendar': canViewCalendarTab,
+            'deletion-requests': canViewDeletionRequests  // ADD THIS LINE
+
         }[newTab];
 
         if (hasPermission) {
@@ -206,7 +211,6 @@ const AdminDashboardContent = () => {
     };
 
     // Check if any tabs are accessible
-    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab;
 
     // Main render
     return (
@@ -250,6 +254,11 @@ const AdminDashboardContent = () => {
                                     {t('admin.doctors') || 'Doctors'}
                                 </TabsTrigger>
                             )}
+                            {canViewDeletionRequests && (
+                                <TabsTrigger value="deletion-requests" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
+                                </TabsTrigger>
+                            )}
                         </TabsList>
                         <TabsList className={`flex w-full gap-0.5 mt-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewPatientHealthTab && (
@@ -265,6 +274,11 @@ const AdminDashboardContent = () => {
                             {canViewCalendarTab && (
                                 <TabsTrigger value="calendar" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
+                                </TabsTrigger>
+                            )}
+                            {canViewDeletionRequests && (
+                                <TabsTrigger value="deletion-requests" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletion Requests'}
                                 </TabsTrigger>
                             )}
                         </TabsList>
@@ -305,6 +319,12 @@ const AdminDashboardContent = () => {
                         {canViewCalendarTab && (
                             <TabsTrigger value="calendar" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
                                 {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
+                            </TabsTrigger>
+                        )}
+                        {/* ADD THIS INSTEAD */}
+                        {canViewDeletionRequests && (
+                            <TabsTrigger value="deletion-requests" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletion Requests'}
                             </TabsTrigger>
                         )}
                     </TabsList>
@@ -382,6 +402,12 @@ const AdminDashboardContent = () => {
                                 i18n={i18n}
                                 setActiveTab={setActiveTab}
                             />
+                        </TabsContent>
+                    )}
+                    {/* ADD THE DELETION REQUESTS TAB HERE */}
+                    {canViewDeletionRequests && (
+                        <TabsContent value="deletion-requests" className="pt-6">
+                            <DeletionRequestsTab />
                         </TabsContent>
                     )}
                 </Tabs>

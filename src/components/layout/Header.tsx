@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { getRolePermissions, getDefaultRouteForRole } from '../../lib/rolePermissions';
 import { PasswordChangeModal } from '../ui/PasswordChangeModal';
+import NotificationBell from '../NotificationBell';
 
 export function Header() {
     const { user, logout } = useAuth();
@@ -95,7 +96,7 @@ export function Header() {
                 }
 
                 console.log("No authentication found");
-      
+
             } catch (error) {
                 console.error("Error checking auth status:", error);
                 setIsAuthenticated(false);
@@ -186,15 +187,15 @@ export function Header() {
 
     // Handle logout click
     const handleLogout = async () => {
-    try {
-        closeMobileMenu();
-        await logout();
-        navigate('/auth', { replace: true });
-    } catch (error) {
-        console.error('Logout error:', error);
-        navigate('/auth', { replace: true });
-    }
-};
+        try {
+            closeMobileMenu();
+            await logout();
+            navigate('/auth', { replace: true });
+        } catch (error) {
+            console.error('Logout error:', error);
+            navigate('/auth', { replace: true });
+        }
+    };
 
     // Function to get role display name with translation
     const getRoleDisplayName = (role: string) => {
@@ -360,6 +361,8 @@ export function Header() {
 
                             {isAuthenticated ? (
                                 <>
+                                    {/* NotificationBell temporarily disabled due to subscription issue */}
+                                    { <NotificationBell /> }
                                     {canChangePassword && (
                                         <Button
                                             variant="outline"
@@ -400,6 +403,9 @@ export function Header() {
                                     {getRoleDisplayName(effectiveRole)}
                                 </span>
                             )}
+
+                            {/* Mobile NotificationBell */}
+                             {isAuthenticated && <NotificationBell />} 
 
                             {/* Mobile Menu Button */}
                             <Button
