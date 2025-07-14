@@ -358,7 +358,7 @@ const Index = () => {
   const englishNameRegex = /^[A-Za-z\s'-]+$/;
   const arabicNameRegex = /^[\u0600-\u06FF\s'-]+$/;
 
- 
+
 
   // Helper: Regex for phone number validation
   const phoneRegex = /^(\+970|\+972)\d{9}$/;
@@ -563,7 +563,7 @@ const Index = () => {
       });
       return false;
     }
-  
+
     // Validate gender
     if (!form.gender_user) {
       toast({

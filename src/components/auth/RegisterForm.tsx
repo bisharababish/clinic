@@ -774,7 +774,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                         </div>
                     )}
                 </div>
-        
+
                 <div className="space-y-2">
                     <Label htmlFor="phoneNumber">
                         {t("common.phone")}
