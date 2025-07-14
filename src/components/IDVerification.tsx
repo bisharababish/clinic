@@ -12,7 +12,7 @@ import {
     ChevronDown,
     Search
 } from "lucide-react";
-import { fetchIDStatus, getAvailableIDDatasets } from '../lib/PalID';
+import { fetchIDStatus, getAvailableIDDatasets } from '@/lib/PalID';
 import type { CKANPackage } from '@/lib/PalID';
 
 interface VerificationResult {
