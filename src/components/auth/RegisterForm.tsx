@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
-import { isValidPalestinianID } from '@/lib/PalID';
+import { isValidPalestinianID } from '@/lib/palid';
 
 
 interface RegisterFormProps {
