@@ -27,7 +27,7 @@ import DeletionRequestModal from '../../../components/DeletionRequestModal';
 import { createDeletionRequest } from '../../../lib/deletionRequests';
 import { hasPermission } from '../../../lib/rolePermissions';
 // Add these imports to your existing imports
-import { isValidPalestinianID } from '@/lib/PalID';
+import { isValidPalestinianID } from '../../../lib/PalID';
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface UserInfo {

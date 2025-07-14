@@ -32,7 +32,7 @@ import {
     getDatasetDetails,
     fetchResourceData,
     type CKANPackage
-} from '@/lib/PalID';
+} from '../lib/PalID';
 
 // Define the verification result type
 interface VerificationResult {
