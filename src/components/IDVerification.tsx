@@ -12,8 +12,8 @@ import {
     ChevronDown,
     Search
 } from "lucide-react";
-import { fetchIDStatus, getAvailableIDDatasets } from '@/lib/palid';
-import type { CKANPackage } from '@/lib/palid';
+import { fetchIDStatus, getAvailableIDDatasets } from '@/lib/PalID';
+import type { CKANPackage } from '@/lib/PalID';
 
 interface VerificationResult {
     status: 'valid' | 'invalid' | 'unknown' | 'error';

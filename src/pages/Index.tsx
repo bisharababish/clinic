@@ -51,7 +51,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "@/components/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isValidPalestinianID } from '../lib/palid';
+import { isValidPalestinianID } from '@/lib/PalID';
 
 
 // Enhanced patient info interface for search results
