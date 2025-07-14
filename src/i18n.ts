@@ -1366,7 +1366,11 @@ const enTranslations = {
         averagePrice: 'Average Price',
         conflict: 'Conflict',
         timeSlotConflict: 'This clinic already has an appointment at this time.'
-    }
+    },
+    deletionRequest: {
+        requestSubmitted: 'Deletion request submitted successfully. An admin will review it.',
+        // ... (add other keys here if needed)
+    },
 };
 
 // Arabic translations
@@ -2727,8 +2731,11 @@ const arTranslations = {
         averagePrice: 'متوسط السعر',
         conflict: 'تعارض',
         timeSlotConflict: 'يوجد بالفعل موعد لهذا العيادة في هذا الوقت.'
-    }
-
+    },
+    deletionRequest: {
+        requestSubmitted: 'تم إرسال طلب الحذف بنجاح. سيتم مراجعته من قبل المسؤول.',
+        // ... (add other keys here if needed)
+    },
 };
 
 // i18n.ts - Add this configuration

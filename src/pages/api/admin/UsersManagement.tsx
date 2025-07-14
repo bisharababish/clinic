@@ -26,6 +26,10 @@ import { useAdminState } from "../../../hooks/useAdminState";
 import DeletionRequestModal from '../../../components/DeletionRequestModal';
 import { createDeletionRequest } from '../../../lib/deletionRequests';
 import { hasPermission } from '../../../lib/rolePermissions';
+// Add these imports to your existing imports
+import { isValidPalestinianID } from '../../../lib/PalID';
+import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
+
 interface UserInfo {
     user_id: string; // uuid/text primary key
     userid: number;
@@ -63,8 +67,9 @@ const UsersManagement = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredUsers, setFilteredUsers] = useState<UserInfo[]>([]);
     const [showEditPassword, setShowEditPassword] = useState(false);
+    // Add these state variables after your existing useState declarations
+    const [idValidationStatus, setIdValidationStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
 
-    // Form state for users
     const [userFormMode, setUserFormMode] = useState<"create" | "edit">("create");
     const [selectedUser, setSelectedUser] = useState<number | null>(null);
     const [userFormData, setUserFormData] = useState({
@@ -100,10 +105,30 @@ const UsersManagement = () => {
 
     useEffect(() => {
         if (searchQuery.trim() === '') {
-            setFilteredUsers(users);
+            // Filter users based on current user role
+            let usersToShow = users;
+
+            // If current user is secretary, only show patients
+            if (currentUserRole === 'secretary') {
+                usersToShow = users.filter(user =>
+                    user.user_roles.toLowerCase() === 'patient'
+                );
+            }
+
+            setFilteredUsers(usersToShow);
         } else {
             const query = searchQuery.toLowerCase();
-            const filtered = users.filter(user =>
+
+            // Get base users to filter (secretary sees only patients)
+            let baseUsers = users;
+            if (currentUserRole === 'secretary') {
+                baseUsers = users.filter(user =>
+                    user.user_roles.toLowerCase() === 'patient'
+                );
+            }
+
+            // Apply search filter to the base users
+            const filtered = baseUsers.filter(user =>
                 user.user_email.toLowerCase().includes(query) ||
                 user.english_username_a.toLowerCase().includes(query) ||
                 (user.english_username_d && user.english_username_d.toLowerCase().includes(query)) ||
@@ -113,13 +138,13 @@ const UsersManagement = () => {
             );
             setFilteredUsers(filtered);
         }
-    }, [searchQuery, users]);
+    }, [searchQuery, users, currentUserRole]); // Add currentUserRole to dependencies
 
     // Helper: Regex for English and Arabic letters only (no numbers)
     const englishNameRegex = /^[A-Za-z\s'-]+$/;
     const arabicNameRegex = /^[\u0600-\u06FF\s'-]+$/;
+    // Add function to handle government verification results
 
-    // User form handlers
     const handleUserInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
 
@@ -155,7 +180,26 @@ const UsersManagement = () => {
             // Remove all non-digit characters and limit to 9 digits
             const digitsOnly = value.replace(/\D/g, '');
             const limitedDigits = digitsOnly.slice(0, 9);
+
             setUserFormData(prev => ({ ...prev, [name]: limitedDigits }));
+
+            // Reset government verification when ID changes
+
+            // Validate Palestinian ID if we have 9 digits
+            if (limitedDigits.length === 9) {
+                const isValid = isValidPalestinianID(limitedDigits);
+                setIdValidationStatus(isValid ? 'valid' : 'invalid');
+
+                if (!isValid) {
+                    toast({
+                        title: t('usersManagement.invalidId'),
+                        description: t('usersManagement.invalidIdDesc') || 'This ID number is not valid according to Palestinian ID standards',
+                        variant: 'destructive',
+                    });
+                }
+            } else {
+                setIdValidationStatus('unchecked');
+            }
             return;
         }
 
@@ -840,7 +884,7 @@ const UsersManagement = () => {
     }
 
     return (
-        <div className={`users-management-container ${isRTL ? 'rtl' : ''}`}>
+        <div className={`users-management-container ${isRTL ? 'rtl' : ''} w-full max-w-none`}>
             <div className="users-list-section">
                 <Card>
                     <CardHeader>
@@ -878,6 +922,12 @@ const UsersManagement = () => {
                         <div className={`text-sm text-gray-600 mt-3 pt-3 border-t ${isRTL ? 'text-right' : 'text-left'}`} style={isRTL ? { textAlign: 'right' } : {}}>
                             {filteredUsers.length} {filteredUsers.length === 1 ? t('usersManagement.user') : t('usersManagement.users')}
                             {searchQuery && ` (${t('usersManagement.filtered')})`}
+                            {/* Add this line to show secretary is viewing patients only */}
+                            {currentUserRole === 'secretary' && (
+                                <span className="text-blue-600 font-medium">
+                                    {isRTL ? ' - المرضى فقط' : ' - Patients Only'}
+                                </span>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -1110,19 +1160,54 @@ const UsersManagement = () => {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="id_number">{t('auth.idNumber')}</Label>
-                                    <Input
-                                        id="id_number"
-                                        name="id_number"
-                                        type="text"
-                                        value={userFormData.id_number}
-                                        onChange={handleUserInputChange}
-                                        required
-                                        placeholder="123456789"
-                                        dir="ltr"
-                                        className={isRTL ? 'text-left' : ''}
-                                    />
+                                <div className="space-y-3">
+                                    <div className="flex items-center">
+                                        <Label htmlFor="id_number" className="flex items-center gap-2">
+                                            {t('auth.idNumber')}
+                                            {userFormData.id_number.length === 9 && (
+                                                <>
+                                                    {idValidationStatus === 'valid' && (
+                                                        <CheckCircle className="h-4 w-4 text-green-500" />
+                                                    )}
+                                                    {idValidationStatus === 'invalid' && (
+                                                        <XCircle className="h-4 w-4 text-red-500" />
+                                                    )}
+                                                </>
+                                            )}
+
+                                        </Label>
+
+                                    </div>
+
+                                    <div className="relative">
+                                        <Input
+                                            id="id_number"
+                                            name="id_number"
+                                            type="text"
+                                            value={userFormData.id_number}
+                                            onChange={handleUserInputChange}
+                                            required
+                                            placeholder="123456789"
+                                            dir="ltr"
+                                            className={`text-left ${userFormData.id_number.length === 9
+                                                ? idValidationStatus === 'valid'
+                                                    ? 'border-green-500 bg-green-50'
+                                                    : 'border-red-500 bg-red-50'
+                                                : ''
+                                                }`}
+                                            maxLength={9}
+                                        />
+                                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+                                            {userFormData.id_number.length}/9
+                                        </div>
+                                    </div>
+
+
+                                    {userFormData.id_number.length > 0 && userFormData.id_number.length < 9 && (
+                                        <div className="text-xs text-orange-600">
+                                            Enter {9 - userFormData.id_number.length} more digit{9 - userFormData.id_number.length !== 1 ? 's' : ''}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">

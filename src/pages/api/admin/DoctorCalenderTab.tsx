@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ChevronLeft, ChevronRight, Calendar, Clock, User, MapPin, Plus, Eye, TrendingUp, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../../lib/supabase';
+import { useAuth } from '../../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface Doctor {
     id: string;
@@ -83,10 +85,12 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
     const [showDayDialog, setShowDayDialog] = useState(false);
     const [selectedDateStr, setSelectedDateStr] = useState('');
     const [doctorAvailability, setDoctorAvailability] = useState<AvailabilitySlot[]>([]);
-
+    const { user } = useAuth();
+    const currentUserRole = user?.role?.toLowerCase() || '';
     // Get current month and year
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
+    const navigate = useNavigate();
 
     // Memoized filtered appointments based on selected doctor
     const filteredAppointments = useMemo(() => {
@@ -302,16 +306,21 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
     const handleQuickAction = (action: string) => {
         switch (action) {
             case 'schedule':
-                // Open in new tab for scheduling
-                window.open('/admin/schedule-appointment', '_blank');
+                // For secretary, redirect to appointments tab instead of opening new tab
+                if (currentUserRole === 'secretary') {
+                    setActiveTab('appointments');
+                } else {
+                    // Open in new tab for other roles
+                    window.open('/admin/schedule-appointment', '_blank');
+                }
                 break;
             case 'doctors':
                 // Switch to doctors tab
                 setActiveTab('doctors');
                 break;
             case 'clinics':
-                // Switch to clinics tab
-                setActiveTab('clinics');
+                // Navigate to the clinics page in the same window
+                navigate('/clinics');
                 break;
             case 'appointments':
                 // Switch to appointments tab
@@ -723,7 +732,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
             </Card>
 
             {/* Summary Cards */}
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                 {/* Today's Appointments */}
                 <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="pb-3">
@@ -873,59 +882,69 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                         </div>
                     </CardContent>
                 </Card>
+                {/* Quick Actions - center in column 2, same width as other cards */}
+                <div className="md:col-start-2 md:col-span-1 flex justify-center mt-2">
+                    <Card className={`w-full hover:shadow-md transition-shadow ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                        <CardHeader className={`pb-3 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                            <CardTitle className={`text-lg ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                                <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}
+                                    style={i18n.language === 'ar' ? { direction: 'rtl', textAlign: 'right', width: '100%', justifyContent: 'flex-end' } : {}}>
+                                    <Activity className="h-5 w-5 text-purple-600" />
+                                    {t('admin.quickActions') || 'Quick Actions'}
+                                </div>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className={`pt-0 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                            <div className="space-y-2">
+                                <Button
+                                    variant="outline"
+                                    className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-blue-50 hover:border-blue-300`}
+                                    size="sm"
+                                    onClick={() => handleQuickAction('schedule')}
+                                >
+                                    <Plus className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-blue-600`} />
+                                    {t('admin.scheduleAppointment') || 'Schedule Appointment'}
+                                </Button>
 
-                {/* Quick Actions */}
-                <Card className={`hover:shadow-md transition-shadow ${i18n.language === 'ar' ? 'text-right' : ''}`}>
-                    <CardHeader className={`pb-3 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
-                        <CardTitle className={`text-lg ${i18n.language === 'ar' ? 'text-right' : ''}`}>
-                            <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse justify-end' : ''}`}
-                                style={i18n.language === 'ar' ? { direction: 'rtl', textAlign: 'right', width: '100%', justifyContent: 'flex-end' } : {}}>
-                                <Activity className="h-5 w-5 text-purple-600" />
-                                {t('admin.quickActions') || 'Quick Actions'}
+                                {/* Only show Manage Doctors if user is not secretary */}
+                                {currentUserRole !== 'secretary' && (
+                                    <Button
+                                        variant="outline"
+                                        className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-green-50 hover:border-green-300`}
+                                        size="sm"
+                                        onClick={() => handleQuickAction('doctors')}
+                                    >
+                                        <User className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-green-600`} />
+                                        {t('admin.manageDoctors') || 'Manage Doctors'}
+                                    </Button>
+                                )}
+
+                                <Button
+                                    variant="outline"
+                                    className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-purple-50 hover:border-purple-300`}
+                                    size="sm"
+                                    onClick={() => handleQuickAction('clinics')}
+                                >
+                                    <MapPin className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-purple-600`} />
+                                    {t('admin.viewClinics') || 'View Clinics'}
+                                </Button>
+
+                                {/* Hide View All Appointments for secretary */}
+                                {currentUserRole !== 'secretary' && (
+                                    <Button
+                                        variant="outline"
+                                        className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-orange-50 hover:border-orange-300`}
+                                        size="sm"
+                                        onClick={() => handleQuickAction('appointments')}
+                                    >
+                                        <Eye className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-orange-600`} />
+                                        {t('admin.viewAllAppointments') || 'View All Appointments'}
+                                    </Button>
+                                )}
                             </div>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className={`pt-0 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
-                        <div className="space-y-2">
-                            <Button
-                                variant="outline"
-                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-blue-50 hover:border-blue-300`}
-                                size="sm"
-                                onClick={() => handleQuickAction('schedule')}
-                            >
-                                <Plus className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-blue-600`} />
-                                {t('admin.scheduleAppointment') || 'Schedule Appointment'}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-green-50 hover:border-green-300`}
-                                size="sm"
-                                onClick={() => handleQuickAction('doctors')}
-                            >
-                                <User className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-green-600`} />
-                                {t('admin.manageDoctors') || 'Manage Doctors'}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-purple-50 hover:border-purple-300`}
-                                size="sm"
-                                onClick={() => handleQuickAction('clinics')}
-                            >
-                                <MapPin className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-purple-600`} />
-                                {t('admin.viewClinics') || 'View Clinics'}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-orange-50 hover:border-orange-300`}
-                                size="sm"
-                                onClick={() => handleQuickAction('appointments')}
-                            >
-                                <Eye className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-orange-600`} />
-                                {t('admin.viewAllAppointments') || 'View All Appointments'}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

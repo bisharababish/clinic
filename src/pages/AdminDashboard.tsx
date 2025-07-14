@@ -59,7 +59,7 @@ const AdminDashboardContent = () => {
     // Get default tab for user role
     const getDefaultTab = () => {
         if (userRole === 'secretary') {
-            return 'appointments';
+            return 'users';
         } else if (userRole === 'admin') {
             return 'overview'; // Prioritize deletion requests for admins
         } else {
@@ -73,20 +73,38 @@ const AdminDashboardContent = () => {
         }
     };
     // Add this new useEffect to handle browser back button
+    // useEffect(() => {
+    //     const handlePopState = () => {
+    //         // When user clicks browser back button, redirect to overview
+    //         if (activeTab !== 'overview' && canViewOverviewTab) {
+    //             setActiveTab('overview');
+    //         }
+    //     };
+
+    //     window.addEventListener('popstate', handlePopState);
+
+    //     return () => {
+    //         window.removeEventListener('popstate', handlePopState);
+    //     };
+    // }, [activeTab, canViewOverviewTab]);
+    // Add proper URL handling for tab navigation
     useEffect(() => {
-        const handlePopState = () => {
-            // When user clicks browser back button, redirect to overview
-            if (activeTab !== 'overview' && canViewOverviewTab) {
-                setActiveTab('overview');
-            }
+        // Update URL when tab changes
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('tab', activeTab);
+        window.history.replaceState({}, '', currentUrl.toString());
+    }, [activeTab]);
+
+    // Handle browser back/forward navigation
+    useEffect(() => {
+        const handlePopState = (event: PopStateEvent) => {
+            // Let browser handle the navigation naturally
+            // Don't interfere with back button behavior
         };
 
         window.addEventListener('popstate', handlePopState);
-
-        return () => {
-            window.removeEventListener('popstate', handlePopState);
-        };
-    }, [activeTab, canViewOverviewTab]);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
     // Check admin status and access control
     useEffect(() => {
         const initializeAdminDashboard = async () => {
@@ -135,7 +153,7 @@ const AdminDashboardContent = () => {
             'appointments': canViewAppointmentsTab,
             'patient-health': canViewPatientHealthTab,
             'calendar': canViewCalendarTab,
-            'deletion-requests': canViewDeletionRequests  // ADD THIS LINE
+            'deletion-requests': canViewDeletionRequests
 
         }[newTab];
 

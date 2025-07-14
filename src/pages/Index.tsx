@@ -45,11 +45,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  Users
+  Users,
+  XCircle
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "@/components/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isValidPalestinianID } from '../lib/PalID';
+
 
 // Enhanced patient info interface for search results
 interface PatientSearchResult {
@@ -206,6 +209,8 @@ const Index = () => {
   const [isLoadingPatients, setIsLoadingPatients] = useState(false);
   const [showPatientSidebar, setShowPatientSidebar] = useState(false);
   const [patientListFilter, setPatientListFilter] = useState("");
+  const [createIdValidationStatus, setCreateIdValidationStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
+
 
   // NEW: State for patient creation
   const [showCreatePatientForm, setShowCreatePatientForm] = useState(false);
@@ -353,23 +358,7 @@ const Index = () => {
   const englishNameRegex = /^[A-Za-z\s'-]+$/;
   const arabicNameRegex = /^[\u0600-\u06FF\s'-]+$/;
 
-  // Helper: Check if date is at least 16 years ago
-  const isAtLeast16YearsOld = (dateString: string) => {
-    const dob = new Date(dateString);
-    const today = new Date();
-    const age = today.getFullYear() - dob.getFullYear();
-    if (age > 16) return true;
-    if (age === 16) {
-      // Check month and day
-      if (
-        today.getMonth() > dob.getMonth() ||
-        (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate())
-      ) {
-        return true;
-      }
-    }
-    return false;
-  };
+ 
 
   // Helper: Regex for phone number validation
   const phoneRegex = /^(\+970|\+972)\d{9}$/;
@@ -443,12 +432,30 @@ const Index = () => {
       setCreatePatientForm(prev => ({ ...prev, [name]: sanitized }));
       return;
     }
+
     // Handle ID number field - limit to 9 digits only
     if (name === 'id_number') {
       // Remove all non-digit characters and limit to 9 digits
       const digitsOnly = value.replace(/\D/g, '');
-      const limitedDigits = digitsOnly.slice(0, 10);
+      const limitedDigits = digitsOnly.slice(0, 9);
+
       setCreatePatientForm(prev => ({ ...prev, [name]: limitedDigits }));
+
+      // Validate Palestinian ID if we have 9 digits
+      if (limitedDigits.length === 9) {
+        const isValid = isValidPalestinianID(limitedDigits);
+        setCreateIdValidationStatus(isValid ? 'valid' : 'invalid');
+
+        if (!isValid) {
+          toast({
+            title: t('usersManagement.invalidId'),
+            description: t('usersManagement.invalidIdDesc') || 'This ID number is not valid according to Palestinian ID standards',
+            variant: 'destructive',
+          });
+        }
+      } else {
+        setCreateIdValidationStatus('unchecked');
+      }
       return;
     }
 
@@ -556,15 +563,7 @@ const Index = () => {
       });
       return false;
     }
-    if (!isAtLeast16YearsOld(form.date_of_birth)) {
-      toast({
-        title: isRTL ? "العمر غير كافٍ" : "Age Restriction",
-        description: t('usersManagement.patientMustBe16YearsOld'),
-        variant: "destructive",
-      });
-      return false;
-    }
-
+  
     // Validate gender
     if (!form.gender_user) {
       toast({
@@ -2466,9 +2465,22 @@ const Index = () => {
                             </div>
                           </div>
                           <div>
-                            <Label htmlFor="create_id_number" className="text-sm">
-                              {isRTL ? "رقم الهوية" : "ID Number"}
-                            </Label>
+                            <div className="flex items-center">
+                              <Label htmlFor="create_id_number" className="text-sm flex items-center gap-2">
+                                {isRTL ? "رقم الهوية" : "ID Number"}
+                                {createPatientForm.id_number.length === 9 && (
+                                  <>
+                                    {createIdValidationStatus === 'valid' && (
+                                      <CheckCircle className="h-4 w-4 text-green-500" />
+                                    )}
+                                    {createIdValidationStatus === 'invalid' && (
+                                      <XCircle className="h-4 w-4 text-red-500" />
+                                    )}
+                                  </>
+                                )}
+                              </Label>
+                            </div>
+
                             <div className="relative">
                               <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                               <Input
@@ -2476,11 +2488,26 @@ const Index = () => {
                                 name="id_number"
                                 value={createPatientForm.id_number}
                                 onChange={handleCreatePatientFormChange}
-                                className={isRTL ? 'pr-10' : 'pl-10'}
+                                className={`${isRTL ? 'pr-10' : 'pl-10'} ${createPatientForm.id_number.length === 9
+                                  ? createIdValidationStatus === 'valid'
+                                    ? 'border-green-500 bg-green-50'
+                                    : 'border-red-500 bg-red-50'
+                                  : ''
+                                  }`}
                                 required
                                 placeholder="123456789"
+                                maxLength={9}
                               />
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+                                {createPatientForm.id_number.length}/9
+                              </div>
                             </div>
+
+                            {createPatientForm.id_number.length > 0 && createPatientForm.id_number.length < 9 && (
+                              <div className="text-xs text-orange-600">
+                                Enter {9 - createPatientForm.id_number.length} more digit{9 - createPatientForm.id_number.length !== 1 ? 's' : ''}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

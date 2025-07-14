@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { EyeIcon, EyeOffIcon, Mail, Lock, User, Phone, Calendar, CreditCard } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Mail, Lock, User, Phone, Calendar, CreditCard, CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
+import { isValidPalestinianID } from '../../lib/PalID';
+
 
 interface RegisterFormProps {
     onSwitchToLogin: () => void;
@@ -47,6 +49,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { isRTL } = useContext(LanguageContext);
+    const [idValidationStatus, setIdValidationStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
+
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -73,16 +77,28 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
         // Restrict ID number to exactly 9 digits
         if (name === 'id_number') {
-            if (!isNumbersOnly(value) || value.length > 9) {
-                if (!isNumbersOnly(value)) {
+            // Remove all non-digit characters and limit to 9 digits
+            const digitsOnly = value.replace(/\D/g, '');
+            const limitedDigits = digitsOnly.slice(0, 9);
+
+            setFormData(prev => ({ ...prev, [name]: limitedDigits }));
+
+            // Validate Palestinian ID if we have 9 digits
+            if (limitedDigits.length === 9) {
+                const isValid = isValidPalestinianID(limitedDigits);
+                setIdValidationStatus(isValid ? 'valid' : 'invalid');
+
+                if (!isValid) {
                     toast({
-                        title: t("auth.invalidInput"),
-                        description: t("auth.idNumbersOnly"),
-                        variant: "destructive",
+                        title: t('usersManagement.invalidId'),
+                        description: t('usersManagement.invalidIdDesc') || 'This ID number is not valid according to Palestinian ID standards',
+                        variant: 'destructive',
                     });
                 }
-                return;
+            } else {
+                setIdValidationStatus('unchecked');
             }
+            return;
         }
 
         // Handle phone number with +97, then 0 or 2, then 9 digits
@@ -712,30 +728,23 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="email">
-                        {t("common.email")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
-                    </Label>
-                    <div className="relative">
-                        <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
-                        <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
-                            required
-                            placeholder={isRTL ? "أدخل بريدك الإلكتروني" : "name@example.com"}
-                            dir={isRTL ? "rtl" : "ltr"}  // CHANGED: Now RTL when in Arabic
-                        />
+                    <div className="flex items-center">
+                        <Label htmlFor="id_number" className="flex items-center gap-2">
+                            {t("auth.idNumber")}
+                            <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
+                            {formData.id_number.length === 9 && (
+                                <>
+                                    {idValidationStatus === 'valid' && (
+                                        <CheckCircle className="h-4 w-4 text-green-500" />
+                                    )}
+                                    {idValidationStatus === 'invalid' && (
+                                        <XCircle className="h-4 w-4 text-red-500" />
+                                    )}
+                                </>
+                            )}
+                        </Label>
                     </div>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="id_number">
-                        {t("auth.idNumber")}
-                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
-                    </Label>
+
                     <div className="relative">
                         <CreditCard className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
                         <Input
@@ -744,13 +753,28 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             type="text"
                             value={formData.id_number}
                             onChange={handleInputChange}
-                            className={isRTL ? 'pr-10' : 'pl-10'}
+                            className={`${isRTL ? 'pr-10' : 'pl-10'} ${formData.id_number.length === 9
+                                ? idValidationStatus === 'valid'
+                                    ? 'border-green-500 bg-green-50'
+                                    : 'border-red-500 bg-red-50'
+                                : ''
+                                }`}
                             required
                             placeholder={t("auth.yourIDNumber")}
                             maxLength={9}
                         />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+                            {formData.id_number.length}/9
+                        </div>
                     </div>
+
+                    {formData.id_number.length > 0 && formData.id_number.length < 9 && (
+                        <div className="text-xs text-orange-600">
+                            Enter {9 - formData.id_number.length} more digit{9 - formData.id_number.length !== 1 ? 's' : ''}
+                        </div>
+                    )}
                 </div>
+        
                 <div className="space-y-2">
                     <Label htmlFor="phoneNumber">
                         {t("common.phone")}
