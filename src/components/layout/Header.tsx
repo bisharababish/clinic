@@ -392,8 +392,8 @@ export function Header() {
 
                         {/* Mobile: Language switcher + Role + Menu button */}
                         <div className="lg:hidden flex items-center gap-1">
-                            {/* Mobile Language Switcher - only show on very small screens */}
-                            <div className="xs:hidden">
+                            {/* Mobile Language Switcher - only show on screens smaller than sm */}
+                            <div className="sm:hidden">
                                 <LanguageSwitcher />
                             </div>
 
