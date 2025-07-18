@@ -826,6 +826,7 @@ const Index = () => {
         description: isRTL ?
           `تم إنشاء حساب ${newPatient.english_username_a} ${newPatient.english_username_d} بنجاح` :
           `Successfully created account for ${newPatient.english_username_a} ${newPatient.english_username_d}`,
+        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
       });
 
       // Reset form and close
@@ -862,6 +863,7 @@ const Index = () => {
         title: isRTL ? "فشل في إنشاء المريض" : "Failed to Create Patient",
         description: errorMessage,
         variant: "destructive",
+        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
       });
 
       // Log the error
@@ -1272,6 +1274,7 @@ const Index = () => {
           title: isRTL ? "وزن غير صحيح" : "Invalid Weight",
           description: isRTL ? "يرجى إدخال وزن صحيح بين 1-220 كيلوغرام" : "Please enter a valid weight between 1-220 kg",
           variant: "destructive",
+          style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
         });
       }
       return;
@@ -1287,6 +1290,7 @@ const Index = () => {
           title: isRTL ? "طول غير صحيح" : "Invalid Height",
           description: isRTL ? "يرجى إدخال طول صحيح بين 1-200 سم" : "Please enter a valid height between 1-200 cm",
           variant: "destructive",
+          style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
         });
       }
       return;
@@ -1371,6 +1375,7 @@ const Index = () => {
         title: isRTL ? "وزن غير صحيح" : "Invalid Weight",
         description: isRTL ? "يرجى إدخال وزن صحيح بين 1-220 كيلوغرام" : "Please enter a valid weight between 1-220 kg",
         variant: "destructive",
+        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
       });
       return false;
     }
@@ -1380,6 +1385,7 @@ const Index = () => {
         title: isRTL ? "طول غير صحيح" : "Invalid Height",
         description: isRTL ? "يرجى إدخال طول صحيح بين 1-200 سم" : "Please enter a valid height between 1-200 cm",
         variant: "destructive",
+        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
       });
       return false;
     }
@@ -1428,6 +1434,7 @@ const Index = () => {
         title: isRTL ? "خطأ" : "Error",
         description: isRTL ? "لا يمكن تحديد المريض المراد تحديث معلوماته" : "Cannot determine which patient to update",
         variant: "destructive",
+        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
       });
       return;
     }

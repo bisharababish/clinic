@@ -177,7 +177,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
           toast({
             title: t("auth.adminLogin") || "Admin Login",
-            description: t("auth.secureAdminAccess") || "Secure admin access granted"
+            description: t("auth.secureAdminAccess") || "Secure admin access granted",
+            style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
           });
 
           // Get the stored redirect path or use default admin path
@@ -197,17 +198,20 @@ const LoginForm: React.FC<LoginFormProps> = ({
           if (userRole === 'lab') {
             toast({
               title: t("common.login") || "Login Successful",
-              description: toastMessage + " Redirecting to Labs..."
+              description: toastMessage + " Redirecting to Labs...",
+              style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
           } else if (userRole === 'xray' || userRole === 'x ray') {
             toast({
               title: t("common.login") || "Login Successful",
-              description: toastMessage + " Redirecting to X-Ray..."
+              description: toastMessage + " Redirecting to X-Ray...",
+              style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
           } else {
             toast({
               title: t("common.login") || "Login Successful",
-              description: toastMessage
+              description: toastMessage,
+              style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
           }
 
@@ -244,6 +248,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         title: t("common.login") || "Login Failed",
         description: errorMessage,
         variant: "destructive",
+        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
       });
     } finally {
       setIsLoading(false);

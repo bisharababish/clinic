@@ -544,6 +544,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                     title: t('common.error'),
                     description: t('appointmentsManagement.failedToCreate'),
                     variant: "destructive",
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                 });
                 return;
             }
@@ -563,6 +564,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             toast({
                 title: t('common.success'),
                 description: t('appointmentsManagement.appointmentCreated'),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             // Refresh appointments in real time
@@ -585,6 +587,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 title: t('common.error'),
                 description: t('appointmentsManagement.failedToCreate'),
                 variant: "destructive",
+                style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
             });
         }
     };

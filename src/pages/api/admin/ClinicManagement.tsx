@@ -445,12 +445,14 @@ const ClinicManagement = () => {
             toast({
                 title: t('common.success'),
                 description: t('clinicManagement.clinicDeletedSuccessfully'),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             toast({
                 title: t('common.error'),
                 description: t('clinicManagement.failedToDeleteClinic'),
                 variant: "destructive",
+                style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
             });
         } finally {
             setShowDeleteClinicDialog(false);
@@ -468,6 +470,7 @@ const ClinicManagement = () => {
                     title: t('common.error'),
                     description: t('clinicManagement.clinicNameRequired'),
                     variant: "destructive",
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                 });
                 return;
             }
@@ -477,6 +480,7 @@ const ClinicManagement = () => {
                     title: t('common.error'),
                     description: t('clinicManagement.categoryRequired'),
                     variant: "destructive",
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                 });
                 return;
             }
@@ -492,6 +496,7 @@ const ClinicManagement = () => {
                     title: t('common.error'),
                     description: t('clinicManagement.categoryNotFound'),
                     variant: "destructive",
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                 });
                 return;
             }
@@ -535,6 +540,7 @@ const ClinicManagement = () => {
                         title: t('common.error'),
                         description: error.message || t('clinicManagement.failedToSaveClinic'),
                         variant: "destructive",
+                        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                     });
                     return;
                 }
@@ -545,6 +551,7 @@ const ClinicManagement = () => {
                     toast({
                         title: t('common.success'),
                         description: t('clinicManagement.clinicCreatedSuccessfully'),
+                        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                     });
                     resetClinicForm();
                 }

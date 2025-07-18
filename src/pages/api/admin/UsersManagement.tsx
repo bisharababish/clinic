@@ -675,6 +675,7 @@ const UsersManagement = () => {
                 toast({
                     title: t('common.success'),
                     description: t('usersManagement.userCreatedSuccessfully'),
+                    style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                 });
 
                 logActivity(
@@ -692,6 +693,7 @@ const UsersManagement = () => {
                     title: t('common.error'),
                     description: t('usersManagement.unexpectedError'),
                     variant: "destructive",
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                 });
             }
         } else if (userFormMode === "edit" && selectedUser !== null) {
@@ -800,6 +802,7 @@ const UsersManagement = () => {
                         title: t('common.error'),
                         description: t('usersManagement.failedToUpdateUser'),
                         variant: "destructive",
+                        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                     });
                     return;
                 }
@@ -821,11 +824,13 @@ const UsersManagement = () => {
                                 ' - تم تحديث كلمة المرور بنجاح.' :
                                 ' - Password updated successfully.'
                             ),
+                        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                     });
                 } else {
                     toast({
                         title: t('common.success'),
                         description: t('usersManagement.userUpdatedSuccessfully'),
+                        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                     });
                 }
 
@@ -836,6 +841,7 @@ const UsersManagement = () => {
                     title: t('common.error'),
                     description: t('usersManagement.unexpectedError'),
                     variant: "destructive",
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                 });
             }
         }

@@ -158,6 +158,7 @@ export function PasswordChangeModal({
                     variant: "destructive",
                     title: isRTL ? 'خطأ في تغيير كلمة المرور' : 'Password Change Error',
                     description: updateError.message || (isRTL ? 'فشل في تغيير كلمة المرور' : 'Failed to change password'),
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                 });
                 return;
             }
@@ -192,6 +193,7 @@ export function PasswordChangeModal({
                 description: isRTL ?
                     'تم تحديث كلمة المرور الخاصة بك بنجاح' :
                     'Your password has been updated successfully',
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             console.error('❌ Unexpected error during password change (in background):', error);

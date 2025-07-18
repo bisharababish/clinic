@@ -365,6 +365,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                         title: t("auth.registrationFailed"),
                         description: `Database error: ${insertError.message}`,
                         variant: "destructive",
+                        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                     });
                     throw insertError;
                 }
@@ -376,6 +377,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             toast({
                 title: t("auth.registrationSuccess"),
                 description: t("auth.welcomeToClinic"),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
             // Instead of auto-login, redirect to login page
             setTimeout(() => {
@@ -393,6 +395,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 title: t("auth.registrationFailed"),
                 description: errorMessage,
                 variant: "destructive",
+                style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
             });
         } finally {
             setIsLoading(false);

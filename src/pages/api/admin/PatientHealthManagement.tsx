@@ -600,6 +600,7 @@ const PatientHealthForm: React.FC<{
                     title: "Failed to Create Patient",
                     description: errorMessage,
                     variant: "destructive",
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
                 });
             } finally {
                 setIsCreatingPatient(false);

@@ -28,7 +28,7 @@ export interface PatientHealthData {
         antibiotics: string[];
     };
     allergies?: string[];
-    social_situation?: 'married' | 'single'; 
+    social_situation?: 'married' | 'single';
 
     // User tracking fields
     created_by_user_id?: number;
@@ -211,6 +211,7 @@ export const usePatientHealth = () => {
                 title: "Error",
                 description: `Failed to save health information: ${errorMessage}`,
                 variant: "destructive",
+                style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
             });
             return false;
         } finally {

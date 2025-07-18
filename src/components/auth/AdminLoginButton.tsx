@@ -122,7 +122,8 @@ const AdminLoginButton: React.FC = () => {
 
       toast({
         title: "Admin Login Successful",
-        description: `Welcome, ${userData.english_username_a}!`
+        description: `Welcome, ${userData.english_username_a}!`,
+        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
       });
 
       // Close dialog
@@ -138,6 +139,7 @@ const AdminLoginButton: React.FC = () => {
         title: "Login Failed",
         description: "An unexpected error occurred",
         variant: "destructive",
+        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
       });
       return false;
     } finally {
