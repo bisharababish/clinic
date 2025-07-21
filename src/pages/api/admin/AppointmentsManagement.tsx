@@ -1602,14 +1602,17 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 <div>
                                     <p className="text-sm font-medium">{t('appointmentsManagement.dateTime')}</p>
                                     <p>
-                                        {new Date(selectedAppointment.date).toLocaleDateString()} - {(() => {
-                                            // Try to find the end time from doctor availability
-                                            const slot = doctorAvailability.find(slot => slot.start_time === selectedAppointment.time);
-                                            if (slot && slot.end_time && slot.end_time !== slot.start_time) {
-                                                return `${selectedAppointment.time} to ${slot.end_time}`;
-                                            } else {
-                                                return selectedAppointment.time;
-                                            }
+                                        {(() => {
+                                            const startTime = selectedAppointment.time;
+                                            const dateObj = new Date(selectedAppointment.date);
+                                            const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                                            const slot = doctorAvailability.find(slot =>
+                                                slot.doctor_id === selectedAppointment.doctor_id &&
+                                                slot.day === dayOfWeek &&
+                                                slot.start_time === startTime
+                                            );
+                                            const endTime = slot ? slot.end_time : undefined;
+                                            return `${dateObj.toLocaleDateString()} - ${formatTime(startTime)}${endTime ? ` to ${formatTime(endTime)}` : ''}`;
                                         })()}
                                     </p>
                                 </div>
