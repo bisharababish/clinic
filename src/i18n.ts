@@ -741,7 +741,9 @@ const enTranslations = {
         enterValidWeight: "Please enter a valid weight between 1-220 kg",
         enterValidHeight: "Please enter a valid height between 1-200 cm",
         failedToSaveSocialSituation: "Failed to save social situation",
-        cannotDeterminePatient: "Cannot determine which patient to update"
+        cannotDeterminePatient: "Cannot determine which patient to update",
+        invalidId: 'Invalid ID Number',
+        invalidIdDesc: 'This ID number is not valid according to Palestinian ID standards.',
     },
     clinicManagement: {
         // Main titles
@@ -2144,7 +2146,9 @@ const arTranslations = {
         enterValidWeight: "يرجى إدخال وزن صحيح بين 1-500 كيلوغرام",
         enterValidHeight: "يرجى إدخال طول صحيح بين 1-300 سم",
         failedToSaveSocialSituation: "فشل في حفظ الحالة الاجتماعية",
-        cannotDeterminePatient: "لا يمكن تحديد المريض المراد تحديث معلوماته"
+        cannotDeterminePatient: "لا يمكن تحديد المريض المراد تحديث معلوماته",
+        invalidId: 'رقم الهوية غير صالح',
+        invalidIdDesc: 'رقم الهوية هذا غير صالح وفقًا لمعايير الهوية الفلسطينية.',
     },
     clinicManagement: {
         // Main titles

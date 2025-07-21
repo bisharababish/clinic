@@ -1042,21 +1042,7 @@ const ClinicManagement = () => {
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                             />
                                         </div>
-                                        {/* Show auto-translated Arabic name (read-only) */}
-                                        <div className="space-y-2">
-                                            <Label htmlFor="name_ar" className={isRTL ? 'text-left block' : ''}>
-                                                {t('clinicManagement.clinicNameArabic')}
-                                            </Label>
-                                            <Input
-                                                id="name_ar"
-                                                name="name_ar"
-                                                value={clinicFormData.name_ar}
-                                                readOnly
-                                                className={isRTL ? 'text-left' : ''}
-                                                dir="rtl"
-                                            />
-                                            <p className="text-sm text-gray-500">{t('clinicManagement.clinicNameArabicAuto')}</p>
-                                        </div>
+                                        {/* Removed Arabic clinic name field */}
                                         <div className="space-y-2">
                                             <Label htmlFor="category_id" className={isRTL ? 'text-left block' : ''}>
                                                 {t('clinicManagement.category')}

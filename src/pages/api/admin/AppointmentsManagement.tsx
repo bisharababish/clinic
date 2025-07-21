@@ -1602,7 +1602,15 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                 <div>
                                     <p className="text-sm font-medium">{t('appointmentsManagement.dateTime')}</p>
                                     <p>
-                                        {new Date(selectedAppointment.date).toLocaleDateString()} - {selectedAppointment.time}
+                                        {new Date(selectedAppointment.date).toLocaleDateString()} - {(() => {
+                                            // Try to find the end time from doctor availability
+                                            const slot = doctorAvailability.find(slot => slot.start_time === selectedAppointment.time);
+                                            if (slot && slot.end_time && slot.end_time !== slot.start_time) {
+                                                return `${selectedAppointment.time} to ${slot.end_time}`;
+                                            } else {
+                                                return selectedAppointment.time;
+                                            }
+                                        })()}
                                     </p>
                                 </div>
                             </div>
@@ -1763,11 +1771,15 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     <SelectValue placeholder={t('appointmentsManagement.chooseDoctor')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {availableDoctorsForClinic.map(doctor => (
-                                        <SelectItem key={doctor.id} value={doctor.id}>
-                                            {doctor.name} - {doctor.specialty} (₪{doctor.price})
-                                        </SelectItem>
-                                    ))}
+                                    {availableDoctorsForClinic.length === 0 ? (
+                                        <div className="p-3 text-center text-gray-500">{t('appointmentsManagement.noAvailableDoctors')}</div>
+                                    ) : (
+                                        availableDoctorsForClinic.map(doctor => (
+                                            <SelectItem key={doctor.id} value={doctor.id}>
+                                                {doctor.name} - {doctor.specialty} (₪{doctor.price})
+                                            </SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                             {selectedClinicId && availableDoctorsForClinic.length === 0 && (
@@ -1794,7 +1806,10 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             <div
                                                 key={patient.userid}
                                                 className={`patient-item p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${selectedPatientId === patient.userid.toString() ? 'bg-blue-50' : ''}`}
-                                                onClick={() => setSelectedPatientId(patient.userid.toString())}
+                                                onClick={() => {
+                                                    setSelectedPatientId(patient.userid.toString());
+                                                    setPatientSearchQuery("");
+                                                }}
                                             >
                                                 <div className="font-medium">{patient.english_username_a} {patient.english_username_d}</div>
                                                 <div className="text-xs text-gray-500">{patient.user_email}</div>

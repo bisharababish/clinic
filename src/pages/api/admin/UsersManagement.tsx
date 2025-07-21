@@ -51,9 +51,19 @@ interface UserInfo {
 }
 
 const UsersManagement = () => {
-    const { toast } = useToast();
+    const { toast, dismiss } = useToast();
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
+
+    React.useEffect(() => {
+        const onLangChange = () => {
+            dismiss();
+        };
+        i18n.on('languageChanged', onLangChange);
+        return () => {
+            i18n.off('languageChanged', onLangChange);
+        };
+    }, [i18n, dismiss]);
 
     // ✅ Use centralized state instead of local state
     const {
@@ -660,9 +670,13 @@ const UsersManagement = () => {
 
                 if (userError) {
                     console.error("Error creating user profile:", userError);
+                    let errorMsg = userError.message;
+                    if (errorMsg && (errorMsg.includes('duplicate key value') || errorMsg.includes('unique constraint'))) {
+                        errorMsg = 'A user with this information already exists. Please use a different username or email.';
+                    }
                     toast({
                         title: t('common.error'),
-                        description: userError.message || t('usersManagement.failedToCreateUser'),
+                        description: errorMsg || t('usersManagement.failedToCreateUser'),
                         variant: "destructive",
                     });
                     return;
