@@ -13,6 +13,15 @@ import { supabase } from "@/lib/supabase";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
 import { isValidPalestinianID } from '@/lib/PalID_temp';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 interface RegisterFormProps {
@@ -50,6 +59,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     const { t } = useTranslation();
     const { isRTL } = useContext(LanguageContext);
     const [idValidationStatus, setIdValidationStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
+    const [showVerificationEmailDialog, setShowVerificationEmailDialog] = useState(false);
 
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -373,16 +383,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 console.log('Insert completed with warning, but user was created successfully');
             }
 
-            // ✅ Always show success if we get here
-            toast({
-                title: t("auth.registrationSuccess"),
-                description: t("auth.welcomeToClinic"),
-                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
-            });
-            // Instead of auto-login, redirect to login page
-            setTimeout(() => {
-                onSwitchToLogin();
-            }, 1500);
+            // Show verification email dialog instead of toast and redirect
+            setShowVerificationEmailDialog(true);
 
         } catch (error) {
             let errorMessage = t("auth.registrationFailed");
@@ -731,6 +733,26 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 </div>
 
                 <div className="space-y-2">
+                    <Label htmlFor="email">
+                        {isRTL ? "البريد الإلكتروني" : "Email"}
+                        <span style={{ color: 'red', marginLeft: 2, fontSize: '1.5em', lineHeight: 0 }}> •</span>
+                    </Label>
+                    <div className="relative">
+                        <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-3 h-4 w-4 text-muted-foreground`} />
+                        <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            className={isRTL ? 'pr-10' : 'pl-10'}
+                            required
+                            placeholder={isRTL ? "البريد الإلكتروني" : "name@example.com"}
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
                     <div className="flex items-center">
                         <Label htmlFor="id_number" className="flex items-center gap-2">
                             {t("auth.idNumber")}
@@ -909,6 +931,25 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     {t("common.login")}
                 </button>
             </div>
+
+            <AlertDialog open={showVerificationEmailDialog} onOpenChange={(isOpen) => {
+                setShowVerificationEmailDialog(isOpen);
+                if (!isOpen) {
+                    onSwitchToLogin();
+                }
+            }}>
+                <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className={isRTL ? 'text-right' : ''}>{isRTL ? "تم التسجيل بنجاح!" : "Registration Successful!"}</AlertDialogTitle>
+                        <AlertDialogDescription className={isRTL ? 'text-right' : ''}>
+                            {isRTL ? "لقد أرسلنا رابط تحقق إلى بريدك الإلكتروني لإكمال تسجيلك. يرجى التحقق من صندوق الوارد الخاص بك ومجلد الرسائل غير المرغوب فيها." : "We've sent a verification link to your email to complete your registration. Please check your inbox and spam folder."}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction>{isRTL ? "موافق" : "OK"}</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };
