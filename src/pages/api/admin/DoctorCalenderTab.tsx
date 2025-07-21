@@ -306,21 +306,16 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
     const handleQuickAction = (action: string) => {
         switch (action) {
             case 'schedule':
-                // For secretary, redirect to appointments tab instead of opening new tab
-                if (currentUserRole === 'secretary') {
-                    setActiveTab('appointments');
-                } else {
-                    // Open in new tab for other roles
-                    window.open('/admin/schedule-appointment', '_blank');
-                }
+                // Always open schedule appointment in a new tab
+                window.open('/admin/schedule-appointment', '_blank');
                 break;
             case 'doctors':
-                // Switch to doctors tab
-                setActiveTab('doctors');
+                // Open doctors management in a new tab
+                window.open('/admin/doctors', '_blank');
                 break;
             case 'clinics':
-                // Navigate to the clinics page in the same window
-                navigate('/clinics');
+                // Open clinics page in a new tab
+                window.open('/clinics', '_blank');
                 break;
             case 'appointments':
                 // Switch to appointments tab
@@ -896,16 +891,6 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                         </CardHeader>
                         <CardContent className={`pt-0 ${i18n.language === 'ar' ? 'text-right' : ''}`}>
                             <div className="space-y-2">
-                                <Button
-                                    variant="outline"
-                                    className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-blue-50 hover:border-blue-300`}
-                                    size="sm"
-                                    onClick={() => handleQuickAction('schedule')}
-                                >
-                                    <Plus className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-blue-600`} />
-                                    {t('admin.scheduleAppointment') || 'Schedule Appointment'}
-                                </Button>
-
                                 {/* Only show Manage Doctors if user is not secretary */}
                                 {currentUserRole !== 'secretary' && (
                                     <Button
@@ -928,19 +913,6 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                     <MapPin className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-purple-600`} />
                                     {t('admin.viewClinics') || 'View Clinics'}
                                 </Button>
-
-                                {/* Hide View All Appointments for secretary */}
-                                {currentUserRole !== 'secretary' && (
-                                    <Button
-                                        variant="outline"
-                                        className={`w-full ${i18n.language === 'ar' ? 'flex-row-reverse justify-start' : 'justify-start'} hover:bg-orange-50 hover:border-orange-300`}
-                                        size="sm"
-                                        onClick={() => handleQuickAction('appointments')}
-                                    >
-                                        <Eye className={`h-4 w-4 ${i18n.language === 'ar' ? 'ml-2' : 'mr-2'} text-orange-600`} />
-                                        {t('admin.viewAllAppointments') || 'View All Appointments'}
-                                    </Button>
-                                )}
                             </div>
                         </CardContent>
                     </Card>
