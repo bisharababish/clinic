@@ -9,6 +9,8 @@ import { getDefaultRouteForRole } from "./lib/rolePermissions";
 import { supabase } from "./lib/supabase";
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import CookieConsent from "react-cookie-consent";
+import { useLegalModals, PrivacyPolicyModal } from "../src/components/modals/LegalModals";
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -108,6 +110,8 @@ function AuthLoadingGate({ children }: { children: React.ReactNode }) {
 function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
+  const { privacyOpen, openPrivacy, closePrivacy } = useLegalModals();
+
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -294,6 +298,42 @@ function App() {
         </Router>
       </GlobalErrorBoundary>
       <Toaster />
+      <CookieConsent
+        location="bottom"
+        buttonText="Accept All Cookies"
+        declineButtonText="Decline"
+        enableDeclineButton
+        cookieName="bethlehem-med-center-cookies"
+        style={{
+          background: "#1f2937",
+          fontSize: "14px",
+          padding: "20px"
+        }}
+        buttonStyle={{
+          background: "#3b82f6",
+          color: "white",
+          fontSize: "14px",
+          borderRadius: "6px",
+          padding: "8px 16px",
+          border: "none"
+        }}
+        declineButtonStyle={{
+          background: "transparent",
+          color: "#9ca3af",
+          fontSize: "14px",
+          borderRadius: "6px",
+          padding: "8px 16px",
+          border: "1px solid #6b7280"
+        }}
+        expires={365}
+        overlay
+      >
+        🍪 We use cookies to improve your experience on our website. By continuing to browse, you agree to our use of cookies for analytics and personalized content.{" "}
+        <button onClick={openPrivacy} style={{ color: "#60a5fa", textDecoration: "underline", background: "none", border: "none" }}>
+          Privacy Policy
+        </button>
+      </CookieConsent>
+      <PrivacyPolicyModal isOpen={privacyOpen} onClose={closePrivacy} />
     </AuthProvider>
   );
 }
