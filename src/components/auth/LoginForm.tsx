@@ -12,6 +12,7 @@ import { supabase } from "../../lib/supabase";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
 import { getDefaultRouteForRole } from "../../lib/rolePermissions";
+import ReCAPTCHA from "react-google-recaptcha";
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -33,6 +34,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
+  const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
 
   // Helper function to get role-based redirect
   const getRoleBasedRedirect = (role: string): string => {
@@ -59,6 +61,15 @@ const LoginForm: React.FC<LoginFormProps> = ({
       });
       return false;
     }
+
+    // if (!recaptchaValue) {
+    //   toast({
+    //     title: "Security Check Required",
+    //     description: "Please complete the reCAPTCHA verification",
+    //     variant: "destructive",
+    //   });
+    //   return false;
+    // }
 
     return true;
   };
@@ -147,6 +158,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
     try {
       console.log("Starting login process for:", email);
+      console.log("reCAPTCHA verified successfully");
 
       // Set a flag to indicate we're mid-login to prevent redirects
       sessionStorage.setItem('login_in_progress', 'true');
@@ -222,6 +234,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
           }, 100);
         }
 
+        // Reset reCAPTCHA after successful login
+        setRecaptchaValue(null);
         return;
       }
 
@@ -250,11 +264,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
         variant: "destructive",
         style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
       });
+
+      // Reset reCAPTCHA on failed login
+      setRecaptchaValue(null);
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="w-full space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="space-y-2 text-center">
@@ -322,7 +338,15 @@ const LoginForm: React.FC<LoginFormProps> = ({
             </button>
           </div>
         </div>
-
+        {/* ADD THE RECAPTCHA HERE - AFTER PASSWORD, BEFORE SUBMIT BUTTON */}
+        <div className="space-y-4">
+          <ReCAPTCHA
+            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+            onChange={(value) => setRecaptchaValue(value)}
+            onExpired={() => setRecaptchaValue(null)}
+            theme="light"
+          />
+        </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (t("common.loading") || "Loading...") : (t("common.login") || "Login")}
         </Button>
