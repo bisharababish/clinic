@@ -62,14 +62,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
       return false;
     }
 
-    // if (!recaptchaValue) {
-    //   toast({
-    //     title: "Security Check Required",
-    //     description: "Please complete the reCAPTCHA verification",
-    //     variant: "destructive",
-    //   });
-    //   return false;
-    // }
+    if (!recaptchaValue) {
+      toast({
+        title: "Security Check Required",
+        description: "Please complete the reCAPTCHA verification",
+        variant: "destructive",
+      });
+      return false;
+    }
 
     return true;
   };
@@ -340,12 +340,18 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </div>
         {/* ADD THE RECAPTCHA HERE - AFTER PASSWORD, BEFORE SUBMIT BUTTON */}
         <div className="space-y-4">
-          <ReCAPTCHA
-            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-            onChange={(value) => setRecaptchaValue(value)}
-            onExpired={() => setRecaptchaValue(null)}
-            theme="light"
-          />
+          {import.meta.env.VITE_RECAPTCHA_SITE_KEY ? (
+            <ReCAPTCHA
+              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+              onChange={(value) => setRecaptchaValue(value)}
+              onExpired={() => setRecaptchaValue(null)}
+              theme="light"
+            />
+          ) : (
+            <div className="p-3 bg-yellow-100 border border-yellow-400 rounded">
+              <p className="text-sm text-yellow-800">reCAPTCHA not configured</p>
+            </div>
+          )}
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (t("common.loading") || "Loading...") : (t("common.login") || "Login")}
