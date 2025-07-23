@@ -1624,8 +1624,8 @@ const Index = () => {
           >
             <List className="h-4 w-4" />
             {showPatientSidebar ?
-              (isRTL ? "إخفاء القائمة" : "Hide List") :
-              (isRTL ? "قائمة المرضى" : "Patient List")
+              (isRTL ? " " : " ") :
+              (isRTL ? "" : " ")
             }
             {showPatientSidebar ? <X className="h-4 w-4 ml-2" /> : <Users className="h-4 w-4 ml-2" />}
           </Button>
@@ -1637,7 +1637,7 @@ const Index = () => {
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-blue-800 flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  {isRTL ? "قائمة المرضى" : "All Patients"}
+                  {isRTL ? "سجل المرضى" : "All Patients"}
                 </h3>
                 <Badge variant="secondary">
                   {filteredPatients.length}
@@ -1651,7 +1651,6 @@ const Index = () => {
                   size="sm"
                 >
                   <X className="h-4 w-4" />
-                  {isRTL ? "إخفاء القائمة" : "Hide List"}
                 </Button>
               )}
             </div>
