@@ -210,8 +210,11 @@ const Clinics = () => {
 
     const handleViewClinic = useCallback((clinic: Clinic) => {
         setSelectedClinic(clinic);
-        setSelectedDoctor(null);
-        setSelectedTime("");
+        if (clinic.doctors && clinic.doctors.length > 0) {
+            setSelectedDoctor(clinic.doctors[0]);
+        } else {
+            setSelectedDoctor(null);
+        } setSelectedTime("");
         setSelectedDay("");
     }, []);
 
