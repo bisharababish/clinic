@@ -338,20 +338,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
             </button>
           </div>
         </div>
+
         {/* ADD THE RECAPTCHA HERE - AFTER PASSWORD, BEFORE SUBMIT BUTTON */}
+
         <div className="space-y-4">
-          {import.meta.env.VITE_RECAPTCHA_SITE_KEY ? (
-            <ReCAPTCHA
-              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-              onChange={(value) => setRecaptchaValue(value)}
-              onExpired={() => setRecaptchaValue(null)}
-              theme="light"
-            />
-          ) : (
-            <div className="p-3 bg-yellow-100 border border-yellow-400 rounded">
-              <p className="text-sm text-yellow-800">reCAPTCHA not configured</p>
-            </div>
-          )}
+          <ReCAPTCHA
+            sitekey="6LfuCYwrAAAAAJJg1UL6P5SUo_djC52at4EEvnKo"
+            onChange={(value) => setRecaptchaValue(value)}
+            onExpired={() => setRecaptchaValue(null)}
+            theme="light"
+          />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (t("common.loading") || "Loading...") : (t("common.login") || "Login")}
