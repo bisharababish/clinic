@@ -1749,10 +1749,10 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         <div>
                             <Label htmlFor="clinic-select">{t('appointmentsManagement.selectClinic')}</Label>
                             <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
-                                <SelectTrigger id="clinic-select">
+                                <SelectTrigger id="clinic-select" dir={isRTL ? 'rtl' : 'ltr'}>
                                     <SelectValue placeholder={t('appointmentsManagement.chooseClinic')} />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent dir={isRTL ? 'rtl' : 'ltr'}>
                                     {clinics.filter(c => c.is_active).map(clinic => (
                                         <SelectItem key={clinic.id} value={clinic.id}>
                                             {clinic.name} - {clinic.category}
@@ -1770,10 +1770,10 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                         <div>
                             <Label htmlFor="doctor-select">{t('appointmentsManagement.selectDoctor')}</Label>
                             <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
-                                <SelectTrigger id="doctor-select">
+                                <SelectTrigger id="doctor-select" dir={isRTL ? 'rtl' : 'ltr'}>
                                     <SelectValue placeholder={t('appointmentsManagement.chooseDoctor')} />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent dir={isRTL ? 'rtl' : 'ltr'}>
                                     {availableDoctorsForClinic.length === 0 ? (
                                         <div className="p-3 text-center text-gray-500">{t('appointmentsManagement.noAvailableDoctors')}</div>
                                     ) : (
@@ -1801,25 +1801,56 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                     onChange={(e) => setPatientSearchQuery(e.target.value)}
                                     className="patient-search form-input"
                                 />
-                                <div className="patient-list max-h-40 overflow-y-auto border rounded-md">
-                                    {filteredPatients.length === 0 ? (
-                                        <div className="p-3 text-center text-gray-500">{t('appointmentsManagement.noPatientsFound')}</div>
-                                    ) : (
-                                        filteredPatients.map(patient => (
-                                            <div
-                                                key={patient.userid}
-                                                className={`patient-item p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${selectedPatientId === patient.userid.toString() ? 'bg-blue-50' : ''}`}
-                                                onClick={() => {
-                                                    setSelectedPatientId(patient.userid.toString());
-                                                    setPatientSearchQuery("");
-                                                }}
-                                            >
-                                                <div className="font-medium">{patient.english_username_a} {patient.english_username_d}</div>
-                                                <div className="text-xs text-gray-500">{patient.user_email}</div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+
+                                {/* Show selected patient */}
+                                {selectedPatientId && !patientSearchQuery && (
+                                    <div className="selected-patient p-3 bg-blue-50 border rounded-md">
+                                        {(() => {
+                                            const selectedPatient = filteredPatients.find(p => p.userid.toString() === selectedPatientId);
+                                            return selectedPatient ? (
+                                                <div>
+                                                    <div className="font-medium">{selectedPatient.english_username_a} {selectedPatient.english_username_d}</div>
+                                                    <div className="text-xs text-gray-500">{selectedPatient.user_email}</div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="mt-2"
+                                                        onClick={() => {
+                                                            setSelectedPatientId("");
+                                                            setPatientSearchQuery("");
+                                                        }}
+                                                    >
+                                                        {isRTL ? 'تغيير المريض' : 'Change Patient'}
+                                                    </Button>
+                                                </div>
+                                            ) : null;
+                                        })()}
+                                    </div>
+                                )}
+
+                                {/* Show dropdown only when searching */}
+                                {patientSearchQuery.trim() && (
+                                    <div className="patient-list max-h-40 overflow-y-auto border rounded-md">
+                                        {filteredPatients.length === 0 ? (
+                                            <div className="p-3 text-center text-gray-500">{t('appointmentsManagement.noPatientsFound')}</div>
+                                        ) : (
+                                            filteredPatients.map(patient => (
+                                                <div
+                                                    key={patient.userid}
+                                                    className="patient-item p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0"
+                                                    onClick={() => {
+                                                        setSelectedPatientId(patient.userid.toString());
+                                                        setPatientSearchQuery("");
+                                                    }}
+                                                >
+                                                    <div className="font-medium">{patient.english_username_a} {patient.english_username_d}</div>
+                                                    <div className="text-xs text-gray-500">{patient.user_email}</div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                         {/* Appointment Time Selection */}

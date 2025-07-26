@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -268,8 +268,10 @@ const Labs = () => {
       setError(`Failed to upload files: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsUploading(false);
+
     }
   };
+
   const loadAttachments = async (labResultId: number) => {
     try {
       const attachmentsData = await FileUploadService.getLabAttachments(labResultId);
@@ -657,75 +659,231 @@ const Labs = () => {
     setIsClient(true);
   }, []);
 
-  // Tiptap toolbar component
-  const TiptapToolbar = ({ editor, isRTL }: { editor: Editor | null, isRTL: boolean }) => (
-    <div className="tiptap-toolbar" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
-      <button aria-label="Bold" title={isRTL ? 'عريض' : 'Bold'} onClick={() => editor?.chain().focus().toggleBold().run()} disabled={!editor?.can().chain().focus().toggleBold().run()}><b>B</b></button>
-      <button aria-label="Italic" title={isRTL ? 'مائل' : 'Italic'} onClick={() => editor?.chain().focus().toggleItalic().run()} disabled={!editor?.can().chain().focus().toggleItalic().run()}><i>I</i></button>
-      <button aria-label="Underline" title={isRTL ? 'تحته خط' : 'Underline'} onClick={() => editor?.chain().focus().toggleUnderline().run()} disabled={!editor?.can().chain().focus().toggleUnderline().run()}><u>U</u></button>
-      <button aria-label="Heading 1" title={isRTL ? 'عنوان رئيسي' : 'Heading 1'} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} disabled={!editor?.can().chain().focus().toggleHeading({ level: 1 }).run()}>H1</button>
-      <button aria-label="Heading 2" title={isRTL ? 'عنوان فرعي' : 'Heading 2'} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} disabled={!editor?.can().chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
-      <button aria-label="Normal" title={isRTL ? 'نص عادي' : 'Normal'} onClick={() => editor?.chain().focus().setParagraph().run()} disabled={!editor?.can().chain().focus().setParagraph().run()}>{isRTL ? 'نص عادي' : 'Normal'}</button>
-      <button aria-label="Align Left" title={isRTL ? 'محاذاة يسار' : 'Align Left'} onClick={() => editor?.chain().focus().setTextAlign('left').run()} disabled={!editor?.can().chain().focus().setTextAlign('left').run()}>L</button>
-      <button aria-label="Align Center" title={isRTL ? 'توسيط' : 'Align Center'} onClick={() => editor?.chain().focus().setTextAlign('center').run()} disabled={!editor?.can().chain().focus().setTextAlign('center').run()}>C</button>
-      <button aria-label="Align Right" title={isRTL ? 'محاذاة يمين' : 'Align Right'} onClick={() => editor?.chain().focus().setTextAlign('right').run()} disabled={!editor?.can().chain().focus().setTextAlign('right').run()}>R</button>
-      <button aria-label="Bullet List" title={isRTL ? 'قائمة نقطية' : 'Bullet List'} onClick={() => editor?.chain().focus().toggleBulletList().run()} disabled={!editor?.can().chain().focus().toggleBulletList().run()}>• List</button>
-      <button aria-label="Ordered List" title={isRTL ? 'قائمة مرتبة' : 'Ordered List'} onClick={() => editor?.chain().focus().toggleOrderedList().run()} disabled={!editor?.can().chain().focus().toggleOrderedList().run()}>1. List</button>
-      <button aria-label="Clear Formatting" title={isRTL ? 'مسح' : 'Clear'} onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()}>{isRTL ? 'مسح' : 'Clear'}</button>
+const TiptapToolbar = React.memo(({ editor, isRTL }: { editor: Editor | null, isRTL: boolean }) => {
+  if (!editor) return null;
+
+  const handleButtonClick = (action: () => void) => {
+    return (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      action();
+    };
+  };
+
+  return (
+    <div className="tiptap-toolbar" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive('bold') ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleBold().run())}
+        disabled={!editor.can().chain().focus().toggleBold().run()}
+        title={isRTL ? 'عريض' : 'Bold'}
+      >
+        <strong>B</strong>
+      </button>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive('italic') ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleItalic().run())}
+        disabled={!editor.can().chain().focus().toggleItalic().run()}
+        title={isRTL ? 'مائل' : 'Italic'}
+      >
+        <em>I</em>
+      </button>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive('underline') ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleUnderline().run())}
+        disabled={!editor.can().chain().focus().toggleUnderline().run()}
+        title={isRTL ? 'تحته خط' : 'Underline'}
+      >
+        <u>U</u>
+      </button>
+
+      <div className="toolbar-separator"></div>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 1 }).run())}
+        title={isRTL ? 'عنوان رئيسي' : 'Heading 1'}
+      >
+        H1
+      </button>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 2 }).run())}
+        title={isRTL ? 'عنوان فرعي' : 'Heading 2'}
+      >
+        H2
+      </button>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive('paragraph') ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().setParagraph().run())}
+        title={isRTL ? 'نص عادي' : 'Paragraph'}
+      >
+        P
+      </button>
+
+      <div className="toolbar-separator"></div>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive({ textAlign: 'left' }) ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('left').run())}
+        title={isRTL ? 'محاذاة يسار' : 'Align Left'}
+      >
+        ⇤
+      </button>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive({ textAlign: 'center' }) ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('center').run())}
+        title={isRTL ? 'توسيط' : 'Center'}
+      >
+        ≡
+      </button>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive({ textAlign: 'right' }) ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('right').run())}
+        title={isRTL ? 'محاذاة يمين' : 'Align Right'}
+      >
+        ⇥
+      </button>
+
+      <div className="toolbar-separator"></div>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive('bulletList') ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleBulletList().run())}
+        title={isRTL ? 'قائمة نقطية' : 'Bullet List'}
+      >
+        •
+      </button>
+
+      <button
+        type="button"
+        className={`toolbar-btn ${editor.isActive('orderedList') ? 'is-active' : ''}`}
+        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleOrderedList().run())}
+        title={isRTL ? 'قائمة مرتبة' : 'Numbered List'}
+      >
+        1.
+      </button>
+
+      <div className="toolbar-separator"></div>
+
+      <button
+        type="button"
+        className="toolbar-btn"
+        onMouseDown={handleButtonClick(() => editor.chain().focus().unsetAllMarks().clearNodes().run())}
+        title={isRTL ? 'مسح التنسيق' : 'Clear Format'}
+      >
+        ✕
+      </button>
     </div>
   );
+});
 
-  // Tiptap editors for testResults and doctorNotes
+  // Initialize editors with better content management
   const testResultsEditor = useEditor({
     extensions: [
       StarterKit,
-      TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }),
-      Placeholder.configure({ placeholder: isRTL ? 'أدخل نتائج الفحص التفصيلية' : 'Enter detailed test results' }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph', 'listItem'],
+        alignments: ['left', 'center', 'right'],
+        defaultAlignment: isRTL ? 'right' : 'left'
+      }),
+      Placeholder.configure({
+        placeholder: isRTL ? 'أدخل نتائج الفحص التفصيلية' : 'Enter detailed test results'
+      }),
       Underline,
       Link,
-      Heading,
+      Heading.configure({ levels: [1, 2] }),
       Paragraph,
       Bold,
       Italic,
+      BulletList,
+      OrderedList,
+      ListItem,
       Image,
     ],
-    content: labData.testResults,
+    content: labData.testResults || '',
     editorProps: {
       attributes: {
         dir: isRTL ? 'rtl' : 'ltr',
         style: `text-align: ${isRTL ? 'right' : 'left'}; min-height: 120px;`,
       },
     },
-    onUpdate: ({ editor }) => {
-      setLabData(prev => ({ ...prev, testResults: editor.getHTML() }));
-    },
+    onUpdate: useCallback(({ editor }) => {
+      const html = editor.getHTML();
+      setLabData(prev => ({ ...prev, testResults: html }));
+    }, []),
+    immediatelyRender: false,
   });
+
   const doctorNotesEditor = useEditor({
     extensions: [
       StarterKit,
-      TextAlign.configure({ types: ['heading', 'paragraph', 'listItem'] }),
-      Placeholder.configure({ placeholder: isRTL ? 'أدخل ملاحظات أو توصيات إضافية' : 'Enter additional notes or recommendations' }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph', 'listItem'],
+        alignments: ['left', 'center', 'right'],
+        defaultAlignment: isRTL ? 'right' : 'left'
+      }),
+      Placeholder.configure({
+        placeholder: isRTL ? 'أدخل ملاحظات أو توصيات إضافية' : 'Enter additional notes or recommendations'
+      }),
       Underline,
       Link,
-      Heading,
+      Heading.configure({ levels: [1, 2] }),
       Paragraph,
       Bold,
       Italic,
+      BulletList,
+      OrderedList,
+      ListItem,
       Image,
     ],
-    content: labData.doctorNotes,
+    content: labData.doctorNotes || '',
     editorProps: {
       attributes: {
         dir: isRTL ? 'rtl' : 'ltr',
         style: `text-align: ${isRTL ? 'right' : 'left'}; min-height: 80px;`,
       },
     },
-    onUpdate: ({ editor }) => {
-      setLabData(prev => ({ ...prev, doctorNotes: editor.getHTML() }));
-    },
+    onUpdate: useCallback(({ editor }) => {
+      const html = editor.getHTML();
+      setLabData(prev => ({ ...prev, doctorNotes: html }));
+    }, []),
+    immediatelyRender: false,
   });
 
-  // Loading state while checking user
+  useEffect(() => {
+    if (testResultsEditor && !testResultsEditor.isDestroyed) {
+      const currentContent = testResultsEditor.getHTML();
+      if (currentContent !== labData.testResults) {
+        testResultsEditor.commands.setContent(labData.testResults || '');
+      }
+    }
+  }, [labData.testResults, testResultsEditor]);
+
+  useEffect(() => {
+    if (doctorNotesEditor && !doctorNotesEditor.isDestroyed) {
+      const currentContent = doctorNotesEditor.getHTML();
+      if (currentContent !== labData.doctorNotes) {
+        doctorNotesEditor.commands.setContent(labData.doctorNotes || '');
+      }
+    }
+  }, [labData.doctorNotes, doctorNotesEditor]);
   if (!user) {
     return <UserAuthSkeletonLoading />;
   }

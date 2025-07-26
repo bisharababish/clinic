@@ -523,7 +523,7 @@ const XRay = () => {
   // Handle body part selection from skeleton
   const handleBodyPartSelect = (bodyPart) => {
     setFormFields((prev) => ({ ...prev, bodyPart }));
-        if (error && !error.includes('Please log in')) setError("");
+    if (error && !error.includes('Please log in')) setError("");
 
   };
 
@@ -864,11 +864,12 @@ const XRay = () => {
                 >
                   <option value="">{t('xray.selectPatientOption') || 'Choose a patient...'}</option>
                   {patients
-                    .filter((p) =>
-                      `${p.english_username_a} ${p.english_username_d}`
+                    .filter((p) => {
+                      if (!searchTerm.trim()) return false; // Show nothing when search is empty
+                      return `${p.english_username_a} ${p.english_username_d}`
                         .toLowerCase()
-                        .includes(searchTerm.toLowerCase())
-                    )
+                        .includes(searchTerm.toLowerCase());
+                    })
                     .map((p) => (
                       <option key={p.userid} value={p.userid}>
                         {`${p.english_username_a} ${p.english_username_d}`} (ID: {p.userid})
@@ -921,11 +922,12 @@ const XRay = () => {
                 >
                   <option value="">{t('xray.selectDoctorOption') || 'Choose a doctor...'}</option>
                   {doctors
-                    .filter((d) =>
-                      `${d.english_username_a} ${d.english_username_d}`
+                    .filter((d) => {
+                      if (!doctorSearchTerm.trim()) return false; // Show nothing when search is empty
+                      return `${d.english_username_a} ${d.english_username_d}`
                         .toLowerCase()
-                        .includes(doctorSearchTerm.toLowerCase())
-                    )
+                        .includes(doctorSearchTerm.toLowerCase());
+                    })
                     .map((d) => (
                       <option key={d.userid} value={d.userid}>
                         Dr. {`${d.english_username_a} ${d.english_username_d}`} (ID: {d.userid})

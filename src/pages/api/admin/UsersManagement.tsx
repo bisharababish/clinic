@@ -496,7 +496,7 @@ const UsersManagement = () => {
             if (result.success) {
                 toast({
                     title: t('common.success'),
-                    description: t('deletionRequest.requestSubmitted') || 'Deletion request submitted successfully. An admin will review it.',
+                    description: t('deletionRequest.requestSubmitted') || 'تم تقديم طلب الحذف بنجاح. سيقوم المشرف بمراجعته.',
                 });
 
                 logActivity(

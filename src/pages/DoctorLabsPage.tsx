@@ -607,9 +607,11 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                     {isRTL ? 'نتائج الفحص' : 'Test Results'}
                                 </h3>
                                 <div className="bg-gray-50 p-4 rounded-md">
-                                    <div className="text-sm text-gray-800 whitespace-pre-wrap" dir={isRTL ? 'rtl' : 'ltr'}>
-                                        {selectedTest.test_results}
-                                    </div>
+                                    <div
+                                        className="text-sm text-gray-800 whitespace-pre-wrap"
+                                        dir={isRTL ? 'rtl' : 'ltr'}
+                                        dangerouslySetInnerHTML={{ __html: selectedTest.test_results }}
+                                    />
                                 </div>
                             </div>
 
@@ -619,9 +621,11 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                         {isRTL ? 'ملاحظات الطبيب' : 'Doctor\'s Notes'}
                                     </h3>
                                     <div className="bg-blue-50 p-4 rounded-md">
-                                        <p className="text-sm text-gray-800" dir={isRTL ? 'rtl' : 'ltr'}>
-                                            {selectedTest.doctor_notes}
-                                        </p>
+                                        <div
+                                            className="text-sm text-gray-800"
+                                            dir={isRTL ? 'rtl' : 'ltr'}
+                                            dangerouslySetInnerHTML={{ __html: selectedTest.doctor_notes }}
+                                        />
                                     </div>
                                 </div>
                             )}
