@@ -806,15 +806,7 @@ const Labs = () => {
             </Alert>
           )}
 
-          {isSaved && (
-            <Alert variant="default" className="mt-6 bg-green-100 border-green-400 text-green-700 dark:bg-green-900/30 dark:border-green-600 dark:text-green-400">
-              <CheckCircle className="h-4 w-4" />
-              <AlertTitle>{t('success') || 'Success'}</AlertTitle>
-              <AlertDescription>
-                {t('labs.saveSuccess') || 'Lab results saved successfully!'}
-              </AlertDescription>
-            </Alert>
-          )}
+
 
           <Card className="mt-6">
             <CardHeader>
@@ -1064,7 +1056,16 @@ const Labs = () => {
                     </div>
                   )}
                 </div>
-
+                {/* Success message */}
+                {isSaved && (
+                  <Alert variant="default" className="bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200">
+                    <CheckCircle className="h-4 w-4" />
+                    <AlertTitle>{t('success') || 'Success'}</AlertTitle>
+                    <AlertDescription>
+                      {t('labs.saveSuccess') || 'Lab results saved successfully!'}
+                    </AlertDescription>
+                  </Alert>
+                )}
                 {/* Submit button */}
                 <div className="flex justify-end">
                   <Button

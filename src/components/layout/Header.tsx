@@ -523,7 +523,7 @@ export function Header() {
                                                 to="/doctor/labs"
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    handleMobileNavigation('/labs');
+                                                    handleMobileNavigation('/doctor/labs');
                                                 }}
                                                 className="font-medium"
                                             >

@@ -31,8 +31,27 @@ const AdminDashboardContent = () => {
         isLoading: dataLoading,
         error: dataError,
         refreshAll,
-        loadAppointments
-    } = useAdminState(); // Use the centralized state
+        loadAppointments,
+        extendSession,
+        lastUpdated
+    } = useAdminState();
+
+
+    const getDataAge = () => {
+        if (Object.keys(lastUpdated).length === 0) return null;
+
+        const oldestUpdate = Math.min(...Object.values(lastUpdated));
+        const ageMinutes = Math.floor((Date.now() - oldestUpdate) / 60000);
+
+        if (ageMinutes < 1) return i18n.language === 'ar' ? 'تم التحديث للتو' : 'Just updated';
+        if (ageMinutes === 1) return i18n.language === 'ar' ? 'منذ دقيقة واحدة' : '1 minute ago';
+        return i18n.language === 'ar' ? `منذ ${ageMinutes} دقائق` : `${ageMinutes} minutes ago`;
+    };
+
+    // Check if data needs refresh
+    const needsRefresh = Object.values(lastUpdated).some(timestamp =>
+        Date.now() - timestamp > 240000
+    );
 
     const { toast } = useToast();
     const { t } = useTranslation();
@@ -233,8 +252,22 @@ const AdminDashboardContent = () => {
     // Main render
     return (
         <div className="max-w-7xl mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-6">{getDashboardTitle()}</h1>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold">{getDashboardTitle()}</h1>
+                    {getDataAge() && (
+                        <p className="text-sm text-gray-500 mt-1">
+                            {i18n.language === 'ar' ? 'آخر تحديث' : 'Last updated'}: {getDataAge()}
+                        </p>
+                    )}
+                </div>
 
+                {needsRefresh && (
+                    <Button onClick={extendSession} variant="outline" size="sm">
+                        🔄 {t('admin.refreshData') || 'Refresh Data'}
+                    </Button>
+                )}
+            </div>
             {!hasAccessibleTabs ? (
                 <div className="text-center py-12">
                     <h2 className="text-xl font-semibold text-gray-600 mb-4">

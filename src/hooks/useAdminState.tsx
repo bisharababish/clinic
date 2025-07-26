@@ -112,6 +112,8 @@ interface AdminStateContextType extends AdminState {
     getUser: (userid: number) => UserInfo | undefined;
     getClinic: (clinicId: string) => ClinicInfo | undefined;
     getDoctor: (doctorId: string) => DoctorInfo | undefined;
+    extendSession: () => void;
+
 }
 
 const AdminStateContext = createContext<AdminStateContextType | undefined>(undefined);
@@ -129,7 +131,9 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const activeOperationsRef = useRef(new Set<string>());
     const isLoadingRef = useRef(false);
     const debouncedOperations = useRef(new Map<string, NodeJS.Timeout>());
-    const CACHE_DURATION = 120 * 1000;
+    const CACHE_DURATION = 300 * 1000; // 5 minutes
+    const SESSION_EXTENSION_THRESHOLD = 240 * 1000; // 4 minutes (extend before cache expires)
+    const SESSION_EXTENSION_DURATION = 600 * 1000; // 10 minutes (new session length)
     useEffect(() => {
         const interval = setInterval(() => {
             if (activeOperationsRef.current.size > 0) {
@@ -442,9 +446,43 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const getUser = (userid: number) => users.find(u => u.userid === userid);
     const getClinic = (clinicId: string) => clinics.find(c => c.id === clinicId);
     const getDoctor = (doctorId: string) => doctors.find(d => d.id === doctorId);
+    const extendSession = () => {
+        const now = Date.now();
+        console.log('🔄 Extending session and refreshing cache...');
 
-    // REPLACE THE ENTIRE SUBSCRIPTIONS useEffect WITH THIS:
-    // REPLACE THE ENTIRE useEffect WITH SUBSCRIPTIONS WITH THIS:
+        // Clear existing cache to force fresh data
+        setLastUpdated({});
+
+        // Optionally load fresh data immediately
+        loadAll(true);
+
+        toast({
+            title: 'Session Extended',
+            description: 'Data refreshed successfully',
+            variant: 'default',
+        });
+    };
+    useEffect(() => {
+        const checkSessionExtension = () => {
+            const now = Date.now();
+
+            // Check if any cache is approaching expiration
+            Object.entries(lastUpdated).forEach(([key, timestamp]) => {
+                const timeUntilExpiry = CACHE_DURATION - (now - timestamp);
+
+                if (timeUntilExpiry <= SESSION_EXTENSION_THRESHOLD && timeUntilExpiry > 0) {
+                    console.log(`🔔 Cache for ${key} expiring soon, extending session...`);
+                    extendSession();
+                    return;
+                }
+            });
+        };
+
+        // Check every minute
+        const interval = setInterval(checkSessionExtension, 60000);
+
+        return () => clearInterval(interval);
+    }, [lastUpdated]);
     useEffect(() => {
         console.log('🔗 Setting up admin state subscriptions...');
 
@@ -559,6 +597,8 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         getUser,
         getClinic,
         getDoctor,
+        extendSession,
+
     };
 
     return (

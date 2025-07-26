@@ -225,6 +225,7 @@ const DoctorLabsPage: React.FC = () => {
     useEffect(() => {
         let isMounted = true;
 
+
         const initializeComponent = async () => {
             if (!user) {
                 if (isMounted) {
@@ -233,7 +234,8 @@ const DoctorLabsPage: React.FC = () => {
                 return;
             }
 
-            if (user.role !== 'doctor' && user.role !== 'admin') {
+            const userRole = user.role?.toLowerCase();
+            if (userRole !== 'doctor' && userRole !== 'admin') {
                 if (isMounted) {
                     setError('Access denied. Only doctors and administrators can view lab results.');
                     setInitializing(false);
