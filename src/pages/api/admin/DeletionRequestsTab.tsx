@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { ar } from 'date-fns/locale';
 import {
     Dialog,
     DialogContent,
@@ -163,9 +164,15 @@ const DeletionRequestsTab: React.FC = () => {
             'manager': 'bg-green-100 text-green-800'
         };
 
+        const roleTranslations = {
+            'secretary': isRTL ? 'سكرتير' : 'secretary',
+            'admin': isRTL ? 'مشرف' : 'admin',
+            'manager': isRTL ? 'مدير' : 'manager'
+        };
+
         return (
             <Badge className={roleColors[role.toLowerCase()] || 'bg-gray-100 text-gray-800'}>
-                {role}
+                {roleTranslations[role.toLowerCase()] || role}
             </Badge>
         );
     };
@@ -213,7 +220,7 @@ const DeletionRequestsTab: React.FC = () => {
             {/* Header */}
             <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
                 <div>
-                    <h2 className="text-xl sm:text-2xl font-bold">
+                    <h2 className={`text-xl sm:text-2xl font-bold ${isRTL ? 'text-right' : ''}`}>
                         {isRTL ? 'طلبات الحذف' : 'Deletion Requests'}
                     </h2>
                     <p className="text-gray-600 mt-1 text-sm sm:text-base">
@@ -230,9 +237,9 @@ const DeletionRequestsTab: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <Card>
                     <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-center">
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500" />
-                            <div className={`ml-3 sm:ml-4 ${isRTL ? 'mr-3 sm:mr-4 ml-0' : ''}`}>
+                            <div className={`${isRTL ? 'mr-6 sm:mr-8 text-right' : 'ml-6 sm:ml-8'}`}>
                                 <p className="text-xs sm:text-sm font-medium text-gray-600">{isRTL ? 'قيد الانتظار' : 'Pending'}</p>
                                 <p className="text-xl sm:text-2xl font-bold text-yellow-600">
                                     {requests.filter(r => r.status === 'pending').length}
@@ -243,9 +250,9 @@ const DeletionRequestsTab: React.FC = () => {
                 </Card>
                 <Card>
                     <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-center">
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
-                            <div className={`ml-3 sm:ml-4 ${isRTL ? 'mr-3 sm:mr-4 ml-0' : ''}`}>
+                            <div className={`${isRTL ? 'mr-6 sm:mr-8 text-right' : 'ml-6 sm:ml-8'}`}>
                                 <p className="text-xs sm:text-sm font-medium text-gray-600">{isRTL ? 'موافق عليه' : 'Approved'}</p>
                                 <p className="text-xl sm:text-2xl font-bold text-green-600">
                                     {requests.filter(r => r.status === 'approved').length}
@@ -256,9 +263,9 @@ const DeletionRequestsTab: React.FC = () => {
                 </Card>
                 <Card>
                     <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-center">
+                        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <XCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
-                            <div className={`ml-3 sm:ml-4 ${isRTL ? 'mr-3 sm:mr-4 ml-0' : ''}`}>
+                            <div className={`${isRTL ? 'mr-6 sm:mr-8 text-right' : 'ml-6 sm:ml-8'}`}>
                                 <p className="text-xs sm:text-sm font-medium text-gray-600">{isRTL ? 'مرفوض' : 'Declined'}</p>
                                 <p className="text-xl sm:text-2xl font-bold text-red-600">
                                     {requests.filter(r => r.status === 'declined').length}
@@ -278,7 +285,7 @@ const DeletionRequestsTab: React.FC = () => {
                             {isRTL ? 'لا توجد طلبات حذف' : 'No Deletion Requests'}
                         </h3>
                         <p className="text-gray-500 text-sm sm:text-base">
-                            {isRTL ? 'لا توجد طلبات حذف في هذا الوقت.' : 'There are no deletion requests at this time.'}
+                            {isRTL ? '.لا توجد طلبات حذف في هذا الوقت' : 'There are no deletion requests at this time.'}
                         </p>
                     </CardContent>
                 </Card>
@@ -302,7 +309,7 @@ const DeletionRequestsTab: React.FC = () => {
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                                                {request.user_details.role}
+                                                {isRTL ? (request.user_details.role === 'Patient' ? 'مريض' : request.user_details.role) : request.user_details.role}
                                             </div>
                                             {request.user_details.id_number && (
                                                 <div className="flex items-center gap-1">
@@ -318,27 +325,32 @@ const DeletionRequestsTab: React.FC = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <div className={`text-xs sm:text-sm text-gray-500 ${isRTL ? 'text-left' : 'text-right'}`}>
-                                        <p>{formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}</p>
-                                    </div>
+                                    <div className={`text-xs sm:text-sm text-gray-500 ${isRTL ? 'text-right' : 'text-right'}`}>
+                                        <p>{formatDistanceToNow(new Date(request.created_at), {
+                                            addSuffix: true,
+                                            locale: isRTL ? ar : undefined
+                                        })}</p>                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 sm:p-6 pt-0">
                                 <div className="space-y-3 sm:space-y-4">
                                     {/* Request Details */}
                                     <div>
-                                        <h4 className="font-medium text-xs sm:text-sm mb-2">
-                                            {isRTL ? 'تفاصيل الطلب:' : 'Request Details:'}
+                                        <h4 className={`font-medium text-xs sm:text-sm mb-2 ${isRTL ? 'text-right' : ''}`}>
+                                            {isRTL ? ':تفاصيل الطلب' : 'Request Details:'}
                                         </h4>
-                                        <div className={`flex flex-col sm:flex-row sm:items-center gap-2 mb-2 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                                        <div className={`flex flex-col sm:flex-row sm:items-center gap-2 mb-2 ${isRTL ? 'sm:flex-row-reverse text-right' : ''}`}>
                                             <span className="text-xs sm:text-sm text-gray-600">
-                                                {isRTL ? 'طلب بواسطة:' : 'Requested by:'}
+                                                {isRTL ? ':طلب بواسطة' : 'Requested by:'}
                                             </span>
                                             <span className="font-medium text-xs sm:text-sm">{request.requested_by_email}</span>
                                             {getRequestorBadge(request.requested_by_role)}
                                         </div>
-                                        <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
-                                            <p className="text-xs sm:text-sm"><strong>{isRTL ? 'السبب:' : 'Reason:'}</strong> {request.reason}</p>
+                                        <div className={`bg-gray-50 p-2 sm:p-3 rounded-lg`}>
+                                            <p className={`text-xs sm:text-sm ${isRTL ? 'flex flex-row-reverse text-right gap-2' : ''}`}>
+                                                <strong>{isRTL ? ':السبب' : 'Reason:'}</strong>
+                                                <span>{request.reason}</span>
+                                            </p>
                                         </div>
                                     </div>
 
@@ -391,47 +403,52 @@ const DeletionRequestsTab: React.FC = () => {
 
             {/* Approval/Decline Modal */}
             <Dialog open={showApprovalModal} onOpenChange={setShowApprovalModal}>
-                <DialogContent className={`sm:max-w-md ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            {actionType === 'approved' ? (
-                                <CheckCircle className="h-5 w-5 text-green-500" />
-                            ) : (
-                                <XCircle className="h-5 w-5 text-red-500" />
-                            )}
-                            {actionType === 'approved'
-                                ? (isRTL ? 'تأكيد الموافقة' : 'Confirm Approval')
-                                : (isRTL ? 'تأكيد الرفض' : 'Confirm Decline')
-                            }
-                        </DialogTitle>
-                        <DialogDescription>
-                            {actionType === 'approved'
-                                ? (isRTL ? 'سيؤدي هذا إلى حذف المستخدم نهائياً ولا يمكن التراجع عنه.' : 'This will permanently delete the user and cannot be undone.')
-                                : (isRTL ? 'سيتم رفض طلب الحذف وسيبقى المستخدم نشطاً.' : 'The deletion request will be declined and the user will remain active.')
-                            }
-                        </DialogDescription>
-                    </DialogHeader>
+                <DialogContent className={`sm:max-w-md ${isRTL ? 'text-right' : 'text-left'} ${isRTL ? '[&>button]:!left-4 [&>button]:!right-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>                    <DialogHeader className={isRTL ? '[&>*:last-child]:left-4 [&>*:last-child]:right-auto' : ''}>
+                    <DialogTitle className="flex items-center gap-2">
+                        {actionType === 'approved' ? (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                            <XCircle className="h-5 w-5 text-red-500" />
+                        )}
+                        {actionType === 'approved'
+                            ? (isRTL ? 'تأكيد الموافقة' : 'Confirm Approval')
+                            : (isRTL ? 'تأكيد الرفض' : 'Confirm Decline')
+                        }
+                    </DialogTitle>
+                    <DialogDescription className={isRTL ? 'text-right' : ''}>
+                        {actionType === 'approved'
+                            ? (isRTL ? 'سيؤدي هذا إلى حذف المستخدم نهائياً ولا يمكن التراجع عنه.' : 'This will permanently delete the user and cannot be undone.')
+                            : (isRTL ? 'سيتم رفض طلب الحذف وسيبقى المستخدم نشطاً.' : 'The deletion request will be declined and the user will remain active.')
+                        }
+                    </DialogDescription>
+                </DialogHeader>
 
                     <div className="space-y-4">
                         {selectedRequest && (
                             <div className="p-3 bg-gray-50 rounded-lg">
-                                <h4 className="font-medium text-sm mb-1">User to {actionType}:</h4>
-                                <p className="text-sm">{selectedRequest.user_details.english_name}</p>
+                                <h4 className="font-medium text-sm mb-1">
+                                    {actionType === 'approved'
+                                        ? (isRTL ? 'المستخدم المراد الموافقة عليه:' : 'User to approve:')
+                                        : (isRTL ? 'المستخدم المراد رفضه:' : 'User to decline:')
+                                    }
+                                </h4>                                <p className="text-sm">{selectedRequest.user_details.english_name}</p>
                                 <p className="text-xs text-gray-600">{selectedRequest.user_details.email}</p>
                             </div>
                         )}
 
                         <div className="space-y-2">
                             <Label htmlFor="admin-notes">
-                                {t('deletionRequest.adminNotes') || 'Admin Notes'}
-                                {actionType === 'declined' ? ' *' : ' (Optional)'}
+                                {actionType === 'approved'
+                                    ? (isRTL ? 'ملاحظات المشرف (اختيارية)' : 'Admin Notes (Optional)')
+                                    : (isRTL ? 'ملاحظات المشرف *' : 'Admin Notes *')
+                                }
                             </Label>
                             <Textarea
                                 id="admin-notes"
                                 placeholder={
                                     actionType === 'approved'
-                                        ? (t('deletionRequest.approvalNotesPlaceholder') || 'Optional notes about the approval...')
-                                        : (t('deletionRequest.declineNotesPlaceholder') || 'Reason for declining this request...')
+                                        ? (isRTL ? 'ملاحظات اختيارية حول الموافقة...' : 'Optional notes about the approval...')
+                                        : (isRTL ? 'سبب رفض هذا الطلب...' : 'Reason for declining this request...')
                                 }
                                 value={adminNotes}
                                 onChange={(e) => setAdminNotes(e.target.value)}
@@ -465,11 +482,11 @@ const DeletionRequestsTab: React.FC = () => {
                             className="w-full sm:w-auto"
                         >
                             {processingRequest === selectedRequest?.id ? (
-                                t('deletionRequest.processing') || 'Processing...'
+                                isRTL ? 'جاري المعالجة...' : 'Processing...'
                             ) : actionType === 'approved' ? (
-                                t('deletionRequest.approveAndDelete') || 'Approve & Delete'
+                                isRTL ? 'موافقة وحذف' : 'Approve & Delete'
                             ) : (
-                                t('deletionRequest.decline') || 'Decline Request'
+                                isRTL ? 'رفض الطلب' : 'Decline Request'
                             )}
                         </Button>
                     </DialogFooter>

@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-
+import { useTranslation } from 'react-i18next';
 // Complete interfaces
 interface UserInfo {
     user_id: string;
@@ -124,6 +124,8 @@ interface AdminStateContextType extends AdminState {
 const AdminStateContext = createContext<AdminStateContextType | undefined>(undefined);
 
 export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const { i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar'
     const [users, setUsers] = useState<UserInfo[]>([]);
     const [clinics, setClinics] = useState<ClinicInfo[]>([]);
     const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
@@ -464,8 +466,8 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         loadAll(true);
 
         toast({
-            title: 'Session Extended',
-            description: 'Data refreshed successfully',
+            title: isRTL ? 'تم تمديد الجلسة' : 'Session Extended',
+            description: isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully',
             variant: 'default',
         });
     };
