@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "../../../lib/supabase";
 import { translateMedicalCategory, createBilingualCategoryName, isKnownMedicalTerm } from "../../../lib/medicalTranslations";
 import { CheckCircle } from "lucide-react";
-
+import { translateToArabic } from "../../../lib/translationService";
 
 import {
     Trash2,
@@ -94,6 +94,7 @@ const ClinicManagement = () => {
         isRTL ? "clinics" : "categories"
     );
     const { setClinics, setCategories } = useAdminState();
+    const [isTranslating, setIsTranslating] = useState(false);
 
     // State for clinic form
     const [clinicFormMode, setClinicFormMode] = useState<"create" | "edit">("create");
@@ -304,13 +305,7 @@ const ClinicManagement = () => {
             });
         }
     };
-    // Add a general translation function (placeholder for now)
-    const translateToArabic = async (text: string) => {
-        // TODO: Replace with real translation API call
-        // For now, just return the same text with ' (AR)' appended for demo
-        if (!text) return '';
-        return text + ' (AR)';
-    };
+
     // Clinic form handlers
     const handleClinicInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -464,6 +459,10 @@ const ClinicManagement = () => {
         console.log("Form submitted with data:", clinicFormData);
 
         try {
+            // Translate clinic name to Arabic
+            setIsTranslating(true);
+            const arabicName = await translateToArabic(clinicFormData.name);
+            setIsTranslating(false);
 
             if (!clinicFormData.name || !clinicFormData.name.trim()) {
                 toast({
@@ -506,7 +505,7 @@ const ClinicManagement = () => {
             // ✅ FIX: Create the object with conditional properties
             const clinicData = {
                 name: clinicFormData.name,
-                name_ar: clinicFormData.name_ar, // Save Arabic name
+                name_ar: arabicName,
                 category_id: selectedCategory.id,
                 category: selectedCategory.name,
                 description: clinicFormData.description || null,
@@ -1158,10 +1157,10 @@ const ClinicManagement = () => {
                                         type="submit"
                                         form="clinicForm"
                                         className={clinicFormMode === "edit" ? "" : "w-full"}
-                                        disabled={isLoading || categories.length === 0}
+                                        disabled={isLoading || categories.length === 0 || isTranslating}
                                     >
-                                        {isLoading
-                                            ? t('clinicManagement.saving')
+                                        {isLoading || isTranslating
+                                            ? (isTranslating ? 'Translating...' : t('clinicManagement.saving'))
                                             : clinicFormMode === "create"
                                                 ? t('clinicManagement.createClinic')
                                                 : t('clinicManagement.updateClinic')

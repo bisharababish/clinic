@@ -19,14 +19,17 @@ type AvailabilitySlot = {
 type Doctor = {
     id: string;
     name: string;
+    name_ar?: string; // Make sure this is here
     specialty: string;
+    specialty_ar?: string; // Add this for specialty
     price: number;
     availability: AvailabilitySlot[];
 };
-
 type Clinic = {
     id: string;
     name: string;
+    name_ar?: string; // Add this line
+
     category: string;
     description?: string;
     doctors: Doctor[];
@@ -35,8 +38,8 @@ type Clinic = {
 type Category = {
     id: string;
     name: string;
-    name_en?: string;  // Add this
-    name_ar?: string;  // Add this
+    name_en?: string;
+    name_ar?: string;
 };
 
 // Skeleton Loading Component
@@ -88,6 +91,18 @@ const Clinics = () => {
             return getDisplayName(category);
         }
         return categoryName; // Fallback to original name
+    };
+    const getClinicDisplayName = (clinic: Clinic) => {
+        console.log('🔍 Display check:', { isRTL, clinic_name: clinic.name, clinic_name_ar: clinic.name_ar });
+        return isRTL && clinic.name_ar ? clinic.name_ar : clinic.name;
+    };
+
+    const getDoctorDisplayName = (doctor: Doctor) => {
+        return isRTL && doctor.name_ar ? doctor.name_ar : doctor.name;
+    };
+
+    const getSpecialtyDisplayName = (doctor: Doctor) => {
+        return isRTL && doctor.specialty_ar ? doctor.specialty_ar : doctor.specialty;
     };
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState("all");
@@ -141,24 +156,27 @@ const Clinics = () => {
                 supabase
                     .from('clinics')
                     .select(`
+        id,
+        name,
+        name_ar,
+        category,
+        description,
+        doctors(
+            id,
+            name,
+            name_ar,
+            specialty,
+            specialty_ar,
+            price,
+            is_available,
+            doctor_availability(
                 id,
-                name,
-                category,
-                description,
-                doctors(
-                    id,
-                    name,
-                    specialty,
-                    price,
-                    is_available,
-                    doctor_availability(
-                        id,
-                        day,
-                        start_time,
-                        end_time
-                    )
-                )
-            `)
+                day,
+                start_time,
+                end_time
+            )
+        )
+    `)
                     .eq('is_active', true)
                     .eq('doctors.is_available', true)
                     .order('display_order', { ascending: true })
@@ -174,6 +192,8 @@ const Clinics = () => {
             const transformedClinics = (clinicResult.data || []).map(clinic => ({
                 id: clinic.id,
                 name: clinic.name,
+                name_ar: clinic.name_ar,  // Make sure this is here
+
                 category: clinic.category,
                 description: clinic.description,
                 doctors: (clinic.doctors || [])
@@ -181,11 +201,14 @@ const Clinics = () => {
                     .map(doctor => ({
                         id: doctor.id,
                         name: doctor.name,
+                        name_ar: doctor.name_ar, // Add this
                         specialty: doctor.specialty,
+                        specialty_ar: doctor.specialty_ar, // Add this
                         price: doctor.price,
                         availability: doctor.doctor_availability || []
                     }))
             }));
+            console.log('🔍 Transformed clinics:', transformedClinics);
 
             setClinics(transformedClinics);
         } catch (error) {
@@ -235,8 +258,8 @@ const Clinics = () => {
         // Navigate to payment page with appointment details
         navigate("/payment", {
             state: {
-                clinicName: selectedClinic.name,
-                doctorName: selectedDoctor.name,
+                clinicName: getClinicDisplayName(selectedClinic),
+                doctorName: getDoctorDisplayName(selectedDoctor),
                 specialty: selectedDoctor.specialty,
                 appointmentDay: selectedDay,
                 appointmentTime: selectedTime,
@@ -342,7 +365,7 @@ const Clinics = () => {
                             dir={isRTL ? "rtl" : "ltr"}
                         >
                             <h3 className={`clinic-card-title ${isRTL ? 'text-left' : 'text-left'}`}>
-                                {clinic.name}
+                                {getClinicDisplayName(clinic)}
                             </h3>
                             <p className={`clinic-card-category ${isRTL ? 'text-left' : 'text-left'}`}>
                                 {getCategoryDisplayName(clinic.category)}  {/* ← NEW */}
@@ -366,7 +389,7 @@ const Clinics = () => {
                         <div className="modal-content" dir={isRTL ? "rtl" : "ltr"}>
                             <div className="modal-header">
                                 <h2 className="modal-title">
-                                    {selectedClinic.name}
+                                    {getClinicDisplayName(selectedClinic)}
                                 </h2>
                                 <button
                                     onClick={() => setSelectedClinic(null)}
@@ -396,10 +419,10 @@ const Clinics = () => {
                                             dir={isRTL ? "rtl" : "ltr"}
                                         >
                                             <h3 className={`text-lg font-semibold ${isRTL ? 'text-left' : 'text-left'}`}>
-                                                {doctor.name}
+                                                {getDoctorDisplayName(doctor)}
                                             </h3>
                                             <p className={`text-gray-600 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                                {doctor.specialty}
+                                                {getSpecialtyDisplayName(doctor)}
                                             </p>
                                             <p className={`font-medium mt-2 ${isRTL ? 'text-left' : 'text-left'}`}>
                                                 {t('clinics.fee')}: ₪{doctor.price}

@@ -22,11 +22,14 @@ import {
 } from "lucide-react";
 import "../../styles/doctormanagement.css"
 import { useAdminState } from "../../../hooks/useAdminState"; // ✅ NEW IMPORT
+import { translateToArabic } from "../../../lib/translationService";
 
 interface DoctorInfo {
     id: string;
     name: string;
+    name_ar?: string; // Add this
     specialty: string;
+    specialty_ar?: string; // Add this
     clinic_id: string;
     email: string;
     phone?: string;
@@ -88,6 +91,7 @@ const DoctorManagement = () => {
         is_available: false,
         price: 1,
     });
+    const [isTranslating, setIsTranslating] = useState(false);
 
     // State for availability management
     const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
@@ -356,6 +360,11 @@ const DoctorManagement = () => {
         }
 
         try {
+            // Translate doctor name and specialty to Arabic
+            setIsTranslating(true);
+            const arabicName = await translateToArabic(doctorFormData.name);
+            const arabicSpecialty = await translateToArabic(doctorFormData.specialty);
+            setIsTranslating(false);
 
             if (doctorFormMode === "create") {
                 // Create new doctor
@@ -363,7 +372,9 @@ const DoctorManagement = () => {
                     .from('doctors')
                     .insert({
                         name: doctorFormData.name,
+                        name_ar: arabicName, // Add this
                         specialty: doctorFormData.specialty,
+                        specialty_ar: arabicSpecialty, // Add this
                         clinic_id: doctorFormData.clinic_id,
                         email: doctorFormData.email,
                         phone: doctorFormData.phone || null,
@@ -391,7 +402,9 @@ const DoctorManagement = () => {
                     .from('doctors')
                     .update({
                         name: doctorFormData.name,
+                        name_ar: arabicName, // Add this
                         specialty: doctorFormData.specialty,
+                        specialty_ar: arabicSpecialty, // Add this
                         clinic_id: doctorFormData.clinic_id,
                         email: doctorFormData.email,
                         phone: doctorFormData.phone || null,
@@ -908,10 +921,10 @@ const DoctorManagement = () => {
                                 type="submit"
                                 form="doctorForm"
                                 className={doctorFormMode === "edit" ? "" : "w-full"}
-                                disabled={isLoading || clinics.length === 0}
+                                disabled={isLoading || clinics.length === 0 || isTranslating}
                             >
-                                {isLoading
-                                    ? t('doctorManagement.saving')
+                                {isLoading || isTranslating
+                                    ? (isTranslating ? 'Translating...' : t('doctorManagement.saving'))
                                     : doctorFormMode === "create"
                                         ? t('doctorManagement.createDoctor')
                                         : t('doctorManagement.updateDoctor')

@@ -27,6 +27,7 @@ interface UserInfo {
 interface ClinicInfo {
     id: string;
     name: string;
+    name_ar?: string; // Add this line
     category: string;
     category_name_en?: string;  // Add this
     category_name_ar?: string;  // Add this
@@ -41,6 +42,8 @@ interface ClinicInfo {
 interface DoctorInfo {
     id: string;
     name: string;
+    name_ar?: string; // Add this line
+
     specialty: string;
     clinic_id: string;
     email: string;
@@ -57,8 +60,10 @@ interface AppointmentInfo {
     patient_name: string;
     doctor_id: string;
     doctor_name: string;
+    doctor_name_ar?: string;
     clinic_id: string;
     clinic_name: string;
+    clinic_name_ar?: string;
     date: string;
     time: string;
     status: 'scheduled' | 'completed' | 'cancelled';
@@ -236,14 +241,14 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             const { data, error } = await supabase
                 .from('clinics')
                 .select(`
-                *,
-                clinic_categories!clinics_category_id_fkey (
-                    name_ar
-                )
-            `)
+        *,
+        name_ar,
+        clinic_categories!clinics_category_id_fkey (
+            name_ar
+        )
+    `)
                 .order('name', { ascending: true });
-
-            if (error) throw error;
+            if (error) throw error;  // ✅ ADD THIS LINE
 
             const transformedClinics = (data || []).map(clinic => ({
                 ...clinic,
@@ -332,11 +337,11 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             const { data, error } = await supabase
                 .from('appointments')
                 .select(`
-                *,
-                patients:patient_id (userid, english_username_a, english_username_d),
-                doctors:doctor_id (id, name),
-                clinics:clinic_id (id, name)
-            `)
+    *,
+    patients:patient_id (userid, english_username_a, english_username_d),
+    doctors:doctor_id (id, name, name_ar),
+    clinics:clinic_id (id, name, name_ar)
+`)
                 .order('date', { ascending: false });
 
             if (error) throw error;
@@ -347,8 +352,10 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 patient_name: `${apt.patients?.english_username_a || ''} ${apt.patients?.english_username_d || ''}`.trim(),
                 doctor_id: apt.doctor_id,
                 doctor_name: apt.doctors?.name || 'Unknown Doctor',
+                doctor_name_ar: apt.doctors?.name_ar,
                 clinic_id: apt.clinic_id,
                 clinic_name: apt.clinics?.name || 'Unknown Clinic',
+                clinic_name_ar: apt.clinics?.name_ar,
                 date: apt.date,
                 time: apt.time,
                 status: apt.status,
