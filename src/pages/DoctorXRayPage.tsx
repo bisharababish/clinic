@@ -668,8 +668,8 @@ const DoctorXRayPage: React.FC = () => {
                                             <Download className="h-4 w-4" />
                                             {t('doctorPages.downloadImage') || 'Download'}
                                         </button>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
+                                        {user?.role === 'admin' && (
+                                            <AlertDialog>                                            <AlertDialogTrigger asChild>
                                                 <button
                                                     onClick={() => setConfirmDeleteImage(image)}
                                                     disabled={deletingId === image.id}
@@ -679,37 +679,37 @@ const DoctorXRayPage: React.FC = () => {
                                                     {deletingId === image.id ? (t('doctorPages.deleting') || 'Deleting...') : (t('common.delete') || 'Delete')}
                                                 </button>
                                             </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>{t('doctorPages.confirmDeleteTitle') || 'Delete X-ray Image?'}</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        {t('doctorPages.confirmDeleteDesc') || 'Are you sure you want to delete this X-ray image? This action cannot be undone.'}
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel asChild>
-                                                        <button type="button" onClick={() => setConfirmDeleteImage(null)}>
-                                                            {t('common.cancel') || 'Cancel'}
-                                                        </button>
-                                                    </AlertDialogCancel>
-                                                    <AlertDialogAction asChild>
-                                                        <button
-                                                            type="button"
-                                                            onClick={async () => {
-                                                                if (confirmDeleteImage) {
-                                                                    await handleDeleteImage(confirmDeleteImage);
-                                                                    setConfirmDeleteImage(null);
-                                                                }
-                                                            }}
-                                                            disabled={deletingId === image.id}
-                                                        >
-                                                            {deletingId === image.id ? (t('doctorPages.deleting') || 'Deleting...') : (t('common.delete') || 'Delete')}
-                                                        </button>
-                                                    </AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </div>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>{t('doctorPages.confirmDeleteTitle') || 'Delete X-ray Image?'}</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            {t('doctorPages.confirmDeleteDesc') || 'Are you sure you want to delete this X-ray image? This action cannot be undone.'}
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel asChild>
+                                                            <button type="button" onClick={() => setConfirmDeleteImage(null)}>
+                                                                {t('common.cancel') || 'Cancel'}
+                                                            </button>
+                                                        </AlertDialogCancel>
+                                                        <AlertDialogAction asChild>
+                                                            <button
+                                                                type="button"
+                                                                onClick={async () => {
+                                                                    if (confirmDeleteImage) {
+                                                                        await handleDeleteImage(confirmDeleteImage);
+                                                                        setConfirmDeleteImage(null);
+                                                                    }
+                                                                }}
+                                                                disabled={deletingId === image.id}
+                                                            >
+                                                                {deletingId === image.id ? (t('doctorPages.deleting') || 'Deleting...') : (t('common.delete') || 'Delete')}
+                                                            </button>
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        )}                                    </div>
                                 </div>
                             </div>
                         ))
