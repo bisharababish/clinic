@@ -119,7 +119,7 @@ const DeletionRequestsTab: React.FC = () => {
                 description: action === 'approved'
                     ? t('deletionRequest.requestApproved') || 'Deletion request approved and user deleted'
                     : t('deletionRequest.requestDeclined') || 'Deletion request declined',
-                className: "bg-green-50 border-green-200 text-green-800", // Add green background
+                style: { backgroundColor: '#16a34a', color: '#fff' },
             });
 
             // Reload requests
@@ -131,8 +131,7 @@ const DeletionRequestsTab: React.FC = () => {
                 title: t('common.error'),
                 description: error instanceof Error ? error.message : `Failed to ${action} request`,
                 variant: "destructive",
-                className: "bg-red-50 border-red-200 text-red-800", 
-
+                style: { backgroundColor: '#16a34a', color: '#fff' },
             });
         } finally {
             setProcessingRequest(null);
