@@ -280,8 +280,23 @@ const DoctorManagement = () => {
         if (!doctorToDelete) return;
 
         try {
+            // Step 1: Delete all appointments for this doctor
+            const { error: appointmentsError } = await supabase
+                .from('appointments')
+                .delete()
+                .eq('doctor_id', doctorToDelete.id);
 
-            // First delete all availability slots for this doctor
+            if (appointmentsError) {
+                console.error("Error deleting appointments:", appointmentsError);
+                toast({
+                    title: t('common.error'),
+                    description: "Failed to delete doctor's appointments",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Step 2: Delete all availability slots for this doctor
             const { error: availabilityError } = await supabase
                 .from('doctor_availability')
                 .delete()
@@ -291,12 +306,13 @@ const DoctorManagement = () => {
                 console.error("Error deleting availability slots:", availabilityError);
                 toast({
                     title: t('common.error'),
-                    description: t('doctorManagement.failedToDeleteAvailability'), // You might need to add this translation
+                    description: "Failed to delete doctor's availability",
                     variant: "destructive",
                 });
-                return; // ← This stops the function from continuing
+                return;
             }
-            // Delete the doctor
+
+            // Step 3: Now delete the doctor
             const { error } = await supabase
                 .from('doctors')
                 .delete()
@@ -304,14 +320,13 @@ const DoctorManagement = () => {
 
             if (error) throw error;
 
-            await loadDoctors(true); // Force refresh doctors
+            await loadDoctors(true);
 
             toast({
                 title: t('common.success'),
                 description: t('doctorManagement.doctorDeletedSuccessfully', { name: doctorToDelete.name }),
             });
 
-            // Close the dialog
             setShowDeleteDialog(false);
             setDoctorToDelete(null);
         } catch (error) {
@@ -321,10 +336,8 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToDeleteDoctor'),
                 variant: "destructive",
             });
-
         }
     };
-
     const handleDoctorSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         // Validate phone number
