@@ -63,7 +63,7 @@ export const createDeletionRequest = async (
 
         // Create notification for admins
         await createNotification(
-            'admin', // This will be handled by the notification system to send to all admins
+            'admin',
             'New Deletion Request',
             `${requestedByEmail} has requested to delete user: ${userDetails.english_name}`,
             'warning',
@@ -104,7 +104,7 @@ export const updateDeletionRequest = async (
         }
 
         // Create notification for the requester
-        const statusMessage = status === 'approved' 
+        const statusMessage = status === 'approved'
             ? `Your deletion request for user ${data.user_details.english_name} has been approved.`
             : `Your deletion request for user ${data.user_details.english_name} has been declined.`;
 
@@ -152,6 +152,139 @@ export const getDeletionRequests = async (
     }
 };
 
+export const deleteDeletionRequests = async (
+    requestIds: string[]
+): Promise<{ success: boolean; error?: string }> => {
+    try {
+        console.log('=== DELETION DEBUG START ===');
+        console.log('Attempting to delete requests with IDs:', requestIds);
+
+        // Step 1: Verify requests exist and get current user
+        const { data: currentUser, error: userError } = await supabase.auth.getUser();
+        console.log('Current user:', currentUser.user?.email, currentUser.user?.id);
+
+        if (userError) {
+            console.error('User authentication error:', userError);
+            return { success: false, error: 'Authentication error: ' + userError.message };
+        }
+
+        // Step 2: Check what requests exist before deletion
+        const { data: beforeRequests, error: fetchError } = await supabase
+            .from('deletion_requests')
+            .select('*')
+            .in('id', requestIds);
+
+        console.log('Requests found before deletion:', beforeRequests);
+        console.log('Fetch error:', fetchError);
+
+        if (fetchError) {
+            console.error('Error fetching requests:', fetchError);
+            return { success: false, error: 'Failed to fetch requests: ' + fetchError.message };
+        }
+
+        if (!beforeRequests || beforeRequests.length === 0) {
+            console.log('No requests found with provided IDs');
+            return { success: false, error: 'No requests found with the provided IDs' };
+        }
+
+        // Step 3: Check RLS policies by trying a simple select first
+        console.log('Testing RLS policies...');
+        const { data: testSelect, error: testError } = await supabase
+            .from('deletion_requests')
+            .select('id')
+            .eq('id', requestIds[0])
+            .single();
+
+        console.log('RLS test result:', { data: testSelect, error: testError });
+
+        // Step 4: Try deletion with comprehensive error catching
+        console.log('Attempting bulk deletion...');
+        const deleteQuery = supabase
+            .from('deletion_requests')
+            .delete()
+            .in('id', requestIds);
+
+        // Add select to see what would be deleted
+        const { data: deletedData, error: deleteError, status, statusText } = await deleteQuery.select('*');
+
+        console.log('Delete operation complete:');
+        console.log('- HTTP Status:', status);
+        console.log('- Status Text:', statusText);
+        console.log('- Error:', deleteError);
+        console.log('- Deleted Data:', deletedData);
+        console.log('- Expected to delete:', requestIds.length);
+        console.log('- Actually deleted:', deletedData?.length || 0);
+
+        if (deleteError) {
+            console.error('DELETE ERROR DETAILS:', {
+                message: deleteError.message,
+                details: deleteError.details,
+                hint: deleteError.hint,
+                code: deleteError.code
+            });
+
+            // Try individual deletions to isolate the problem
+            console.log('Bulk delete failed, trying individual deletions...');
+            let successCount = 0;
+            const errors = [];
+
+            for (const requestId of requestIds) {
+                console.log(`Trying to delete individual request: ${requestId}`);
+
+                const { data: singleDelete, error: singleError } = await supabase
+                    .from('deletion_requests')
+                    .delete()
+                    .eq('id', requestId)
+                    .select('*');
+
+                if (singleError) {
+                    console.error(`Individual delete failed for ${requestId}:`, singleError);
+                    errors.push(`${requestId}: ${singleError.message}`);
+                } else {
+                    console.log(`Successfully deleted ${requestId}:`, singleDelete);
+                    successCount++;
+                }
+            }
+
+            if (errors.length > 0) {
+                return {
+                    success: false,
+                    error: `Deletion failed. Errors: ${errors.join('; ')}`
+                };
+            }
+
+            console.log(`Individual deletions completed. Success count: ${successCount}`);
+        }
+
+        // Step 5: Verify the deletion worked
+        console.log('Verifying deletion...');
+        const { data: afterRequests, error: verifyError } = await supabase
+            .from('deletion_requests')
+            .select('*')
+            .in('id', requestIds);
+
+        console.log('Requests remaining after deletion:', afterRequests);
+        console.log('Verify error:', verifyError);
+
+        if (afterRequests && afterRequests.length > 0) {
+            console.error('DELETION FAILED: Requests still exist after deletion attempt');
+            return {
+                success: false,
+                error: `Deletion failed: ${afterRequests.length} requests still exist after deletion attempt`
+            };
+        }
+
+        console.log('=== DELETION DEBUG END - SUCCESS ===');
+        return { success: true };
+
+    } catch (error) {
+        console.error('UNEXPECTED ERROR in deleteDeletionRequests:', error);
+        return {
+            success: false,
+            error: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        };
+    }
+};
 // Create notification
 export const createNotification = async (
     userEmail: string,
@@ -164,7 +297,7 @@ export const createNotification = async (
     try {
         // If userEmail is 'admin', get all admin emails
         let targetEmails: string[] = [];
-        
+
         if (userEmail === 'admin') {
             const { data: adminUsers, error: adminError } = await supabase
                 .from('userinfo')
@@ -244,7 +377,7 @@ export const deleteUserAfterApproval = async (
 
         if (rpcError) {
             console.warn("RPC function failed, trying direct deletion", rpcError);
-            
+
             // Fallback to direct deletion
             const { error: directError } = await supabase
                 .from('userinfo')

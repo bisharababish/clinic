@@ -32,6 +32,7 @@ import {
     getDeletionRequests,
     updateDeletionRequest,
     deleteUserAfterApproval,
+    deleteDeletionRequests,
     DeletionRequest
 } from '../../../lib/deletionRequests';
 import { useAuth } from '../../../hooks/useAuth';
@@ -53,7 +54,9 @@ const DeletionRequestsTab: React.FC = () => {
     const [selectedRequest, setSelectedRequest] = useState<DeletionRequest | null>(null);
     const [adminNotes, setAdminNotes] = useState('');
     const [actionType, setActionType] = useState<'approved' | 'declined'>('approved');
-
+    const [showDeclined, setShowDeclined] = useState(false);
+    const [selectedDeclined, setSelectedDeclined] = useState<string[]>([]);
+    const [isDeletingSelected, setIsDeletingSelected] = useState(false);
     // Load deletion requests
     const loadRequests = async () => {
         setIsLoading(true);
@@ -115,29 +118,123 @@ const DeletionRequestsTab: React.FC = () => {
             }
 
             toast({
-                title: t('common.success'),
+                title: isRTL ? 'نجح' : 'Success',
                 description: action === 'approved'
-                    ? t('deletionRequest.requestApproved') || 'Deletion request approved and user deleted'
-                    : t('deletionRequest.requestDeclined') || 'Deletion request declined',
-                style: { backgroundColor: '#16a34a', color: '#fff' },
+                    ? (isRTL ? 'تم الموافقة على طلب الحذف وحذف المستخدم' : 'Deletion request approved and user deleted')
+                    : (isRTL ? 'تم رفض طلب الحذف' : 'Deletion request declined'),
+                style: {
+                    backgroundColor: '#16a34a',
+                    color: '#fff'
+                },
             });
-
             // Reload requests
             await loadRequests();
 
         } catch (error) {
             console.error(`Error ${action}ing request:`, error);
+
+            // Create user-friendly error message
+            let errorMessage = '';
+
+            if (error instanceof Error) {
+                // Check for specific error patterns and provide better messages
+                if (error.message.includes('constraint') || error.message.includes('violates')) {
+                    errorMessage = isRTL
+                        ? 'فشل في حذف المستخدم بسبب قيود في قاعدة البيانات. يرجى المحاولة مرة أخرى أو الاتصال بالدعم التقني.'
+                        : 'Failed to delete user due to database constraints. Please try again or contact technical support.';
+                } else if (error.message.includes('Failed to delete user')) {
+                    errorMessage = isRTL
+                        ? 'فشل في حذف المستخدم. يرجى التحقق من صحة البيانات والمحاولة مرة أخرى.'
+                        : 'Failed to delete user. Please verify the data and try again.';
+                } else if (action === 'approved') {
+                    errorMessage = isRTL
+                        ? 'فشل في الموافقة على طلب الحذف وحذف المستخدم.'
+                        : 'Failed to approve deletion request and delete user.';
+                } else {
+                    errorMessage = isRTL
+                        ? 'فشل في رفض طلب الحذف.'
+                        : 'Failed to decline deletion request.';
+                }
+            } else {
+                // Generic fallback message
+                errorMessage = action === 'approved'
+                    ? (isRTL ? 'فشل في الموافقة على طلب الحذف.' : 'Failed to approve deletion request.')
+                    : (isRTL ? 'فشل في رفض طلب الحذف.' : 'Failed to decline deletion request.');
+            }
+
             toast({
                 title: t('common.error'),
-                description: error instanceof Error ? error.message : `Failed to ${action} request`,
+                description: errorMessage,
                 variant: "destructive",
-                style: { backgroundColor: '#16a34a', color: '#fff' },
+                style: {
+                    backgroundColor: '#dc2626',
+                    color: '#fff'
+                },
             });
         } finally {
             setProcessingRequest(null);
             setShowApprovalModal(false);
             setSelectedRequest(null);
             setAdminNotes('');
+        }
+    };
+    const handleSelectDeclined = (requestId: string) => {
+        setSelectedDeclined(prev =>
+            prev.includes(requestId)
+                ? prev.filter(id => id !== requestId)
+                : [...prev, requestId]
+        );
+    };
+
+    const handleSelectAllDeclined = () => {
+        const declinedIds = requests.filter(r => r.status === 'declined').map(r => r.id);
+        setSelectedDeclined(prev =>
+            prev.length === declinedIds.length ? [] : declinedIds
+        );
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedDeclined.length === 0) return;
+
+        setIsDeletingSelected(true);
+
+        try {
+            // Actually delete from database first
+            const deleteResult = await deleteDeletionRequests(selectedDeclined);
+
+            if (!deleteResult.success) {
+                throw new Error(deleteResult.error || 'Failed to delete requests');
+            }
+
+            // Only update local state after successful API call
+            await loadRequests(); // Reload from database instead of optimistic update
+            setSelectedDeclined([]);
+
+            toast({
+                title: isRTL ? 'نجح' : 'Success',
+                description: isRTL
+                    ? `تم حذف ${selectedDeclined.length} طلب مرفوض`
+                    : `Deleted ${selectedDeclined.length} declined request(s)`,
+                style: {
+                    backgroundColor: '#16a34a',
+                    color: '#fff'
+                },
+            });
+        } catch (error) {
+            console.error('Error deleting requests:', error);
+            toast({
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL
+                    ? 'فشل في حذف الطلبات المحددة'
+                    : 'Failed to delete selected requests',
+                variant: "destructive",
+                style: {
+                    backgroundColor: '#dc2626',
+                    color: '#fff'
+                },
+            });
+        } finally {
+            setIsDeletingSelected(false);
         }
     };
 
@@ -229,10 +326,50 @@ const DeletionRequestsTab: React.FC = () => {
                         {isRTL ? 'مراجعة وإدارة طلبات حذف المستخدمين' : 'Review and manage user deletion requests'}
                     </p>
                 </div>
-                <Button variant="outline" onClick={loadRequests} disabled={isLoading} className="w-full sm:w-auto">
-                    <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {isRTL ? 'تحديث' : 'Refresh'}
-                </Button>
+                <div className="flex gap-2 flex-wrap">
+                    <Button variant="outline" onClick={loadRequests} disabled={isLoading} className="w-full sm:w-auto">
+                        <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {isRTL ? 'تحديث' : 'Refresh'}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowDeclined(!showDeclined)}
+                        className="w-full sm:w-auto"
+                    >
+                        {showDeclined
+                            ? (isRTL ? 'إخفاء المرفوضة' : 'Hide Declined')
+                            : (isRTL ? 'إظهار المرفوضة' : 'Show Declined')
+                        }
+                    </Button>
+                    {showDeclined && requests.some(r => r.status === 'declined') && (
+                        <>
+                            <Button
+                                variant="outline"
+                                onClick={handleSelectAllDeclined}
+                                className="w-full sm:w-auto"
+                            >
+                                {selectedDeclined.length === requests.filter(r => r.status === 'declined').length
+                                    ? (isRTL ? 'إلغاء التحديد' : 'Deselect All')
+                                    : (isRTL ? 'تحديد الكل' : 'Select All')
+                                }
+                            </Button>
+                            {selectedDeclined.length > 0 && (
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleDeleteSelected}
+                                    disabled={isDeletingSelected}
+                                    className="w-full sm:w-auto"
+                                >
+                                    {isDeletingSelected ? (
+                                        isRTL ? 'جاري الحذف...' : 'Deleting...'
+                                    ) : (
+                                        isRTL ? `حذف (${selectedDeclined.length})` : `Delete (${selectedDeclined.length})`
+                                    )}
+                                </Button>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* Stats */}
@@ -293,12 +430,20 @@ const DeletionRequestsTab: React.FC = () => {
                 </Card>
             ) : (
                 <div className="space-y-3 sm:space-y-4">
-                    {requests.map((request) => (
+                    {requests.filter(request => showDeclined || request.status !== 'declined').map((request) => (
                         <Card key={request.id}>
                             <CardHeader className="p-4 sm:p-6">
                                 <div className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
                                     <div className="space-y-2 flex-1">
                                         <div className={`flex flex-col sm:flex-row sm:items-center gap-2 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                                            {request.status === 'declined' && showDeclined && (
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedDeclined.includes(request.id)}
+                                                    onChange={() => handleSelectDeclined(request.id)}
+                                                    className="w-4 h-4 text-red-600"
+                                                />
+                                            )}
                                             <h3 className="text-base sm:text-lg font-semibold">
                                                 {request.user_details.english_name}
                                             </h3>
@@ -359,12 +504,16 @@ const DeletionRequestsTab: React.FC = () => {
                                     {/* Admin Notes (if any) */}
                                     {request.admin_notes && (
                                         <div>
-                                            <h4 className="font-medium text-xs sm:text-sm mb-2">{isRTL ? 'ملاحظات المشرف:' : 'Admin Notes:'}</h4>
+                                            <h4 className={`font-medium text-xs sm:text-sm mb-2 ${isRTL ? 'text-right' : ''}`}>
+                                                {isRTL ? ':ملاحظات المشرف' : 'Admin Notes:'}
+                                            </h4>
                                             <div className="bg-blue-50 p-2 sm:p-3 rounded-lg">
-                                                <p className="text-xs sm:text-sm">{request.admin_notes}</p>
+                                                <p className={`text-xs sm:text-sm ${isRTL ? 'text-right' : ''}`}>
+                                                    {request.admin_notes}
+                                                </p>
                                                 {request.admin_email && (
-                                                    <p className="text-xs text-gray-500 mt-1">
-                                                        by {request.admin_email}
+                                                    <p className={`text-xs text-gray-500 mt-1 ${isRTL ? 'text-right' : ''}`}>
+                                                        {isRTL ? `بواسطة ${request.admin_email}` : `by ${request.admin_email}`}
                                                     </p>
                                                 )}
                                             </div>
@@ -459,7 +608,7 @@ const DeletionRequestsTab: React.FC = () => {
                             />
                             {actionType === 'declined' && !adminNotes.trim() && (
                                 <p className="text-xs text-red-500">
-                                    {t('deletionRequest.declineReasonRequired') || 'Please provide a reason for declining.'}
+                                    {isRTL ? 'يرجى تقديم سبب للرفض.' : 'Please provide a reason for declining.'}
                                 </p>
                             )}
                         </div>
