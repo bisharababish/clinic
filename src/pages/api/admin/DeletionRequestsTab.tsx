@@ -258,15 +258,15 @@ const DeletionRequestsTab: React.FC = () => {
 
     const getRequestorBadge = (role: string) => {
         const roleColors = {
-            'secretary': 'bg-blue-100 text-blue-800',
-            'admin': 'bg-purple-100 text-purple-800',
-            'manager': 'bg-green-100 text-green-800'
+            'Secretary': 'bg-blue-100 text-blue-800',
+            'Admin': 'bg-purple-100 text-purple-800',
+            'Manager': 'bg-green-100 text-green-800'
         };
 
         const roleTranslations = {
-            'secretary': isRTL ? 'سكرتير' : 'secretary',
-            'admin': isRTL ? 'مشرف' : 'admin',
-            'manager': isRTL ? 'مدير' : 'manager'
+            'Secretary': isRTL ? 'سكرتير' : 'Secretary',
+            'Admin': isRTL ? 'مشرف' : 'Admin',
+            'Manager': isRTL ? 'مدير' : 'Manager'
         };
 
         return (
