@@ -499,6 +499,10 @@ const UsersManagement = () => {
                     description: isRTL
                         ? 'تم تقديم طلب الحذف بنجاح. سيقوم المشرف بمراجعته.'
                         : 'Deletion request submitted successfully. An admin will review it.',
+                    style: {
+                        backgroundColor: '#16a34a',
+                        color: '#fff'
+                    },
                 });
 
                 logActivity(
