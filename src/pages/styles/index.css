@@ -1,4 +1,8 @@
 /* Index.css - Enhanced Mobile Responsive styles for the Index page */
+input#create_id_number {
+    outline: none !important;
+    box-shadow: none !important;
+}
 
 /* Main container responsive layout */
 .index-container {

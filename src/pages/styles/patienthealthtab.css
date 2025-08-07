@@ -1,5 +1,11 @@
 /* Patient Health Management - Mobile Responsive Styles */
 
+
+input#create_id_number {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
 /* Mobile-First Responsive Design */
 @media (max-width: 768px) {
 

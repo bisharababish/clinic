@@ -1,4 +1,8 @@
 /* Doctor Management Responsive Styles */
+input#id_number {
+    outline: none !important;
+    box-shadow: none !important;
+}
 
 /* Mobile First Approach - Base styles for mobile */
 .doctor-management-container {
