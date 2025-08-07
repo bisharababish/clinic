@@ -1,4 +1,9 @@
 /* UsersManagement.css */
+/* This will remove ALL borders from the ID input */
+input#id_number {
+    outline: none !important;
+    box-shadow: none !important;
+}
 
 /* Main container responsive layout */
 .users-management-container {
@@ -53,6 +58,7 @@
 
     }
 }
+
 
 /* Card header responsive */
 .card-header-top {
