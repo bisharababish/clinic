@@ -538,6 +538,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                 })
                 .select();
 
+
             if (error) {
                 console.error("❌ Error creating appointment:", error);
                 toast({
