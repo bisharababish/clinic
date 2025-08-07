@@ -678,7 +678,7 @@ const UsersManagement = () => {
                     console.error("Error creating user profile:", userError);
                     let errorMsg = userError.message;
                     if (errorMsg && (errorMsg.includes('duplicate key value') || errorMsg.includes('unique constraint'))) {
-                        errorMsg = 'A user with this information already exists. Please use a different username or email.';
+                        errorMsg = 'A user with this information already exists. Please use a different username, email, or ID.';
                     }
                     toast({
                         title: t('common.error'),
