@@ -112,7 +112,12 @@ const UsersManagement = () => {
     // Add this near the other permission checks:
     const canCreateUsers = hasPermission(currentUserRole, 'canManageUsers');
     const canEditUsers = hasPermission(currentUserRole, 'canManageUsers');
-
+    useEffect(() => {
+        if (userFormMode === "edit" && userFormData.id_number && userFormData.id_number.length === 9) {
+            const isValid = isValidPalestinianID(userFormData.id_number);
+            setIdValidationStatus(isValid ? 'valid' : 'invalid');
+        }
+    }, [userFormMode, userFormData.id_number]);
     useEffect(() => {
         if (searchQuery.trim() === '') {
             // Filter users based on current user role
@@ -290,6 +295,8 @@ const UsersManagement = () => {
             user_roles: "patient",
             user_password: "",
         });
+        setIdValidationStatus('unchecked');
+
     };
 
     const handleEditUser = (userid: number) => {
@@ -322,6 +329,8 @@ const UsersManagement = () => {
             user_roles: userToEdit.user_roles.toLowerCase() as UserRole,
             user_password: "", // Password is not loaded for security
         });
+        setIdValidationStatus('unchecked');
+
     };
 
     // Function to properly capitalize role names including multi-word roles
