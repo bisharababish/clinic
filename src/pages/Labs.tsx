@@ -659,140 +659,140 @@ const Labs = () => {
     setIsClient(true);
   }, []);
 
-const TiptapToolbar = React.memo(({ editor, isRTL }: { editor: Editor | null, isRTL: boolean }) => {
-  if (!editor) return null;
+  const TiptapToolbar = React.memo(({ editor, isRTL }: { editor: Editor | null, isRTL: boolean }) => {
+    if (!editor) return null;
 
-  const handleButtonClick = (action: () => void) => {
-    return (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      action();
+    const handleButtonClick = (action: () => void) => {
+      return (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        action();
+      };
     };
-  };
 
-  return (
-    <div className="tiptap-toolbar" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive('bold') ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleBold().run())}
-        disabled={!editor.can().chain().focus().toggleBold().run()}
-        title={isRTL ? 'عريض' : 'Bold'}
-      >
-        <strong>B</strong>
-      </button>
+    return (
+      <div className="tiptap-toolbar" style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive('bold') ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().toggleBold().run())}
+          disabled={!editor.can().chain().focus().toggleBold().run()}
+          title={isRTL ? 'عريض' : 'Bold'}
+        >
+          <strong>B</strong>
+        </button>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive('italic') ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleItalic().run())}
-        disabled={!editor.can().chain().focus().toggleItalic().run()}
-        title={isRTL ? 'مائل' : 'Italic'}
-      >
-        <em>I</em>
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive('italic') ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().toggleItalic().run())}
+          disabled={!editor.can().chain().focus().toggleItalic().run()}
+          title={isRTL ? 'مائل' : 'Italic'}
+        >
+          <em>I</em>
+        </button>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive('underline') ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleUnderline().run())}
-        disabled={!editor.can().chain().focus().toggleUnderline().run()}
-        title={isRTL ? 'تحته خط' : 'Underline'}
-      >
-        <u>U</u>
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive('underline') ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().toggleUnderline().run())}
+          disabled={!editor.can().chain().focus().toggleUnderline().run()}
+          title={isRTL ? 'تحته خط' : 'Underline'}
+        >
+          <u>U</u>
+        </button>
 
-      <div className="toolbar-separator"></div>
+        <div className="toolbar-separator"></div>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 1 }).run())}
-        title={isRTL ? 'عنوان رئيسي' : 'Heading 1'}
-      >
-        H1
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive('heading', { level: 1 }) ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 1 }).run())}
+          title={isRTL ? 'عنوان رئيسي' : 'Heading 1'}
+        >
+          H1
+        </button>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 2 }).run())}
-        title={isRTL ? 'عنوان فرعي' : 'Heading 2'}
-      >
-        H2
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive('heading', { level: 2 }) ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().toggleHeading({ level: 2 }).run())}
+          title={isRTL ? 'عنوان فرعي' : 'Heading 2'}
+        >
+          H2
+        </button>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive('paragraph') ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().setParagraph().run())}
-        title={isRTL ? 'نص عادي' : 'Paragraph'}
-      >
-        P
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive('paragraph') ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().setParagraph().run())}
+          title={isRTL ? 'نص عادي' : 'Paragraph'}
+        >
+          P
+        </button>
 
-      <div className="toolbar-separator"></div>
+        <div className="toolbar-separator"></div>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive({ textAlign: 'left' }) ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('left').run())}
-        title={isRTL ? 'محاذاة يسار' : 'Align Left'}
-      >
-        ⇤
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive({ textAlign: 'left' }) ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('left').run())}
+          title={isRTL ? 'محاذاة يسار' : 'Align Left'}
+        >
+          ⇤
+        </button>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive({ textAlign: 'center' }) ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('center').run())}
-        title={isRTL ? 'توسيط' : 'Center'}
-      >
-        ≡
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive({ textAlign: 'center' }) ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('center').run())}
+          title={isRTL ? 'توسيط' : 'Center'}
+        >
+          ≡
+        </button>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive({ textAlign: 'right' }) ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('right').run())}
-        title={isRTL ? 'محاذاة يمين' : 'Align Right'}
-      >
-        ⇥
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive({ textAlign: 'right' }) ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().setTextAlign('right').run())}
+          title={isRTL ? 'محاذاة يمين' : 'Align Right'}
+        >
+          ⇥
+        </button>
 
-      <div className="toolbar-separator"></div>
+        <div className="toolbar-separator"></div>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive('bulletList') ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleBulletList().run())}
-        title={isRTL ? 'قائمة نقطية' : 'Bullet List'}
-      >
-        •
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive('bulletList') ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().toggleBulletList().run())}
+          title={isRTL ? 'قائمة نقطية' : 'Bullet List'}
+        >
+          •
+        </button>
 
-      <button
-        type="button"
-        className={`toolbar-btn ${editor.isActive('orderedList') ? 'is-active' : ''}`}
-        onMouseDown={handleButtonClick(() => editor.chain().focus().toggleOrderedList().run())}
-        title={isRTL ? 'قائمة مرتبة' : 'Numbered List'}
-      >
-        1.
-      </button>
+        <button
+          type="button"
+          className={`toolbar-btn ${editor.isActive('orderedList') ? 'is-active' : ''}`}
+          onMouseDown={handleButtonClick(() => editor.chain().focus().toggleOrderedList().run())}
+          title={isRTL ? 'قائمة مرتبة' : 'Numbered List'}
+        >
+          1.
+        </button>
 
-      <div className="toolbar-separator"></div>
+        <div className="toolbar-separator"></div>
 
-      <button
-        type="button"
-        className="toolbar-btn"
-        onMouseDown={handleButtonClick(() => editor.chain().focus().unsetAllMarks().clearNodes().run())}
-        title={isRTL ? 'مسح التنسيق' : 'Clear Format'}
-      >
-        ✕
-      </button>
-    </div>
-  );
-});
+        <button
+          type="button"
+          className="toolbar-btn"
+          onMouseDown={handleButtonClick(() => editor.chain().focus().unsetAllMarks().clearNodes().run())}
+          title={isRTL ? 'مسح التنسيق' : 'Clear Format'}
+        >
+          ✕
+        </button>
+      </div>
+    );
+  });
 
   // Initialize editors with better content management
   const testResultsEditor = useEditor({
@@ -1094,13 +1094,14 @@ const TiptapToolbar = React.memo(({ editor, isRTL }: { editor: Editor | null, is
                   {/* Test Date */}
                   <div>
                     <Label htmlFor="testDate">{isRTL ? 'تاريخ الفحص' : 'Test Date'}</Label>
-                    <Input
+                    <input
                       id="testDate"
                       name="testDate"
                       type="date"
                       value={labData.testDate}
                       onChange={handleChange}
                       required
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     />
                   </div>
 
