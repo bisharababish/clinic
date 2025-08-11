@@ -177,6 +177,7 @@ const enTranslations = {
         secretaryDashboard: 'Secretary Dashboard',
         doctorLabs: 'Lab Results',
         doctorXRay: 'X-Ray Images',
+        patients: 'Patients',
     },
     doctorPages: {
         // Lab Results Page
@@ -1780,6 +1781,7 @@ const arTranslations = {
         secretaryDashboard: 'لوحة تحكم السكرتير',
         doctorLabs: 'نتائج المختبر',
         doctorXRay: 'صور الأشعة',
+        patients: 'المرضى',
     },
     doctorPages: {
         // Lab Results Page

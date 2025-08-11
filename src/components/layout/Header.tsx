@@ -168,6 +168,7 @@ export function Header() {
     // Doctor-specific permissions
     const canViewDoctorLabs = isAuthenticated && userPermissions.canViewDoctorLabs;
     const canViewDoctorXray = isAuthenticated && userPermissions.canViewDoctorXray;
+    const canViewPatients = isAuthenticated && userPermissions.canViewPatients;
 
     // Define role checks for styling
     const isAdmin = effectiveRole === "admin";
@@ -333,6 +334,11 @@ export function Header() {
                         {canViewDoctorXray && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/doctor/xray" className="font-medium">{t('navbar.doctorXRay') || 'X-Ray Images'}</Link>
+                            </Button>
+                        )}
+                        {canViewPatients && (
+                            <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
+                                <Link to="/doctor/patients" className="font-medium">{t('navbar.patients') || 'Patients'}</Link>
                             </Button>
                         )}
                         {canViewAdmin && (
@@ -559,6 +565,20 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
+                                    {canViewPatients && (
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                            <Link
+                                                to="/doctor/patients"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/doctor/patients');
+                                                }}
+                                                className="font-medium"
+                                            >
+                                                {t('navbar.patients') || 'Patients'}
+                                            </Link>
+                                        </Button>
+                                    )}
                                     {canViewAdmin && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
                                             <Link
@@ -573,6 +593,7 @@ export function Header() {
                                             </Link>
                                         </Button>
                                     )}
+
                                     {isAuthenticated && canChangePassword && (
                                         <Button
                                             variant="ghost"

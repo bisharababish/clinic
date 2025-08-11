@@ -20,6 +20,8 @@ export interface UserPermissions {
   canViewCalendar: boolean;
   canRequestUserDeletion: boolean;
   canApproveUserDeletion: boolean;
+  canViewPatients: boolean; // Add this line
+
 }
 
 export const RolePermissions: Record<string, UserPermissions> = {
@@ -43,6 +45,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewCalendar: true,
     canRequestUserDeletion: true,
     canApproveUserDeletion: true,
+    canViewPatients: true, // Add this
 
   },
   secretary: {
@@ -65,6 +68,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewCalendar: true,
     canRequestUserDeletion: true,
     canApproveUserDeletion: false,
+    canViewPatients: false, // Add this
 
   },
   doctor: {
@@ -87,6 +91,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewCalendar: true,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
+    canViewPatients: true, // Add this
 
   },
   lab: {
@@ -109,6 +114,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewCalendar: false,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
+    canViewPatients: false, // Add this
 
   },
   "x ray": {
@@ -131,6 +137,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewCalendar: false,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
+    canViewPatients: false, // Add this
 
   },
   nurse: {
@@ -153,6 +160,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewCalendar: false,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
+    canViewPatients: false, // Add this
 
   },
   patient: {
@@ -175,6 +183,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewCalendar: false,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
+    canViewPatients: false, // Add this
 
   }
 };
@@ -208,10 +217,9 @@ export const getAccessibleRoutes = (role: string): string[] => {
   if (permissions.canViewXray) routes.push('/xray');
   if (permissions.canViewAdmin) routes.push('/admin');
 
-  // ✅ NEW: Add doctor-specific routes
   if (permissions.canViewDoctorLabs) routes.push('/doctor/labs');
   if (permissions.canViewDoctorXray) routes.push('/doctor/xray');
-
+  if (permissions.canViewPatients) routes.push('/doctor/patients');
   return routes;
 };
 
