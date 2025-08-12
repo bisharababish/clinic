@@ -222,51 +222,82 @@ const DoctorPatientsPage: React.FC = () => {
             });
         }
     };
-
-    // Save clinical note
     const saveClinicalNote = async () => {
-        if (!selectedPatient || !user) return;
+        if (!selectedPatient || !user) {
+            console.error('Missing required data:', { selectedPatient, user });
+            return;
+        }
+
+        if (!newNote.notes?.trim()) {
+            toast({
+                title: 'Error',
+                description: 'Clinical notes are required.',
+                variant: 'destructive',
+            });
+            return;
+        }
 
         try {
-            const noteData = {
-                ...newNote,
-                patient_id: selectedPatient.id,
-                doctor_id: user.id,
-                doctor_name: user.name,
-                updated_at: new Date().toISOString()
-            };
+            // The logged-in doctor's info should be automatically available
+            // Let's get the doctor's userid from userinfo table using their email
+            const { data: doctorInfo, error: doctorError } = await supabase
+                .from('userinfo')
+                .select('userid, english_username_a, english_username_b, english_username_c, english_username_d')
+                .eq('user_email', user.email)
+                .eq('user_roles', 'Doctor') // Make sure they're actually a doctor
+                .single();
 
-            let result;
-            if (editingNote) {
-                const { data, error } = await supabase
-                    .from('clinical_notes')
-                    .update(noteData)
-                    .eq('id', editingNote.id)
-                    .select()
-                    .single();
-                result = { data, error };
-            } else {
-                const { data, error } = await supabase
-                    .from('clinical_notes')
-                    .insert([{ ...noteData, created_at: new Date().toISOString() }])
-                    .select()
-                    .single();
-                result = { data, error };
+            if (doctorError || !doctorInfo) {
+                throw new Error('Doctor information not found. Please make sure you are logged in as a doctor.');
             }
 
-            if (result.error) throw result.error;
+            const doctorName = `${doctorInfo.english_username_a} ${doctorInfo.english_username_b} ${doctorInfo.english_username_c} ${doctorInfo.english_username_d}`.trim();
 
+            const noteData = {
+                patient_id: selectedPatient.id,
+                doctor_id: doctorInfo.userid, // This is the doctor's userid from userinfo table
+                doctor_name: doctorName,
+                note_type: newNote.note_type || 'general',
+                status: newNote.status || 'active',
+                priority: newNote.priority || 'medium',
+                notes: newNote.notes.trim(),
+                chief_complaint: newNote.chief_complaint || null,
+                diagnosis: newNote.diagnosis || null,
+                treatment_plan: newNote.treatment_plan || null,
+                medications: newNote.medications || null,
+                follow_up_date: newNote.follow_up_date || null,
+                follow_up_notes: newNote.follow_up_notes || null,
+                vital_signs: newNote.vital_signs || {}
+            };
+
+            console.log('Saving note with data:', noteData);
+
+            const { data, error } = await supabase
+                .from('clinical_notes')
+                .insert([noteData])
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Database error:', error);
+                throw error;
+            }
+
+            // Refresh the notes list and close the form
             await fetchClinicalNotes(selectedPatient.id);
             resetNoteForm();
+            setIsAddingNote(false);
+
             toast({
                 title: 'Success',
-                description: editingNote ? 'Note updated successfully!' : 'Note added successfully!',
+                description: 'Clinical note added successfully!',
             });
+
         } catch (err) {
             console.error('Error saving clinical note:', err);
             toast({
                 title: 'Error',
-                description: 'Failed to save note. Please try again.',
+                description: `Failed to save note: ${err.message}`,
                 variant: 'destructive',
             });
         }
@@ -559,7 +590,7 @@ const DoctorPatientsPage: React.FC = () => {
                                     </h3>
                                     <form onSubmit={(e) => { e.preventDefault(); saveClinicalNote(); }}>
                                         <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
- 
+
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">{isRTL ? 'نوع الملاحظة' : 'Note Type'}</label>
                                                 <select
@@ -619,8 +650,10 @@ const DoctorPatientsPage: React.FC = () => {
                                                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
                                             >
                                                 <Save className="h-4 w-4" />
-                                                {editingNote ? 'Update Note' : 'Save Note'}
-                                            </button>
+                                                {editingNote
+                                                    ? (isRTL ? 'تحديث الملاحظة' : 'Update Note')
+                                                    : (isRTL ? 'حفظ الملاحظة' : 'Save Note')
+                                                }                                            </button>
                                             <button
                                                 type="button"
                                                 onClick={() => {
