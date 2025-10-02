@@ -1266,6 +1266,7 @@ const UsersManagement = () => {
                                             type="date"
                                             value={userFormData.date_of_birth}
                                             onChange={handleUserInputChange}
+                                            max={new Date().toISOString().split('T')[0]}
                                             dir="ltr"
                                         />
                                     </div>

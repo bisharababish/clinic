@@ -1,0 +1,9 @@
+:root {
+  --xray-bone: 0, 0%, 100%; /* white */
+  --xray-bone-selected: 210, 100%, 90%; /* optional: light blue for selected */
+  --xray-bone-hover: 210, 20%, 95%; /* optional: off-white for hover */
+  --xray-joint: 220, 30%, 40%;
+  --xray-highlight: 200, 90%, 55%;
+  --xray-background: 220, 30%, 10%;
+  --xray-glow: 200, 90%, 60%;
+}

@@ -368,7 +368,7 @@ export function Header() {
                             {isAuthenticated ? (
                                 <>
                                     {/* NotificationBell temporarily disabled due to subscription issue */}
-                                    {<NotificationBell />}
+                                    {!isPatient && <NotificationBell />}
                                     {canChangePassword && (
                                         <Button
                                             variant="outline"
@@ -411,7 +411,7 @@ export function Header() {
                             )}
 
                             {/* Mobile NotificationBell */}
-                            {isAuthenticated && <NotificationBell />}
+                            {isAuthenticated && !isPatient && <NotificationBell />}
 
                             {/* Mobile Menu Button - always visible */}
                             <Button
