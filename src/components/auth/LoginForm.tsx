@@ -36,7 +36,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const { isRTL } = useContext(LanguageContext);
   const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
-  
+
   // Helper function to get role-based redirect
   const getRoleBasedRedirect = (role: string): string => {
     return getDefaultRouteForRole(role);
@@ -269,7 +269,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       // Reset reCAPTCHA on failed login
       setRecaptchaValue(null);
-      recaptchaRef.current?.reset(); 
+      recaptchaRef.current?.reset();
 
     } finally {
       setIsLoading(false);
