@@ -247,13 +247,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
       console.error("Login error:", error);
       sessionStorage.removeItem('login_in_progress');
 
-      let errorMessage = t("auth.missingCredentials") || "Login failed";
+      let errorMessage = t("auth.loginFailed") || "Login failed";
 
-      if (typeof error === "object" && error !== null && "message" in error && typeof (error as { message?: string }).message === "string") {
-        const errMsg = (error as { message: string }).message;
+      if (error && typeof error === "object" && "message" in error) {
+        const errMsg = String(error.message);
+
         if (errMsg.includes("Invalid login credentials")) {
           errorMessage = t("auth.invalidCredentials") || "Invalid email or password";
-        } else {
+        } else if (errMsg) {
           errorMessage = errMsg;
         }
       }
@@ -262,7 +263,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         title: t("common.login") || "Login Failed",
         description: errorMessage,
         variant: "destructive",
-        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
+        style: { backgroundColor: '#dc2626', color: '#fff' },
       });
 
       // Reset reCAPTCHA on failed login

@@ -555,10 +555,42 @@ const Index = () => {
     }
 
     // Validate date of birth (must be at least 16 years old)
+    // Validate date of birth (must be at least 16 years old)
     if (!form.date_of_birth) {
       toast({
         title: isRTL ? "تاريخ الميلاد مطلوب" : "Date of Birth Required",
         description: t('usersManagement.enterDateOfBirth'),
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // ADD THIS NEW VALIDATION - Check if date is not in the future
+    const selectedDate = new Date(form.date_of_birth);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
+
+    if (selectedDate > today) {
+      toast({
+        title: isRTL ? "تاريخ ميلاد غير صحيح" : "Invalid Date of Birth",
+        description: isRTL
+          ? "تاريخ غير صحيح"
+          : "Invalid date",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Optional: Add minimum age validation (e.g., must be at least 1 year old)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    if (selectedDate > oneYearAgo) {
+      toast({
+        title: isRTL ? "تاريخ ميلاد غير صحيح" : "Invalid Date of Birth",
+        description: isRTL
+          ? "يجب أن يكون عمر المريض سنة واحدة على الأقل"
+          : "Patient must be at least 1 year old",
         variant: "destructive",
       });
       return false;

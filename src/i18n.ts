@@ -61,6 +61,9 @@ const enTranslations = {
         enterCredentials2: 'Enter your credentials to access your account',
         enterCredentials: 'name@example.com',
         dontHaveAccount: 'Don\'t have an account?',
+        invalidCredentials: "Invalid email or password",
+        loginFailed: "Login Failed",
+
         alreadyHaveAccount: 'Already have an account?',
         createAccount: 'Create Account',
         registerAsPatient: 'Register  to access our services',
@@ -1663,6 +1666,9 @@ const arTranslations = {
         dontHaveAccount: 'ليس لديك حساب؟',
         alreadyHaveAccount: 'هل لديك حساب بالفعل؟',
         createAccount: 'إنشاء حساب',
+        invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+
+        loginFailed: "فشل تسجيل الدخول",  
         registerAsPatient: 'سجل للوصول إلى خدماتنا',
         resetPasswordTitle: 'نسيت كلمة المرور',
         resetPasswordDesc: 'أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور',

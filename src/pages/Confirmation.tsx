@@ -6,20 +6,19 @@ import { Link } from "react-router-dom";
 
 const Confirmation = () => {
     const location = useLocation();
-    const { clinicName, doctorName, appointmentTime, paymentMethod } = location.state || {
+    const { clinicName, doctorName, appointmentTime, paymentMethod, confirmationNumber } = location.state || {
         clinicName: "Selected Clinic",
         doctorName: "Selected Doctor",
         appointmentTime: "Selected Time",
-        paymentMethod: "creditCard"
+        paymentMethod: "cash",
+        confirmationNumber: undefined
     };
 
-    const paymentMethodDisplay = {
-        paypal: "PayPal",
-        creditCard: "Credit Card",
-        insurance: "Insurance"
+    const paymentMethodDisplay: Record<string, string> = {
+        cash: "Cash",
     };
 
-    const confirmationNumber = `APT${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
+    const fallbackConfirmation = `APT${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
     const appointmentDate = new Date();
     appointmentDate.setDate(appointmentDate.getDate() + 3); // Sample future date
 
@@ -39,7 +38,7 @@ const Confirmation = () => {
                 <CardContent className="space-y-6">
                     <div className="grid grid-cols-2 gap-3">
                         <div className="text-sm font-medium">Confirmation Number:</div>
-                        <div className="font-bold">{confirmationNumber}</div>
+                        <div className="font-bold">{confirmationNumber || fallbackConfirmation}</div>
 
                         <div className="text-sm font-medium">Clinic:</div>
                         <div>{clinicName}</div>
@@ -51,7 +50,7 @@ const Confirmation = () => {
                         <div>{appointmentTime}</div>
 
                         <div className="text-sm font-medium">Paid Using:</div>
-                        <div>{paymentMethodDisplay[paymentMethod as keyof typeof paymentMethodDisplay]}</div>
+                        <div>{paymentMethodDisplay[paymentMethod as keyof typeof paymentMethodDisplay] || 'Cash'}</div>
                     </div>
 
                     <div className="bg-blue-50 border border-blue-100 rounded-md p-4 text-blue-800">

@@ -34,6 +34,7 @@ interface PaymentBookingRecord {
     currency: string;
     payment_status: string;
     booking_status: string;  // ✅ CORRECT
+    confirmation_number?: string;
     created_at: string;
     updated_at: string;
 }
@@ -67,6 +68,7 @@ const Payment = () => {
     const [agreedToCashTerms, setAgreedToCashTerms] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [appointmentId, setAppointmentId] = useState<string>("");
+    const [confirmationNumber, setConfirmationNumber] = useState<string>("");
 
     useEffect(() => {
         // Get current user and create appointment record
@@ -118,7 +120,11 @@ const Payment = () => {
                     });
                     throw new Error(error.message || 'Insert failed');
                 }
-                if (appointment) setAppointmentId((appointment as PaymentBookingRecord).id);
+                if (appointment) {
+                    const appt = appointment as PaymentBookingRecord;
+                    setAppointmentId(appt.id);
+                    if (appt.confirmation_number) setConfirmationNumber(appt.confirmation_number);
+                }
             } catch (error) {
                 console.error('Error initializing payment:', error);
                 toast({
@@ -168,7 +174,9 @@ const Payment = () => {
                         doctorName,
                         appointmentTime,
                         paymentMethod: 'cash',
-                        status: 'pending_payment'
+                        status: 'pending_payment',
+                        confirmationNumber: confirmationNumber,
+                        appointmentId: appointmentId
                     }
                 });
             }
