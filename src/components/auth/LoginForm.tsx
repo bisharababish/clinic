@@ -1,6 +1,6 @@
 // src/components/auth/LoginForm.tsx
 import * as React from "react";
-import { useState, useContext } from "react";
+import { useState, useContext, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,7 +35,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const { t } = useTranslation();
   const { isRTL } = useContext(LanguageContext);
   const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
-
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  
   // Helper function to get role-based redirect
   const getRoleBasedRedirect = (role: string): string => {
     return getDefaultRouteForRole(role);
@@ -268,6 +269,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       // Reset reCAPTCHA on failed login
       setRecaptchaValue(null);
+      recaptchaRef.current?.reset(); 
+
     } finally {
       setIsLoading(false);
     }
@@ -344,6 +347,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
         <div className="space-y-4">
           <ReCAPTCHA
+            ref={recaptchaRef}
+
             sitekey="6LfuCYwrAAAAAJJg1UL6P5SUo_djC52at4EEvnKo"
             onChange={(value) => setRecaptchaValue(value)}
             onExpired={() => setRecaptchaValue(null)}

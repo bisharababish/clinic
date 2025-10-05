@@ -414,32 +414,64 @@ const Labs = () => {
       setIsLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
+      // First, fetch all patients
+      const { data: patientsData, error: patientsError } = await supabase
         .from('userinfo')
         .select(`
-                userid, 
-                english_username_a, 
-                english_username_d,
-                arabic_username_a, 
-                arabic_username_d,
-                user_email, 
-                user_roles, 
-                date_of_birth, 
-                blood_type, 
-                phone_number, 
-                address
-            `)
+        userid, 
+        english_username_a, 
+        english_username_d,
+        arabic_username_a, 
+        arabic_username_d,
+        user_email, 
+        user_roles, 
+        date_of_birth, 
+        phone_number, 
+        address
+      `)
         .eq('user_roles', 'Patient')
         .order('english_username_a');
 
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
+      if (patientsError) {
+        console.error('Database error:', patientsError);
+        throw patientsError;
       }
 
-      console.log('Patients loaded:', data?.length || 0);
-      console.log('Sample patient data:', data?.[0]);
-      setPatients(data || []);
+      if (!patientsData || patientsData.length === 0) {
+        setPatients([]);
+        return;
+      }
+
+      // Get all patient IDs
+      const patientIds = patientsData.map(p => p.userid);
+
+      // Fetch blood types for all patients from patient_health_info
+      const { data: healthData, error: healthError } = await supabase
+        .from('patient_health_info')
+        .select('patient_id, blood_type')
+        .in('patient_id', patientIds);
+
+      if (healthError) {
+        console.warn('Could not fetch health data:', healthError);
+      }
+
+      // Create a map of patient_id to blood_type for quick lookup
+      const bloodTypeMap = new Map();
+      if (healthData) {
+        healthData.forEach(item => {
+          bloodTypeMap.set(item.patient_id, item.blood_type);
+        });
+      }
+
+      // Merge blood type data with patient data
+      const mappedPatients = patientsData.map(patient => ({
+        ...patient,
+        blood_type: bloodTypeMap.get(patient.userid) || null
+      }));
+
+      console.log('Patients loaded:', mappedPatients.length);
+      console.log('Sample patient with blood type:', mappedPatients[0]);
+      setPatients(mappedPatients);
 
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -556,16 +588,49 @@ const Labs = () => {
       }
 
       // Save blood type to patient's record if it was changed
+      // Save blood type to patient_health_info if it was changed
       if (labData.bloodType && labData.bloodType !== selectedPatient.blood_type) {
-        const { error: updateError } = await supabase
-          .from('userinfo')
-          .update({
-            blood_type: labData.bloodType
-          })
-          .eq('userid', selectedPatient.userid);
+        // Check if patient has a health info record
+        const { data: existingHealth, error: checkError } = await supabase
+          .from('patient_health_info')
+          .select('id')
+          .eq('patient_id', selectedPatient.userid)
+          .single();
 
-        if (updateError) {
-          console.warn('Failed to update patient blood type:', updateError);
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.warn('Error checking health info:', checkError);
+        }
+
+        if (existingHealth) {
+          // Update existing record
+          const { error: updateError } = await supabase
+            .from('patient_health_info')
+            .update({ blood_type: labData.bloodType })
+            .eq('patient_id', selectedPatient.userid);
+
+          if (updateError) {
+            console.warn('Failed to update blood type:', updateError);
+          } else {
+            console.log('Blood type updated successfully');
+          }
+        } else {
+          // Create new record with blood type
+          const { error: insertError } = await supabase
+            .from('patient_health_info')
+            .insert({
+              patient_id: selectedPatient.userid,
+              blood_type: labData.bloodType,
+              created_by_user_id: currentUserId,
+              created_by_email: user?.email,
+              created_by_name: user?.name,
+              created_by_role: user?.role
+            });
+
+          if (insertError) {
+            console.warn('Failed to insert blood type:', insertError);
+          } else {
+            console.log('Blood type record created successfully');
+          }
         }
       }
 

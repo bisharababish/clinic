@@ -6,8 +6,17 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileUploadService } from '../lib/fileUploadService';
-
-
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 // Type definitions (updated to match your database)
 interface LabResult {
     id: number;
@@ -145,6 +154,8 @@ const DoctorLabsPage: React.FC = () => {
     const { user } = useAuth();
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
+    const { toast } = useToast();
+
     const [labResults, setLabResults] = useState<LabResult[]>([]);
     const [loading, setLoading] = useState<boolean>(true); // Start with loading true
     const [error, setError] = useState<string | null>(null);
@@ -153,6 +164,8 @@ const DoctorLabsPage: React.FC = () => {
     const [filterDate, setFilterDate] = useState<string>('');
     const [filterType, setFilterType] = useState<string>('');
     const [initializing, setInitializing] = useState<boolean>(true);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [resultToDelete, setResultToDelete] = useState<LabResult | null>(null);
     const isFetchingRef = useRef(false);
 
     // Fetch lab results from database
@@ -278,7 +291,69 @@ const DoctorLabsPage: React.FC = () => {
     const handleViewDetails = (result: LabResult): void => {
         setSelectedTest(result);
     };
+    const handleDeleteResult = (result: LabResult) => {
+        setResultToDelete(result);
+        setDeleteConfirmOpen(true);
+    };
 
+    const confirmDelete = async () => {
+        if (!resultToDelete) return;
+
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Delete attachments first if they exist
+            if (resultToDelete.attachments && resultToDelete.attachments.length > 0) {
+                for (const attachment of resultToDelete.attachments) {
+                    await FileUploadService.deleteFile(attachment.id, attachment.file_path);
+                }
+            }
+
+            // Delete the lab result from database
+            const { error: deleteError } = await supabase
+                .from('lab_results')
+                .delete()
+                .eq('id', resultToDelete.id);
+
+            if (deleteError) {
+                throw deleteError;
+            }
+
+            // Remove from local state
+            setLabResults(prev => prev.filter(r => r.id !== resultToDelete.id));
+
+            // Close modal if this result was being viewed
+            if (selectedTest?.id === resultToDelete.id) {
+                setSelectedTest(null);
+            }
+
+            // Show success toast
+            toast({
+                title: isRTL ? 'تم الحذف بنجاح' : 'Deleted Successfully',
+                description: isRTL
+                    ? `تم حذف نتيجة الفحص لـ ${resultToDelete.patient_name}`
+                    : `Lab result for ${resultToDelete.patient_name} has been deleted`,
+                style: { backgroundColor: '#16a34a', color: '#fff' },
+            });
+
+        } catch (error) {
+            console.error('Error deleting lab result:', error);
+
+            // Show error toast
+            toast({
+                title: isRTL ? 'فشل الحذف' : 'Delete Failed',
+                description: isRTL
+                    ? 'فشل حذف نتيجة الفحص. يرجى المحاولة مرة أخرى.'
+                    : 'Failed to delete lab result. Please try again.',
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+            setDeleteConfirmOpen(false);
+            setResultToDelete(null);
+        }
+    };
     const handleDownloadReport = (result: LabResult): void => {
         const reportContent = `
 ${isRTL ? 'تفاصيل الفحص المخبري' : 'Lab Test Details'}
@@ -525,16 +600,39 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                                     <button
                                                         onClick={() => handleViewDetails(result)}
                                                         className="text-blue-600 hover:text-blue-900 flex items-center gap-1 mr-4"
+                                                        title={isRTL ? 'عرض التفاصيل' : 'View Details'}
                                                     >
                                                         <Eye className="h-4 w-4" />
                                                         {isRTL ? 'عرض' : 'View'}
                                                     </button>
                                                     <button
                                                         onClick={() => handleDownloadReport(result)}
-                                                        className="text-green-600 hover:text-green-900 flex items-center gap-1"
+                                                        className="text-green-600 hover:text-green-900 flex items-center gap-1 mr-4"
+                                                        title={isRTL ? 'تحميل التقرير' : 'Download Report'}
                                                     >
                                                         <Download className="h-4 w-4" />
                                                         {isRTL ? 'تحميل' : 'Download'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteResult(result)}
+                                                        className="text-red-600 hover:text-red-900 flex items-center gap-1"
+                                                        title={isRTL ? 'حذف النتيجة' : 'Delete Result'}
+                                                        disabled={loading}
+                                                    >
+                                                        <svg
+                                                            className="h-4 w-4"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                strokeWidth={2}
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                            />
+                                                        </svg>
+                                                        {isRTL ? 'حذف' : 'Delete'}
                                                     </button>
                                                 </div>
                                             </td>
@@ -677,6 +775,33 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                     </div>
                 </div>
             )}
+            {/* Delete Confirmation Dialog - ADD IT HERE */}
+            <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {isRTL ? 'تأكيد الحذف' : 'Confirm Deletion'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {isRTL
+                                ? `هل أنت متأكد من حذف نتيجة الفحص لـ ${resultToDelete?.patient_name}؟ لا يمكن التراجع عن هذا الإجراء.`
+                                : `Are you sure you want to delete the lab result for ${resultToDelete?.patient_name}? This action cannot be undone.`
+                            }
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>
+                            {isRTL ? 'إلغاء' : 'Cancel'}
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {isRTL ? 'حذف' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };
