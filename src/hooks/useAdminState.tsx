@@ -138,9 +138,9 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const activeOperationsRef = useRef(new Set<string>());
     const isLoadingRef = useRef(false);
     const debouncedOperations = useRef(new Map<string, NodeJS.Timeout>());
-    const CACHE_DURATION = 360 * 1000; // 6 minutes (active session)
-    const SESSION_EXTENSION_THRESHOLD = 300 * 1000; // 5 minutes (extend 1 minute before cache expires)
-    const SESSION_EXTENSION_DURATION = 600 * 1000; // 10 minutes (extended session length)
+    const CACHE_DURATION = 20 * 60 * 1000; // 20 minutes (active session)
+    const SESSION_EXTENSION_THRESHOLD = 2 * 60 * 1000; // 2 minutes (extend 2 minutes before cache expires)
+    const SESSION_EXTENSION_DURATION = 20 * 60 * 1000; // 20 minutes (extended session length)
     useEffect(() => {
         const interval = setInterval(() => {
             if (activeOperationsRef.current.size > 0) {
