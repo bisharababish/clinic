@@ -250,7 +250,7 @@ const enTranslations = {
         selectedDay: 'Selected Day',
         selectedTime: 'Selected Time',
         securePayment: 'Secure Payment',
-        allTransactionsEncrypted: 'All transactions are encrypted and secure.',
+        allTransactionsEncrypted: 'All payments are made securely in cash at the clinic.',
         clinicName: "Selected Clinic",
         doctorName: "Selected Doctor",
         specialtyselect: "Selected Specialty",
@@ -1450,7 +1450,8 @@ const arTranslations = {
     payment: {
         // تنبيه الأمان
         securePayment: 'دفع آمن',
-        allTransactionsEncrypted: 'جميع المعاملات مشفرة وآمنة.',
+        allTransactionsEncrypted: 'تتم جميع الدفعات نقدًا وبشكل آمن في العيادة.',
+
         selectedClinic: 'العيادة المختارة',
         selectedDoctor: 'الطبيب المختار',
         selectedSpecialty: 'التخصص المختار',
@@ -1648,7 +1649,10 @@ const arTranslations = {
         "paypal": "باي بال",
         "transactionId": "رقم المعاملة",
         "viewMyAppointments": "عرض مواعيدي",
-        "bookAnotherAppointment": "حجز موعد آخر"
+        "bookAnotherAppointment": "حجز موعد آخر",
+        "cashPaymentRegistered": "Cash Payment Registered",
+        "appointmentScheduledPayAtClinic": "Your appointment has been scheduled. Please pay at the clinic.",
+
     },
     "paymentCancel": {
         "paymentCancelled": "تم إلغاء الدفع",
@@ -1668,7 +1672,7 @@ const arTranslations = {
         createAccount: 'إنشاء حساب',
         invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
 
-        loginFailed: "فشل تسجيل الدخول",  
+        loginFailed: "فشل تسجيل الدخول",
         registerAsPatient: 'سجل للوصول إلى خدماتنا',
         resetPasswordTitle: 'نسيت كلمة المرور',
         resetPasswordDesc: 'أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور',

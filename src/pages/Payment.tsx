@@ -164,10 +164,9 @@ const Payment = () => {
 
             if (result.success) {
                 toast({
-                    title: "Cash Payment Registered",
-                    description: "Your appointment has been scheduled. Please pay at the clinic.",
+                    title: isRTL ? "تم تسجيل الدفع النقدي" : "Cash Payment Registered",
+                    description: isRTL ? "تم جدولة موعدك. يرجى الدفع في العيادة." : "Your appointment has been scheduled. Please pay at the clinic.",
                 });
-
                 navigate("/confirmation", {
                     state: {
                         clinicName,
@@ -261,13 +260,15 @@ const Payment = () => {
                             </ul>
                         </div>
                         <form onSubmit={handleCashSubmit} className="space-y-6">
-                            <div className={`flex items-start ${isRTL ? 'flex-row-reverse' : ''} gap-3`}>
-                                <Checkbox
-                                    id="cashTerms"
-                                    checked={agreedToCashTerms}
-                                    onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
-                                />
-                                <div className="grid gap-1.5 leading-none">
+                            <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                {!isRTL && (
+                                    <Checkbox
+                                        id="cashTerms"
+                                        checked={agreedToCashTerms}
+                                        onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
+                                    />
+                                )}
+                                <div className="grid gap-1.5 leading-none flex-1">
                                     <label
                                         htmlFor="cashTerms"
                                         className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isRTL ? 'text-right' : 'text-left'}`}
@@ -275,6 +276,13 @@ const Payment = () => {
                                         {t('payment.agreeToTerms')}
                                     </label>
                                 </div>
+                                {isRTL && (
+                                    <Checkbox
+                                        id="cashTerms"
+                                        checked={agreedToCashTerms}
+                                        onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
+                                    />
+                                )}
                             </div>
                             <Button
                                 type="submit"
