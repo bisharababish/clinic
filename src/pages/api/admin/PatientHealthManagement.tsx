@@ -514,7 +514,23 @@ const PatientHealthForm: React.FC<{
                 });
 
                 if (authError) {
-                    throw new Error(`Failed to create auth account: ${authError.message}`);
+                    // Handle rate limiting error gracefully
+                    if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
+                        toast({
+                            title: isRTL ? "فشل في إنشاء المريض" : "Failed to create patient",
+                            description: isRTL ? "يرجى المحاولة مرة أخرى بعد لحظة" : "Please try again in a moment",
+                            variant: "destructive",
+                        });
+                        return;
+                    }
+
+                    // For other auth errors, show a generic message
+                    toast({
+                        title: isRTL ? "فشل في إنشاء المريض" : "Failed to create patient",
+                        description: isRTL ? "حدث خطأ أثناء إنشاء حساب المريض" : "An error occurred while creating the patient account",
+                        variant: "destructive",
+                    });
+                    return;
                 }
 
                 // Prepare database record

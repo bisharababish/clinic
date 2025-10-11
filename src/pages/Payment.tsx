@@ -1,5 +1,5 @@
 // pages/Payment.tsx - Updated with real payment processing
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { palestinianPaymentService, PaymentData } from "../lib/paymentService";
 import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { Skeleton } from "@/components/ui/skeleton";
+import { freeAutoTranslateAppointmentData } from "../lib/freeTranslationService";
 
 type PaymentMethod = "cash";
 interface LocationState {
@@ -20,6 +21,10 @@ interface LocationState {
     appointmentDay: string;
     appointmentTime: string;
     price: number;
+    // Arabic values (optional)
+    clinicNameAr?: string;
+    doctorNameAr?: string;
+    specialtyAr?: string;
 }
 
 interface PaymentBookingRecord {
@@ -53,7 +58,10 @@ const Payment = () => {
         specialty,
         appointmentDay,
         appointmentTime,
-        price
+        price,
+        clinicNameAr,
+        doctorNameAr,
+        specialtyAr
     } = locationState || {
         clinicName: t('payment.selectedClinic'),
         doctorName: t('payment.selectedDoctor'),
@@ -61,7 +69,47 @@ const Payment = () => {
         appointmentDay: t('payment.selectedDay'),
         appointmentTime: t('payment.selectedTime'),
         price: 150,
+        clinicNameAr: undefined,
+        doctorNameAr: undefined,
+        specialtyAr: undefined,
     };
+
+    // Auto-translated appointment data
+    const [translatedAppointment, setTranslatedAppointment] = useState({
+        clinicName: clinicName || '',
+        doctorName: doctorName || '',
+        specialty: specialty || '',
+        appointmentDay: appointmentDay || '',
+        appointmentTime: appointmentTime || ''
+    });
+
+    // Auto-translate when language changes
+    useEffect(() => {
+        console.log('🔄 Payment useEffect triggered:', {
+            language: i18n.language,
+            doctorName,
+            specialty,
+            appointmentDay
+        });
+
+        const translateData = async () => {
+            console.log('🚀 Starting free auto-translation...');
+            const translated = await freeAutoTranslateAppointmentData(
+                {
+                    clinicName,
+                    doctorName,
+                    specialty,
+                    appointmentDay,
+                    appointmentTime
+                },
+                i18n.language
+            );
+            console.log('✅ Free translation complete, updating state:', translated);
+            setTranslatedAppointment(translated);
+        };
+
+        translateData();
+    }, [clinicName, doctorName, specialty, appointmentDay, appointmentTime, i18n.language]);
 
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
     const [isProcessing, setIsProcessing] = useState(false);
@@ -114,8 +162,8 @@ const Payment = () => {
                 if (error) {
                     console.error('payment_bookings insert error:', {
                         message: error.message,
-                        details: (error as any).details,
-                        hint: (error as any).hint,
+                        details: error.details,
+                        hint: error.hint,
                         code: error.code,
                     });
                     throw new Error(error.message || 'Insert failed');
@@ -171,11 +219,17 @@ const Payment = () => {
                     state: {
                         clinicName,
                         doctorName,
+                        specialty,
+                        appointmentDay,
                         appointmentTime,
                         paymentMethod: 'cash',
                         status: 'pending_payment',
                         confirmationNumber: confirmationNumber,
-                        appointmentId: appointmentId
+                        appointmentId: appointmentId,
+                        // Arabic values
+                        clinicNameAr,
+                        doctorNameAr,
+                        specialtyAr
                     }
                 });
             }
@@ -221,19 +275,27 @@ const Payment = () => {
                 <CardContent className="space-y-2">
                     <div className={`grid grid-cols-2 gap-2 ${isRTL ? 'text-left font-arabic' : 'text-left'}`}>
                         <div className="text-sm font-medium">{t('payment.clinic')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>{clinicName}</div>
+                        <div className={isRTL ? 'text-left font-arabic' : ''}>
+                            {translatedAppointment.clinicName}
+                        </div>
 
                         <div className="text-sm font-medium">{t('payment.doctor')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>{doctorName}</div>
+                        <div className={isRTL ? 'text-left font-arabic' : ''}>
+                            {translatedAppointment.doctorName}
+                        </div>
 
                         <div className="text-sm font-medium">{t('payment.specialty')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>{specialty}</div>
+                        <div className={isRTL ? 'text-left font-arabic' : ''}>
+                            {translatedAppointment.specialty}
+                        </div>
 
                         <div className="text-sm font-medium">{t('payment.day')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>{appointmentDay}</div>
+                        <div className={isRTL ? 'text-left font-arabic' : ''}>
+                            {translatedAppointment.appointmentDay}
+                        </div>
 
                         <div className="text-sm font-medium">{t('payment.time')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>{appointmentTime}</div>
+                        <div className={isRTL ? 'text-left font-arabic' : ''}>{translatedAppointment.appointmentTime}</div>
 
                         <div className="text-sm font-medium">{t('payment.totalAmount')}:</div>
                         <div className={`font-bold ${isRTL ? 'text-left font-arabic' : ''}`}>₪{price}</div>

@@ -789,7 +789,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                             }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className={isRTL ? 'gap-4' : ''}>
                         <AlertDialogCancel>
                             {isRTL ? 'إلغاء' : 'Cancel'}
                         </AlertDialogCancel>

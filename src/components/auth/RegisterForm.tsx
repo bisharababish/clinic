@@ -326,6 +326,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
             if (authError) {
                 console.error('Auth signup error:', authError);
+
+                // Handle rate limiting error gracefully
+                if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
+                    toast({
+                        title: t("auth.registrationFailed"),
+                        description: "Please try again in a moment",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
                 throw authError;
             }
 

@@ -312,6 +312,62 @@ const enTranslations = {
         // Footer
         back: 'Back',
         dataProtected: 'Your data is protected',
+
+        // Days of the week
+        monday: 'Monday',
+        tuesday: 'Tuesday',
+        wednesday: 'Wednesday',
+        thursday: 'Thursday',
+        friday: 'Friday',
+        saturday: 'Saturday',
+        sunday: 'Sunday',
+
+        // Common medical specialties
+        dentist: 'Dentist',
+        dentistSpecialty: 'Dentistry',
+        pediatrics: 'Pediatrics',
+        cardiology: 'Cardiology',
+        dermatology: 'Dermatology',
+        neurology: 'Neurology',
+        orthopedics: 'Orthopedics',
+        psychiatry: 'Psychiatry',
+        gynecology: 'Gynecology',
+        urology: 'Urology',
+        ophthalmology: 'Ophthalmology',
+        radiology: 'Radiology',
+        surgery: 'Surgery',
+        emergency: 'Emergency Medicine',
+        family: 'Family Medicine',
+        internal: 'Internal Medicine',
+        general: 'General',
+        anesthesiology: 'Anesthesiology',
+        oncology: 'Oncology',
+        endocrinology: 'Endocrinology',
+        pulmonology: 'Pulmonology',
+        gastroenterology: 'Gastroenterology',
+        nephrology: 'Nephrology',
+        rheumatology: 'Rheumatology',
+        hematology: 'Hematology',
+        immunology: 'Immunology',
+        pathology: 'Pathology',
+        pharmacology: 'Pharmacology',
+        physiotherapy: 'Physiotherapy',
+        laboratory: 'Laboratory',
+
+        // Common clinic names
+        bethlehemMedCenter: 'Bethlehem Med Center',
+        alMakassedHospital: 'Al-Makassed Hospital',
+        hadassahHospital: 'Hadassah Hospital',
+        alShifaHospital: 'Al-Shifa Hospital',
+        ramallahHospital: 'Ramallah Hospital',
+
+        // Common doctor names (examples)
+        bisharaBabish: 'Bishara Babish',
+        ahmedMohammed: 'Ahmed Mohammed',
+        fatimaAli: 'Fatima Ali',
+        omarHassan: 'Omar Hassan',
+        mariamIbrahim: 'Mariam Ibrahim',
+        issaHandal: 'Issa Handal',
     },
     "paymentSuccess": {
         "paymentSuccessful": "Payment Successful",
@@ -1375,7 +1431,15 @@ const enTranslations = {
     },
     deletionRequest: {
         requestSubmitted: 'Deletion request submitted successfully. An admin will review it.',
+        newDeletionRequest: 'New Deletion Request',
+        deletionRequestMessage: '{{email}} has requested to delete user: {{userName}}',
         // ... (add other keys here if needed)
+    },
+    notifications: {
+        markAllRead: 'Mark all read',
+        showingFirst: 'Showing first {{count}} notifications',
+        noNotifications: 'No notifications',
+        noNotificationsDesc: 'You\'re all caught up! No new notifications.',
     },
 };
 
@@ -1514,6 +1578,62 @@ const arTranslations = {
         // التذييل
         back: 'العودة',
         dataProtected: 'بياناتك محمية',
+
+        // أيام الأسبوع
+        monday: 'الاثنين',
+        tuesday: 'الثلاثاء',
+        wednesday: 'الأربعاء',
+        thursday: 'الخميس',
+        friday: 'الجمعة',
+        saturday: 'السبت',
+        sunday: 'الأحد',
+
+        // تخصصات طبية شائعة
+        dentist: 'طبيب أسنان',
+        dentistSpecialty: 'طب الأسنان',
+        pediatrics: 'طب الأطفال',
+        cardiology: 'أمراض القلب',
+        dermatology: 'الأمراض الجلدية',
+        neurology: 'طب الأعصاب',
+        orthopedics: 'جراحة العظام',
+        psychiatry: 'الطب النفسي',
+        gynecology: 'أمراض النساء',
+        urology: 'المسالك البولية',
+        ophthalmology: 'طب العيون',
+        radiology: 'الأشعة',
+        surgery: 'الجراحة',
+        emergency: 'طب الطوارئ',
+        family: 'طب الأسرة',
+        internal: 'الطب الباطني',
+        general: 'عام',
+        anesthesiology: 'التخدير',
+        oncology: 'علاج الأورام',
+        endocrinology: 'الغدد الصماء',
+        pulmonology: 'أمراض الرئة',
+        gastroenterology: 'أمراض الجهاز الهضمي',
+        nephrology: 'أمراض الكلى',
+        rheumatology: 'أمراض الروماتيزم',
+        hematology: 'أمراض الدم',
+        immunology: 'المناعة',
+        pathology: 'علم الأمراض',
+        pharmacology: 'علم الأدوية',
+        physiotherapy: 'العلاج الطبيعي',
+        laboratory: 'المختبر',
+
+        // أسماء عيادات شائعة
+        bethlehemMedCenter: 'مركز بيت لحم الطبي',
+        alMakassedHospital: 'مستشفى المقاصد',
+        hadassahHospital: 'مستشفى هداسا',
+        alShifaHospital: 'مستشفى الشفاء',
+        ramallahHospital: 'مستشفى رام الله',
+
+        // أسماء أطباء شائعة (أمثلة)
+        bisharaBabish: 'بشارة بابيش',
+        ahmedMohammed: 'أحمد محمد',
+        fatimaAli: 'فاطمة علي',
+        omarHassan: 'عمر حسن',
+        mariamIbrahim: 'مريم إبراهيم',
+        issaHandal: 'عيسى حندل',
     },
     patientHealth: {
         title: 'إدارة صحة المرضى',
@@ -2750,7 +2870,15 @@ const arTranslations = {
     },
     deletionRequest: {
         requestSubmitted: 'تم إرسال طلب الحذف بنجاح. سيتم مراجعته من قبل المسؤول.',
+        newDeletionRequest: 'طلب حذف جديد',
+        deletionRequestMessage: '{{email}}   :طلب حذف المستخدم:   {{userName}}',
         // ... (add other keys here if needed)
+    },
+    notifications: {
+        markAllRead: 'وضع علامة قراءة على الكل',
+        showingFirst: 'عرض أول {{count}} إشعارات',
+        noNotifications: 'لا توجد إشعارات',
+        noNotificationsDesc: 'أنت على اطلاع بكل شيء! لا توجد إشعارات جديدة.',
     },
 };
 

@@ -9,6 +9,12 @@ interface User {
     name: string;
     role: UserRole;
     full_name?: string;
+    // Arabic name fields
+    arabic_name?: string;
+    arabic_username_a?: string;
+    arabic_username_b?: string;
+    arabic_username_c?: string;
+    arabic_username_d?: string;
 }
 
 interface AuthContextType {
@@ -98,12 +104,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const normalizedRole = normalizeRole(userData.user_roles || 'patient');
                 const fullName = userData.english_username_a || userData.user_email;
 
+                // Construct Arabic full name from available parts
+                const arabicNameParts = [
+                    userData.arabic_username_a,
+                    userData.arabic_username_b,
+                    userData.arabic_username_c,
+                    userData.arabic_username_d
+                ].filter(part => part && part.trim());
+                const arabicFullName = arabicNameParts.length > 0 ? arabicNameParts.join(' ') : null;
+
                 return {
                     id: userData.userid.toString(),
                     email: userData.user_email,
                     name: fullName,
                     role: normalizedRole,
-                    full_name: fullName
+                    full_name: fullName,
+                    // Arabic name fields
+                    arabic_name: arabicFullName,
+                    arabic_username_a: userData.arabic_username_a,
+                    arabic_username_b: userData.arabic_username_b,
+                    arabic_username_c: userData.arabic_username_c,
+                    arabic_username_d: userData.arabic_username_d
                 };
             }
             return null;
@@ -212,7 +233,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                                 email: session.user.email || '',
                                 name: session.user.email?.split('@')[0] || 'User',
                                 role: 'patient' as UserRole,
-                                full_name: session.user.email || ''
+                                full_name: session.user.email || '',
+                                arabic_name: null,
+                                arabic_username_a: null,
+                                arabic_username_b: null,
+                                arabic_username_c: null,
+                                arabic_username_d: null
                             };
                         }
 
@@ -227,7 +253,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                                 email: session.user.email || '',
                                 name: session.user.email?.split('@')[0] || 'User',
                                 role: 'patient',
-                                full_name: session.user.email || ''
+                                full_name: session.user.email || '',
+                                arabic_name: null,
+                                arabic_username_a: null,
+                                arabic_username_b: null,
+                                arabic_username_c: null,
+                                arabic_username_d: null
                             };
                             updateUserState(fallbackUser);
                         }
@@ -419,12 +450,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const normalizedRole = normalizeRole(insertData[0].user_roles);
                 const fullName = insertData[0].english_username_a;
 
+                // Construct Arabic full name from available parts
+                const arabicNameParts = [
+                    insertData[0].arabic_username_a,
+                    insertData[0].arabic_username_b,
+                    insertData[0].arabic_username_c,
+                    insertData[0].arabic_username_d
+                ].filter(part => part && part.trim());
+                const arabicFullName = arabicNameParts.length > 0 ? arabicNameParts.join(' ') : null;
+
                 const userObj: User = {
                     id: insertData[0].userid.toString(),
                     email: insertData[0].user_email,
                     name: fullName,
                     role: normalizedRole,
-                    full_name: fullName
+                    full_name: fullName,
+                    arabic_name: arabicFullName,
+                    arabic_username_a: insertData[0].arabic_username_a,
+                    arabic_username_b: insertData[0].arabic_username_b,
+                    arabic_username_c: insertData[0].arabic_username_c,
+                    arabic_username_d: insertData[0].arabic_username_d
                 };
 
                 // Cache user profile for faster access
@@ -485,6 +530,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             if (authError) {
                 console.error('Auth signup error:', authError);
+
+                // Handle rate limiting error gracefully
+                if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
+                    throw new Error('Please try again in a moment');
+                }
+
                 throw authError;
             }
 
@@ -545,12 +596,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const normalizedRole = normalizeRole(userInsertData[0].user_roles);
                 const fullName = userInsertData[0].english_username_a;
 
+                // Construct Arabic full name from available parts
+                const arabicNameParts = [
+                    userInsertData[0].arabic_username_a,
+                    userInsertData[0].arabic_username_b,
+                    userInsertData[0].arabic_username_c,
+                    userInsertData[0].arabic_username_d
+                ].filter(part => part && part.trim());
+                const arabicFullName = arabicNameParts.length > 0 ? arabicNameParts.join(' ') : null;
+
                 const userObj: User = {
                     id: userInsertData[0].userid.toString(),
                     email: userInsertData[0].user_email,
                     name: fullName,
                     role: normalizedRole,
-                    full_name: fullName
+                    full_name: fullName,
+                    arabic_name: arabicFullName,
+                    arabic_username_a: userInsertData[0].arabic_username_a,
+                    arabic_username_b: userInsertData[0].arabic_username_b,
+                    arabic_username_c: userInsertData[0].arabic_username_c,
+                    arabic_username_d: userInsertData[0].arabic_username_d
                 };
 
                 // Cache user profile

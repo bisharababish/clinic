@@ -62,10 +62,12 @@ export const createDeletionRequest = async (
         }
 
         // Create notification for admins
+        const notificationMessage = `${requestedByEmail} has requested to delete user: ${userDetails.english_name}|||${userDetails.arabic_name || userDetails.english_name}`;
+
         await createNotification(
             'admin',
             'New Deletion Request',
-            `${requestedByEmail} has requested to delete user: ${userDetails.english_name}`,
+            notificationMessage,
             'warning',
             'deletion_requests',
             data.id

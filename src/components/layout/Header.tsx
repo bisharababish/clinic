@@ -440,6 +440,7 @@ export function Header() {
                     }}
                     userEmail={user.email || ''}
                     userName={user.name || ''}
+                    userArabicName={user.arabic_name || ''}
                 />
             )}
 

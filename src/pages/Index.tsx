@@ -770,7 +770,31 @@ const Index = () => {
 
       if (authError) {
         console.error('Auth creation error:', authError);
-        throw new Error(`Failed to create auth account: ${authError.message}`);
+
+        // Handle rate limiting error gracefully
+        if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
+          // Extract the number of seconds from the error message
+          const secondsMatch = authError.message.match(/(\d+)\s*seconds?/i);
+          const waitTime = secondsMatch ? parseInt(secondsMatch[1]) : 60;
+
+          toast({
+            title: isRTL ? "فشل في إنشاء المريض" : "Failed to create patient",
+            description: isRTL
+              ? `يرجى المحاولة مرة أخرى بعد ${waitTime} ثانية`
+              : `Please try again after ${waitTime} seconds`,
+            variant: "destructive",
+            duration: 5000, // Show for 5 seconds
+          });
+          return;
+        }
+
+        // For other auth errors, show a generic message
+        toast({
+          title: isRTL ? "فشل في إنشاء المريض" : "Failed to create patient",
+          description: isRTL ? "حدث خطأ أثناء إنشاء حساب المريض" : "An error occurred while creating the patient account",
+          variant: "destructive",
+        });
+        return;
       }
 
       console.log('✅ Auth user created successfully');
@@ -856,7 +880,7 @@ const Index = () => {
       toast({
         title: isRTL ? "تم إنشاء المريض بنجاح" : "Patient Created Successfully",
         description: isRTL ?
-          `تم إنشاء حساب ${newPatient.english_username_a} ${newPatient.english_username_d} بنجاح` :
+          `تم إنشاء حساب ${newPatient.arabic_username_a || newPatient.english_username_a} ${newPatient.arabic_username_d || newPatient.english_username_d} بنجاح` :
           `Successfully created account for ${newPatient.english_username_a} ${newPatient.english_username_d}`,
         style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
       });
@@ -2543,7 +2567,10 @@ const Index = () => {
 
                             {createPatientForm.id_number.length > 0 && createPatientForm.id_number.length < 9 && (
                               <div className="text-xs text-orange-600">
-                                Enter {9 - createPatientForm.id_number.length} more digit{9 - createPatientForm.id_number.length !== 1 ? 's' : ''}
+                                {isRTL ?
+                                  `أدخل ${9 - createPatientForm.id_number.length} رقم${9 - createPatientForm.id_number.length !== 1 ? 'اً' : ''} إضافي${9 - createPatientForm.id_number.length !== 1 ? 'ة' : ''}` :
+                                  `Enter ${9 - createPatientForm.id_number.length} more digit${9 - createPatientForm.id_number.length !== 1 ? 's' : ''}`
+                                }
                               </div>
                             )}
                           </div>

@@ -255,15 +255,20 @@ const Clinics = () => {
     const handleBookAppointment = () => {
         if (!selectedClinic || !selectedDoctor || !selectedTime) return;
 
-        // Navigate to payment page with appointment details
+        // Navigate to payment page with appointment details including Arabic fields
         navigate("/payment", {
             state: {
-                clinicName: getClinicDisplayName(selectedClinic),
-                doctorName: getDoctorDisplayName(selectedDoctor),
+                // English values
+                clinicName: selectedClinic.name,
+                doctorName: selectedDoctor.name,
                 specialty: selectedDoctor.specialty,
                 appointmentDay: selectedDay,
                 appointmentTime: selectedTime,
-                price: selectedDoctor.price
+                price: selectedDoctor.price,
+                // Arabic values (if available)
+                clinicNameAr: selectedClinic.name_ar,
+                doctorNameAr: selectedDoctor.name_ar,
+                specialtyAr: selectedDoctor.specialty_ar
             }
         });
     };

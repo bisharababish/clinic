@@ -32,13 +32,15 @@ interface PasswordChangeModalProps {
     onClose: () => void;
     userEmail: string;
     userName?: string;
+    userArabicName?: string;
 }
 
 export function PasswordChangeModal({
     isOpen,
     onClose,
     userEmail,
-    userName
+    userName,
+    userArabicName
 }: PasswordChangeModalProps) {
     const { t } = useTranslation();
     const { isRTL } = useContext(LanguageContext);
@@ -266,7 +268,7 @@ export function PasswordChangeModal({
                     </DialogTitle>
                     <DialogDescription className="text-gray-600 mt-2">
                         {isRTL ?
-                            `مرحباً ${userName || 'بك'}! يمكنك تغيير كلمة المرور الخاصة بك لحماية حسابك.` :
+                            `مرحباً ${userArabicName || userName || 'بك'}! يمكنك تغيير كلمة المرور الخاصة بك لحماية حسابك.` :
                             `Hello ${userName || 'there'}! You can change your password to better secure your account.`
                         }
                     </DialogDescription>
