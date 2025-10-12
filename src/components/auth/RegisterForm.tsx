@@ -114,9 +114,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         // Handle phone number with +97, then 0 or 2, then 9 digits
         if (name === 'phoneNumber') {
             let sanitized = value.replace(/[^\d+]/g, '');
+
+            // Always ensure +97 prefix is at the beginning
             if (!sanitized.startsWith('+97')) {
-                sanitized = '+97';
+                // If user types digits without +97, prepend +97
+                if (sanitized.length > 0 && !sanitized.startsWith('+')) {
+                    sanitized = '+97' + sanitized;
+                } else if (!sanitized.startsWith('+97')) {
+                    sanitized = '+97';
+                }
             }
+
             const afterPrefix = sanitized.slice(3, 4);
             if (afterPrefix !== '0' && afterPrefix !== '2') {
                 sanitized = sanitized.slice(0, 3);
@@ -826,7 +834,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                             onChange={handleInputChange}
                             className={isRTL ? 'pr-10' : 'pl-10'}
                             required
-                            placeholder={isRTL ? "٩٧٠٠٠٠٠٠٠٠٠+" : "+97000000000"} dir={isRTL ? "rtl" : "ltr"}
+                            placeholder={isRTL ? "+٩٧٠٠٠٠٠٠٠٠٠" : "+97000000000"}
+                            dir="ltr"
+                            style={{ textAlign: isRTL ? 'right' : 'left' }}
                         />
                     </div>
                 </div>
