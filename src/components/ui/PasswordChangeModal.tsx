@@ -263,10 +263,19 @@ export function PasswordChangeModal({
                         <Shield className="h-8 w-8 text-blue-600" />
                     </div>
                     <DialogTitle className="text-xl font-bold text-gray-800 flex items-center justify-center gap-2">
-                        <Key className="h-5 w-5" />
-                        {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                        {isRTL ? (
+                            <>
+                                {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                                <Key className="h-5 w-5" />
+                            </>
+                        ) : (
+                            <>
+                                <Key className="h-5 w-5" />
+                                {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
+                            </>
+                        )}
                     </DialogTitle>
-                    <DialogDescription className="text-gray-600 mt-2">
+                    <DialogDescription className={`text-gray-600 mt-2 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                         {isRTL ?
                             `مرحباً ${userArabicName || userName || 'بك'}! يمكنك تغيير كلمة المرور الخاصة بك لحماية حسابك.` :
                             `Hello ${userName || 'there'}! You can change your password to better secure your account.`

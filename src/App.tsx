@@ -12,6 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CookieConsent from "react-cookie-consent";
 import { useLegalModals, PrivacyPolicyModal } from "../src/components/modals/LegalModals";
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+import { useScrollToTop } from "./hooks/useScrollToTop";
+
+// Scroll to top component that works inside Router context
+function ScrollToTop() {
+  useScrollToTop();
+  return null;
+}
 
 // Lazy load components for code splitting
 const Auth = lazy(() => import("./pages/Auth"));
@@ -169,7 +176,9 @@ function App() {
             v7_startTransition: true,
             v7_relativeSplatPath: true
           }}
-        >          <Suspense fallback={<PageLoader />}>
+        >
+          <ScrollToTop />
+          <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public routes */}
               <Route path="/auth" element={<Auth />} />

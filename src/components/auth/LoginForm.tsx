@@ -64,11 +64,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
     }
 
     if (!recaptchaValue) {
-      toast({
-        title: "Security Check Required",
-        description: "Please complete the reCAPTCHA verification",
-        variant: "destructive",
-      });
+      // reCAPTCHA validation - silent check without toast notification
       return false;
     }
 

@@ -12,6 +12,7 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { getRolePermissions, getDefaultRouteForRole } from '../../lib/rolePermissions';
 import { PasswordChangeModal } from '../ui/PasswordChangeModal';
 import NotificationBell from '../NotificationBell';
+import { useScrollToTopOnClick } from '../../hooks/useScrollToTop';
 
 export function Header() {
     const { user, logout } = useAuth();
@@ -22,6 +23,7 @@ export function Header() {
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const { isRTL } = useContext(LanguageContext);
     const { t } = useTranslation();
+    const scrollToTop = useScrollToTopOnClick();
 
     // Optimized mobile menu handlers with immediate state update
     const toggleMobileMenu = useCallback(() => {
@@ -38,11 +40,12 @@ export function Header() {
         // Close menu immediately first
         setIsMobileMenuOpen(false);
 
-        // Small delay to ensure state update, then navigate
+        // Small delay to ensure state update, then navigate and scroll to top
         setTimeout(() => {
             navigate(path);
+            scrollToTop();
         }, 10);
-    }, [navigate]);
+    }, [navigate, scrollToTop]);
 
     // Extra check for authentication state on mount and when user changes
     useEffect(() => {

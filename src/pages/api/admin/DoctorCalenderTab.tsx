@@ -85,8 +85,55 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
     const [showDayDialog, setShowDayDialog] = useState(false);
     const [selectedDateStr, setSelectedDateStr] = useState('');
     const [doctorAvailability, setDoctorAvailability] = useState<AvailabilitySlot[]>([]);
+    const [showOfficeHours, setShowOfficeHours] = useState<boolean>(true);
     const { user } = useAuth();
     const currentUserRole = user?.role?.toLowerCase() || '';
+
+    // 🎨 Clinic Color Mapping System
+    const clinicColors = [
+        { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
+        { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
+        { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
+        { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
+        { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
+        { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
+        { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
+        { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
+        { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
+        { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' }
+    ];
+
+    // Function to get color for a clinic
+    const getClinicColor = (clinicId: string) => {
+        const clinicIndex = clinics.findIndex(clinic => clinic.id === clinicId);
+        if (clinicIndex === -1) return clinicColors[0]; // Default to first color
+        return clinicColors[clinicIndex % clinicColors.length];
+    };
+
+    // Function to translate appointment content for Arabic
+    const translateAppointmentContent = (apt: Appointment) => {
+        if (i18n.language !== 'ar') return apt;
+
+        // Common clinic name translations
+        const clinicTranslations: { [key: string]: string } = {
+            'Dentist': 'طبيب أسنان',
+            'Cardiology': 'أمراض القلب',
+            'Dermatology': 'الأمراض الجلدية',
+            'Orthopedics': 'العظام',
+            'Pediatrics': 'طب الأطفال',
+            'Gynecology': 'النساء والولادة',
+            'Ophthalmology': 'العيون',
+            'Neurology': 'الأعصاب',
+            'Psychiatry': 'الطب النفسي',
+            'Emergency': 'الطوارئ',
+        };
+
+        return {
+            ...apt,
+            clinic_name: clinicTranslations[apt.clinic_name] || apt.clinic_name,
+            // Keep patient names as they are - they should already be in the correct language
+        };
+    };
     // Get current month and year
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
@@ -564,7 +611,24 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
             {/* Weekly Calendar */}
             <Card className="mt-6">
                 <CardHeader>
-                    <CardTitle className="text-lg">Weekly Calendar</CardTitle>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Weekly Calendar</CardTitle>
+                        {/* Admin Office Hours Toggle */}
+                        {(currentUserRole === 'admin' || currentUserRole === 'administrator') && (
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm font-medium" htmlFor="office-hours-toggle">
+                                    {t('admin.showOfficeHours') || 'Show Office Hours'}
+                                </label>
+                                <input
+                                    id="office-hours-toggle"
+                                    type="checkbox"
+                                    checked={showOfficeHours}
+                                    onChange={(e) => setShowOfficeHours(e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                />
+                            </div>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {/* Weekly calendar grid */}
@@ -579,7 +643,9 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                             return d;
                         });
 
-                        const displayTimeSlots = i18n.language === 'ar' ? [...timeSlots].reverse() : timeSlots;
+                        // Filter time slots based on showOfficeHours setting
+                        const filteredTimeSlots = showOfficeHours ? timeSlots : [];
+                        const displayTimeSlots = i18n.language === 'ar' ? [...filteredTimeSlots].reverse() : filteredTimeSlots;
                         // Helper to format time in Arabic
                         function formatTimeArabic(time) {
                             // Convert to Arabic numerals and add صباحًا/مساءً
@@ -647,42 +713,10 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                                                 const cellApts = filteredAppointments.filter(apt => {
                                                                     if (apt.date !== dateStr) return false;
 
-                                                                    // Check if appointment matches availability slot
-                                                                    return doctorAvailability.some(avail => {
-                                                                        return avail.doctor_id === apt.doctor_id &&
-                                                                            avail.start_time === apt.time &&
-                                                                            (selectedDoctor === 'all' || avail.doctor_id === selectedDoctor);
-                                                                    });
-                                                                }); let hasConflict = false;
-                                                                for (let i = 0; i < cellApts.length; i++) {
-                                                                    for (let j = 0; j < cellApts.length; j++) {
-                                                                        if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
-                                                                            hasConflict = true;
-                                                                            break;
-                                                                        }
+                                                                    // If office hours are hidden, show all appointments regardless of availability
+                                                                    if (!showOfficeHours) {
+                                                                        return apt.time === slot && (selectedDoctor === 'all' || apt.doctor_id === selectedDoctor);
                                                                     }
-                                                                    if (hasConflict) break;
-                                                                }
-                                                                return (
-                                                                    <td key={slotIdx} className={`border p-2 min-w-[100px] ${hasConflict ? 'bg-red-100 border-red-500 relative' : ''}`}>
-                                                                        {cellApts.length > 0 ? cellApts.map(apt => (
-                                                                            <div key={apt.id} className="bg-blue-100 text-blue-800 rounded px-1 mb-1 truncate">
-                                                                                {apt.patient_name} <span className="block text-xs">{apt.time}</span>
-                                                                            </div>
-                                                                        )) : <span className="text-gray-300">-</span>}
-                                                                        {hasConflict && (
-                                                                            <span className="absolute top-1 right-1 text-xs text-red-600" title="Conflict: Multiple appointments for the same clinic at this time">⚠️</span>
-                                                                        )}
-                                                                    </td>
-                                                                );
-                                                            })}
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
-                                                            {displayTimeSlots.map((slot, slotIdx) => {
-                                                                const cellApts = filteredAppointments.filter(apt => {
-                                                                    if (apt.date !== dateStr) return false;
 
                                                                     // Check if appointment matches availability slot
                                                                     return doctorAvailability.some(avail => {
@@ -702,11 +736,65 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                                                 }
                                                                 return (
                                                                     <td key={slotIdx} className={`border p-2 min-w-[100px] ${hasConflict ? 'bg-red-100 border-red-500 relative' : ''}`}>
-                                                                        {cellApts.length > 0 ? cellApts.map(apt => (
-                                                                            <div key={apt.id} className="bg-blue-100 text-blue-800 rounded px-1 mb-1 truncate">
-                                                                                {apt.patient_name} <span className="block text-xs">{apt.time}</span>
-                                                                            </div>
-                                                                        )) : <span className="text-gray-300">-</span>}
+                                                                        {cellApts.length > 0 ? cellApts.map(apt => {
+                                                                            const translatedApt = translateAppointmentContent(apt);
+                                                                            const clinicColor = getClinicColor(apt.clinic_id);
+                                                                            return (
+                                                                                <div key={apt.id} className={`${clinicColor.bg} ${clinicColor.text} ${clinicColor.border} rounded px-1 mb-1 truncate border`}>
+                                                                                    <div className="font-medium text-xs" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>{translatedApt.patient_name}</div>
+                                                                                    <div className="text-xs opacity-80">{translatedApt.time}</div>
+                                                                                    <div className="text-xs opacity-70 truncate" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>{translatedApt.clinic_name}</div>
+                                                                                </div>
+                                                                            );
+                                                                        }) : <span className="text-gray-300">-</span>}
+                                                                        {hasConflict && (
+                                                                            <span className="absolute top-1 right-1 text-xs text-red-600" title="Conflict: Multiple appointments for the same clinic at this time">⚠️</span>
+                                                                        )}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
+                                                            {displayTimeSlots.map((slot, slotIdx) => {
+                                                                const cellApts = filteredAppointments.filter(apt => {
+                                                                    if (apt.date !== dateStr) return false;
+
+                                                                    // If office hours are hidden, show all appointments regardless of availability
+                                                                    if (!showOfficeHours) {
+                                                                        return apt.time === slot && (selectedDoctor === 'all' || apt.doctor_id === selectedDoctor);
+                                                                    }
+
+                                                                    // Check if appointment matches availability slot
+                                                                    return doctorAvailability.some(avail => {
+                                                                        return avail.doctor_id === apt.doctor_id &&
+                                                                            avail.start_time === apt.time &&
+                                                                            (selectedDoctor === 'all' || avail.doctor_id === selectedDoctor);
+                                                                    });
+                                                                }); let hasConflict = false;
+                                                                for (let i = 0; i < cellApts.length; i++) {
+                                                                    for (let j = 0; j < cellApts.length; j++) {
+                                                                        if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
+                                                                            hasConflict = true;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    if (hasConflict) break;
+                                                                }
+                                                                return (
+                                                                    <td key={slotIdx} className={`border p-2 min-w-[100px] ${hasConflict ? 'bg-red-100 border-red-500 relative' : ''}`}>
+                                                                        {cellApts.length > 0 ? cellApts.map(apt => {
+                                                                            const translatedApt = translateAppointmentContent(apt);
+                                                                            const clinicColor = getClinicColor(apt.clinic_id);
+                                                                            return (
+                                                                                <div key={apt.id} className={`${clinicColor.bg} ${clinicColor.text} ${clinicColor.border} rounded px-1 mb-1 truncate border`}>
+                                                                                    <div className="font-medium text-xs" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>{translatedApt.patient_name}</div>
+                                                                                    <div className="text-xs opacity-80">{translatedApt.time}</div>
+                                                                                    <div className="text-xs opacity-70 truncate" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}>{translatedApt.clinic_name}</div>
+                                                                                </div>
+                                                                            );
+                                                                        }) : <span className="text-gray-300">-</span>}
                                                                         {hasConflict && (
                                                                             <span className="absolute top-1 right-1 text-xs text-red-600" title="Conflict: Multiple appointments for the same clinic at this time">⚠️</span>
                                                                         )}
