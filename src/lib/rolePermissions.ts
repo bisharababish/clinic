@@ -235,9 +235,9 @@ export const getDefaultRouteForRole = (role: string): string => {
     case 'x-ray':
       return '/xray';
     case 'admin':
-      return '/';
+      return '/admin';
     case 'secretary':
-      return '/'; // Secretary goes to admin dashboard (appointments)
+      return '/admin'; // Secretary goes to admin dashboard (appointments)
     case 'doctor':
       return '/doctor/labs'; // ✅ CHANGED: Doctors go directly to their lab results page
     case 'nurse':

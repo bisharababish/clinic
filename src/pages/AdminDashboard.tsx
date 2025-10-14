@@ -1,5 +1,5 @@
 // pages/AdminDashboard.tsx - REPLACE THE ENTIRE FILE WITH THIS:
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { AdminStateProvider, useAdminState } from "../hooks/useAdminState"; // NEW IMPORT
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ import CalendarTab from "./api/admin/CalenderTab";
 import { hasPermission } from "@/lib/rolePermissions";
 import PatientHealthManagement from "./api/admin/PatientHealthManagement";
 import DeletionRequestsTab from "./api/admin/DeletionRequestsTab";
+import PaymentManagement from "./api/admin/PaymentManagement";
+import PaidPatientsList from "@/components/PaidPatientsList";
 
 // The actual dashboard component that uses the state
 const AdminDashboardContent = () => {
@@ -54,7 +56,8 @@ const AdminDashboardContent = () => {
     );
 
     const { toast } = useToast();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
     const navigate = useNavigate();
 
     // Get user role and permissions
@@ -73,10 +76,11 @@ const AdminDashboardContent = () => {
     const canViewAppointmentsTab = userPermissions.canViewAppointments;
     const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole);
     const canViewCalendarTab = hasPermission(userRole, 'canViewCalendar');
-    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab || canViewDeletionRequests;
+    const canViewPaymentTab = ['admin', 'secretary'].includes(userRole); // Admin and Secretary can view payments
+    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab || canViewPaymentTab || canViewDeletionRequests;
 
     // Get default tab for user role
-    const getDefaultTab = () => {
+    const getDefaultTab = useCallback(() => {
         if (userRole === 'secretary') {
             return 'users';
         } else if (userRole === 'admin') {
@@ -88,9 +92,12 @@ const AdminDashboardContent = () => {
             if (canViewClinicsTab) return 'clinics';
             if (canViewUsersTab) return 'users';
             if (canViewDoctorsTab) return 'doctors';
+            if (canViewCalendarTab) return 'calendar';
+            if (canViewPaymentTab) return 'payments';
+            if (canViewDeletionRequests) return 'deletion-requests';
             return 'overview';
         }
-    };
+    }, [userRole, canViewAppointmentsTab, canViewOverviewTab, canViewPatientHealthTab, canViewClinicsTab, canViewUsersTab, canViewDoctorsTab, canViewCalendarTab, canViewPaymentTab, canViewDeletionRequests]);
     // Add this new useEffect to handle browser back button
     // useEffect(() => {
     //     const handlePopState = () => {
@@ -160,7 +167,7 @@ const AdminDashboardContent = () => {
         };
 
         initializeAdminDashboard();
-    }, [authLoading, user, userPermissions, navigate, t, activeTab]);
+    }, [authLoading, user, userPermissions, navigate, t, activeTab, getDefaultTab, toast]);
 
     // Handle tab changes with permission checking
     const handleTabChange = (newTab: string) => {
@@ -170,6 +177,8 @@ const AdminDashboardContent = () => {
             'clinics': canViewClinicsTab,
             'doctors': canViewDoctorsTab,
             'appointments': canViewAppointmentsTab,
+            'payments': canViewPaymentTab,
+            'paid-patients': canViewPaymentTab,
             'patient-health': canViewPatientHealthTab,
             'calendar': canViewCalendarTab,
             'deletion-requests': canViewDeletionRequests
@@ -318,6 +327,16 @@ const AdminDashboardContent = () => {
                                     {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
                                 </TabsTrigger>
                             )}
+                            {canViewPaymentTab && (
+                                <TabsTrigger value="payments" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {isRTL ? 'المدفوعات' : 'Payments'}
+                                </TabsTrigger>
+                            )}
+                            {canViewPaymentTab && (
+                                <TabsTrigger value="paid-patients" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'المرضى المدفوعين' : 'Paid Patients'}
+                                </TabsTrigger>
+                            )}
                             {canViewCalendarTab && (
                                 <TabsTrigger value="calendar" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
@@ -361,6 +380,16 @@ const AdminDashboardContent = () => {
                         {canViewAppointmentsTab && (
                             <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
                                 {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
+                            </TabsTrigger>
+                        )}
+                        {canViewPaymentTab && (
+                            <TabsTrigger value="payments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {isRTL ? 'المدفوعات' : 'Payments'}
+                            </TabsTrigger>
+                        )}
+                        {canViewPaymentTab && (
+                            <TabsTrigger value="paid-patients" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'المرضى المدفوعين' : 'Paid Patients'}
                             </TabsTrigger>
                         )}
                         {canViewCalendarTab && (
@@ -451,6 +480,43 @@ const AdminDashboardContent = () => {
                             />
                         </TabsContent>
                     )}
+
+                    {/* PAYMENTS TAB */}
+                    {canViewPaymentTab && (
+                        <TabsContent value="payments" className="pt-6">
+                            <PaymentManagement />
+                        </TabsContent>
+                    )}
+
+                    {/* PAID PATIENTS TAB */}
+                    {canViewPaymentTab && (
+                        <TabsContent value="paid-patients" className="pt-6">
+                            <div className="space-y-6">
+                                {/* All Paid Patients */}
+                                <div>
+                                    <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                                        {i18n.language === 'ar' ? "جميع المدفوعات" : "All Payments"}
+                                    </h2>
+                                    <PaidPatientsList
+                                        showOnlyPaid={true}
+                                        compact={false}
+                                    />
+                                </div>
+
+                                {/* Pending Payments */}
+                                <div>
+                                    <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                                        {i18n.language === 'ar' ? "المدفوعات المعلقة" : "Pending Payments"}
+                                    </h2>
+                                    <PaidPatientsList
+                                        showOnlyPending={true}
+                                        compact={false}
+                                    />
+                                </div>
+                            </div>
+                        </TabsContent>
+                    )}
+
                     {/* ADD THE DELETION REQUESTS TAB HERE */}
                     {canViewDeletionRequests && (
                         <TabsContent value="deletion-requests" className="pt-6">

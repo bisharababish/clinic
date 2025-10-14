@@ -114,6 +114,7 @@ const Clinics = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [clinics, setClinics] = useState<Clinic[]>([]);
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [existingAppointments, setExistingAppointments] = useState<string[]>([]); // Track clinics with existing appointments
     const isFetchingRef = useRef(false);
 
     useEffect(() => {

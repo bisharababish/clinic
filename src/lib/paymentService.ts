@@ -10,6 +10,12 @@ export interface PaymentData {
     currency: string;
     paymentMethod: 'cash';
     description: string;
+    // Additional appointment data for payment booking
+    clinicName?: string;
+    doctorName?: string;
+    specialty?: string;
+    appointmentDay?: string;
+    appointmentTime?: string;
 }
 
 class PalestinianPaymentService {
@@ -125,16 +131,8 @@ class PalestinianPaymentService {
     // Process cash payment
     async processCashPayment(paymentData: PaymentData): Promise<{ success: boolean; paymentMethod: 'cash'; status: 'pending' }> {
         try {
-            await this.recordPayment({
-                appointmentId: paymentData.appointmentId,
-                paymentMethod: 'cash',
-                amount: paymentData.amount,
-                currency: paymentData.currency,
-                status: 'pending',
-            });
-
-            await this.updateAppointmentPaymentStatus(paymentData.appointmentId, 'pending');
-
+            // The payment booking record is already created in Payment.tsx
+            // We just need to update the existing record or create a transaction record
             return { success: true, paymentMethod: 'cash', status: 'pending' };
         } catch (error) {
             console.error('Cash payment processing failed:', error);

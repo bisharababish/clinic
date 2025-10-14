@@ -30,6 +30,10 @@ interface LocationState {
 interface PaymentBookingRecord {
     id: string;
     patient_id: string;
+    patient_name?: string;
+    patient_email?: string;
+    patient_phone?: string;
+    unique_patient_id?: string;
     clinic_name: string;
     doctor_name: string;
     specialty: string;
@@ -38,8 +42,7 @@ interface PaymentBookingRecord {
     price: number;
     currency: string;
     payment_status: string;
-    booking_status: string;  // ✅ CORRECT
-    confirmation_number?: string;
+    booking_status: string;
     created_at: string;
     updated_at: string;
 }
@@ -140,11 +143,73 @@ const Payment = () => {
                 }
                 setUser(user);
 
-                // Create appointment record
+                // Get user information from userinfo table
+                let userInfo = null;
+                try {
+                    const { data: userInfoData, error: userInfoError } = await supabase
+                        .from('userinfo')
+                        .select('english_username_a, english_username_d, user_email, user_phonenumber, unique_patient_id')
+                        .eq('id', user.id)
+                        .maybeSingle();
+
+                    if (!userInfoError && userInfoData) {
+                        userInfo = userInfoData;
+                    }
+                } catch (error) {
+                    console.warn('Could not fetch user info:', error);
+                }
+
+                // Check if patient already has an appointment at this clinic
+                const { data: existingAppointments, error: checkError } = await supabase
+                    .from('payment_bookings')
+                    .select('id, clinic_name, appointment_day, appointment_time, payment_status, booking_status')
+                    .eq('patient_id', user.id)
+                    .eq('clinic_name', clinicName)
+                    .in('booking_status', ['scheduled', 'confirmed'])
+                    .in('payment_status', ['pending', 'paid']);
+
+                if (checkError) {
+                    console.error('Error checking existing appointments:', checkError);
+                    throw new Error('Failed to check existing appointments');
+                }
+
+                // If patient already has an appointment at this clinic, show error
+                if (existingAppointments && existingAppointments.length > 0) {
+                    const existingAppointment = existingAppointments[0];
+                    toast({
+                        title: isRTL ? "موعد موجود مسبقاً" : "Existing Appointment",
+                        description: isRTL
+                            ? `لديك موعد مسبق في ${clinicName} في ${existingAppointment.appointment_day} الساعة ${existingAppointment.appointment_time}. يمكنك حجز موعد واحد فقط لكل عيادة في نفس الوقت.`
+                            : `You already have an appointment at ${clinicName} on ${existingAppointment.appointment_day} at ${existingAppointment.appointment_time}. You can only book one appointment per clinic at a time.`,
+                        variant: "destructive",
+                    });
+                    navigate("/clinics");
+                    return;
+                }
+
+                // Debug: Log user information
+                console.log('🔍 User Info Debug:', {
+                    userId: user.id,
+                    userEmail: user.email,
+                    userInfo: userInfo,
+                    constructedName: userInfo ?
+                        `${userInfo.english_username_a || ''} ${userInfo.english_username_d || ''}`.trim() ||
+                        userInfo.user_email ||
+                        'Unknown Patient' :
+                        user.email || 'Unknown Patient'
+                });
                 const { data: appointment, error } = await supabase
                     .from('payment_bookings')
                     .insert([{
                         patient_id: user.id,
+                        patient_name: userInfo ?
+                            `${userInfo.english_username_a || ''} ${userInfo.english_username_d || ''}`.trim() ||
+                            userInfo.user_email ||
+                            'Unknown Patient' :
+                            user.email || 'Unknown Patient',
+                        patient_email: userInfo?.user_email || user.email || '',
+                        patient_phone: userInfo?.user_phonenumber || '',
+                        unique_patient_id: userInfo?.unique_patient_id || '',
                         clinic_name: clinicName,
                         doctor_name: doctorName,
                         specialty: specialty,
@@ -154,7 +219,6 @@ const Payment = () => {
                         currency: 'ILS',
                         payment_status: 'pending',
                         booking_status: 'scheduled'
-
                     }])
                     .select('*')
                     .single();
@@ -171,7 +235,8 @@ const Payment = () => {
                 if (appointment) {
                     const appt = appointment as PaymentBookingRecord;
                     setAppointmentId(appt.id);
-                    if (appt.confirmation_number) setConfirmationNumber(appt.confirmation_number);
+                    // Generate confirmation number from appointment ID
+                    setConfirmationNumber(`#${appt.id.toString().slice(-8)}`);
                 }
             } catch (error) {
                 console.error('Error initializing payment:', error);
@@ -184,7 +249,7 @@ const Payment = () => {
         };
 
         initializePayment();
-    }, []);
+    }, [clinicName, doctorName, specialty, appointmentDay, appointmentTime, price, navigate, toast]);
 
     // Credit card flow removed for cash-only mode
 
@@ -205,7 +270,12 @@ const Payment = () => {
                 amount: price,
                 currency: 'ILS',
                 paymentMethod: 'cash',
-                description: `Medical appointment - ${doctorName} at ${clinicName}`
+                description: `Medical appointment - ${doctorName} at ${clinicName}`,
+                clinicName: clinicName,
+                doctorName: doctorName,
+                specialty: specialty,
+                appointmentDay: appointmentDay,
+                appointmentTime: appointmentTime
             };
 
             const result = await palestinianPaymentService.processCashPayment(paymentData);

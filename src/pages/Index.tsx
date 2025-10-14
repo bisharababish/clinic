@@ -46,12 +46,14 @@ import {
   ChevronRight,
   Filter,
   Users,
-  XCircle
+  XCircle,
+  DollarSign
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "@/components/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isValidPalestinianID } from '@/lib/PalID_temp';
+import PaidPatientsList from "@/components/PaidPatientsList";
 
 
 // Enhanced patient info interface for search results
@@ -3321,6 +3323,40 @@ const Index = () => {
                       );
                     })()}
                   </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Paid Patients List - Only visible to nurses, doctors, and admins */}
+          {canSearchPatients() && (
+            <section className="bg-white p-6 rounded-lg shadow mt-8">
+              <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                <DollarSign className="h-6 w-6" />
+                {isRTL ? "المرضى المدفوعين" : "Paid Patients"}
+              </h2>
+
+              <div className="space-y-6">
+                {/* All Paid Patients */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">
+                    {isRTL ? "جميع المدفوعات" : "All Payments"}
+                  </h3>
+                  <PaidPatientsList
+                    showOnlyPaid={true}
+                    compact={false}
+                  />
+                </div>
+
+                {/* Pending Payments */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">
+                    {isRTL ? "المدفوعات المعلقة" : "Pending Payments"}
+                  </h3>
+                  <PaidPatientsList
+                    showOnlyPending={true}
+                    compact={false}
+                  />
                 </div>
               </div>
             </section>

@@ -138,6 +138,8 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const activeOperationsRef = useRef(new Set<string>());
     const isLoadingRef = useRef(false);
     const debouncedOperations = useRef(new Map<string, NodeJS.Timeout>());
+    const subscriptionsRef = useRef<Array<ReturnType<typeof supabase.channel>>>([]);
+    const isSubscribedRef = useRef(false);
     const CACHE_DURATION = 20 * 60 * 1000; // 20 minutes (active session)
     const SESSION_EXTENSION_THRESHOLD = 2 * 60 * 1000; // 2 minutes (extend 2 minutes before cache expires)
     const SESSION_EXTENSION_DURATION = 20 * 60 * 1000; // 20 minutes (extended session length)
@@ -493,9 +495,14 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         return () => clearInterval(interval);
     }, [lastUpdated]);
     useEffect(() => {
-        console.log('🔗 Setting up admin state subscriptions...');
+        // Prevent multiple subscriptions
+        if (isSubscribedRef.current) {
+            console.log('🔗 Subscriptions already active, skipping setup...');
+            return;
+        }
 
-        const subscriptions: Array<ReturnType<typeof supabase.channel>> = [];
+        console.log('🔗 Setting up admin state subscriptions...');
+        isSubscribedRef.current = true;
 
         const debouncedRefresh = (tableName: string, loadFunction: () => Promise<void>) => {
             const existingTimeout = debouncedOperations.current.get(tableName);
@@ -518,51 +525,63 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             debouncedOperations.current.set(tableName, newTimeout);
         };
 
+        // Create unique channel names to prevent conflicts
+        const timestamp = Date.now();
+        const channelSuffix = `-${timestamp}`;
+
         const usersSubscription = supabase
-            .channel('admin-users-realtime')
+            .channel(`admin-users-realtime${channelSuffix}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'userinfo' }, () => {
                 debouncedRefresh('users', () => loadUsers(true));
             })
             .subscribe();
-        subscriptions.push(usersSubscription);
+        subscriptionsRef.current.push(usersSubscription);
 
         const clinicsSubscription = supabase
-            .channel('admin-clinics-realtime')
+            .channel(`admin-clinics-realtime${channelSuffix}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'clinics' }, () => {
                 debouncedRefresh('clinics', () => loadClinics(true));
             })
             .subscribe();
-        subscriptions.push(clinicsSubscription);
+        subscriptionsRef.current.push(clinicsSubscription);
 
         const categoriesSubscription = supabase
-            .channel('admin-categories-realtime')
+            .channel(`admin-categories-realtime${channelSuffix}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'clinic_categories' }, () => {
                 debouncedRefresh('categories', () => loadCategories(true));
             })
             .subscribe();
-        subscriptions.push(categoriesSubscription);
+        subscriptionsRef.current.push(categoriesSubscription);
 
         const doctorsSubscription = supabase
-            .channel('admin-doctors-realtime')
+            .channel(`admin-doctors-realtime${channelSuffix}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'doctors' }, () => {
                 debouncedRefresh('doctors', () => loadDoctors(true));
             })
             .subscribe();
-        subscriptions.push(doctorsSubscription);
+        subscriptionsRef.current.push(doctorsSubscription);
 
         const appointmentsSubscription = supabase
-            .channel('admin-appointments-realtime')
+            .channel(`admin-appointments-realtime${channelSuffix}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {
                 debouncedRefresh('appointments', () => loadAppointments(true));
             })
             .subscribe();
-        subscriptions.push(appointmentsSubscription);
+        subscriptionsRef.current.push(appointmentsSubscription);
 
         return () => {
             console.log('🧹 Cleaning up admin state subscriptions...');
-            subscriptions.forEach(sub => sub?.unsubscribe());
+            subscriptionsRef.current.forEach(sub => {
+                try {
+                    sub?.unsubscribe();
+                } catch (error) {
+                    console.warn('Warning: Error unsubscribing from channel:', error);
+                }
+            });
+            subscriptionsRef.current = [];
             debouncedOperations.current.forEach(timeout => clearTimeout(timeout));
             debouncedOperations.current.clear();
+            isSubscribedRef.current = false;
         };
     }, []);
 
