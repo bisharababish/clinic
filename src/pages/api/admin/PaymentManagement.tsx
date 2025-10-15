@@ -516,24 +516,46 @@ const PaymentManagement: React.FC = () => {
                     const actualDate = convertDayNameToDate(paymentBooking.appointment_day);
                     console.log(`Converting "${paymentBooking.appointment_day}" to date: "${actualDate}"`);
 
-                    // Create appointment in appointments table
-                    const { data: newAppointment, error: appointmentError } = await supabase
+                    // Check if appointment already exists to prevent duplication
+                    const { data: existingAppointment, error: checkError } = await supabase
                         .from('appointments')
-                        .insert({
-                            patient_id: paymentBooking.patient_id,
-                            doctor_id: doctor.id,
-                            clinic_id: clinic.id,
-                            date: actualDate, // Use converted date
-                            time: paymentBooking.appointment_time,
-                            status: 'scheduled',
-                            payment_status: 'paid',
-                            price: paymentBooking.price,
-                            notes: `Payment completed for booking #${paymentBooking.id}`,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        })
-                        .select()
+                        .select('id')
+                        .eq('patient_id', paymentBooking.patient_id)
+                        .eq('doctor_id', doctor.id)
+                        .eq('clinic_id', clinic.id)
+                        .eq('date', actualDate)
+                        .eq('time', paymentBooking.appointment_time)
                         .single();
+
+                    let newAppointment = null;
+                    let appointmentError = null;
+
+                    if (existingAppointment) {
+                        console.log('⚠️ Appointment already exists, skipping creation:', existingAppointment.id);
+                        newAppointment = existingAppointment;
+                    } else {
+                        // Create appointment in appointments table only if it doesn't exist
+                        const { data: createdAppointment, error: createError } = await supabase
+                            .from('appointments')
+                            .insert({
+                                patient_id: paymentBooking.patient_id,
+                                doctor_id: doctor.id,
+                                clinic_id: clinic.id,
+                                date: actualDate, // Use converted date
+                                time: paymentBooking.appointment_time,
+                                status: 'scheduled',
+                                payment_status: 'paid',
+                                price: paymentBooking.price,
+                                notes: `Payment completed for booking #${paymentBooking.id}`,
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            })
+                            .select()
+                            .single();
+
+                        newAppointment = createdAppointment;
+                        appointmentError = createError;
+                    }
 
                     if (appointmentError) {
                         console.error('❌ Error creating appointment:', appointmentError);
@@ -543,10 +565,16 @@ const PaymentManagement: React.FC = () => {
                             variant: "destructive",
                         });
                     } else {
-                        console.log('✅ Appointment created successfully:', newAppointment);
+                        if (existingAppointment) {
+                            console.log('✅ Using existing appointment:', newAppointment);
+                        } else {
+                            console.log('✅ Appointment created successfully:', newAppointment);
+                        }
                         toast({
                             title: isRTL ? 'تم تحديث حالة الدفع' : 'Payment Marked as Completed',
-                            description: isRTL ? 'تم تحديث حالة الدفع وإنشاء الموعد بنجاح' : 'Payment status updated and appointment created successfully',
+                            description: existingAppointment
+                                ? (isRTL ? 'تم تحديث حالة الدفع والموعد موجود بالفعل' : 'Payment status updated and appointment already exists')
+                                : (isRTL ? 'تم تحديث حالة الدفع وإنشاء الموعد بنجاح' : 'Payment status updated and appointment created successfully'),
                         });
                     }
                 } else {

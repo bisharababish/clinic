@@ -35,6 +35,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
 const DoctorPatientsPage = lazy(() => import("./pages/DoctorPatientPage"));
+const PatientDashboardPage = lazy(() => import("./pages/PatientDashboard"));
 
 
 
@@ -292,6 +293,19 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              {/* Patient Dashboard - accessible to patients only */}
+              <Route
+                path="/patient/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={["patient"]}>
+                    <MainLayout>
+                      <PatientDashboardPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Admin Dashboard - accessible to admin and secretary */}
               <Route
                 path="/admin/*"

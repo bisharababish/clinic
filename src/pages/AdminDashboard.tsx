@@ -21,6 +21,7 @@ import PatientHealthManagement from "./api/admin/PatientHealthManagement";
 import DeletionRequestsTab from "./api/admin/DeletionRequestsTab";
 import PaymentManagement from "./api/admin/PaymentManagement";
 import PaidPatientsList from "@/components/PaidPatientsList";
+import AppointmentChangeLogs from "@/components/AppointmentChangeLogs";
 
 // The actual dashboard component that uses the state
 const AdminDashboardContent = () => {
@@ -77,7 +78,16 @@ const AdminDashboardContent = () => {
     const canViewPatientHealthTab = ['admin', 'doctor', 'nurse'].includes(userRole);
     const canViewCalendarTab = hasPermission(userRole, 'canViewCalendar');
     const canViewPaymentTab = ['admin', 'secretary'].includes(userRole); // Admin and Secretary can view payments
-    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab || canViewPaymentTab || canViewDeletionRequests;
+    const canViewAppointmentLogsTab = ['admin', 'secretary'].includes(userRole); // Admin and Secretary can view appointment change logs
+
+    // Debug logging for appointment logs tab access
+    console.log('🔍 Admin Dashboard Access Debug:', {
+        userRole,
+        canViewAppointmentLogsTab,
+        isAdmin: userRole === 'admin',
+        isSecretary: userRole === 'secretary'
+    });
+    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab || canViewPaymentTab || canViewAppointmentLogsTab || canViewDeletionRequests;
 
     // Get default tab for user role
     const getDefaultTab = useCallback(() => {
@@ -181,6 +191,7 @@ const AdminDashboardContent = () => {
             'paid-patients': canViewPaymentTab,
             'patient-health': canViewPatientHealthTab,
             'calendar': canViewCalendarTab,
+            'appointment-logs': canViewAppointmentLogsTab,
             'deletion-requests': canViewDeletionRequests
 
         }[newTab];
@@ -342,6 +353,11 @@ const AdminDashboardContent = () => {
                                     {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
                                 </TabsTrigger>
                             )}
+                            {canViewAppointmentLogsTab && (
+                                <TabsTrigger value="appointment-logs" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'سجل المواعيد' : 'Appointment Logs'}
+                                </TabsTrigger>
+                            )}
                             {canViewDeletionRequests && (
                                 <TabsTrigger value="deletion-requests" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
                                     {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletion Requests'}
@@ -397,7 +413,11 @@ const AdminDashboardContent = () => {
                                 {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
                             </TabsTrigger>
                         )}
-                        {/* ADD THIS INSTEAD */}
+                        {canViewAppointmentLogsTab && (
+                            <TabsTrigger value="appointment-logs" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'سجل المواعيد' : 'Appointment Logs'}
+                            </TabsTrigger>
+                        )}
                         {canViewDeletionRequests && (
                             <TabsTrigger value="deletion-requests" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
                                 {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletion Requests'}
@@ -517,7 +537,14 @@ const AdminDashboardContent = () => {
                         </TabsContent>
                     )}
 
-                    {/* ADD THE DELETION REQUESTS TAB HERE */}
+                    {/* APPOINTMENT CHANGE LOGS TAB */}
+                    {canViewAppointmentLogsTab && (
+                        <TabsContent value="appointment-logs" className="pt-6">
+                            <AppointmentChangeLogs />
+                        </TabsContent>
+                    )}
+
+                    {/* DELETION REQUESTS TAB */}
                     {canViewDeletionRequests && (
                         <TabsContent value="deletion-requests" className="pt-6">
                             <DeletionRequestsTab />

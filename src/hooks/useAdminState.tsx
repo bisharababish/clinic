@@ -352,6 +352,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             if (appointmentsError) throw appointmentsError;
 
             // Load paid payment bookings and convert them to appointment format
+            // Only load payment bookings that don't have corresponding appointments
             const { data: paymentBookingsData, error: paymentBookingsError } = await supabase
                 .from('payment_bookings')
                 .select('*')
@@ -361,6 +362,24 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             if (paymentBookingsError) throw paymentBookingsError;
 
             console.log('🔍 Loaded payment bookings:', paymentBookingsData?.length || 0, paymentBookingsData);
+
+            // Filter out payment bookings that already have corresponding appointments
+            const filteredPaymentBookings = paymentBookingsData?.filter(pb => {
+                // Check if there's already an appointment for this payment booking
+                const hasCorrespondingAppointment = appointmentsData?.some(apt =>
+                    apt.patient_id === pb.patient_id &&
+                    apt.date === pb.appointment_day &&
+                    apt.time === pb.appointment_time
+                );
+
+                if (hasCorrespondingAppointment) {
+                    console.log(`🔄 Skipping payment booking ${pb.id} - already has corresponding appointment`);
+                }
+
+                return !hasCorrespondingAppointment;
+            }) || [];
+
+            console.log(`🔄 Filtered payment bookings: ${filteredPaymentBookings.length} (removed ${(paymentBookingsData?.length || 0) - filteredPaymentBookings.length} duplicates)`);
 
             // Map appointments from appointments table
             const mappedAppointments: AppointmentInfo[] = appointmentsData?.map(apt => ({
@@ -384,7 +403,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             })) || [];
 
             // Map payment bookings to appointment format
-            const mappedPaymentBookings: AppointmentInfo[] = paymentBookingsData?.map(pb => {
+            const mappedPaymentBookings: AppointmentInfo[] = filteredPaymentBookings?.map(pb => {
                 // Try to find the actual doctor and clinic IDs from the names
                 const foundDoctor = doctors.find(d =>
                     d.name === pb.doctor_name ||

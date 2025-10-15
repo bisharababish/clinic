@@ -344,6 +344,11 @@ export function Header() {
                                 <Link to="/doctor/patients" className="font-medium">{t('navbar.patients') || 'Patients'}</Link>
                             </Button>
                         )}
+                        {isPatient && (
+                            <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
+                                <Link to="/patient/dashboard" className="font-medium">{t('navbar.myAppointments') || 'My Appointments'}</Link>
+                            </Button>
+                        )}
                         {canViewAdmin && (
                             <Button variant="ghost" size="sm" asChild className={`transition-colors duration-200 ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
                                 <Link to="/admin" className="font-medium">
@@ -580,6 +585,20 @@ export function Header() {
                                                 className="font-medium"
                                             >
                                                 {t('navbar.patients') || 'Patients'}
+                                            </Link>
+                                        </Button>
+                                    )}
+                                    {isPatient && (
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                            <Link
+                                                to="/patient/dashboard"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/patient/dashboard');
+                                                }}
+                                                className="font-medium"
+                                            >
+                                                {t('navbar.myAppointments') || 'My Appointments'}
                                             </Link>
                                         </Button>
                                     )}

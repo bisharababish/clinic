@@ -182,6 +182,7 @@ const enTranslations = {
         doctorLabs: 'Lab Results',
         doctorXRay: 'X-Ray Images',
         patients: 'Patients',
+        myAppointments: 'My Appointments',
     },
     doctorPages: {
         // Lab Results Page
@@ -2211,6 +2212,7 @@ const arTranslations = {
         doctorLabs: 'نتائج المختبر',
         doctorXRay: 'صور الأشعة',
         patients: 'المرضى',
+        myAppointments: 'مواعيدي',
     },
     doctorPages: {
         // Lab Results Page
