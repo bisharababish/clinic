@@ -133,89 +133,66 @@ const MarkPaymentPaid: React.FC<MarkPaymentPaidProps> = ({
                         <CheckCircle className="h-4 w-4" />
                         {paymentStatus === 'paid'
                             ? (isRTL ? 'مدفوع' : 'Paid')
-                            : (isRTL ? 'تحديد كمكتمل' : 'Mark as Completed')
+                            : (isRTL ? 'تأكيد' : 'Mark as Completed')
                         }
                     </Button>
                 )}
             </DialogTrigger>
-            <DialogContent className={isRTL ? 'text-right' : 'text-left'}>
-                {/* Custom close button for Arabic */}
-                {isRTL && (
-                    <button
-                        onClick={() => setIsOpen(false)}
-                        className="absolute left-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="h-4 w-4"
-                        >
-                            <path d="m18 6-12 12" />
-                            <path d="m6 6 12 12" />
-                        </svg>
-                        <span className="sr-only">Close</span>
-                    </button>
-                )}
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
+            <DialogContent className={`[&>button]:hidden ${isRTL ? 'text-right' : 'text-left'}`}>
+                <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+                    <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                         <DollarSign className="h-5 w-5" />
                         {isRTL ? 'تحديد الدفع كمكتمل' : 'Mark Payment as Completed'}
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
                         {isRTL ? 'تأكيد أن الدفع النقدي تم استلامه في العيادة' : 'Confirm that the cash payment has been received at the clinic'}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    <Alert>
+                    <Alert className={isRTL ? 'text-right' : 'text-left'}>
                         <CheckCircle className="h-4 w-4" />
-                        <AlertDescription>
+                        <AlertDescription className={isRTL ? 'text-right' : 'text-left'}>
                             {isRTL ? 'تأكيد أن الدفع النقدي تم استلامه في العيادة' : 'Confirm that the cash payment has been received at the clinic'}
                         </AlertDescription>
                     </Alert>
 
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className={`bg-gray-50 p-4 rounded-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
+                            <div className={isRTL ? 'text-right' : 'text-left'}>
                                 <span className="font-medium">{isRTL ? 'المريض' : 'Patient'}:</span>
                                 <div>{patientName}</div>
                             </div>
-                            <div>
+                            <div className={isRTL ? 'text-right' : 'text-left'}>
                                 <span className="font-medium">{isRTL ? 'المبلغ' : 'Amount'}:</span>
                                 <div className="text-lg font-bold text-green-600">₪{amount}</div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex gap-3 justify-end">
+                    <div className="flex gap-4 justify-end">
                         <Button
                             variant="outline"
                             onClick={() => setIsOpen(false)}
                             disabled={isMarking}
+                            className="mr-4"
                         >
                             {isRTL ? 'إلغاء' : 'Cancel'}
                         </Button>
                         <Button
                             onClick={handleMarkPaid}
                             disabled={isMarking}
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-green-600 hover:bg-green-700 ml-4"
                         >
                             {isMarking ? (
                                 <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    <Loader2 className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
                                     {isRTL ? 'جاري التعليم...' : 'Marking...'}
                                 </>
                             ) : (
                                 <>
-                                    <CheckCircle className="h-4 w-4 mr-2" />
-                                    {isRTL ? 'تحديد كمكتمل' : 'Mark as Completed'}
+                                    <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                    {isRTL ? 'تأكيد' : 'Mark as Completed'}
                                 </>
                             )}
                         </Button>

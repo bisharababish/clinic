@@ -487,20 +487,22 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{isRTL ? 'تأكيد حذف الدفع' : 'Confirm Delete Payment'}</AlertDialogTitle>
-                        <AlertDialogDescription>
+                    <AlertDialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+                        <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>
+                            {isRTL ? 'تأكيد حذف الدفع' : 'Confirm Delete Payment'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className={isRTL ? 'text-right' : 'text-left'}>
                             {isRTL ? 'هل أنت متأكد من حذف هذا الدفع؟ لا يمكن التراجع عن هذا الإجراء.' : 'Are you sure you want to delete this payment? This action cannot be undone.'}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     {patientToDelete && (
-                        <div className="py-4">
+                        <div className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                             <div className="space-y-2">
                                 <p><strong>{isRTL ? 'المريض' : 'Patient'}:</strong> {patientToDelete.patient_name}</p>
                                 <p><strong>{isRTL ? 'المبلغ' : 'Amount'}:</strong> ₪{patientToDelete.amount}</p>
                                 <p><strong>{isRTL ? 'الموعد' : 'Appointment'}:</strong> {patientToDelete.appointment_day} at {patientToDelete.appointment_time}</p>
                                 <p><strong>{isRTL ? 'حالة الدفع' : 'Payment Status'}:</strong>
-                                    <Badge variant={getStatusBadgeVariant(patientToDelete.payment_status)} className="ml-2">
+                                    <Badge variant={getStatusBadgeVariant(patientToDelete.payment_status)} className={isRTL ? 'mr-2' : 'ml-2'}>
                                         {isRTL ?
                                             (patientToDelete.payment_status === 'paid' ? 'مدفوع' :
                                                 patientToDelete.payment_status === 'pending' ? 'معلق' :
@@ -512,11 +514,11 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                             </div>
                         </div>
                     )}
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-4">
+                        <AlertDialogCancel className="mr-4">{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => patientToDelete && deletePayment(patientToDelete.id)}
-                            className="bg-red-600 hover:bg-red-700"
+                            className="bg-red-600 hover:bg-red-700 ml-4"
                         >
                             {isRTL ? 'حذف' : 'Delete'}
                         </AlertDialogAction>

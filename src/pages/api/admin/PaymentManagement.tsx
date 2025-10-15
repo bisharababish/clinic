@@ -1038,23 +1038,25 @@ const PaymentManagement: React.FC = () => {
 
             {/* Payment Details Dialog */}
             <Dialog open={showPaymentDetails} onOpenChange={setShowPaymentDetails}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>{isRTL ? 'تفاصيل الدفع' : 'Payment Details'}</DialogTitle>
-                        <DialogDescription>
+                <DialogContent className={`max-w-2xl ${isRTL ? '[&>button]:left-4 [&>button]:right-auto' : ''}`}>
+                    <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+                        <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
+                            {isRTL ? 'تفاصيل الدفع' : 'Payment Details'}
+                        </DialogTitle>
+                        <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
                             {isRTL ? 'معلومات مفصلة حول هذا الدفع' : 'Detailed information about this payment'}
                         </DialogDescription>
                     </DialogHeader>
                     {selectedPayment && (
-                        <div className="space-y-4">
+                        <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'رقم التأكيد' : 'Confirmation #'}</Label>
                                     <p className="text-sm text-muted-foreground">
                                         {selectedPayment.confirmation_number || `#${selectedPayment.id.slice(-8)}`}
                                     </p>
                                 </div>
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'حالة الدفع' : 'Payment Status'}</Label>
                                     <Badge variant={getStatusBadgeVariant(selectedPayment.payment_status)}>
                                         {translatePaymentStatus(selectedPayment.payment_status)}
@@ -1063,40 +1065,40 @@ const PaymentManagement: React.FC = () => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'اسم المريض' : 'Patient Name'}</Label>
                                     <p className="text-sm">{selectedPayment.patient_name}</p>
                                 </div>
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'بريد المريض الإلكتروني' : 'Patient Email'}</Label>
                                     <p className="text-sm">{selectedPayment.patient_email}</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'اسم الطبيب' : 'Doctor Name'}</Label>
                                     <p className="text-sm">{selectedPayment.doctor_name}</p>
                                 </div>
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'اسم العيادة' : 'Clinic Name'}</Label>
                                     <p className="text-sm">{selectedPayment.clinic_name}</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'تاريخ الموعد' : 'Appointment Date'}</Label>
                                     <p className="text-sm">{selectedPayment.appointment_day}</p>
                                 </div>
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'وقت الموعد' : 'Appointment Time'}</Label>
                                     <p className="text-sm">{selectedPayment.appointment_time}</p>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
+                                <div className={isRTL ? 'text-right' : 'text-left'}>
                                     <Label className="font-medium">{isRTL ? 'المبلغ' : 'Amount'}</Label>
                                     <p className="text-lg font-bold">₪{selectedPayment.price}</p>
                                 </div>
@@ -1128,15 +1130,17 @@ const PaymentManagement: React.FC = () => {
 
             {/* Mark Payment as Completed Dialog */}
             <AlertDialog open={showMarkPaidDialog} onOpenChange={setShowMarkPaidDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{isRTL ? 'تحديد الدفع كمكتمل' : 'Mark Payment as Completed'}</AlertDialogTitle>
-                        <AlertDialogDescription>
+                <AlertDialogContent className={isRTL ? '[&>button]:left-4 [&>button]:right-auto' : ''}>
+                    <AlertDialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+                        <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>
+                            {isRTL ? 'تحديد الدفع كمكتمل' : 'Mark Payment as Completed'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className={isRTL ? 'text-right' : 'text-left'}>
                             {isRTL ? 'تأكيد أن الدفع النقدي تم استلامه في العيادة' : 'Confirm that the cash payment has been received at the clinic'}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     {selectedPayment && (
-                        <div className="py-4">
+                        <div className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                             <div className="space-y-2">
                                 <p><strong>{isRTL ? 'المريض' : 'Patient'}:</strong> {selectedPayment.patient_name}</p>
                                 <p><strong>{isRTL ? 'المبلغ' : 'Amount'}:</strong> ₪{selectedPayment.price}</p>
@@ -1144,10 +1148,13 @@ const PaymentManagement: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => selectedPayment && markPaymentCompleted(selectedPayment.id)}>
-                            {isRTL ? 'تحديد كمكتمل' : 'Mark as Completed'}
+                    <AlertDialogFooter className="gap-4">
+                        <AlertDialogCancel className="mr-4">{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => selectedPayment && markPaymentCompleted(selectedPayment.id)}
+                            className="ml-4"
+                        >
+                            {isRTL ? 'تأكيد' : 'Mark as Completed'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -1157,13 +1164,13 @@ const PaymentManagement: React.FC = () => {
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>
+                        <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>
                             {paymentToDelete?.isBulkDelete
                                 ? (isRTL ? 'تأكيد حذف جميع المدفوعات المعلقة' : 'Confirm Delete All Pending Payments')
                                 : (isRTL ? 'تأكيد حذف الدفع' : 'Confirm Delete Payment')
                             }
                         </AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogDescription className={isRTL ? 'text-right' : 'text-left'}>
                             {paymentToDelete?.isBulkDelete
                                 ? (isRTL ? `هل أنت متأكد من حذف جميع المدفوعات المعلقة (${paymentToDelete?.pendingCount})؟ لا يمكن التراجع عن هذا الإجراء.` : `Are you sure you want to delete all pending payments (${paymentToDelete?.pendingCount})? This action cannot be undone.`)
                                 : (isRTL ? 'هل أنت متأكد من حذف هذا الدفع؟ لا يمكن التراجع عن هذا الإجراء.' : 'Are you sure you want to delete this payment? This action cannot be undone.')
@@ -1184,11 +1191,11 @@ const PaymentManagement: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-4">
+                        <AlertDialogCancel className="mr-4">{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={() => paymentToDelete && deletePayment(paymentToDelete.id, paymentToDelete?.isBulkDelete || false)}
-                            className="bg-red-600 hover:bg-red-700"
+                            className="bg-red-600 hover:bg-red-700 ml-4"
                         >
                             {paymentToDelete?.isBulkDelete
                                 ? (isRTL ? `حذف جميع المعلقة` : `Delete All Pending`)
