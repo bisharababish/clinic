@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, DollarSign, Loader2 } from 'lucide-react';
+import { CheckCircle, CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
@@ -141,7 +141,7 @@ const MarkPaymentPaid: React.FC<MarkPaymentPaidProps> = ({
             <DialogContent className={`[&>button]:hidden ${isRTL ? 'text-right' : 'text-left'}`}>
                 <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
                     <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <DollarSign className="h-5 w-5" />
+                        <CreditCard className="h-5 w-5" />
                         {isRTL ? 'تحديد الدفع كمكتمل' : 'Mark Payment as Completed'}
                     </DialogTitle>
                     <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>

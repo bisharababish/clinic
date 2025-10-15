@@ -39,14 +39,13 @@ import {
     CheckCircle,
     XCircle,
     Clock,
-    DollarSign,
+    CreditCard,
     Calendar,
     User,
     FileText,
     RefreshCw,
     AlertCircle,
     TrendingUp,
-    CreditCard,
     Banknote
 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
@@ -781,7 +780,7 @@ const PaymentManagement: React.FC = () => {
                         <CardTitle className="text-sm font-medium">
                             {isRTL ? 'متوسط الدفع' : 'Average Payment'}
                         </CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                        <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">₪{stats.averagePayment.toFixed(2)}</div>
