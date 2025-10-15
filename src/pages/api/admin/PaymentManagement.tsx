@@ -85,6 +85,9 @@ interface PaymentBooking {
     updated_at: string;
     // Related payment transaction
     payment_transaction?: PaymentTransaction;
+    // For bulk delete functionality
+    isBulkDelete?: boolean;
+    pendingCount?: number;
 }
 
 interface PaymentStats {
@@ -102,7 +105,7 @@ const PaymentManagement: React.FC = () => {
     const isRTL = i18n.language === 'ar';
     const { toast } = useToast();
     const { user } = useAuth();
-    const { isLoading } = useAdminState();
+    const { isLoading, loadAppointments } = useAdminState();
 
     // Debug logging
     console.log('PaymentManagement Debug:', {
@@ -164,6 +167,8 @@ const PaymentManagement: React.FC = () => {
     const [selectedPayment, setSelectedPayment] = useState<PaymentBooking | null>(null);
     const [showPaymentDetails, setShowPaymentDetails] = useState(false);
     const [showMarkPaidDialog, setShowMarkPaidDialog] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [paymentToDelete, setPaymentToDelete] = useState<PaymentBooking | null>(null);
     const [isLoadingPayments, setIsLoadingPayments] = useState(true);
     const [paymentsError, setPaymentsError] = useState<string | null>(null);
 
@@ -342,10 +347,20 @@ const PaymentManagement: React.FC = () => {
     // Mark payment as completed (for cash payments received at clinic)
     const markPaymentCompleted = async (paymentId: string) => {
         try {
+            // First, get the payment booking details
+            const { data: paymentBooking, error: fetchError } = await supabase
+                .from('payment_bookings')
+                .select('*')
+                .eq('id', paymentId)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            // Update payment status to paid
             const { error } = await supabase
                 .from('payment_bookings')
                 .update({
-                    payment_status: 'completed',
+                    payment_status: 'paid',
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', paymentId);
@@ -356,23 +371,286 @@ const PaymentManagement: React.FC = () => {
             await supabase
                 .from('payment_transactions')
                 .update({
-                    transaction_status: 'completed',
+                    transaction_status: 'paid',
                     updated_at: new Date().toISOString()
                 })
                 .eq('payment_booking_id', paymentId);
 
-            toast({
-                title: isRTL ? 'تم تحديث حالة الدفع' : 'Payment Marked as Completed',
-                description: isRTL ? 'تم تحديث حالة الدفع بنجاح' : 'Payment status updated successfully',
-            });
+            // Create appointment in appointments table
+            if (paymentBooking) {
+                console.log('🔍 Payment booking details:', {
+                    clinicName: paymentBooking.clinic_name,
+                    doctorName: paymentBooking.doctor_name,
+                    appointmentDay: paymentBooking.appointment_day,
+                    appointmentTime: paymentBooking.appointment_time
+                });
 
-            loadPayments(); // Refresh data
+                // Try to find clinic by name (exact match first)
+                let clinic = null;
+                let clinicError = null;
+
+                const { data: clinicData, error: clinicErr } = await supabase
+                    .from('clinics')
+                    .select('id, name, name_ar')
+                    .eq('name', paymentBooking.clinic_name)
+                    .single();
+
+                if (clinicData) {
+                    clinic = clinicData;
+                } else {
+                    // Try Arabic name if English name not found
+                    const { data: clinicArData, error: clinicArErr } = await supabase
+                        .from('clinics')
+                        .select('id, name, name_ar')
+                        .eq('name_ar', paymentBooking.clinic_name)
+                        .single();
+
+                    if (clinicArData) {
+                        clinic = clinicArData;
+                    } else {
+                        // Try partial match
+                        const { data: clinicPartialData, error: clinicPartialErr } = await supabase
+                            .from('clinics')
+                            .select('id, name, name_ar')
+                            .ilike('name', `%${paymentBooking.clinic_name}%`)
+                            .single();
+
+                        if (clinicPartialData) {
+                            clinic = clinicPartialData;
+                        } else {
+                            clinicError = clinicErr || clinicArErr || clinicPartialErr;
+                        }
+                    }
+                }
+
+                // Try to find doctor by name (exact match first)
+                let doctor = null;
+                let doctorError = null;
+
+                const { data: doctorData, error: doctorErr } = await supabase
+                    .from('doctors')
+                    .select('id, name, name_ar')
+                    .eq('name', paymentBooking.doctor_name)
+                    .single();
+
+                if (doctorData) {
+                    doctor = doctorData;
+                } else {
+                    // Try Arabic name if English name not found
+                    const { data: doctorArData, error: doctorArErr } = await supabase
+                        .from('doctors')
+                        .select('id, name, name_ar')
+                        .eq('name_ar', paymentBooking.doctor_name)
+                        .single();
+
+                    if (doctorArData) {
+                        doctor = doctorArData;
+                    } else {
+                        // Try partial match
+                        const { data: doctorPartialData, error: doctorPartialErr } = await supabase
+                            .from('doctors')
+                            .select('id, name, name_ar')
+                            .ilike('name', `%${paymentBooking.doctor_name}%`)
+                            .single();
+
+                        if (doctorPartialData) {
+                            doctor = doctorPartialData;
+                        } else {
+                            doctorError = doctorErr || doctorArErr || doctorPartialErr;
+                        }
+                    }
+                }
+
+                console.log('🔍 Clinic search result:', { clinic, clinicError });
+                console.log('🔍 Doctor search result:', { doctor, doctorError });
+
+                if (clinic && doctor) {
+                    console.log('✅ Found clinic and doctor, creating appointment...');
+
+                    // Convert day name to actual date if needed
+                    const convertDayNameToDate = (dayName: string): string => {
+                        const dayMap: { [key: string]: number } = {
+                            'Monday': 1,
+                            'Tuesday': 2,
+                            'Wednesday': 3,
+                            'Thursday': 4,
+                            'Friday': 5,
+                            'Saturday': 6,
+                            'Sunday': 0
+                        };
+
+                        // Also handle Arabic day names
+                        const arabicDayMap: { [key: string]: number } = {
+                            'الاثنين': 1,
+                            'الثلاثاء': 2,
+                            'الأربعاء': 3,
+                            'الخميس': 4,
+                            'الجمعة': 5,
+                            'السبت': 6,
+                            'الأحد': 0
+                        };
+
+                        const dayNumber = dayMap[dayName] ?? arabicDayMap[dayName];
+                        if (dayNumber !== undefined) {
+                            // Find the next occurrence of this day
+                            const today = new Date();
+                            const currentDay = today.getDay();
+                            let daysUntilTarget = (dayNumber - currentDay + 7) % 7;
+                            if (daysUntilTarget === 0) daysUntilTarget = 7; // Next week if today is the target day
+
+                            const targetDate = new Date(today);
+                            targetDate.setDate(today.getDate() + daysUntilTarget);
+
+                            return targetDate.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+                        }
+
+                        // If it's already a date string, return as is
+                        if (dayName.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                            return dayName;
+                        }
+
+                        // Fallback: return today's date
+                        console.warn(`Could not convert day name "${dayName}" to date, using today's date`);
+                        return new Date().toISOString().split('T')[0];
+                    };
+
+                    const actualDate = convertDayNameToDate(paymentBooking.appointment_day);
+                    console.log(`Converting "${paymentBooking.appointment_day}" to date: "${actualDate}"`);
+
+                    // Create appointment in appointments table
+                    const { data: newAppointment, error: appointmentError } = await supabase
+                        .from('appointments')
+                        .insert({
+                            patient_id: paymentBooking.patient_id,
+                            doctor_id: doctor.id,
+                            clinic_id: clinic.id,
+                            date: actualDate, // Use converted date
+                            time: paymentBooking.appointment_time,
+                            status: 'scheduled',
+                            payment_status: 'paid',
+                            price: paymentBooking.price,
+                            notes: `Payment completed for booking #${paymentBooking.id}`,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        })
+                        .select()
+                        .single();
+
+                    if (appointmentError) {
+                        console.error('❌ Error creating appointment:', appointmentError);
+                        toast({
+                            title: isRTL ? 'تحذير' : 'Warning',
+                            description: isRTL ? 'تم تحديث الدفع ولكن حدث خطأ في إنشاء الموعد' : 'Payment updated but failed to create appointment',
+                            variant: "destructive",
+                        });
+                    } else {
+                        console.log('✅ Appointment created successfully:', newAppointment);
+                        toast({
+                            title: isRTL ? 'تم تحديث حالة الدفع' : 'Payment Marked as Completed',
+                            description: isRTL ? 'تم تحديث حالة الدفع وإنشاء الموعد بنجاح' : 'Payment status updated and appointment created successfully',
+                        });
+                    }
+                } else {
+                    console.error('❌ Could not find clinic or doctor:', {
+                        clinicError,
+                        doctorError,
+                        searchedClinicName: paymentBooking.clinic_name,
+                        searchedDoctorName: paymentBooking.doctor_name
+                    });
+
+                    // Let's try to find clinics and doctors with similar names
+                    const { data: allClinics } = await supabase
+                        .from('clinics')
+                        .select('id, name');
+                    const { data: allDoctors } = await supabase
+                        .from('doctors')
+                        .select('id, name');
+
+                    console.log('🔍 Available clinics:', allClinics);
+                    console.log('🔍 Available doctors:', allDoctors);
+
+                    toast({
+                        title: isRTL ? 'تحذير' : 'Warning',
+                        description: isRTL ? `تم تحديث الدفع ولكن لم يتم العثور على العيادة "${paymentBooking.clinic_name}" أو الطبيب "${paymentBooking.doctor_name}"` : `Payment updated but could not find clinic "${paymentBooking.clinic_name}" or doctor "${paymentBooking.doctor_name}"`,
+                        variant: "destructive",
+                    });
+                }
+            }
+
+            loadPayments(); // Refresh payment data
+
+            // Also refresh appointments data to show the new appointment
+            if (loadAppointments) {
+                await loadAppointments(true); // Force refresh
+            }
+
             setShowMarkPaidDialog(false);
         } catch (error) {
             console.error('Error marking payment as completed:', error);
             toast({
                 title: isRTL ? 'خطأ' : 'Error',
                 description: isRTL ? 'خطأ في تحديث حالة الدفع' : 'Error marking payment as completed',
+                variant: "destructive",
+            });
+        }
+    };
+
+    // Delete payment booking
+    const deletePayment = async (paymentId: string, isBulkDelete: boolean = false) => {
+        try {
+            if (isBulkDelete) {
+                // Delete all pending payments
+                const pendingPayments = payments.filter(p => p.payment_status === 'pending');
+                const pendingIds = pendingPayments.map(p => p.id);
+
+                // First delete related payment transactions
+                await supabase
+                    .from('payment_transactions')
+                    .delete()
+                    .in('payment_booking_id', pendingIds);
+
+                // Then delete the payment bookings
+                const { error } = await supabase
+                    .from('payment_bookings')
+                    .delete()
+                    .in('id', pendingIds);
+
+                if (error) throw error;
+
+                toast({
+                    title: isRTL ? 'تم حذف جميع المدفوعات المعلقة' : 'All Pending Payments Deleted',
+                    description: isRTL ? `تم حذف ${pendingPayments.length} مدفوع معلق بنجاح` : `${pendingPayments.length} pending payments deleted successfully`,
+                });
+            } else {
+                // Delete single payment
+                // First delete related payment transactions
+                await supabase
+                    .from('payment_transactions')
+                    .delete()
+                    .eq('payment_booking_id', paymentId);
+
+                // Then delete the payment booking
+                const { error } = await supabase
+                    .from('payment_bookings')
+                    .delete()
+                    .eq('id', paymentId);
+
+                if (error) throw error;
+
+                toast({
+                    title: isRTL ? 'تم حذف الدفع' : 'Payment Deleted',
+                    description: isRTL ? 'تم حذف الدفع بنجاح' : 'Payment deleted successfully',
+                });
+            }
+
+            loadPayments(); // Refresh data
+            setShowDeleteDialog(false);
+            setPaymentToDelete(null);
+        } catch (error) {
+            console.error('Error deleting payment:', error);
+            toast({
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL ? 'خطأ في حذف الدفع' : 'Error deleting payment',
                 variant: "destructive",
             });
         }
@@ -523,7 +801,7 @@ const PaymentManagement: React.FC = () => {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-4 bg-gray-50 rounded-lg">
                         <div className="space-y-2">
                             <Label>{isRTL ? 'البحث' : 'Search'}</Label>
                             <div className="relative">
@@ -569,9 +847,9 @@ const PaymentManagement: React.FC = () => {
                             </Select>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             <Label>{isRTL ? 'الإجراءات' : 'Actions'}</Label>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-3">
                                 <Button onClick={exportPayments} variant="outline" size="sm">
                                     <Download className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                     {isRTL ? 'تصدير' : 'Export'}
@@ -580,6 +858,28 @@ const PaymentManagement: React.FC = () => {
                                     <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                     {isRTL ? 'تحديث' : 'Refresh'}
                                 </Button>
+                                {stats.pendingPayments > 0 && (
+                                    <Button
+                                        onClick={() => {
+                                            const pendingPayments = payments.filter(p => p.payment_status === 'pending');
+                                            if (pendingPayments.length > 0) {
+                                                const bulkDeletePayment: PaymentBooking = {
+                                                    ...pendingPayments[0],
+                                                    isBulkDelete: true,
+                                                    pendingCount: pendingPayments.length
+                                                };
+                                                setPaymentToDelete(bulkDeletePayment);
+                                                setShowDeleteDialog(true);
+                                            }
+                                        }}
+                                        variant="destructive"
+                                        size="sm"
+                                        className="ml-2 px-4 py-2 font-medium shadow-md hover:shadow-lg transition-all duration-200 border-2 border-red-300 hover:border-red-400"
+                                    >
+                                        <XCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                                        {isRTL ? `حذف ${stats.pendingPayments} معلق` : `Delete ${stats.pendingPayments} Pending`}
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -680,6 +980,7 @@ const PaymentManagement: React.FC = () => {
                                                             setSelectedPayment(payment);
                                                             setShowPaymentDetails(true);
                                                         }}
+                                                        title={isRTL ? 'عرض التفاصيل' : 'View Details'}
                                                     >
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
@@ -692,10 +993,23 @@ const PaymentManagement: React.FC = () => {
                                                                 setShowMarkPaidDialog(true);
                                                             }}
                                                             className="text-green-600 hover:text-green-700"
+                                                            title={isRTL ? 'تحديد كمكتمل' : 'Mark as Paid'}
                                                         >
                                                             <CheckCircle className="h-4 w-4" />
                                                         </Button>
                                                     )}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setPaymentToDelete(payment);
+                                                            setShowDeleteDialog(true);
+                                                        }}
+                                                        className="text-red-600 hover:text-red-700"
+                                                        title={isRTL ? 'حذف الدفع' : 'Delete Payment'}
+                                                    >
+                                                        <XCircle className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -834,6 +1148,52 @@ const PaymentManagement: React.FC = () => {
                         <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
                         <AlertDialogAction onClick={() => selectedPayment && markPaymentCompleted(selectedPayment.id)}>
                             {isRTL ? 'تحديد كمكتمل' : 'Mark as Completed'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Delete Payment Confirmation Dialog */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {paymentToDelete?.isBulkDelete
+                                ? (isRTL ? 'تأكيد حذف جميع المدفوعات المعلقة' : 'Confirm Delete All Pending Payments')
+                                : (isRTL ? 'تأكيد حذف الدفع' : 'Confirm Delete Payment')
+                            }
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {paymentToDelete?.isBulkDelete
+                                ? (isRTL ? `هل أنت متأكد من حذف جميع المدفوعات المعلقة (${paymentToDelete?.pendingCount})؟ لا يمكن التراجع عن هذا الإجراء.` : `Are you sure you want to delete all pending payments (${paymentToDelete?.pendingCount})? This action cannot be undone.`)
+                                : (isRTL ? 'هل أنت متأكد من حذف هذا الدفع؟ لا يمكن التراجع عن هذا الإجراء.' : 'Are you sure you want to delete this payment? This action cannot be undone.')
+                            }
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    {paymentToDelete && !paymentToDelete?.isBulkDelete && (
+                        <div className="py-4">
+                            <div className="space-y-2">
+                                <p><strong>{isRTL ? 'المريض' : 'Patient'}:</strong> {paymentToDelete.patient_name}</p>
+                                <p><strong>{isRTL ? 'المبلغ' : 'Amount'}:</strong> ₪{paymentToDelete.price}</p>
+                                <p><strong>{isRTL ? 'الموعد' : 'Appointment'}:</strong> {paymentToDelete.appointment_day} at {paymentToDelete.appointment_time}</p>
+                                <p><strong>{isRTL ? 'حالة الدفع' : 'Payment Status'}:</strong>
+                                    <Badge variant={getStatusBadgeVariant(paymentToDelete.payment_status)} className="ml-2">
+                                        {translatePaymentStatus(paymentToDelete.payment_status)}
+                                    </Badge>
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => paymentToDelete && deletePayment(paymentToDelete.id, paymentToDelete?.isBulkDelete || false)}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {paymentToDelete?.isBulkDelete
+                                ? (isRTL ? `حذف جميع المعلقة` : `Delete All Pending`)
+                                : (isRTL ? 'حذف' : 'Delete')
+                            }
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

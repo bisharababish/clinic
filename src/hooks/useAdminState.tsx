@@ -336,9 +336,10 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         updateLoadingState();
 
         try {
-            console.log('🔄 Loading appointments...');
+            console.log('🔄 Loading appointments from both appointments and payment_bookings tables...');
 
-            const { data, error } = await supabase
+            // Load appointments from appointments table
+            const { data: appointmentsData, error: appointmentsError } = await supabase
                 .from('appointments')
                 .select(`
     *,
@@ -348,9 +349,21 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 `)
                 .order('date', { ascending: false });
 
-            if (error) throw error;
+            if (appointmentsError) throw appointmentsError;
 
-            const mappedAppointments: AppointmentInfo[] = data?.map(apt => ({
+            // Load paid payment bookings and convert them to appointment format
+            const { data: paymentBookingsData, error: paymentBookingsError } = await supabase
+                .from('payment_bookings')
+                .select('*')
+                .eq('payment_status', 'paid')
+                .order('appointment_day', { ascending: false });
+
+            if (paymentBookingsError) throw paymentBookingsError;
+
+            console.log('🔍 Loaded payment bookings:', paymentBookingsData?.length || 0, paymentBookingsData);
+
+            // Map appointments from appointments table
+            const mappedAppointments: AppointmentInfo[] = appointmentsData?.map(apt => ({
                 id: apt.id,
                 patient_id: apt.patient_id,
                 patient_name: `${apt.patients?.english_username_a || ''} ${apt.patients?.english_username_d || ''}`.trim(),
@@ -370,9 +383,71 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 updated_at: apt.updated_at
             })) || [];
 
-            setAppointments(mappedAppointments);
+            // Map payment bookings to appointment format
+            const mappedPaymentBookings: AppointmentInfo[] = paymentBookingsData?.map(pb => {
+                // Try to find the actual doctor and clinic IDs from the names
+                const foundDoctor = doctors.find(d =>
+                    d.name === pb.doctor_name ||
+                    d.name_ar === pb.doctor_name ||
+                    d.name?.toLowerCase().includes(pb.doctor_name?.toLowerCase() || '') ||
+                    d.name_ar?.toLowerCase().includes(pb.doctor_name?.toLowerCase() || '')
+                );
+
+                const foundClinic = clinics.find(c =>
+                    c.name === pb.clinic_name ||
+                    c.name_ar === pb.clinic_name ||
+                    c.name?.toLowerCase().includes(pb.clinic_name?.toLowerCase() || '') ||
+                    c.name_ar?.toLowerCase().includes(pb.clinic_name?.toLowerCase() || '')
+                );
+
+                // Debug logging for doctor/clinic matching
+                if (!foundDoctor) {
+                    console.log(`🔍 Could not find doctor for: "${pb.doctor_name}"`);
+                    console.log(`🔍 Available doctors:`, doctors.map(d => ({ name: d.name, name_ar: d.name_ar })));
+                }
+                if (!foundClinic) {
+                    console.log(`🔍 Could not find clinic for: "${pb.clinic_name}"`);
+                    console.log(`🔍 Available clinics:`, clinics.map(c => ({ name: c.name, name_ar: c.name_ar })));
+                }
+
+                return {
+                    id: `pb_${pb.id}`, // Prefix to distinguish from regular appointments
+                    patient_id: pb.patient_id,
+                    patient_name: pb.patient_name || 'Unknown Patient',
+                    doctor_id: foundDoctor?.id || '',
+                    doctor_name: foundDoctor?.name || pb.doctor_name || 'Unknown Doctor',
+                    doctor_name_ar: foundDoctor?.name_ar || '',
+                    clinic_id: foundClinic?.id || '',
+                    clinic_name: foundClinic?.name || pb.clinic_name || 'Unknown Clinic',
+                    clinic_name_ar: foundClinic?.name_ar || '',
+                    date: pb.appointment_day,
+                    time: pb.appointment_time,
+                    status: pb.booking_status === 'scheduled' ? 'scheduled' : 'completed',
+                    payment_status: 'paid',
+                    price: pb.price,
+                    notes: `Payment booking #${pb.id}`,
+                    created_at: pb.created_at,
+                    updated_at: pb.updated_at
+                };
+            }) || [];
+
+            // Combine both sources and remove duplicates (payment bookings that already exist as appointments)
+            const allAppointments = [...mappedAppointments, ...mappedPaymentBookings];
+
+            // Remove duplicates based on patient_id, date, time, and doctor_name
+            const uniqueAppointments = allAppointments.filter((appointment, index, self) =>
+                index === self.findIndex(a =>
+                    a.patient_id === appointment.patient_id &&
+                    a.date === appointment.date &&
+                    a.time === appointment.time &&
+                    a.doctor_name === appointment.doctor_name
+                )
+            );
+
+            setAppointments(uniqueAppointments);
             setLastUpdated(prev => ({ ...prev, [cacheKey]: now }));
-            console.log(`✅ Loaded ${mappedAppointments.length} appointments`);
+            console.log(`✅ Loaded ${uniqueAppointments.length} appointments (${mappedAppointments.length} from appointments table, ${mappedPaymentBookings.length} from payment bookings)`);
+            console.log('🔍 Final appointments list:', uniqueAppointments);
         } catch (error: unknown) {
             console.error('❌ Failed to load appointments:', error);
             setError('Failed to load appointments: ' + (error instanceof Error ? error.message : String(error)));

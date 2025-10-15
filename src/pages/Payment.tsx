@@ -198,6 +198,66 @@ const Payment = () => {
                         'Unknown Patient' :
                         user.email || 'Unknown Patient'
                 });
+                // Convert day name to actual date
+                const convertDayNameToDate = (dayName: string): string => {
+                    // Handle placeholder text
+                    if (dayName.includes('الوقت المختار') || dayName.includes('The Chosen Time')) {
+                        console.warn(`Detected placeholder text "${dayName}", using tomorrow's date`);
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return tomorrow.toISOString().split('T')[0];
+                    }
+
+                    const dayMap: { [key: string]: number } = {
+                        'Monday': 1,
+                        'Tuesday': 2,
+                        'Wednesday': 3,
+                        'Thursday': 4,
+                        'Friday': 5,
+                        'Saturday': 6,
+                        'Sunday': 0
+                    };
+
+                    // Also handle Arabic day names
+                    const arabicDayMap: { [key: string]: number } = {
+                        'الاثنين': 1,
+                        'الثلاثاء': 2,
+                        'الأربعاء': 3,
+                        'الخميس': 4,
+                        'الجمعة': 5,
+                        'السبت': 6,
+                        'الأحد': 0
+                    };
+
+                    const dayNumber = dayMap[dayName] ?? arabicDayMap[dayName];
+                    if (dayNumber !== undefined) {
+                        // Find the next occurrence of this day
+                        const today = new Date();
+                        const currentDay = today.getDay();
+                        let daysUntilTarget = (dayNumber - currentDay + 7) % 7;
+                        if (daysUntilTarget === 0) daysUntilTarget = 7; // Next week if today is the target day
+
+                        const targetDate = new Date(today);
+                        targetDate.setDate(today.getDate() + daysUntilTarget);
+
+                        return targetDate.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+                    }
+
+                    // If it's already a date string, return as is
+                    if (dayName.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        return dayName;
+                    }
+
+                    // Fallback: return tomorrow's date
+                    console.warn(`Could not convert day name "${dayName}" to date, using tomorrow's date`);
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    return tomorrow.toISOString().split('T')[0];
+                };
+
+                const actualDate = convertDayNameToDate(appointmentDay);
+                console.log(`Converting "${appointmentDay}" to date: "${actualDate}"`);
+
                 const { data: appointment, error } = await supabase
                     .from('payment_bookings')
                     .insert([{
@@ -213,7 +273,7 @@ const Payment = () => {
                         clinic_name: clinicName,
                         doctor_name: doctorName,
                         specialty: specialty,
-                        appointment_day: appointmentDay,
+                        appointment_day: actualDate, // Use converted date
                         appointment_time: appointmentTime,
                         price: price,
                         currency: 'ILS',
