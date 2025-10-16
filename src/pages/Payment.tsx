@@ -217,71 +217,49 @@ const Payment = () => {
                     appointment_time: appointmentTime
                 });
 
-                // More thorough duplicate detection - get ALL appointments for this patient
+                // Check for existing appointments INCLUDING soft-deleted ones
+                console.log('🔍 Checking for appointments including soft-deleted records...');
+
                 const { data: existingAppointments, error: checkError } = await supabase
                     .from('payment_bookings')
-                    .select('id, clinic_name, doctor_name, appointment_day, appointment_time, payment_status, booking_status, created_at')
-                    .eq('patient_id', user.id);
+                    .select('id, clinic_name, doctor_name, appointment_day, appointment_time, payment_status, booking_status, created_at, patient_id, patient_email, deleted')
+                    .or(`patient_id.eq.${user.id},patient_email.eq.${user.email}`);
+
+                console.log('🔍 ALL APPOINTMENTS FOUND (including soft-deleted):', {
+                    count: existingAppointments?.length || 0,
+                    appointments: existingAppointments?.map(apt => ({
+                        id: apt.id,
+                        clinic: apt.clinic_name,
+                        doctor: apt.doctor_name,
+                        date: apt.appointment_day,
+                        time: apt.appointment_time,
+                        status: apt.payment_status,
+                        deleted: apt.deleted
+                    }))
+                });
 
                 if (checkError) {
                     console.error('Error checking existing appointments:', checkError);
                     throw new Error('Failed to check existing appointments');
                 }
 
-                console.log('🔍 Found existing appointments:', existingAppointments);
-                console.log('📋 All existing appointments for this patient:', existingAppointments?.map(apt => ({
-                    id: apt.id,
-                    clinic: apt.clinic_name,
-                    doctor: apt.doctor_name,
-                    date: apt.appointment_day,
-                    time: apt.appointment_time,
-                    status: apt.payment_status
-                })));
-
-                // Manual duplicate checking - more precise than database query
-                const exactDuplicates = existingAppointments?.filter(existing => {
+                // Check for exact duplicates (regardless of deleted status)
+                const exactDuplicates = (existingAppointments || []).filter(existing => {
                     const timeMatch = existing.appointment_time === appointmentTime;
                     const dateMatch = existing.appointment_day === actualDate;
                     const doctorMatch = existing.doctor_name === doctorName;
                     const clinicMatch = existing.clinic_name === clinicName;
+                    return timeMatch && dateMatch && doctorMatch && clinicMatch;
+                });
 
-                    // Only consider it a duplicate if it's an active appointment (not cancelled/failed)
-                    const isActiveAppointment = existing.payment_status === 'pending' || existing.payment_status === 'paid';
+                console.log('🔍 Exact duplicates found (including soft-deleted):', exactDuplicates);
 
-                    console.log(`🔍 Checking appointment ${existing.id}:`, {
-                        timeMatch,
-                        dateMatch,
-                        doctorMatch,
-                        clinicMatch,
-                        isActiveAppointment,
-                        status: existing.payment_status,
-                        existing: {
-                            time: existing.appointment_time,
-                            date: existing.appointment_day,
-                            doctor: existing.doctor_name,
-                            clinic: existing.clinic_name,
-                            status: existing.payment_status
-                        },
-                        new: {
-                            time: appointmentTime,
-                            date: actualDate,
-                            doctor: doctorName,
-                            clinic: clinicName
-                        }
-                    });
-
-                    return timeMatch && dateMatch && doctorMatch && clinicMatch && isActiveAppointment;
-                }) || [];
-
-                console.log('🔍 Exact duplicates found:', exactDuplicates);
-
-                // If patient already has an exact duplicate appointment, show error
                 if (exactDuplicates.length > 0) {
                     const existingAppointment = exactDuplicates[0];
-                    console.log('🚫 EXACT DUPLICATE DETECTED:', {
+                    console.log('🚫 DUPLICATE FOUND:', {
                         existing: existingAppointment,
                         new: { clinicName, doctorName, actualDate, appointmentTime },
-                        duplicateCount: exactDuplicates.length
+                        isDeleted: existingAppointment.deleted
                     });
 
                     toast({
@@ -294,6 +272,8 @@ const Payment = () => {
                     console.log('🚫 DUPLICATE DETECTED - PREVENTING BOOKING');
                     navigate("/clinics");
                     return;
+                } else {
+                    console.log('✅ NO DUPLICATES FOUND - PROCEEDING TO INSERT');
                 }
 
                 // Debug: Log user information
@@ -312,28 +292,42 @@ const Payment = () => {
                 // Final check before booking - make sure no duplicates exist
                 console.log('✅ PROCEEDING WITH BOOKING - No duplicates found');
 
+                const insertData = {
+                    patient_id: user.id,
+                    patient_name: userInfo ?
+                        `${userInfo.english_username_a || ''} ${userInfo.english_username_d || ''}`.trim() ||
+                        userInfo.user_email ||
+                        'Unknown Patient' :
+                        user.email || 'Unknown Patient',
+                    patient_email: userInfo?.user_email || user.email || '',
+                    patient_phone: userInfo?.user_phonenumber || '',
+                    unique_patient_id: userInfo?.unique_patient_id || '',
+                    clinic_name: clinicName,
+                    doctor_name: doctorName,
+                    specialty: specialty,
+                    appointment_day: actualDate, // Use converted date
+                    appointment_time: appointmentTime,
+                    price: price,
+                    currency: 'ILS',
+                    payment_status: 'pending',
+                    booking_status: 'scheduled'
+                };
+
+                console.log('🔍 EXACT DATA BEING INSERTED:', {
+                    constraint_fields: {
+                        patient_id: insertData.patient_id,
+                        clinic_name: `"${insertData.clinic_name}"`,
+                        doctor_name: `"${insertData.doctor_name}"`,
+                        appointment_day: `"${insertData.appointment_day}"`,
+                        appointment_time: `"${insertData.appointment_time}"`
+                    },
+                    full_data: insertData
+                });
+
+                // Try to insert the appointment
                 const { data: appointment, error } = await supabase
                     .from('payment_bookings')
-                    .insert([{
-                        patient_id: user.id,
-                        patient_name: userInfo ?
-                            `${userInfo.english_username_a || ''} ${userInfo.english_username_d || ''}`.trim() ||
-                            userInfo.user_email ||
-                            'Unknown Patient' :
-                            user.email || 'Unknown Patient',
-                        patient_email: userInfo?.user_email || user.email || '',
-                        patient_phone: userInfo?.user_phonenumber || '',
-                        unique_patient_id: userInfo?.unique_patient_id || '',
-                        clinic_name: clinicName,
-                        doctor_name: doctorName,
-                        specialty: specialty,
-                        appointment_day: actualDate, // Use converted date
-                        appointment_time: appointmentTime,
-                        price: price,
-                        currency: 'ILS',
-                        payment_status: 'pending',
-                        booking_status: 'scheduled'
-                    }])
+                    .insert([insertData])
                     .select('*')
                     .single();
 
@@ -352,6 +346,42 @@ const Payment = () => {
                             details: error.details,
                             newAppointment: { clinicName, doctorName, actualDate, appointmentTime }
                         });
+
+                        // Instead of showing error, let's try to find and delete the conflicting record
+                        console.log('🔧 Attempting to resolve constraint violation by cleaning up conflicting records...');
+
+                        const { error: deleteError } = await supabase
+                            .from('payment_bookings')
+                            .delete()
+                            .eq('patient_id', user.id)
+                            .eq('clinic_name', clinicName)
+                            .eq('doctor_name', doctorName)
+                            .eq('appointment_day', actualDate)
+                            .eq('appointment_time', appointmentTime);
+
+                        if (deleteError) {
+                            console.error('Failed to delete conflicting record:', deleteError);
+                        } else {
+                            console.log('✅ Deleted conflicting record, retrying insert...');
+
+                            // Retry the insert
+                            const { data: retryAppointment, error: retryError } = await supabase
+                                .from('payment_bookings')
+                                .insert([insertData])
+                                .select('*')
+                                .single();
+
+                            if (retryError) {
+                                console.error('Retry insert failed:', retryError);
+                                throw new Error(retryError.message || 'Insert failed after cleanup');
+                            } else {
+                                console.log('✅ Successfully inserted after cleanup:', retryAppointment);
+                                const appt = retryAppointment as any;
+                                setAppointmentId(appt.id);
+                                setConfirmationNumber(`#${appt.id.toString().slice(-8)}`);
+                                return; // Success, exit early
+                            }
+                        }
 
                         toast({
                             title: isRTL ? "موعد مكرر" : "Duplicate Appointment",

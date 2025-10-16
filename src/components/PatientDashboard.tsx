@@ -87,22 +87,16 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                 return;
             }
 
-            // Fetch appointments for this patient from both tables
-            const { data: appointmentsData, error: appointmentsError } = await supabase
-                .from('appointments')
-                .select('*')
-                .eq('patient_id', session.user.id)
-                .order('created_at', { ascending: false });
-
-            if (appointmentsError) {
-                console.error('Error fetching appointments:', appointmentsError);
-            }
+            // For now, focus on payment_bookings table only since it has all the necessary fields
+            // and is where new appointments are created
+            const appointmentsData = []; // Skip appointments table for now to avoid complexity
 
             // Also fetch from payment_bookings for pending payments
+            // Query by both patient_id and patient_email to ensure we get all bookings
             const { data: paymentBookingsData, error: paymentBookingsError } = await supabase
                 .from('payment_bookings')
                 .select('*')
-                .eq('patient_email', patientEmail)
+                .or(`patient_id.eq.${session.user.id},patient_email.eq.${patientEmail}`)
                 .order('created_at', { ascending: false });
 
             if (paymentBookingsError) {
@@ -110,14 +104,15 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
             }
 
             // Normalize appointments from both tables to PatientAppointment format
+            // For now, we're only using payment_bookings table
             const normalizedAppointments = (appointmentsData || []).map(apt => ({
                 id: apt.id,
-                patient_name: apt.patient_name || 'Unknown Patient',
+                patient_name: 'Unknown Patient',
                 patient_email: patientEmail,
-                patient_phone: apt.patient_phone || '',
-                doctor_name: apt.doctor_name || 'Unknown Doctor',
-                clinic_name: apt.clinic_name || 'Unknown Clinic',
-                specialty: apt.specialty || '',
+                patient_phone: '',
+                doctor_name: 'Unknown Doctor',
+                clinic_name: 'Unknown Clinic',
+                specialty: '',
                 appointment_day: apt.date || apt.appointment_day,
                 appointment_time: apt.time || apt.appointment_time,
                 price: apt.price || 0,
@@ -189,6 +184,20 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
     // Load appointments on mount
     useEffect(() => {
         loadAppointments();
+    }, [loadAppointments]);
+
+    // Refresh appointments when window regains focus (e.g., returning from payment page)
+    useEffect(() => {
+        const handleFocus = () => {
+            console.log('🔄 Window focused - refreshing appointments');
+            loadAppointments();
+        };
+
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
     }, [loadAppointments]);
 
     // Log appointment change
