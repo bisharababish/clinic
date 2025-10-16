@@ -166,6 +166,7 @@ const DoctorLabsPage: React.FC = () => {
     const [initializing, setInitializing] = useState<boolean>(true);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [resultToDelete, setResultToDelete] = useState<LabResult | null>(null);
+    const [patientArabicName, setPatientArabicName] = useState<string>('');
     const isFetchingRef = useRef(false);
 
     // Fetch lab results from database
@@ -291,8 +292,37 @@ const DoctorLabsPage: React.FC = () => {
     const handleViewDetails = (result: LabResult): void => {
         setSelectedTest(result);
     };
-    const handleDeleteResult = (result: LabResult) => {
+    const fetchPatientArabicName = async (patientEmail: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('userinfo')
+                .select('arabic_username_a, arabic_username_d')
+                .eq('user_email', patientEmail)
+                .single();
+
+            if (error || !data) {
+                return '';
+            }
+
+            const arabicNameParts = [
+                data.arabic_username_a,
+                data.arabic_username_d
+            ].filter(part => part && part.trim());
+
+            return arabicNameParts.join(' ').trim();
+        } catch (error) {
+            console.error('Error fetching patient Arabic name:', error);
+            return '';
+        }
+    };
+
+    const handleDeleteResult = async (result: LabResult) => {
         setResultToDelete(result);
+
+        // Fetch patient's Arabic name
+        const arabicName = await fetchPatientArabicName(result.patient_email);
+        setPatientArabicName(arabicName);
+
         setDeleteConfirmOpen(true);
     };
 
@@ -777,25 +807,28 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
             )}
             {/* Delete Confirmation Dialog - ADD IT HERE */}
             <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-                <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
+                <AlertDialogContent
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                    className={`${isRTL ? 'text-right' : 'text-left'} ${isRTL ? 'rtl' : 'ltr'}`}
+                >
+                    <AlertDialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+                        <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>
                             {isRTL ? 'تأكيد الحذف' : 'Confirm Deletion'}
                         </AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogDescription className={isRTL ? 'text-right' : 'text-left'}>
                             {isRTL
-                                ? `هل أنت متأكد من حذف نتيجة الفحص لـ ${resultToDelete?.patient_name}؟ لا يمكن التراجع عن هذا الإجراء.`
+                                ? `هل أنت متأكد من حذف نتيجة الفحص لـ ${patientArabicName || resultToDelete?.patient_name}؟ لا يمكن التراجع عن هذا الإجراء.`
                                 : `Are you sure you want to delete the lab result for ${resultToDelete?.patient_name}? This action cannot be undone.`
                             }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className={isRTL ? 'gap-4' : ''}>
-                        <AlertDialogCancel>
+                    <AlertDialogFooter className={isRTL ? 'flex-row-reverse gap-4 justify-start' : 'justify-end'}>
+                        <AlertDialogCancel className={isRTL ? 'order-2' : ''}>
                             {isRTL ? 'إلغاء' : 'Cancel'}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={confirmDelete}
-                            className="bg-red-600 hover:bg-red-700"
+                            className={`bg-red-600 hover:bg-red-700 ${isRTL ? 'order-1' : ''}`}
                         >
                             {isRTL ? 'حذف' : 'Delete'}
                         </AlertDialogAction>

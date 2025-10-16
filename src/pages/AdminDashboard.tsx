@@ -354,13 +354,13 @@ const AdminDashboardContent = () => {
                                 </TabsTrigger>
                             )}
                             {canViewAppointmentLogsTab && (
-                                <TabsTrigger value="appointment-logs" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                    {i18n.language === 'ar' ? 'سجل المواعيد' : 'Appointment Logs'}
+                                <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] px-0 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
                                 </TabsTrigger>
                             )}
                             {canViewDeletionRequests && (
-                                <TabsTrigger value="deletion-requests" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                    {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletion Requests'}
+                                <TabsTrigger value="deletion-requests" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                    {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
                                 </TabsTrigger>
                             )}
                         </TabsList>
@@ -414,13 +414,13 @@ const AdminDashboardContent = () => {
                             </TabsTrigger>
                         )}
                         {canViewAppointmentLogsTab && (
-                            <TabsTrigger value="appointment-logs" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {i18n.language === 'ar' ? 'سجل المواعيد' : 'Appointment Logs'}
+                            <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking image.pngLogs'}
                             </TabsTrigger>
                         )}
                         {canViewDeletionRequests && (
-                            <TabsTrigger value="deletion-requests" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletion Requests'}
+                            <TabsTrigger value="deletion-requests" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
                             </TabsTrigger>
                         )}
                     </TabsList>
