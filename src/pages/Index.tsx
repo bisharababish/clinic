@@ -3328,8 +3328,8 @@ const Index = () => {
             </section>
           )}
 
-          {/* Paid Patients List - Only visible to nurses, doctors, and admins */}
-          {canSearchPatients() && (
+          {/* Paid Patients List - Only visible to nurses and doctors (not admin/secretary since they have it in dashboard) */}
+          {(userRole === 'nurse' || userRole === 'doctor') && (
             <section className="bg-white p-6 rounded-lg shadow mt-8">
               <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                 <DollarSign className="h-6 w-6" />
