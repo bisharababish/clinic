@@ -217,16 +217,11 @@ const Payment = () => {
                     appointment_time: appointmentTime
                 });
 
+                // More thorough duplicate detection - get ALL appointments for this patient
                 const { data: existingAppointments, error: checkError } = await supabase
                     .from('payment_bookings')
                     .select('id, clinic_name, doctor_name, appointment_day, appointment_time, payment_status, booking_status, created_at')
-                    .eq('patient_id', user.id)
-                    .eq('clinic_name', clinicName)
-                    .eq('doctor_name', doctorName)
-                    .eq('appointment_day', actualDate)
-                    .eq('appointment_time', appointmentTime)
-                    .in('booking_status', ['scheduled', 'confirmed'])
-                    .in('payment_status', ['pending', 'paid']);
+                    .eq('patient_id', user.id);
 
                 if (checkError) {
                     console.error('Error checking existing appointments:', checkError);
@@ -234,14 +229,59 @@ const Payment = () => {
                 }
 
                 console.log('🔍 Found existing appointments:', existingAppointments);
+                console.log('📋 All existing appointments for this patient:', existingAppointments?.map(apt => ({
+                    id: apt.id,
+                    clinic: apt.clinic_name,
+                    doctor: apt.doctor_name,
+                    date: apt.appointment_day,
+                    time: apt.appointment_time,
+                    status: apt.payment_status
+                })));
+
+                // Manual duplicate checking - more precise than database query
+                const exactDuplicates = existingAppointments?.filter(existing => {
+                    const timeMatch = existing.appointment_time === appointmentTime;
+                    const dateMatch = existing.appointment_day === actualDate;
+                    const doctorMatch = existing.doctor_name === doctorName;
+                    const clinicMatch = existing.clinic_name === clinicName;
+
+                    // Only consider it a duplicate if it's an active appointment (not cancelled/failed)
+                    const isActiveAppointment = existing.payment_status === 'pending' || existing.payment_status === 'paid';
+
+                    console.log(`🔍 Checking appointment ${existing.id}:`, {
+                        timeMatch,
+                        dateMatch,
+                        doctorMatch,
+                        clinicMatch,
+                        isActiveAppointment,
+                        status: existing.payment_status,
+                        existing: {
+                            time: existing.appointment_time,
+                            date: existing.appointment_day,
+                            doctor: existing.doctor_name,
+                            clinic: existing.clinic_name,
+                            status: existing.payment_status
+                        },
+                        new: {
+                            time: appointmentTime,
+                            date: actualDate,
+                            doctor: doctorName,
+                            clinic: clinicName
+                        }
+                    });
+
+                    return timeMatch && dateMatch && doctorMatch && clinicMatch && isActiveAppointment;
+                }) || [];
+
+                console.log('🔍 Exact duplicates found:', exactDuplicates);
 
                 // If patient already has an exact duplicate appointment, show error
-                if (existingAppointments && existingAppointments.length > 0) {
-                    const existingAppointment = existingAppointments[0];
-                    console.log('🚫 Duplicate appointment detected:', {
+                if (exactDuplicates.length > 0) {
+                    const existingAppointment = exactDuplicates[0];
+                    console.log('🚫 EXACT DUPLICATE DETECTED:', {
                         existing: existingAppointment,
                         new: { clinicName, doctorName, actualDate, appointmentTime },
-                        existingCount: existingAppointments.length
+                        duplicateCount: exactDuplicates.length
                     });
 
                     toast({
@@ -251,6 +291,7 @@ const Payment = () => {
                             : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
                         variant: "destructive",
                     });
+                    console.log('🚫 DUPLICATE DETECTED - PREVENTING BOOKING');
                     navigate("/clinics");
                     return;
                 }
@@ -267,6 +308,9 @@ const Payment = () => {
                         user.email || 'Unknown Patient'
                 });
                 console.log(`Using converted date: "${actualDate}"`);
+
+                // Final check before booking - make sure no duplicates exist
+                console.log('✅ PROCEEDING WITH BOOKING - No duplicates found');
 
                 const { data: appointment, error } = await supabase
                     .from('payment_bookings')
@@ -303,6 +347,12 @@ const Payment = () => {
 
                     // Handle duplicate appointment error specifically
                     if (error.code === '23505' || error.message?.includes('unique_appointment_booking')) {
+                        console.log('🚫 DATABASE CONSTRAINT VIOLATION - Duplicate detected at database level:', {
+                            error: error.message,
+                            details: error.details,
+                            newAppointment: { clinicName, doctorName, actualDate, appointmentTime }
+                        });
+
                         toast({
                             title: isRTL ? "موعد مكرر" : "Duplicate Appointment",
                             description: isRTL
