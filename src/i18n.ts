@@ -1028,9 +1028,10 @@ const enTranslations = {
         failedToDeleteDoctor: 'Failed to delete doctor. Please try again.',
 
         // Constraint errors
-        cannotDeleteClinicWithDoctors: 'This clinic has {{count}} doctor(s) assigned to it. Please remove the doctors first.',
+        cannotDeleteClinicWithDoctors: 'Cannot delete clinic. Please remove these doctors first: {{doctorNames}}',
         cannotDeleteCategoryWithClinics: 'This category is used by the following clinic(s): {{clinics}}. Please reassign those clinics first.',
         cannotDelete: 'Cannot Delete',
+        failedToCheckDoctors: 'Failed to check for doctors in clinic',
 
         // No categories warning
         noCategoriesAvailable: 'No Categories Available',
@@ -2685,9 +2686,10 @@ const arTranslations = {
         failedToDeleteDoctor: 'فشل في حذف الطبيب. يرجى المحاولة مرة أخرى.',
 
         // Constraint errors
-        cannotDeleteClinicWithDoctors: 'هذه العيادة لديها {{count}} طبيب/أطباء مكلفين بها. يرجى إزالة الأطباء أولاً.',
+        cannotDeleteClinicWithDoctors: 'لا يمكن حذف العيادة. يرجى إزالة هؤلاء الأطباء أولاً: {{doctorNames}}',
         cannotDeleteCategoryWithClinics: 'هذه الفئة مستخدمة من قبل العيادة/العيادات التالية: {{clinics}}. يرجى إعادة تعيين تلك العيادات أولاً.',
         cannotDelete: 'لا يمكن الحذف',
+        failedToCheckDoctors: 'فشل في التحقق من الأطباء في العيادة',
 
         // No categories warning
         noCategoriesAvailable: 'لا توجد فئات متاحة',
@@ -2769,7 +2771,7 @@ const arTranslations = {
         deleteDoctor: 'حذف الطبيب',
 
         // Success messages
-        doctorCreatedSuccessfully: 'تم إنشاء الطبيب بنجاح. لا تنس تحديد أوقات توفره.',
+        doctorCreatedSuccessfully: 'تم إنشاء الطبيب بنجاح. لا تنسى  تحديد أوقات توفره.',
         doctorUpdatedSuccessfully: 'تم تحديث الطبيب بنجاح.',
         doctorDeletedSuccessfully: 'تم حذف د. {{name}} بنجاح.',
 

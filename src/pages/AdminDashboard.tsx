@@ -415,7 +415,7 @@ const AdminDashboardContent = () => {
                         )}
                         {canViewAppointmentLogsTab && (
                             <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking image.pngLogs'}
+                                {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
                             </TabsTrigger>
                         )}
                         {canViewDeletionRequests && (

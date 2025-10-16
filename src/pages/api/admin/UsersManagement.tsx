@@ -326,7 +326,7 @@ const UsersManagement = () => {
             user_phonenumber: userToEdit.user_phonenumber || "",
             date_of_birth: userToEdit.date_of_birth || "",
             gender_user: userToEdit.gender_user || "",
-            user_roles: userToEdit.user_roles.toLowerCase() as UserRole,
+            user_roles: capitalizeRole(userToEdit.user_roles) as UserRole,
             user_password: "", // Password is not loaded for security
         });
         setIdValidationStatus('unchecked');
@@ -335,13 +335,29 @@ const UsersManagement = () => {
 
     // Function to properly capitalize role names including multi-word roles
     const capitalizeRole = (role: string): string => {
-        // Special handling for X Ray to ensure proper capitalization
-        if (role.toLowerCase() === "x ray") {
-            return "X Ray";
-        }
+        const lowerRole = role.toLowerCase();
 
-        // Handle normal single-word roles
-        return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+        // Handle specific role mappings to match Select options
+        switch (lowerRole) {
+            case "patient":
+                return "Patient";
+            case "doctor":
+                return "doctor"; // Keep lowercase as per Select option
+            case "secretary":
+                return "Secretary";
+            case "nurse":
+                return "Nurse";
+            case "lab":
+                return "Lab";
+            case "admin":
+                return "Admin";
+            case "x ray":
+            case "xray":
+                return "X Ray";
+            default:
+                // Fallback to first letter capitalized
+                return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+        }
     };
 
     const handleDeleteUser = async (userid: number) => {

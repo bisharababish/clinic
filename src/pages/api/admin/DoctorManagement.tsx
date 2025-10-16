@@ -1088,24 +1088,27 @@ const DoctorManagement = () => {
             {/* Delete Confirmation Dialog */}
             <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <DialogContent className={`doctor-delete-dialog sm:max-w-md ${isRTL ? 'rtl [&>button]:left-4 [&>button]:right-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                    <DialogHeader className={isRTL ? 'text-left' : ''}>
+                    <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
                         <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                             <AlertTriangle className="h-5 w-5 text-red-500" />
                             {t('doctorManagement.confirmDeletion')}
                         </DialogTitle>
-                        <DialogDescription>
-                            {t('doctorManagement.confirmDeleteDoctor', { name: doctorToDelete?.name })}
+                        <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
+                            {t('doctorManagement.confirmDeleteDoctor', {
+                                name: isRTL && doctorToDelete?.name_ar ? doctorToDelete.name_ar : doctorToDelete?.name
+                            })}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <DialogFooter className={`doctor-delete-footer sm:justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <DialogFooter className={`doctor-delete-footer gap-4 ${isRTL ? 'flex-row-reverse justify-start' : 'justify-end'}`}>
                         <DialogClose asChild>
-                            <Button variant="outline">{t('common.cancel')}</Button>
+                            <Button variant="outline" className={isRTL ? 'order-2' : ''}>{t('common.cancel')}</Button>
                         </DialogClose>
                         <Button
                             variant="destructive"
                             onClick={handleDeleteDoctor}
                             disabled={isLoading}
+                            className={isRTL ? 'order-1' : ''}
                         >
                             {isLoading ? t('doctorManagement.deleting') : t('doctorManagement.deleteDoctor')}
                         </Button>

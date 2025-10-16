@@ -394,14 +394,14 @@ const ClinicManagement = () => {
             // ✅ CHECK DIRECTLY IN DATABASE (not relying on loaded doctors)
             const { data: doctorsInClinic, error: doctorsError } = await supabase
                 .from('doctors')
-                .select('id, name')
+                .select('id, name, name_ar')
                 .eq('clinic_id', clinicToDelete);
 
             if (doctorsError) {
                 console.error('Error checking doctors:', doctorsError);
                 toast({
                     title: t('common.error'),
-                    description: 'Failed to check for doctors in clinic',
+                    description: t('clinicManagement.failedToCheckDoctors') || 'Failed to check for doctors in clinic',
                     variant: "destructive",
                 });
 
@@ -411,10 +411,10 @@ const ClinicManagement = () => {
 
             // ✅ PREVENT DELETION if doctors exist
             if (doctorsInClinic && doctorsInClinic.length > 0) {
-                const doctorNames = doctorsInClinic.map(d => d.name).join(', ');
+                const doctorNames = doctorsInClinic.map(d => d.name_ar || d.name).join(', ');
                 toast({
                     title: t('clinicManagement.cannotDelete'),
-                    description: `Cannot delete clinic. Please remove these doctors first: ${doctorNames}`,
+                    description: t('clinicManagement.cannotDeleteClinicWithDoctors', { doctorNames }),
                     variant: "destructive",
                 });
                 setShowDeleteClinicDialog(false);
@@ -776,7 +776,7 @@ const ClinicManagement = () => {
 
     const getCategoryNameById = (id: string) => {
         const category = categories.find(cat => cat.id === id);
-        return category ? category.name : "Unknown";
+        return category ? getDisplayName(category) : "Unknown";
     };
 
     const handleCategorySubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -1061,7 +1061,7 @@ const ClinicManagement = () => {
                                                     .filter(cat => cat.is_active)
                                                     .map(category => (
                                                         <option key={category.id} value={category.id}>
-                                                            {category.name}
+                                                            {isRTL && category.name_ar ? category.name_ar : category.name}
                                                         </option>
                                                     ))}
                                             </select>

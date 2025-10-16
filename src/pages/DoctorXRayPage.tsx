@@ -506,7 +506,7 @@ const DoctorXRayPage: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Search and Filters */}
                 <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                             <input
@@ -556,14 +556,6 @@ const DoctorXRayPage: React.FC = () => {
                                 }} disabled={loading}
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">
-                                {loading ?
-                                    <Skeleton className="h-4 w-28" /> :
-                                    `${filteredImages.length} ${t('doctorPages.imagesFound') || 'images found'}`
-                                }
-                            </span>
                         </div>
                     </div>
                 </div>
@@ -679,16 +671,16 @@ const DoctorXRayPage: React.FC = () => {
                                                     {deletingId === image.id ? (t('doctorPages.deleting') || 'Deleting...') : (t('common.delete') || 'Delete')}
                                                 </button>
                                             </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>{t('doctorPages.confirmDeleteTitle') || 'Delete X-ray Image?'}</AlertDialogTitle>
-                                                        <AlertDialogDescription>
+                                                <AlertDialogContent className={`${isRTL ? 'text-right' : 'text-left'} ${isRTL ? '[&>button]:left-4 [&>button]:right-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                                                    <AlertDialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+                                                        <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>{t('doctorPages.confirmDeleteTitle') || 'Delete X-ray Image?'}</AlertDialogTitle>
+                                                        <AlertDialogDescription className={isRTL ? 'text-right' : 'text-left'}>
                                                             {t('doctorPages.confirmDeleteDesc') || 'Are you sure you want to delete this X-ray image? This action cannot be undone.'}
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
-                                                    <AlertDialogFooter>
+                                                    <AlertDialogFooter className={`gap-4 ${isRTL ? 'flex-row-reverse justify-start' : 'justify-end'}`}>
                                                         <AlertDialogCancel asChild>
-                                                            <button type="button" onClick={() => setConfirmDeleteImage(null)}>
+                                                            <button type="button" onClick={() => setConfirmDeleteImage(null)} className={isRTL ? 'order-2' : ''}>
                                                                 {t('common.cancel') || 'Cancel'}
                                                             </button>
                                                         </AlertDialogCancel>
@@ -702,6 +694,7 @@ const DoctorXRayPage: React.FC = () => {
                                                                     }
                                                                 }}
                                                                 disabled={deletingId === image.id}
+                                                                className={`bg-red-600 hover:bg-red-700 ${isRTL ? 'order-1' : ''}`}
                                                             >
                                                                 {deletingId === image.id ? (t('doctorPages.deleting') || 'Deleting...') : (t('common.delete') || 'Delete')}
                                                             </button>

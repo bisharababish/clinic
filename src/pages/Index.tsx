@@ -1931,15 +1931,17 @@ const Index = () => {
       {/* Main Content */}
       <div className={`main-content ${canSearchPatients() && showPatientSidebar ? (isRTL ? 'with-sidebar-rtl' : 'with-sidebar-ltr') : ''}`}>
         <div className="main-content-inner space-y-4 md:space-y-8">
-          {/* Notification Alert - visible to all */}
-          <Alert variant="default" className={`alert-responsive ${isRTL ? 'rtl' : ''} bg-blue-50 border-blue-200`}>
-            <AlertDescription className={isRTL ? 'py-4 px-2' : 'py-2'}>
-              <span className="font-medium">{t("home.remindeinder")}:</span> {t("home.reservationRequired")}
-              <Button variant="link" className={`h-auto p-0 ${isRTL ? 'mr-3' : 'ml-2'}`} asChild>
-                <Link to="/clinics">{t("home.bookNow")}</Link>
-              </Button>
-            </AlertDescription>
-          </Alert>
+          {/* Notification Alert - visible to patients only */}
+          {userRole === 'patient' && (
+            <Alert variant="default" className={`alert-responsive ${isRTL ? 'rtl' : ''} bg-blue-50 border-blue-200`}>
+              <AlertDescription className={isRTL ? 'py-4 px-2' : 'py-2'}>
+                <span className="font-medium">{t("home.remindeinder")}:</span> {t("home.reservationRequired")}
+                <Button variant="link" className={`h-auto p-0 ${isRTL ? 'mr-3' : 'ml-2'}`} asChild>
+                  <Link to="/clinics">{t("home.bookNow")}</Link>
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* NEW: Patient Search Section - Only visible to nurses, doctors, and admins */}
           {canSearchPatients() && (
@@ -3038,6 +3040,30 @@ const Index = () => {
             )}
           </section>
 
+          {/* Save Button - visible to ALL users */}
+          <div className="flex justify-center">
+            <Button
+              onClick={handleSaveInfo}
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 text-lg flex items-center gap-2"
+              disabled={healthSaving}
+            >
+              {healthSaving ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  {isRTL ? "جاري الحفظ..." : "Saving..."}
+                </>
+              ) : (
+                <>
+                  <Save className="h-5 w-5" />
+                  {selectedPatient ?
+                    (isRTL ? "حفظ معلومات المريض" : "Save Patient Information") :
+                    t("home.saveInformation")
+                  }
+                </>
+              )}
+            </Button>
+          </div>
+
           {/* Enhanced Patient Logs with User Tracking - visible to ALL users */}
           <section className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.patientLogs")}</h2>
@@ -3328,8 +3354,8 @@ const Index = () => {
             </section>
           )}
 
-          {/* Paid Patients List - Only visible to nurses and doctors (not admin/secretary since they have it in dashboard) */}
-          {(userRole === 'nurse' || userRole === 'doctor') && (
+          {/* Paid Patients List - Only visible to doctors (not nurses, admin/secretary since they have it in dashboard) */}
+          {userRole === 'doctor' && (
             <section className="bg-white p-6 rounded-lg shadow mt-8">
               <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                 <DollarSign className="h-6 w-6" />
@@ -3361,30 +3387,6 @@ const Index = () => {
               </div>
             </section>
           )}
-
-          {/* Save Button - visible to ALL users */}
-          <div className="flex justify-center">
-            <Button
-              onClick={handleSaveInfo}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 text-lg flex items-center gap-2"
-              disabled={healthSaving}
-            >
-              {healthSaving ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  {isRTL ? "جاري الحفظ..." : "Saving..."}
-                </>
-              ) : (
-                <>
-                  <Save className="h-5 w-5" />
-                  {selectedPatient ?
-                    (isRTL ? "حفظ معلومات المريض" : "Save Patient Information") :
-                    t("home.saveInformation")
-                  }
-                </>
-              )}
-            </Button>
-          </div>
         </div>
       </div >
     </div >
