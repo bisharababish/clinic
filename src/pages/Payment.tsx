@@ -116,6 +116,7 @@ const Payment = () => {
 
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isCreatingAppointment, setIsCreatingAppointment] = useState(false);
     const [agreedToCashTerms, setAgreedToCashTerms] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [appointmentId, setAppointmentId] = useState<string>("");
@@ -124,6 +125,14 @@ const Payment = () => {
     useEffect(() => {
         // Get current user and create appointment record
         const initializePayment = async () => {
+            // Prevent multiple simultaneous appointment creations
+            if (isCreatingAppointment) {
+                console.log('🚫 Appointment creation already in progress, skipping...');
+                return;
+            }
+
+            setIsCreatingAppointment(true);
+
             try {
                 const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -159,12 +168,63 @@ const Payment = () => {
                     console.warn('Could not fetch user info:', error);
                 }
 
-                // Check if patient already has an appointment at this clinic
+                // Convert day name to actual date first
+                const convertDayNameToDate = (dayName: string): string => {
+                    // Handle placeholder text
+                    if (dayName.includes('الوقت المختار') || dayName.includes('The Chosen Time')) {
+                        console.warn(`Detected placeholder text "${dayName}", using tomorrow's date`);
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return tomorrow.toISOString().split('T')[0];
+                    }
+
+                    const dayMap: { [key: string]: number } = {
+                        'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 0
+                    };
+
+                    const arabicDayMap: { [key: string]: number } = {
+                        'الاثنين': 1, 'الثلاثاء': 2, 'الأربعاء': 3, 'الخميس': 4, 'الجمعة': 5, 'السبت': 6, 'الأحد': 0
+                    };
+
+                    const dayNumber = dayMap[dayName] ?? arabicDayMap[dayName];
+                    if (dayNumber !== undefined) {
+                        const today = new Date();
+                        const currentDay = today.getDay();
+                        let daysUntilTarget = (dayNumber - currentDay + 7) % 7;
+                        if (daysUntilTarget === 0) daysUntilTarget = 7;
+
+                        const targetDate = new Date(today);
+                        targetDate.setDate(today.getDate() + daysUntilTarget);
+                        return targetDate.toISOString().split('T')[0];
+                    }
+
+                    if (dayName.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        return dayName;
+                    }
+
+                    console.warn(`Could not convert day name "${dayName}" to date, using today's date`);
+                    return new Date().toISOString().split('T')[0];
+                };
+
+                const actualDate = convertDayNameToDate(appointmentDay);
+
+                // Check for exact duplicate appointments (same patient, doctor, clinic, date, time)
+                console.log('🔍 Checking for duplicates with:', {
+                    patient_id: user.id,
+                    clinic_name: clinicName,
+                    doctor_name: doctorName,
+                    appointment_day: actualDate,
+                    appointment_time: appointmentTime
+                });
+
                 const { data: existingAppointments, error: checkError } = await supabase
                     .from('payment_bookings')
-                    .select('id, clinic_name, appointment_day, appointment_time, payment_status, booking_status')
+                    .select('id, clinic_name, doctor_name, appointment_day, appointment_time, payment_status, booking_status, created_at')
                     .eq('patient_id', user.id)
                     .eq('clinic_name', clinicName)
+                    .eq('doctor_name', doctorName)
+                    .eq('appointment_day', actualDate)
+                    .eq('appointment_time', appointmentTime)
                     .in('booking_status', ['scheduled', 'confirmed'])
                     .in('payment_status', ['pending', 'paid']);
 
@@ -173,14 +233,22 @@ const Payment = () => {
                     throw new Error('Failed to check existing appointments');
                 }
 
-                // If patient already has an appointment at this clinic, show error
+                console.log('🔍 Found existing appointments:', existingAppointments);
+
+                // If patient already has an exact duplicate appointment, show error
                 if (existingAppointments && existingAppointments.length > 0) {
                     const existingAppointment = existingAppointments[0];
+                    console.log('🚫 Duplicate appointment detected:', {
+                        existing: existingAppointment,
+                        new: { clinicName, doctorName, actualDate, appointmentTime },
+                        existingCount: existingAppointments.length
+                    });
+
                     toast({
-                        title: isRTL ? "موعد موجود مسبقاً" : "Existing Appointment",
+                        title: isRTL ? "موعد مكرر" : "Duplicate Appointment",
                         description: isRTL
-                            ? `لديك موعد مسبق في ${clinicName} في ${existingAppointment.appointment_day} الساعة ${existingAppointment.appointment_time}. يمكنك حجز موعد واحد فقط لكل عيادة في نفس الوقت.`
-                            : `You already have an appointment at ${clinicName} on ${existingAppointment.appointment_day} at ${existingAppointment.appointment_time}. You can only book one appointment per clinic at a time.`,
+                            ? `لديك موعد موجود مسبقاً مع ${doctorName} في ${clinicName} في ${actualDate} الساعة ${appointmentTime}. لا يمكن حجز نفس الموعد مرتين.`
+                            : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
                         variant: "destructive",
                     });
                     navigate("/clinics");
@@ -198,65 +266,7 @@ const Payment = () => {
                         'Unknown Patient' :
                         user.email || 'Unknown Patient'
                 });
-                // Convert day name to actual date
-                const convertDayNameToDate = (dayName: string): string => {
-                    // Handle placeholder text
-                    if (dayName.includes('الوقت المختار') || dayName.includes('The Chosen Time')) {
-                        console.warn(`Detected placeholder text "${dayName}", using tomorrow's date`);
-                        const tomorrow = new Date();
-                        tomorrow.setDate(tomorrow.getDate() + 1);
-                        return tomorrow.toISOString().split('T')[0];
-                    }
-
-                    const dayMap: { [key: string]: number } = {
-                        'Monday': 1,
-                        'Tuesday': 2,
-                        'Wednesday': 3,
-                        'Thursday': 4,
-                        'Friday': 5,
-                        'Saturday': 6,
-                        'Sunday': 0
-                    };
-
-                    // Also handle Arabic day names
-                    const arabicDayMap: { [key: string]: number } = {
-                        'الاثنين': 1,
-                        'الثلاثاء': 2,
-                        'الأربعاء': 3,
-                        'الخميس': 4,
-                        'الجمعة': 5,
-                        'السبت': 6,
-                        'الأحد': 0
-                    };
-
-                    const dayNumber = dayMap[dayName] ?? arabicDayMap[dayName];
-                    if (dayNumber !== undefined) {
-                        // Find the next occurrence of this day
-                        const today = new Date();
-                        const currentDay = today.getDay();
-                        let daysUntilTarget = (dayNumber - currentDay + 7) % 7;
-                        if (daysUntilTarget === 0) daysUntilTarget = 7; // Next week if today is the target day
-
-                        const targetDate = new Date(today);
-                        targetDate.setDate(today.getDate() + daysUntilTarget);
-
-                        return targetDate.toISOString().split('T')[0]; // Return YYYY-MM-DD format
-                    }
-
-                    // If it's already a date string, return as is
-                    if (dayName.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                        return dayName;
-                    }
-
-                    // Fallback: return tomorrow's date
-                    console.warn(`Could not convert day name "${dayName}" to date, using tomorrow's date`);
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    return tomorrow.toISOString().split('T')[0];
-                };
-
-                const actualDate = convertDayNameToDate(appointmentDay);
-                console.log(`Converting "${appointmentDay}" to date: "${actualDate}"`);
+                console.log(`Using converted date: "${actualDate}"`);
 
                 const { data: appointment, error } = await supabase
                     .from('payment_bookings')
@@ -290,6 +300,20 @@ const Payment = () => {
                         hint: error.hint,
                         code: error.code,
                     });
+
+                    // Handle duplicate appointment error specifically
+                    if (error.code === '23505' || error.message?.includes('unique_appointment_booking')) {
+                        toast({
+                            title: isRTL ? "موعد مكرر" : "Duplicate Appointment",
+                            description: isRTL
+                                ? `لديك موعد موجود مسبقاً مع ${doctorName} في ${clinicName} في ${actualDate} الساعة ${appointmentTime}. لا يمكن حجز نفس الموعد مرتين.`
+                                : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
+                            variant: "destructive",
+                        });
+                        navigate("/clinics");
+                        return;
+                    }
+
                     throw new Error(error.message || 'Insert failed');
                 }
                 if (appointment) {
@@ -305,6 +329,8 @@ const Payment = () => {
                     description: error instanceof Error ? error.message : "Failed to initialize payment. Please try again.",
                     variant: "destructive",
                 });
+            } finally {
+                setIsCreatingAppointment(false);
             }
         };
 

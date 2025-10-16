@@ -504,7 +504,9 @@ const AdminDashboardContent = () => {
                     {/* PAYMENTS TAB */}
                     {canViewPaymentTab && (
                         <TabsContent value="payments" className="pt-6">
-                            <PaymentManagement />
+                            <div className="space-y-6">
+                                <PaymentManagement />
+                            </div>
                         </TabsContent>
                     )}
 

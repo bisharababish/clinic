@@ -568,26 +568,29 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
 
                                     {/* Appointments for this day */}
                                     <div className="space-y-1">
-                                        {day.appointments.slice(0, 3).map(apt => (
-                                            <div
-                                                key={apt.id}
-                                                className={`
-                                                    text-xs p-1 rounded border truncate
-                                                    ${getStatusColor(apt.status)}
-                                                    hover:shadow-sm transition-shadow
-                                                `}
-                                                title={`${formatTime(apt.time)} - ${apt.patient_name} with Dr. ${getDoctorName(apt.doctor_id)}`}
-                                            >
-                                                <div className="flex items-center gap-1 mb-1">
-                                                    <Clock className="h-2 w-2" />
-                                                    <span className="font-medium">{formatTime(apt.time)}</span>
+                                        {day.appointments.slice(0, 3).map(apt => {
+                                            const clinicColor = getClinicColor(apt.clinic_id);
+                                            return (
+                                                <div
+                                                    key={apt.id}
+                                                    className={`
+                                                        text-xs p-1 rounded border truncate
+                                                        ${clinicColor.bg} ${clinicColor.text} ${clinicColor.border}
+                                                        hover:shadow-sm transition-shadow
+                                                    `}
+                                                    title={`${formatTime(apt.time)} - ${apt.patient_name} with Dr. ${apt.doctor_name || getDoctorName(apt.doctor_id)}`}
+                                                >
+                                                    <div className="flex items-center gap-1 mb-1">
+                                                        <Clock className="h-2 w-2" />
+                                                        <span className="font-medium">{formatTime(apt.time)}</span>
+                                                    </div>
+                                                    <div className="truncate font-medium">{apt.patient_name}</div>
+                                                    <div className="truncate text-xs opacity-75">
+                                                        Dr. {apt.doctor_name || getDoctorName(apt.doctor_id)}
+                                                    </div>
                                                 </div>
-                                                <div className="truncate font-medium">{apt.patient_name}</div>
-                                                <div className="truncate text-xs opacity-75">
-                                                    Dr. {getDoctorName(apt.doctor_id)}
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
 
                                         {day.appointments.length > 3 && (
                                             <div className="text-xs text-blue-600 p-1 font-medium bg-blue-50 rounded border border-blue-200">
@@ -712,17 +715,17 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                                             {displayTimeSlots.map((slot, slotIdx) => {
                                                                 const cellApts = filteredAppointments.filter(apt => {
                                                                     if (apt.date !== dateStr) return false;
+                                                                    if (!(selectedDoctor === 'all' || apt.doctor_id === selectedDoctor)) return false;
 
                                                                     // If office hours are hidden, show all appointments regardless of availability
                                                                     if (!showOfficeHours) {
-                                                                        return apt.time === slot && (selectedDoctor === 'all' || apt.doctor_id === selectedDoctor);
+                                                                        return apt.time === slot;
                                                                     }
 
                                                                     // Check if appointment matches availability slot
                                                                     return doctorAvailability.some(avail => {
                                                                         return avail.doctor_id === apt.doctor_id &&
-                                                                            avail.start_time === apt.time &&
-                                                                            (selectedDoctor === 'all' || avail.doctor_id === selectedDoctor);
+                                                                            avail.start_time === apt.time;
                                                                     });
                                                                 }); let hasConflict = false;
                                                                 for (let i = 0; i < cellApts.length; i++) {
@@ -760,17 +763,17 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                                             {displayTimeSlots.map((slot, slotIdx) => {
                                                                 const cellApts = filteredAppointments.filter(apt => {
                                                                     if (apt.date !== dateStr) return false;
+                                                                    if (!(selectedDoctor === 'all' || apt.doctor_id === selectedDoctor)) return false;
 
                                                                     // If office hours are hidden, show all appointments regardless of availability
                                                                     if (!showOfficeHours) {
-                                                                        return apt.time === slot && (selectedDoctor === 'all' || apt.doctor_id === selectedDoctor);
+                                                                        return apt.time === slot;
                                                                     }
 
                                                                     // Check if appointment matches availability slot
                                                                     return doctorAvailability.some(avail => {
                                                                         return avail.doctor_id === apt.doctor_id &&
-                                                                            avail.start_time === apt.time &&
-                                                                            (selectedDoctor === 'all' || avail.doctor_id === selectedDoctor);
+                                                                            avail.start_time === apt.time;
                                                                     });
                                                                 }); let hasConflict = false;
                                                                 for (let i = 0; i < cellApts.length; i++) {
@@ -838,7 +841,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                         <div>
                                             <div className="font-medium text-sm">{apt.patient_name}</div>
                                             <div className="text-xs text-gray-600">
-                                                {formatTime(apt.time)} • Dr. {getDoctorName(apt.doctor_id)}
+                                                {formatTime(apt.time)} • Dr. {apt.doctor_name || getDoctorName(apt.doctor_id)}
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
@@ -893,7 +896,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                         <div>
                                             <div className="font-medium text-sm">{apt.patient_name}</div>
                                             <div className="text-xs text-gray-600">
-                                                {formatTime(apt.time)} • Dr. {getDoctorName(apt.doctor_id)}
+                                                {formatTime(apt.time)} • Dr. {apt.doctor_name || getDoctorName(apt.doctor_id)}
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
