@@ -54,6 +54,7 @@ import { LanguageContext } from "@/components/contexts/LanguageContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isValidPalestinianID } from '@/lib/PalID_temp';
 import PaidPatientsList from "@/components/PaidPatientsList";
+import { AdminStateProvider } from "@/hooks/useAdminState";
 
 
 // Enhanced patient info interface for search results
@@ -3342,10 +3343,12 @@ const Index = () => {
                   <h3 className="text-lg font-semibold mb-4 text-gray-700">
                     {isRTL ? "جميع المدفوعات" : "All Payments"}
                   </h3>
-                  <PaidPatientsList
-                    showOnlyPaid={true}
-                    compact={false}
-                  />
+                  <AdminStateProvider>
+                    <PaidPatientsList
+                      showOnlyPaid={true}
+                      compact={false}
+                    />
+                  </AdminStateProvider>
                 </div>
 
                 {/* Pending Payments */}
@@ -3353,10 +3356,12 @@ const Index = () => {
                   <h3 className="text-lg font-semibold mb-4 text-gray-700">
                     {isRTL ? "المدفوعات المعلقة" : "Pending Payments"}
                   </h3>
-                  <PaidPatientsList
-                    showOnlyPending={true}
-                    compact={false}
-                  />
+                  <AdminStateProvider>
+                    <PaidPatientsList
+                      showOnlyPending={true}
+                      compact={false}
+                    />
+                  </AdminStateProvider>
                 </div>
               </div>
             </section>
