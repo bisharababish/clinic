@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
 import { HeaderOnlyLayout } from "./components/layout/HeaderOnlyLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { AdminStateProvider } from "./hooks/useAdminState";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useEffect, useState, Suspense, lazy } from "react";
 import { getDefaultRouteForRole } from "./lib/rolePermissions";
@@ -171,204 +172,206 @@ function App() {
   return (
 
     <AuthProvider>
-      <GlobalErrorBoundary>
-        <Router
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true
-          }}
-        >
-          <ScrollToTop />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/auth/reset-password" element={<ResetPassword />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
+      <AdminStateProvider>
+        <GlobalErrorBoundary>
+          <Router
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
+            <ScrollToTop />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/reset-password" element={<ResetPassword />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
 
-              {/* Protected routes with MainLayout */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "doctor", "secretary", "nurse", "patient"]}>
-                    <AuthLoadingGate>
-                      <HomeRoute />
-                    </AuthLoadingGate>
-                  </ProtectedRoute>
-                }
-              />
+                {/* Protected routes with MainLayout */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "doctor", "secretary", "nurse", "patient"]}>
+                      <AuthLoadingGate>
+                        <HomeRoute />
+                      </AuthLoadingGate>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Clinics - accessible to admin, secretary, nurse, patient */}
-              <Route
-                path="/clinics"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "secretary", "nurse", "patient"]}>
-                    <AuthLoadingGate>
+                {/* Clinics - accessible to admin, secretary, nurse, patient */}
+                <Route
+                  path="/clinics"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "secretary", "nurse", "patient"]}>
+                      <AuthLoadingGate>
+                        <MainLayout>
+                          <Clinics />
+                        </MainLayout>
+                      </AuthLoadingGate>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Payment - accessible to all authenticated users who can book appointments */}
+                <Route
+                  path="/payment"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "secretary", "patient"]}>
+                      <HeaderOnlyLayout>
+                        <Payment />
+                      </HeaderOnlyLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Confirmation - accessible to all authenticated users who can book appointments */}
+                <Route
+                  path="/confirmation"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "secretary", "patient"]}>
                       <MainLayout>
-                        <Clinics />
+                        <Confirmation />
                       </MainLayout>
-                    </AuthLoadingGate>
-                  </ProtectedRoute>
-                }
-              />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Payment - accessible to all authenticated users who can book appointments */}
-              <Route
-                path="/payment"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "secretary", "patient"]}>
-                    <HeaderOnlyLayout>
-                      <Payment />
-                    </HeaderOnlyLayout>
-                  </ProtectedRoute>
-                }
-              />
+                {/* Labs - accessible to admin, lab, doctor */}
+                <Route
+                  path="/labs"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "lab", "doctor"]}>
+                      <HeaderOnlyLayout>
+                        <Labs />
+                      </HeaderOnlyLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Confirmation - accessible to all authenticated users who can book appointments */}
-              <Route
-                path="/confirmation"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "secretary", "patient"]}>
-                    <MainLayout>
-                      <Confirmation />
-                    </MainLayout>
-                  </ProtectedRoute>
-                }
-              />
+                {/* X-Ray - accessible to admin, xray, doctor */}
+                <Route
+                  path="/xray"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "xray", "doctor"]}>
+                      <HeaderOnlyLayout>
+                        <XRay />
+                      </HeaderOnlyLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Labs - accessible to admin, lab, doctor */}
-              <Route
-                path="/labs"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "lab", "doctor"]}>
-                    <HeaderOnlyLayout>
-                      <Labs />
-                    </HeaderOnlyLayout>
-                  </ProtectedRoute>
-                }
-              />
+                {/* Doctor Labs - accessible to admin, doctor */}
+                <Route
+                  path="/doctor/labs"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "doctor"]}>
+                      <HeaderOnlyLayout>
+                        <DoctorLabsPage />
+                      </HeaderOnlyLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* X-Ray - accessible to admin, xray, doctor */}
-              <Route
-                path="/xray"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "xray", "doctor"]}>
-                    <HeaderOnlyLayout>
-                      <XRay />
-                    </HeaderOnlyLayout>
-                  </ProtectedRoute>
-                }
-              />
+                {/* Doctor X-Ray - accessible to admin, doctor */}
+                <Route
+                  path="/doctor/xray"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "doctor"]}>
+                      <HeaderOnlyLayout>
+                        <DoctorXRayPage />
+                      </HeaderOnlyLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/doctor/patients"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "doctor"]}>
+                      <HeaderOnlyLayout>
+                        <DoctorPatientsPage />
+                      </HeaderOnlyLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Doctor Labs - accessible to admin, doctor */}
-              <Route
-                path="/doctor/labs"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "doctor"]}>
-                    <HeaderOnlyLayout>
-                      <DoctorLabsPage />
-                    </HeaderOnlyLayout>
-                  </ProtectedRoute>
-                }
-              />
+                {/* Patient Dashboard - accessible to patients only */}
+                <Route
+                  path="/patient/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={["patient"]}>
+                      <MainLayout>
+                        <PatientDashboardPage />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Doctor X-Ray - accessible to admin, doctor */}
-              <Route
-                path="/doctor/xray"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "doctor"]}>
-                    <HeaderOnlyLayout>
-                      <DoctorXRayPage />
-                    </HeaderOnlyLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/doctor/patients"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "doctor"]}>
-                    <HeaderOnlyLayout>
-                      <DoctorPatientsPage />
-                    </HeaderOnlyLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Patient Dashboard - accessible to patients only */}
-              <Route
-                path="/patient/dashboard"
-                element={
-                  <ProtectedRoute allowedRoles={["patient"]}>
-                    <MainLayout>
-                      <PatientDashboardPage />
-                    </MainLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Admin Dashboard - accessible to admin and secretary */}
-              <Route
-                path="/admin/*"
-                element={
-                  <ProtectedRoute allowedRoles={["admin", "secretary"]}>
-                    <HeaderOnlyLayout>
-                      <AdminDashboard />
-                    </HeaderOnlyLayout>
-                  </ProtectedRoute>
-                }
-              />
+                {/* Admin Dashboard - accessible to admin and secretary */}
+                <Route
+                  path="/admin/*"
+                  element={
+                    <ProtectedRoute allowedRoles={["admin", "secretary"]}>
+                      <HeaderOnlyLayout>
+                        <AdminDashboard />
+                      </HeaderOnlyLayout>
+                    </ProtectedRoute>
+                  }
+                />
 
 
-              {/* Catch all route - redirect to user's default route based on role */}
-              <Route
-                path="*"
-                element={
-                  <ProtectedRoute>
-                    <DefaultRedirect />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </Suspense>
-        </Router>
-      </GlobalErrorBoundary>
-      <Toaster />
-      <CookieConsent
-        location="bottom"
-        buttonText="Accept All Cookies"
-        declineButtonText="Decline"
-        enableDeclineButton
-        cookieName="bethlehem-med-center-cookies"
-        style={{
-          background: "#1f2937",
-          fontSize: "14px",
-          padding: "20px"
-        }}
-        buttonStyle={{
-          background: "#3b82f6",
-          color: "white",
-          fontSize: "14px",
-          borderRadius: "6px",
-          padding: "8px 16px",
-          border: "none"
-        }}
-        declineButtonStyle={{
-          background: "transparent",
-          color: "#9ca3af",
-          fontSize: "14px",
-          borderRadius: "6px",
-          padding: "8px 16px",
-          border: "1px solid #6b7280"
-        }}
-        expires={365}
-        overlay
-      >
-        🍪 We use cookies to improve your experience on our website. By continuing to browse, you agree to our use of cookies for analytics and personalized content.{" "}
-        <button onClick={openPrivacy} style={{ color: "#60a5fa", textDecoration: "underline", background: "none", border: "none" }}>
-          Privacy Policy
-        </button>
-      </CookieConsent>
-      <PrivacyPolicyModal isOpen={privacyOpen} onClose={closePrivacy} />
+                {/* Catch all route - redirect to user's default route based on role */}
+                <Route
+                  path="*"
+                  element={
+                    <ProtectedRoute>
+                      <DefaultRedirect />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </Suspense>
+          </Router>
+        </GlobalErrorBoundary>
+        <Toaster />
+        <CookieConsent
+          location="bottom"
+          buttonText="Accept All Cookies"
+          declineButtonText="Decline"
+          enableDeclineButton
+          cookieName="bethlehem-med-center-cookies"
+          style={{
+            background: "#1f2937",
+            fontSize: "14px",
+            padding: "20px"
+          }}
+          buttonStyle={{
+            background: "#3b82f6",
+            color: "white",
+            fontSize: "14px",
+            borderRadius: "6px",
+            padding: "8px 16px",
+            border: "none"
+          }}
+          declineButtonStyle={{
+            background: "transparent",
+            color: "#9ca3af",
+            fontSize: "14px",
+            borderRadius: "6px",
+            padding: "8px 16px",
+            border: "1px solid #6b7280"
+          }}
+          expires={365}
+          overlay
+        >
+          🍪 We use cookies to improve your experience on our website. By continuing to browse, you agree to our use of cookies for analytics and personalized content.{" "}
+          <button onClick={openPrivacy} style={{ color: "#60a5fa", textDecoration: "underline", background: "none", border: "none" }}>
+            Privacy Policy
+          </button>
+        </CookieConsent>
+        <PrivacyPolicyModal isOpen={privacyOpen} onClose={closePrivacy} />
+      </AdminStateProvider>
     </AuthProvider>
 
   );

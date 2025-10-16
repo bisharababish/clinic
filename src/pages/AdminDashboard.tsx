@@ -1,7 +1,7 @@
 // pages/AdminDashboard.tsx - REPLACE THE ENTIRE FILE WITH THIS:
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { AdminStateProvider, useAdminState } from "../hooks/useAdminState"; // NEW IMPORT
+import { useAdminState } from "../hooks/useAdminState";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClinicManagement from "./api/admin/ClinicManagement";
@@ -556,13 +556,9 @@ const AdminDashboardContent = () => {
     );
 };
 
-// Wrap the component with the AdminStateProvider
+// Export the component directly without AdminStateProvider wrapper
 const AdminDashboard = () => {
-    return (
-        <AdminStateProvider>
-            <AdminDashboardContent />
-        </AdminStateProvider>
-    );
+    return <AdminDashboardContent />;
 };
 
 export default AdminDashboard;
