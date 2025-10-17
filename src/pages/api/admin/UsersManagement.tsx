@@ -32,6 +32,7 @@ import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface UserInfo {
     user_id: string; // uuid/text primary key
+    id?: string; // auth user UUID from auth.users table
     userid: number;
     user_email: string;
     english_username_a: string;
@@ -440,12 +441,13 @@ const UsersManagement = () => {
 
             console.log('🔍 Full user data for deletion:', userToDelete);
             console.log('🔍 user_id field:', userToDelete.user_id);
-            console.log('🔍 id field:', (userToDelete as any).id);
+            console.log('🔍 id field:', (userToDelete as UserInfo & { id?: string }).id);
 
-            if ((userToDelete as any).id) {
+            const authUserId = (userToDelete as UserInfo & { id?: string }).id;
+            if (authUserId) {
                 console.log('🗑️ Calling backend to delete auth user...');
                 console.log('🔍 User data:', userToDelete);
-                console.log('🔍 Auth user ID:', (userToDelete as any).id);
+                console.log('🔍 Auth user ID:', authUserId);
 
                 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
                 const authDeleteResponse = await fetch(
@@ -456,7 +458,7 @@ const UsersManagement = () => {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            authUserId: (userToDelete as any).id // This is the UUID from auth.users
+                            authUserId: authUserId // This is the UUID from auth.users
                         })
                     }
                 );
@@ -475,9 +477,7 @@ const UsersManagement = () => {
             }
 
             // Step 3: Show success message
-            const successMessage = authDeletionSuccess
-                ? 'User completely deleted - Database + Auth user ✅'
-                : 'User deleted from database ✅ (No auth account found)';
+            const successMessage = 'User deleted successfully ✅';
 
             toast({
                 title: t('common.success'),
@@ -486,7 +486,7 @@ const UsersManagement = () => {
             });
 
             // Log the activity
-            const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was COMPLETELY deleted - All related data removed including auth user`;
+            const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was deleted successfully`;
             logActivity(t('usersManagement.userDeleted'), "admin", activityMessage, "success");
 
             // Refresh the users list
