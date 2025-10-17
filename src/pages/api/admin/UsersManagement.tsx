@@ -360,156 +360,137 @@ const UsersManagement = () => {
         }
     };
 
-    const handleDeleteUser = async (userid: number) => {
-        const userToDelete = users.find(u => u.userid === userid);
-        if (!userToDelete) {
-            toast({
-                title: t('common.error'),
-                description: t('usersManagement.userNotFound'),
-                variant: "destructive",
-            });
-            return;
-        }
+    // Replace your handleDeleteUser function in UsersManagement.tsx with this:
 
-        const userName = isRTL
-            ? `${userToDelete.arabic_username_a || userToDelete.english_username_a} ${userToDelete.arabic_username_d || userToDelete.english_username_d || ''}`
-            : `${userToDelete.english_username_a} ${userToDelete.english_username_d || ''}`;
+const handleDeleteUser = async (userid: number) => {
+    const userToDelete = users.find(u => u.userid === userid);
+    if (!userToDelete) {
+        toast({
+            title: t('common.error'),
+            description: t('usersManagement.userNotFound'),
+            variant: "destructive",
+        });
+        return;
+    }
 
-        let confirmed = false;
+    const userName = isRTL
+        ? `${userToDelete.arabic_username_a || userToDelete.english_username_a} ${userToDelete.arabic_username_d || userToDelete.english_username_d || ''}`
+        : `${userToDelete.english_username_a} ${userToDelete.english_username_d || ''}`;
 
-        const confirmationPromise = new Promise<void>((resolve) => {
-            const { dismiss } = toast({
-                title: t('usersManagement.confirmDeletion'),
-                description: t('usersManagement.deleteConfirmMessage', {
-                    name: userName.trim(),
-                    email: userToDelete.user_email
-                }),
-                action: (
-                    <div className={`confirmation-actions ${isRTL ? 'rtl' : ''}`}>
-                        <button
-                            className="confirm-button"
-                            onClick={() => {
-                                confirmed = true;
-                                dismiss?.();
-                                resolve();
-                            }}
-                        >
-                            {t('usersManagement.confirm')}
-                        </button>
-                        <button
-                            className="cancel-button"
-                            onClick={() => {
-                                confirmed = false;
-                                dismiss?.();
-                                resolve();
-                            }}
-                        >
-                            {t('common.cancel')}
-                        </button>
-                    </div>
-                ),
-                duration: Infinity,
-                className: "min-w-[400px]"
-            });
+    let confirmed = false;
+
+    const confirmationPromise = new Promise<void>((resolve) => {
+        const { dismiss } = toast({
+            title: t('usersManagement.confirmDeletion'),
+            description: t('usersManagement.deleteConfirmMessage', {
+                name: userName.trim(),
+                email: userToDelete.user_email
+            }),
+            action: (
+                <div className={`confirmation-actions ${isRTL ? 'rtl' : ''}`}>
+                    <button
+                        className="confirm-button"
+                        onClick={() => {
+                            confirmed = true;
+                            dismiss?.();
+                            resolve();
+                        }}
+                    >
+                        {t('usersManagement.confirm')}
+                    </button>
+                    <button
+                        className="cancel-button"
+                        onClick={() => {
+                            confirmed = false;
+                            dismiss?.();
+                            resolve();
+                        }}
+                    >
+                        {t('common.cancel')}
+                    </button>
+                </div>
+            ),
+            duration: Infinity,
+            className: "min-w-[400px]"
+        });
+    });
+
+    await confirmationPromise;
+
+    if (!confirmed) return;
+
+    try {
+        console.log("🗑️ Starting COMPLETE user deletion for user ID:", userid);
+
+        // Step 1: Delete from database tables using the RPC function
+        console.log("Deleting from database tables...");
+        const { data: deletionResult, error: deletionError } = await supabase.rpc('delete_user_completely', {
+            user_id_to_delete: userid
         });
 
-        await confirmationPromise;
-
-        if (!confirmed) return;
-
-        if (!userToDelete) return;
-
-        try {
-            console.log("🗑️ Starting COMPLETE user deletion process for user ID:", userid);
-
-            // First, check what will be deleted
-            const { data: dependencies, error: checkError } = await supabase.rpc('check_user_dependencies', {
-                user_id_to_delete: userid.toString() // Convert to string for BIGINT
-            });
-
-            if (checkError) {
-                console.error('Error checking user dependencies:', checkError);
-                throw new Error(`Failed to check user dependencies: ${checkError.message}`);
-            }
-
-            console.log('📊 User dependencies that will be deleted:', dependencies);
-
-            // Use the comprehensive deletion function
-            const { data: deletionResult, error: deletionError } = await supabase.rpc('delete_user_completely', {
-                user_id_to_delete: userid.toString() // Convert to string for BIGINT
-            });
-
-            if (deletionError) {
-                console.error('Complete deletion failed:', deletionError);
-                throw new Error(`Complete deletion failed: ${deletionError.message}`);
-            }
-
-            console.log('✅ Complete deletion successful:', deletionResult);
-
-            // If auth user deletion failed, try manual deletion
-            if (deletionResult.auth_deletion && !deletionResult.auth_deletion.success) {
-                console.warn('⚠️ Auth user deletion failed, attempting manual deletion...');
-
-                try {
-                    // Try to delete from auth.users using admin API
-                    const { error: authError } = await supabase.auth.admin.deleteUser(userToDelete.user_id);
-
-                    if (authError) {
-                        console.warn('Manual auth deletion also failed:', authError);
-                        toast({
-                            title: t('common.success'),
-                            description: `${t('usersManagement.userDeletedSuccessfully')} - Warning: Auth user deletion failed. Please delete manually from Supabase Auth.`,
-                            style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
-                        });
-                    } else {
-                        console.log('✅ Manual auth user deletion successful');
-                        toast({
-                            title: t('common.success'),
-                            description: t('usersManagement.userDeletedSuccessfully'),
-                            style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
-                        });
-                    }
-                } catch (authDeletionError) {
-                    console.error('Manual auth deletion failed:', authDeletionError);
-                    toast({
-                        title: t('common.success'),
-                        description: `${t('usersManagement.userDeletedSuccessfully')} - Warning: Auth user deletion failed. Please delete manually from Supabase Auth.`,
-                        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
-                    });
-                }
-            } else {
-                toast({
-                    title: t('common.success'),
-                    description: t('usersManagement.userDeletedSuccessfully') + ' - Database cleaned. Auth cleanup automatic.',
-                    style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
-                });
-            }
-
-            // Log the activity with detailed information
-            const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user`;
-            logActivity(t('usersManagement.userDeleted'), "admin", activityMessage, "success");
-
-        } catch (error) {
-            console.error("❌ Error in complete user deletion:", error);
-
-            let errorMessage = t('usersManagement.failedToDeleteUser');
-
-            if (error instanceof Error) {
-                if (error.message.includes("foreign key constraint") && error.message.includes("appointments")) {
-                    errorMessage = t('usersManagement.cannotDeleteUserWithAppointments');
-                } else {
-                    errorMessage = error.message;
-                }
-            }
-
-            toast({
-                title: t('common.error'),
-                description: errorMessage,
-                variant: "destructive",
-            });
-
+        if (deletionError) {
+            console.error('Database deletion failed:', deletionError);
+            throw new Error(`Database deletion failed: ${deletionError.message}`);
         }
-    };
+
+        console.log('✅ Database deletion successful:', deletionResult);
+
+        // Step 2: Delete auth user via backend
+        console.log('🗑️ Calling backend to delete auth user...');
+        
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const authDeleteResponse = await fetch(
+            `${backendUrl}/api/admin/delete-user`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    authUserId: userToDelete.user_id // This is the UUID from auth.users
+                })
+            }
+        );
+
+        const authDeleteData = await authDeleteResponse.json();
+
+        if (!authDeleteResponse.ok) {
+            console.error('Auth deletion via backend failed:', authDeleteData);
+            throw new Error(`Auth deletion failed: ${authDeleteData.error}`);
+        }
+
+        console.log('✅ Auth user deletion successful');
+
+        // Step 3: Show success message
+        toast({
+            title: t('common.success'),
+            description: 'User completely deleted - Database + Auth user ✅',
+            style: { backgroundColor: '#16a34a', color: '#fff' },
+        });
+
+        // Log the activity
+        const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was COMPLETELY deleted - All related data removed including auth user`;
+        logActivity(t('usersManagement.userDeleted'), "admin", activityMessage, "success");
+
+        // Refresh the users list
+        loadUsers();
+
+    } catch (error) {
+        console.error("❌ Error in complete user deletion:", error);
+
+        let errorMessage = t('usersManagement.failedToDeleteUser');
+
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+
+        toast({
+            title: t('common.error'),
+            description: errorMessage,
+            variant: "destructive",
+        });
+    }
+};
     const handleDeletionRequest = async (reason: string) => {
         if (!userToDelete || !currentUser?.email) return;
 
