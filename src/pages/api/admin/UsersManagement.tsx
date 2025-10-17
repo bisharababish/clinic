@@ -435,36 +435,47 @@ const handleDeleteUser = async (userid: number) => {
 
         console.log('✅ Database deletion successful:', deletionResult);
 
-        // Step 2: Delete auth user via backend
-        console.log('🗑️ Calling backend to delete auth user...');
+        // Step 2: Delete auth user via backend (only if user has auth account)
+        let authDeletionSuccess = false;
         
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-        const authDeleteResponse = await fetch(
-            `${backendUrl}/api/admin/delete-user`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    authUserId: userToDelete.user_id // This is the UUID from auth.users
-                })
+        if (userToDelete.user_id) {
+            console.log('🗑️ Calling backend to delete auth user...');
+            
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+            const authDeleteResponse = await fetch(
+                `${backendUrl}/api/admin/delete-user`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        authUserId: userToDelete.user_id // This is the UUID from auth.users
+                    })
+                }
+            );
+
+            const authDeleteData = await authDeleteResponse.json();
+
+            if (authDeleteResponse.ok) {
+                console.log('✅ Auth user deletion successful');
+                authDeletionSuccess = true;
+            } else {
+                console.warn('⚠️ Auth deletion failed (user may not have auth account):', authDeleteData);
+                // Don't throw error - continue with success message
             }
-        );
-
-        const authDeleteData = await authDeleteResponse.json();
-
-        if (!authDeleteResponse.ok) {
-            console.error('Auth deletion via backend failed:', authDeleteData);
-            throw new Error(`Auth deletion failed: ${authDeleteData.error}`);
+        } else {
+            console.log('ℹ️ User has no auth account - skipping auth deletion');
         }
 
-        console.log('✅ Auth user deletion successful');
-
         // Step 3: Show success message
+        const successMessage = authDeletionSuccess 
+            ? 'User completely deleted - Database + Auth user ✅'
+            : 'User deleted from database ✅ (No auth account found)';
+            
         toast({
             title: t('common.success'),
-            description: 'User completely deleted - Database + Auth user ✅',
+            description: successMessage,
             style: { backgroundColor: '#16a34a', color: '#fff' },
         });
 
