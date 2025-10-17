@@ -554,6 +554,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
             // Prepare insert data - handle both formats of input data
             const insertData = {
+                // Link to auth user
+                id: authUser.id, // This is the UUID from auth.users
+                
                 user_roles: normalizedRole,
 
                 // Handle separate name fields (preferred)
