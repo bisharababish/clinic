@@ -353,6 +353,8 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             }
 
             console.log("Auth user created successfully");
+            console.log('🔍 Auth user created:', authData.user);
+            console.log('🔍 Auth user ID:', authData.user.id);
 
             // Step 2: Create user profile in database
             const timestamp = new Date().toISOString();
@@ -360,6 +362,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             const { error: insertError } = await supabase
                 .from('userinfo')
                 .insert({
+                    // Link to auth user
+                    id: authData.user.id, // This is the UUID from auth.users
+                    
                     user_roles: 'Patient',
                     english_username_a: formData.english_username_a,
                     english_username_b: formData.english_username_b || "",
