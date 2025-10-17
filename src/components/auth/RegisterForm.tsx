@@ -364,7 +364,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 .insert({
                     // Link to auth user
                     id: authData.user.id, // This is the UUID from auth.users
-                    
+
                     user_roles: 'Patient',
                     english_username_a: formData.english_username_a,
                     english_username_b: formData.english_username_b || "",
