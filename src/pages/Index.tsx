@@ -1931,8 +1931,8 @@ const Index = () => {
       {/* Main Content */}
       <div className={`main-content ${canSearchPatients() && showPatientSidebar ? (isRTL ? 'with-sidebar-rtl' : 'with-sidebar-ltr') : ''}`}>
         <div className="main-content-inner space-y-4 md:space-y-8">
-          {/* Notification Alert - visible to patients only */}
-          {userRole === 'patient' && (
+          {/* Notification Alert - visible to patients and secretaries */}
+          {(userRole === 'patient' || userRole === 'secretary') && (
             <Alert variant="default" className={`alert-responsive ${isRTL ? 'rtl' : ''} bg-blue-50 border-blue-200`}>
               <AlertDescription className={isRTL ? 'py-4 px-2' : 'py-2'}>
                 <span className="font-medium">{t("home.remindeinder")}:</span> {t("home.reservationRequired")}

@@ -875,6 +875,7 @@ const enTranslations = {
         failedToUpdateUser: 'Failed to update user. Please try again.',
         failedToDeleteUser: 'Failed to delete user from database.',
         cannotDeleteUserWithAppointments: 'Cannot delete user with existing appointments. Please delete their appointments first.',
+        authDeletionFailed: 'Auth user deletion failed. Please delete manually from Supabase Auth.',
         unexpectedError: 'An unexpected error occurred. Please try again.',
 
         // Real-time name validation errors
@@ -2533,6 +2534,7 @@ const arTranslations = {
         failedToUpdateUser: 'فشل في تحديث المستخدم. يرجى المحاولة مرة أخرى.',
         failedToDeleteUser: 'فشل في حذف المستخدم من قاعدة البيانات.',
         cannotDeleteUserWithAppointments: 'لا يمكن حذف مستخدم لديه مواعيد موجودة. يرجى حذف مواعيده أولاً.',
+        authDeletionFailed: 'فشل في حذف مستخدم المصادقة. يرجى الحذف يدوياً من Supabase Auth.',
         unexpectedError: 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
 
         // Real-time name validation errors

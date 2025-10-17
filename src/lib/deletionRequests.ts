@@ -342,59 +342,81 @@ export const createNotification = async (
     }
 };
 
-// Delete user after approval
+// Delete user after approval - COMPLETE DELETION
 export const deleteUserAfterApproval = async (
     userId: number
-): Promise<{ success: boolean; error?: string }> => {
+): Promise<{ success: boolean; error?: string; details?: any }> => {
     try {
-        // Get user details first
-        const { data: userToDelete, error: fetchError } = await supabase
-            .from('userinfo')
-            .select('*')
-            .eq('userid', userId)
-            .single();
+        console.log('🗑️ Starting complete user deletion for user ID:', userId);
 
-        if (fetchError) {
-            console.error('Error fetching user for deletion:', fetchError);
-            return { success: false, error: fetchError.message };
-        }
-
-        // Delete related appointments first
-        if (userToDelete.user_roles.toLowerCase() === 'patient') {
-            await supabase
-                .from('appointments')
-                .delete()
-                .eq('patient_id', userId);
-        } else if (userToDelete.user_roles.toLowerCase() === 'doctor') {
-            await supabase
-                .from('appointments')
-                .delete()
-                .eq('doctor_id', userToDelete.user_id);
-        }
-
-        // Try RPC function first
-        const { error: rpcError } = await supabase.rpc('delete_user_by_admin', {
-            user_id_to_delete: userId
+        // First, check what will be deleted
+        const { data: dependencies, error: checkError } = await supabase.rpc('check_user_dependencies', {
+            user_id_to_delete: userId.toString() // Convert to string for BIGINT
         });
 
-        if (rpcError) {
-            console.warn("RPC function failed, trying direct deletion", rpcError);
+        if (checkError) {
+            console.error('Error checking user dependencies:', checkError);
+            return { success: false, error: `Failed to check user dependencies: ${checkError.message}` };
+        }
 
-            // Fallback to direct deletion
-            const { error: directError } = await supabase
-                .from('userinfo')
-                .delete()
-                .eq('userid', userId);
+        console.log('📊 User dependencies found:', dependencies);
 
-            if (directError) {
-                console.error("Direct deletion failed:", directError);
-                return { success: false, error: directError.message };
+        // Use the comprehensive deletion function
+        const { data: deletionResult, error: deletionError } = await supabase.rpc('delete_user_completely', {
+            user_id_to_delete: userId.toString() // Convert to string for BIGINT
+        });
+
+        if (deletionError) {
+            console.error('Complete deletion failed:', deletionError);
+            return { success: false, error: `Complete deletion failed: ${deletionError.message}` };
+        }
+
+        console.log('✅ Complete deletion successful:', deletionResult);
+
+        // If auth user deletion failed, try manual deletion
+        if (deletionResult.auth_deletion && !deletionResult.auth_deletion.success) {
+            console.warn('⚠️ Auth user deletion failed, attempting manual deletion...');
+
+            try {
+                // Get user info for manual auth deletion
+                const { data: userInfo } = await supabase
+                    .from('userinfo')
+                    .select('user_email, user_id')
+                    .eq('userid', userId)
+                    .single();
+
+                if (userInfo?.user_email) {
+                    // Try to delete from auth.users using admin API
+                    const { error: authError } = await supabase.auth.admin.deleteUser(userInfo.user_id);
+
+                    if (authError) {
+                        console.warn('Manual auth deletion also failed:', authError);
+                        return {
+                            success: true,
+                            error: `User data deleted but auth user deletion failed: ${authError.message}. Please delete manually from Supabase Auth.`,
+                            details: deletionResult
+                        };
+                    } else {
+                        console.log('✅ Manual auth user deletion successful');
+                        return {
+                            success: true,
+                            details: { ...deletionResult, auth_deletion: { success: true, message: 'Manual deletion successful' } }
+                        };
+                    }
+                }
+            } catch (authDeletionError) {
+                console.error('Manual auth deletion failed:', authDeletionError);
+                return {
+                    success: true,
+                    error: `User data deleted but auth user deletion failed. Please delete manually from Supabase Auth.`,
+                    details: deletionResult
+                };
             }
         }
 
-        return { success: true };
+        return { success: true, details: deletionResult };
     } catch (error) {
-        console.error('Unexpected error deleting user:', error);
-        return { success: false, error: 'Unexpected error occurred' };
+        console.error('Unexpected error in complete user deletion:', error);
+        return { success: false, error: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}` };
     }
 };

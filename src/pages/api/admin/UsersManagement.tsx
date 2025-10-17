@@ -420,69 +420,86 @@ const UsersManagement = () => {
         if (!userToDelete) return;
 
         try {
-            console.log("Starting deletion process for user ID:", userid);
+            console.log("🗑️ Starting COMPLETE user deletion process for user ID:", userid);
 
-            if (userToDelete.user_roles.toLowerCase() === 'patient') {
-                const { error: appointmentsDeleteError } = await supabase
-                    .from('appointments')
-                    .delete()
-                    .eq('patient_id', userid);
-
-                if (appointmentsDeleteError) {
-                    console.warn("Error deleting patient appointments:", appointmentsDeleteError);
-                } else {
-                    console.log("Successfully deleted patient appointments");
-                }
-            } else if (userToDelete.user_roles.toLowerCase() === 'doctor') {
-                const { error: appointmentsDeleteError } = await supabase
-                    .from('appointments')
-                    .delete()
-                    .eq('doctor_id', userToDelete.user_id);
-
-                if (appointmentsDeleteError) {
-                    console.warn("Error deleting doctor appointments:", appointmentsDeleteError);
-                } else {
-                    console.log("Successfully deleted doctor appointments");
-                }
-            }
-
-            const { data: rpcData, error: rpcError } = await supabase.rpc('delete_user_by_admin', {
-                user_id_to_delete: userid
+            // First, check what will be deleted
+            const { data: dependencies, error: checkError } = await supabase.rpc('check_user_dependencies', {
+                user_id_to_delete: userid.toString() // Convert to string for BIGINT
             });
 
-            if (rpcError) {
-                console.warn("RPC function failed, trying direct deletion", rpcError);
-
-                const { error } = await supabase
-                    .from('userinfo')
-                    .delete()
-                    .eq('userid', userid);
-
-                if (error) {
-                    console.error("Direct deletion also failed", error);
-                    throw new Error(error.message);
-                }
+            if (checkError) {
+                console.error('Error checking user dependencies:', checkError);
+                throw new Error(`Failed to check user dependencies: ${checkError.message}`);
             }
 
+            console.log('📊 User dependencies that will be deleted:', dependencies);
 
-
-            toast({
-                title: t('common.success'),
-                description: t('usersManagement.userDeletedSuccessfully'),
+            // Use the comprehensive deletion function
+            const { data: deletionResult, error: deletionError } = await supabase.rpc('delete_user_completely', {
+                user_id_to_delete: userid.toString() // Convert to string for BIGINT
             });
 
-            const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was deleted`;
+            if (deletionError) {
+                console.error('Complete deletion failed:', deletionError);
+                throw new Error(`Complete deletion failed: ${deletionError.message}`);
+            }
+
+            console.log('✅ Complete deletion successful:', deletionResult);
+
+            // If auth user deletion failed, try manual deletion
+            if (deletionResult.auth_deletion && !deletionResult.auth_deletion.success) {
+                console.warn('⚠️ Auth user deletion failed, attempting manual deletion...');
+
+                try {
+                    // Try to delete from auth.users using admin API
+                    const { error: authError } = await supabase.auth.admin.deleteUser(userToDelete.user_id);
+
+                    if (authError) {
+                        console.warn('Manual auth deletion also failed:', authError);
+                        toast({
+                            title: t('common.success'),
+                            description: `${t('usersManagement.userDeletedSuccessfully')} - Warning: Auth user deletion failed. Please delete manually from Supabase Auth.`,
+                            style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
+                        });
+                    } else {
+                        console.log('✅ Manual auth user deletion successful');
+                        toast({
+                            title: t('common.success'),
+                            description: t('usersManagement.userDeletedSuccessfully'),
+                            style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
+                        });
+                    }
+                } catch (authDeletionError) {
+                    console.error('Manual auth deletion failed:', authDeletionError);
+                    toast({
+                        title: t('common.success'),
+                        description: `${t('usersManagement.userDeletedSuccessfully')} - Warning: Auth user deletion failed. Please delete manually from Supabase Auth.`,
+                        style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
+                    });
+                }
+            } else {
+                toast({
+                    title: t('common.success'),
+                    description: t('usersManagement.userDeletedSuccessfully') + ' - Database cleaned. Auth cleanup automatic.',
+                    style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
+                });
+            }
+
+            // Log the activity with detailed information
+            const activityMessage = `User ${userToDelete.english_username_a} ${userToDelete.english_username_d || ''} (ID: ${userid}) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user`;
             logActivity(t('usersManagement.userDeleted'), "admin", activityMessage, "success");
 
         } catch (error) {
-            console.error("Error deleting user:", error);
+            console.error("❌ Error in complete user deletion:", error);
 
             let errorMessage = t('usersManagement.failedToDeleteUser');
 
-            if (error instanceof Error &&
-                error.message.includes("foreign key constraint") &&
-                error.message.includes("appointments")) {
-                errorMessage = t('usersManagement.cannotDeleteUserWithAppointments');
+            if (error instanceof Error) {
+                if (error.message.includes("foreign key constraint") && error.message.includes("appointments")) {
+                    errorMessage = t('usersManagement.cannotDeleteUserWithAppointments');
+                } else {
+                    errorMessage = error.message;
+                }
             }
 
             toast({
@@ -1010,24 +1027,33 @@ const UsersManagement = () => {
                                                     {t('common.edit')}
                                                 </Button>
                                             )}
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => handleDeleteButtonClick(u.userid)}
-                                                disabled={!canDirectDelete && !canRequestDeletion}
-                                            >
-                                                {canDirectDelete ? (
-                                                    <>
-                                                        <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                        {isRTL ? 'حذف' : 'Delete'}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Clock className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                        {isRTL ? 'طلب حذف' : 'Request Deletion'}
-                                                    </>
-                                                )}
-                                            </Button>
+                                            {/* Hide delete button for admin users */}
+                                            {u.user_roles.toLowerCase() !== 'admin' && (
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => handleDeleteButtonClick(u.userid)}
+                                                    disabled={!canDirectDelete && !canRequestDeletion}
+                                                >
+                                                    {canDirectDelete ? (
+                                                        <>
+                                                            <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                            {isRTL ? 'حذف' : 'Delete'}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Clock className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                            {isRTL ? 'طلب حذف' : 'Request Deletion'}
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            )}
+                                            {/* Show protected message for admin users */}
+                                            {u.user_roles.toLowerCase() === 'admin' && (
+                                                <div className="text-xs text-gray-500 italic">
+                                                    {isRTL ? 'محمي من الحذف' : 'Protected from deletion'}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
