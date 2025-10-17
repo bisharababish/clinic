@@ -442,10 +442,10 @@ const UsersManagement = () => {
             console.log('🔍 user_id field:', userToDelete.user_id);
             console.log('🔍 id field:', (userToDelete as any).id);
 
-            if (userToDelete.user_id) {
+            if ((userToDelete as any).id) {
                 console.log('🗑️ Calling backend to delete auth user...');
                 console.log('🔍 User data:', userToDelete);
-                console.log('🔍 Auth user ID:', userToDelete.user_id);
+                console.log('🔍 Auth user ID:', (userToDelete as any).id);
 
                 const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
                 const authDeleteResponse = await fetch(
@@ -456,7 +456,7 @@ const UsersManagement = () => {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            authUserId: userToDelete.user_id // This is the UUID from auth.users
+                            authUserId: (userToDelete as any).id // This is the UUID from auth.users
                         })
                     }
                 );
