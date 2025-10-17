@@ -2,17 +2,22 @@
 
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: [
+        process.env.FRONTEND_URL || 'https://bethlehemmedcenter.com',
+        'http://localhost:3000',
+        'http://localhost:5173'
+    ],
     credentials: true
 }));
 app.use(express.json());
