@@ -552,11 +552,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Normalize the role
             const normalizedRole = normalizeRole(userData.user_roles || 'patient');
 
+            // Debug: Check auth user ID
+            console.log('🔍 Auth user created:', authUser);
+            console.log('🔍 Auth user ID:', authUser.id);
+            
             // Prepare insert data - handle both formats of input data
             const insertData = {
                 // Link to auth user
                 id: authUser.id, // This is the UUID from auth.users
-                
+
                 user_roles: normalizedRole,
 
                 // Handle separate name fields (preferred)
