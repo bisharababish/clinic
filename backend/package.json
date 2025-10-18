@@ -13,7 +13,12 @@
         "type-check": "tsc --noEmit",
         "postinstall": "npm run build"
     },
-    "keywords": ["healthcare", "medical", "backend", "api"],
+    "keywords": [
+        "healthcare",
+        "medical",
+        "backend",
+        "api"
+    ],
     "author": "Bethlehem Medical Center",
     "license": "MIT",
     "dependencies": {

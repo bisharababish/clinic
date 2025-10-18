@@ -8,7 +8,7 @@ import { EyeIcon, EyeOffIcon, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabase";
+import { supabaseClient as supabase } from "../../lib/supabase";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
 import { getDefaultRouteForRole } from "../../lib/rolePermissions";

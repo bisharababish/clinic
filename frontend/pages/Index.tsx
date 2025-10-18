@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge";
 import { useToast } from "../hooks/use-toast";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabaseClient as supabase } from "../lib/supabase";
 import "./styles/index.css";
 import {
   EyeIcon,

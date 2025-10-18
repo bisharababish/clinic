@@ -1,6 +1,6 @@
 // hooks/useAdminState.tsx - IMPROVED VERSION
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabaseClient as supabase } from '../lib/supabase';
 import { useToast } from './use-toast';
 import { useTranslation } from 'react-i18next';
 // Complete interfaces
@@ -198,6 +198,8 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         try {
             console.log('🔄 Loading users...');
+            console.log('Supabase client:', !!supabase);
+            console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
 
             // Optimized query - only select essential fields for faster loading
             const { data, error } = await supabase
@@ -205,6 +207,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 .select('user_id, userid, user_email, english_username_a, user_roles, user_phonenumber, created_at')
                 .order('userid', { ascending: false });
 
+            console.log('Supabase query result:', { data: data?.length, error });
             if (error) throw error;
 
             console.log('📊 Users data received:', data?.length || 0, 'users');
@@ -213,7 +216,26 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             console.log(`✅ Loaded ${data?.length || 0} users`);
         } catch (error: unknown) {
             console.error('❌ Failed to load users:', error);
-            setError('Failed to load users: ' + (error instanceof Error ? error.message : String(error)));
+            
+            // Better error handling for different error types
+            let errorMessage = 'Failed to load users';
+            if (error instanceof Error) {
+                errorMessage = `Failed to load users: ${error.message}`;
+            } else if (error && typeof error === 'object') {
+                // Handle Supabase errors or other objects
+                const errorObj = error as any;
+                if (errorObj.message) {
+                    errorMessage = `Failed to load users: ${errorObj.message}`;
+                } else if (errorObj.error) {
+                    errorMessage = `Failed to load users: ${errorObj.error}`;
+                } else {
+                    errorMessage = `Failed to load users: ${JSON.stringify(errorObj)}`;
+                }
+            } else {
+                errorMessage = `Failed to load users: ${String(error)}`;
+            }
+            
+            setError(errorMessage);
             // Don't show toast for initial load to avoid UI blocking
             if (forceRefresh) {
                 toast({
