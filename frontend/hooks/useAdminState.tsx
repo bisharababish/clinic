@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useRe
 import { supabaseClient as supabase } from '../lib/supabase';
 import { useToast } from './use-toast';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from './useAuth';
 // Complete interfaces
 interface UserInfo {
     userid: number;
@@ -125,6 +126,7 @@ const AdminStateContext = createContext<AdminStateContextType | undefined>(undef
 
 export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { i18n } = useTranslation();
+    const { user } = useAuth();
     const isRTL = i18n.language === 'ar'
     const [users, setUsers] = useState<UserInfo[]>([]);
     const [clinics, setClinics] = useState<ClinicInfo[]>([]);
