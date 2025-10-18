@@ -8,8 +8,10 @@
       "strict": true,
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
-      "resolveJsonModule": true
+      "resolveJsonModule": true,
+      "outDir": "./dist",
+      "rootDir": "./"
     },
     "include": ["**/*.ts"],
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules", "dist"]
   }
