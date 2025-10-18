@@ -127,6 +127,19 @@ const ClinicManagement = () => {
     const [showDeleteDoctorDialog, setShowDeleteDoctorDialog] = useState(false);
     const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
 
+    // Ensure data is loaded when component mounts
+    useEffect(() => {
+        console.log('🔄 ClinicManagement mounted, ensuring data is loaded...');
+        if (clinics.length === 0 && !isLoading) {
+            console.log('📊 No clinics data, triggering loadClinics...');
+            loadClinics(true); // Force refresh
+        }
+        if (categories.length === 0 && !isLoading) {
+            console.log('📊 No categories data, triggering loadCategories...');
+            loadCategories(true); // Force refresh
+        }
+    }, [clinics.length, categories.length, isLoading, loadClinics, loadCategories]);
+
     // Handle search filtering
     useEffect(() => {
         if (searchQuery.trim() === '') {

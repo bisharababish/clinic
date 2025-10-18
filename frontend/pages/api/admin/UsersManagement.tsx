@@ -113,6 +113,16 @@ const UsersManagement = () => {
     // Add this near the other permission checks:
     const canCreateUsers = hasPermission(currentUserRole, 'canManageUsers');
     const canEditUsers = hasPermission(currentUserRole, 'canManageUsers');
+    
+    // Ensure data is loaded when component mounts
+    useEffect(() => {
+        console.log('🔄 UsersManagement mounted, ensuring data is loaded...');
+        if (users.length === 0 && !isLoading) {
+            console.log('📊 No users data, triggering loadUsers...');
+            loadUsers(true); // Force refresh
+        }
+    }, [users.length, isLoading, loadUsers]);
+    
     useEffect(() => {
         if (userFormMode === "edit" && userFormData.id_number && userFormData.id_number.length === 9) {
             const isValid = isValidPalestinianID(userFormData.id_number);

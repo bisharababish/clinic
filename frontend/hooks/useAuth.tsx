@@ -580,15 +580,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const logout = async () => {
         try {
+            console.log('🚪 Logging out user...');
+            
+            // Clear all local storage and session storage
             localStorage.removeItem('clinic_user_profile');
+            localStorage.removeItem('supabase.auth.token');
             sessionStorage.removeItem('login_in_progress');
             sessionStorage.removeItem('admin_login_success');
+            sessionStorage.removeItem('redirectAfterLogin');
+            
             // Clear session tracking
             SessionManager.getInstance().clearSession();
+            
+            // Clear user state immediately
             setUser(null);
+            
+            // Sign out from Supabase
             await supabase.auth.signOut();
+            
+            console.log('✅ Logout completed successfully');
         } catch (error) {
             console.error('Error logging out:', error);
+            // Even if there's an error, clear the user state
             setUser(null);
             throw error;
         }

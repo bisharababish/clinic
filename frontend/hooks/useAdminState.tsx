@@ -283,7 +283,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 // Clear any cached auth data
                 localStorage.removeItem('clinic_user_profile');
                 localStorage.removeItem('supabase.auth.token');
-                
+
                 // Only redirect if not already on auth page to prevent loops
                 if (!window.location.pathname.includes('/auth')) {
                     window.location.href = '/auth';

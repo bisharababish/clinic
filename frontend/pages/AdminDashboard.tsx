@@ -151,8 +151,16 @@ const AdminDashboardContent = () => {
             try {
                 const currentUserRole = user?.role?.toLowerCase() || '';
 
+                // If no user (logged out), redirect to auth immediately
+                if (!user) {
+                    console.log('🔄 No user found, redirecting to auth...');
+                    navigate('/auth', { replace: true });
+                    return;
+                }
+
                 // Check if user has admin dashboard access
                 if (!userPermissions.canViewAdmin) {
+                    console.log('❌ User does not have admin permissions:', currentUserRole);
                     setError(t('admin.accessDenied') || 'Access denied');
                     toast({
                         title: t('common.error'),
