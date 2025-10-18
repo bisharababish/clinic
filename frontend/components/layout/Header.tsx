@@ -194,14 +194,14 @@ export function Header() {
         try {
             console.log('🚪 Header: Starting logout process...');
             closeMobileMenu();
-            
+
             // Perform logout
             await logout();
-            
+
             // Force redirect to auth page
             console.log('🔄 Header: Redirecting to auth page...');
             window.location.href = '/auth';
-            
+
         } catch (error) {
             console.error('Logout error:', error);
             // Even if logout fails, redirect to auth page

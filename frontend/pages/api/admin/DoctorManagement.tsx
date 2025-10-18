@@ -112,6 +112,19 @@ const DoctorManagement = () => {
     const [showSlotDeleteDialog, setShowSlotDeleteDialog] = useState(false);
     const [slotToDelete, setSlotToDelete] = useState<AvailabilitySlot | null>(null);
 
+    // Ensure data is loaded when component mounts
+    useEffect(() => {
+        console.log('🔄 DoctorManagement mounted, ensuring data is loaded...');
+        if (doctors.length === 0 && !isLoading) {
+            console.log('📊 No doctors data, triggering loadDoctors...');
+            loadDoctors(true); // Force refresh
+        }
+        if (clinics.length === 0 && !isLoading) {
+            console.log('📊 No clinics data, triggering loadClinics...');
+            loadClinics(true); // Force refresh
+        }
+    }, [doctors.length, clinics.length, isLoading, loadDoctors, loadClinics]);
+
     const weekdays = [
         { en: "Monday", ar: t('doctorManagement.monday') },
         { en: "Tuesday", ar: t('doctorManagement.tuesday') },
