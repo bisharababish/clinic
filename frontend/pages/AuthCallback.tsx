@@ -56,7 +56,7 @@ const AuthCallback = () => {
                                 setTimeout(() => {
                                     sessionStorage.removeItem('login_in_progress');
                                     navigate("/admin", { replace: true });
-                                }, 100);
+                                }, 200);
                                 return;
                             }
                         }
@@ -67,7 +67,7 @@ const AuthCallback = () => {
                     setTimeout(() => {
                         sessionStorage.removeItem('login_in_progress');
                         navigate("/", { replace: true });
-                    }, 100);
+                    }, 200);
                 } else {
                     console.log("No session found, redirecting to login...");
                     navigate("/auth", { replace: true });

@@ -275,14 +275,17 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 });
             }
 
-            // If authentication failed, redirect to login
+            // If authentication failed, redirect to login (but only if not already on auth page)
             if (errorMessage.includes('No active session') || errorMessage.includes('not authenticated')) {
                 console.log('🔄 Authentication failed, redirecting to login...');
                 // Clear any cached auth data
                 localStorage.removeItem('clinic_user_profile');
                 localStorage.removeItem('supabase.auth.token');
-                // Redirect to login page
-                window.location.href = '/auth';
+                
+                // Only redirect if not already on auth page to prevent loops
+                if (!window.location.pathname.includes('/auth')) {
+                    window.location.href = '/auth';
+                }
             }
         } finally {
             activeOperationsRef.current.delete(operationId);
@@ -655,6 +658,12 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     // Initial data load - ULTRA-OPTIMIZED for fastest loading
     useEffect(() => {
         console.log('🚀 AdminStateProvider initialized, loading initial data...');
+
+        // Only load data if we have a user context (avoid loading for unauthenticated users)
+        if (!user) {
+            console.log('⏸️ No user context, skipping initial data load');
+            return;
+        }
 
         // Load data automatically when admin dashboard mounts
         const loadInitialData = async () => {

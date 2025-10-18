@@ -27,9 +27,15 @@ const Auth: React.FC = () => {
     if (user && user.role) {
       const defaultRoute = getDefaultRouteForRole(user.role);
       console.log(`User already authenticated as ${user.role}, redirecting to: ${defaultRoute}`);
-      navigate(defaultRoute, { replace: true });
+      
+      // Use a timeout to prevent immediate redirect loops
+      const redirectTimeout = setTimeout(() => {
+        navigate(defaultRoute, { replace: true });
+      }, 100);
+      
+      return () => clearTimeout(redirectTimeout);
     }
-  }, [user, navigate]);
+  }, [user?.role, navigate]); // Only depend on role, not the entire user object
 
   const handleSwitchToRegister = () => {
     setActiveTab("register");
