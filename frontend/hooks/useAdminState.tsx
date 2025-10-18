@@ -255,7 +255,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 errorMessage = `Failed to load users: ${error.message}`;
             } else if (error && typeof error === 'object') {
                 // Handle Supabase errors or other objects
-                const errorObj = error as any;
+                const errorObj = error as { message?: string; error?: string };
                 if (errorObj.message) {
                     errorMessage = `Failed to load users: ${errorObj.message}`;
                 } else if (errorObj.error) {

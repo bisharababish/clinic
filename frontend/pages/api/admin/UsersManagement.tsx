@@ -31,8 +31,6 @@ import { isValidPalestinianID } from '../../../lib/PalID_temp';
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
 interface UserInfo {
-    user_id: string; // uuid/text primary key
-    id?: string; // auth user UUID from auth.users table
     userid: number;
     user_email: string;
     english_username_a: string;
@@ -49,6 +47,9 @@ interface UserInfo {
     date_of_birth?: string;
     gender_user?: string;
     created_at?: string;
+    // Optional fields for auth integration
+    user_id?: string; // uuid/text primary key
+    id?: string; // auth user UUID from auth.users table
 }
 
 const UsersManagement = () => {
@@ -113,7 +114,7 @@ const UsersManagement = () => {
     // Add this near the other permission checks:
     const canCreateUsers = hasPermission(currentUserRole, 'canManageUsers');
     const canEditUsers = hasPermission(currentUserRole, 'canManageUsers');
-    
+
     // Ensure data is loaded when component mounts
     useEffect(() => {
         console.log('🔄 UsersManagement mounted, ensuring data is loaded...');
@@ -122,7 +123,7 @@ const UsersManagement = () => {
             loadUsers(true); // Force refresh
         }
     }, [users.length, isLoading, loadUsers]);
-    
+
     useEffect(() => {
         if (userFormMode === "edit" && userFormData.id_number && userFormData.id_number.length === 9) {
             const isValid = isValidPalestinianID(userFormData.id_number);
@@ -450,9 +451,8 @@ const UsersManagement = () => {
             let authDeletionSuccess = false;
 
             console.log('🔍 Full user data for deletion:', userToDelete);
-            console.log('🔍 user_id field:', userToDelete.user_id);
-            console.log('🔍 id field:', (userToDelete as UserInfo & { id?: string }).id);
 
+            // Access optional auth fields safely
             const authUserId = (userToDelete as UserInfo & { id?: string }).id;
             if (authUserId) {
                 console.log('🗑️ Calling backend to delete auth user...');
