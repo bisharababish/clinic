@@ -5,7 +5,6 @@ import { useToast } from './use-toast';
 import { useTranslation } from 'react-i18next';
 // Complete interfaces
 interface UserInfo {
-    user_id: string;
     userid: number;
     user_email: string;
     english_username_a: string;
@@ -200,19 +199,19 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             console.log('🔄 Loading users...');
             console.log('Supabase client:', !!supabase);
             console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-            
+
             // Check authentication status first
             const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-            console.log('🔐 Session status:', { 
-                hasSession: !!sessionData.session, 
+            console.log('🔐 Session status:', {
+                hasSession: !!sessionData.session,
                 userEmail: sessionData.session?.user?.email,
-                sessionError 
+                sessionError
             });
-            
+
             if (!sessionData.session) {
                 throw new Error('No active session - user not authenticated');
             }
-            
+
             // Check if current user has admin role
             const currentUserEmail = sessionData.session.user.email;
             const { data: currentUserData, error: currentUserError } = await supabase
@@ -220,22 +219,22 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                 .select('user_roles')
                 .eq('user_email', currentUserEmail)
                 .single();
-                
+
             if (currentUserError || !currentUserData) {
                 throw new Error('Could not verify user permissions');
             }
-            
+
             const userRole = currentUserData.user_roles?.toLowerCase();
             if (userRole !== 'admin') {
                 throw new Error(`Access denied: User role '${userRole}' does not have permission to view users`);
             }
-            
+
             console.log('✅ User has admin permissions, proceeding with user load');
 
             // Optimized query - only select essential fields for faster loading
             const { data, error } = await supabase
                 .from('userinfo')
-                .select('user_id, userid, user_email, english_username_a, user_roles, user_phonenumber, created_at')
+                .select('userid, user_email, english_username_a, user_roles, user_phonenumber, created_at')
                 .order('userid', { ascending: false });
 
             console.log('Supabase query result:', { data: data?.length, error });
@@ -247,7 +246,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             console.log(`✅ Loaded ${data?.length || 0} users`);
         } catch (error: unknown) {
             console.error('❌ Failed to load users:', error);
-            
+
             // Better error handling for different error types
             let errorMessage = 'Failed to load users';
             if (error instanceof Error) {
@@ -265,7 +264,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             } else {
                 errorMessage = `Failed to load users: ${String(error)}`;
             }
-            
+
             setError(errorMessage);
             // Don't show toast for initial load to avoid UI blocking
             if (forceRefresh) {
@@ -275,7 +274,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                     variant: 'destructive',
                 });
             }
-            
+
             // If authentication failed, redirect to login
             if (errorMessage.includes('No active session') || errorMessage.includes('not authenticated')) {
                 console.log('🔄 Authentication failed, redirecting to login...');
