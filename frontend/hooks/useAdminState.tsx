@@ -200,6 +200,37 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             console.log('🔄 Loading users...');
             console.log('Supabase client:', !!supabase);
             console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+            
+            // Check authentication status first
+            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+            console.log('🔐 Session status:', { 
+                hasSession: !!sessionData.session, 
+                userEmail: sessionData.session?.user?.email,
+                sessionError 
+            });
+            
+            if (!sessionData.session) {
+                throw new Error('No active session - user not authenticated');
+            }
+            
+            // Check if current user has admin role
+            const currentUserEmail = sessionData.session.user.email;
+            const { data: currentUserData, error: currentUserError } = await supabase
+                .from('userinfo')
+                .select('user_roles')
+                .eq('user_email', currentUserEmail)
+                .single();
+                
+            if (currentUserError || !currentUserData) {
+                throw new Error('Could not verify user permissions');
+            }
+            
+            const userRole = currentUserData.user_roles?.toLowerCase();
+            if (userRole !== 'admin') {
+                throw new Error(`Access denied: User role '${userRole}' does not have permission to view users`);
+            }
+            
+            console.log('✅ User has admin permissions, proceeding with user load');
 
             // Optimized query - only select essential fields for faster loading
             const { data, error } = await supabase
@@ -243,6 +274,16 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                     description: 'Failed to load users',
                     variant: 'destructive',
                 });
+            }
+            
+            // If authentication failed, redirect to login
+            if (errorMessage.includes('No active session') || errorMessage.includes('not authenticated')) {
+                console.log('🔄 Authentication failed, redirecting to login...');
+                // Clear any cached auth data
+                localStorage.removeItem('clinic_user_profile');
+                localStorage.removeItem('supabase.auth.token');
+                // Redirect to login page
+                window.location.href = '/auth';
             }
         } finally {
             activeOperationsRef.current.delete(operationId);
