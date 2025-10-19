@@ -501,7 +501,7 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                                 <p><strong>{isRTL ? 'المريض' : 'Patient'}:</strong> {patientToDelete.patient_name}</p>
                                 <p><strong>{isRTL ? 'المبلغ' : 'Amount'}:</strong> ₪{patientToDelete.amount}</p>
                                 <p><strong>{isRTL ? 'الموعد' : 'Appointment'}:</strong> {patientToDelete.appointment_day} at {patientToDelete.appointment_time}</p>
-                                <p><strong>{isRTL ? 'حالة الدفع' : 'Payment Status'}:</strong>
+                                <div><strong>{isRTL ? 'حالة الدفع' : 'Payment Status'}:</strong>
                                     <Badge variant={getStatusBadgeVariant(patientToDelete.payment_status)} className={isRTL ? 'mr-2' : 'ml-2'}>
                                         {isRTL ?
                                             (patientToDelete.payment_status === 'paid' ? 'مدفوع' :
@@ -510,7 +510,7 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                                             patientToDelete.payment_status
                                         }
                                     </Badge>
-                                </p>
+                                </div>
                             </div>
                         </div>
                     )}
