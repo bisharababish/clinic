@@ -165,8 +165,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const updateLoadingState = () => {
         const newLoadingState = activeOperationsRef.current.size > 0;
         isLoadingRef.current = newLoadingState;
-        // DISABLED: Don't set loading state to prevent flashing
-        // setIsLoading(newLoadingState);
+        setIsLoading(newLoadingState);
 
         // Auto-clear loading state if stuck for too long
         if (newLoadingState) {
@@ -177,7 +176,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
                     setIsLoading(false);
                     isLoadingRef.current = false;
                 }
-            }, 30000); // 30 second timeout
+            }, 10000); // Reduced to 10 second timeout for faster recovery
         }
     };
     // REPLACE THE ENTIRE loadUsers FUNCTION WITH THIS - ULTRA-OPTIMIZED:
@@ -197,6 +196,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-users-${now}`;
         activeOperationsRef.current.add(operationId);
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading users...');
@@ -234,11 +234,12 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
             console.log('✅ User has admin permissions, proceeding with user load');
 
-            // Optimized query - only select essential fields for faster loading
+            // Ultra-optimized query - only essential fields for Overview tab
             const { data, error } = await supabase
                 .from('userinfo')
-                .select('userid, user_email, english_username_a, user_roles, user_phonenumber, created_at')
-                .order('userid', { ascending: false });
+                .select('userid, user_email, english_username_a, user_roles')
+                .order('userid', { ascending: false })
+                .limit(100); // Limit to first 100 users for faster loading
 
             console.log('Supabase query result:', { data: data?.length, error });
             if (error) throw error;
@@ -292,6 +293,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             }
         } finally {
             activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
 
@@ -312,6 +314,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-clinics-${now}`;
         activeOperationsRef.current.add(operationId);
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading clinics...');
@@ -341,6 +344,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             }
         } finally {
             activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
     // REPLACE THE ENTIRE loadDoctors FUNCTION WITH THIS:
@@ -360,6 +364,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-doctors-${now}`;
         activeOperationsRef.current.add(operationId);
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading doctors...');
@@ -379,6 +384,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             setError('Failed to load doctors: ' + (error instanceof Error ? error.message : String(error)));
         } finally {
             activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
 
@@ -399,6 +405,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-appointments-${now}`;
         activeOperationsRef.current.add(operationId);
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading appointments...');
@@ -445,6 +452,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             setError('Failed to load appointments: ' + (error instanceof Error ? error.message : String(error)));
         } finally {
             activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
 
@@ -465,6 +473,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         const operationId = `load-categories-${now}`;
         activeOperationsRef.current.add(operationId);
+        updateLoadingState();
 
         try {
             console.log('🔄 Loading categories...');
@@ -486,6 +495,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             // Don't show toast for initial load to avoid UI blocking
         } finally {
             activeOperationsRef.current.delete(operationId);
+            updateLoadingState();
         }
     };
 
@@ -661,6 +671,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     // Initial data load - ULTRA-OPTIMIZED for fastest loading
     useEffect(() => {
         console.log('🚀 AdminStateProvider initialized, loading initial data...');
+        console.log('👤 User context:', user ? 'Available' : 'Not available');
 
         // Only load data if we have a user context (avoid loading for unauthenticated users)
         if (!user) {
@@ -673,28 +684,20 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             try {
                 console.log('📊 Loading initial admin data...');
 
-                // Load essential data immediately in parallel for fastest startup
-                const essentialDataPromise = Promise.all([
-                    loadUsers(false),
+                // Load users first (most important for Overview tab)
+                await loadUsers(false);
+                console.log('✅ Users loaded - Overview tab can now display');
+
+                // Load other data in parallel in background
+                Promise.all([
                     loadClinics(false),
-                    loadCategories(false)
-                ]);
-
-                // Start loading secondary data immediately (don't wait)
-                const secondaryDataPromise = Promise.all([
                     loadDoctors(false),
+                    loadCategories(false),
                     loadAppointments(false)
-                ]);
-
-                // Wait for essential data to complete
-                await essentialDataPromise;
-                console.log('✅ Essential data loaded');
-
-                // Secondary data will load in background
-                secondaryDataPromise.then(() => {
-                    console.log('✅ Secondary data loaded');
+                ]).then(() => {
+                    console.log('✅ All background data loaded');
                 }).catch(error => {
-                    console.error('❌ Secondary data failed:', error);
+                    console.error('❌ Background data failed:', error);
                 });
 
                 console.log('✅ Initial admin data loaded successfully');
@@ -703,10 +706,9 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             }
         };
 
-        // Minimal delay for fastest startup
-        const timer = setTimeout(loadInitialData, 50); // Reduced from 500ms to 50ms
-        return () => clearTimeout(timer);
-    }, []);
+        // Load immediately with no delay
+        loadInitialData();
+    }, [user]); // Add user as dependency to trigger when user becomes available
 
     const value: AdminStateContextType = {
         // State

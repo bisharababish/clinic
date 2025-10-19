@@ -167,6 +167,14 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
             { key: 'x ray', name: t('admin.xrayTechnicians'), color: '#14b8a6' } // Teal (matches current x-ray card)
         ];
 
+        // If users array is empty or still loading, return empty data
+        if (!users || users.length === 0) {
+            return allRoles.map(role => ({
+                role: role.name,
+                count: 0,
+                fill: role.color
+            }));
+        }
 
         return allRoles.map(role => {
             let count = 0;

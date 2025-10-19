@@ -34,6 +34,7 @@ const AdminDashboardContent = () => {
         doctors,
         appointments,
         isLoading: dataLoading,
+        hasInitialized,
         error: dataError,
         refreshAll,
         loadAppointments,
@@ -175,7 +176,14 @@ const AdminDashboardContent = () => {
 
                 // Set default tab immediately for faster UI response
                 if (!activeTab) {
-                    setActiveTab(getDefaultTab());
+                    const defaultTab = getDefaultTab();
+                    setActiveTab(defaultTab);
+
+                    // If Overview is the default tab, ensure data is loaded
+                    if (defaultTab === 'overview') {
+                        console.log('🔄 Overview is default tab, ensuring data is loaded...');
+                        refreshAll();
+                    }
                 }
 
                 console.log('✅ Admin dashboard initialized for role:', currentUserRole);
@@ -189,13 +197,17 @@ const AdminDashboardContent = () => {
             }
         };
 
-        // Reduced delay for faster initialization
-        const timer = setTimeout(() => {
-            initializeAdminDashboard();
-        }, 100); // Reduced from 1000ms to 100ms
+        // Initialize immediately with no delay
+        initializeAdminDashboard();
+    }, [authLoading, user, userPermissions, navigate, t, activeTab, getDefaultTab, toast, refreshAll]);
 
-        return () => clearTimeout(timer);
-    }, [authLoading, user, userPermissions, navigate, t, activeTab, getDefaultTab, toast]);
+    // Ensure data is loaded when Overview tab is active
+    useEffect(() => {
+        if (activeTab === 'overview' && users.length === 0 && !dataLoading) {
+            console.log('🔄 Overview tab active but no data, triggering load...');
+            refreshAll();
+        }
+    }, [activeTab, users.length, dataLoading, refreshAll]);
 
     // Handle tab changes with permission checking
     const handleTabChange = (newTab: string) => {
