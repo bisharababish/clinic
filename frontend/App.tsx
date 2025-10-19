@@ -10,6 +10,7 @@ import CookieConsent from "react-cookie-consent";
 import { useLegalModals, PrivacyPolicyModal } from "./components/modals/LegalModals";
 import { useScrollToTop } from "./hooks/useScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
+import './src/lib/sentry';
 
 // Scroll to top component that works inside Router context
 function ScrollToTop() {
