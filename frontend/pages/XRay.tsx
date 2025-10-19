@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SEOHead from "../src/components/seo/SEOHead";
 import {
   Upload,
   CheckCircle,
@@ -1700,227 +1701,235 @@ const XRay = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-2xl shadow-lg">
-              <Camera className="w-10 h-10 text-white" />
-            </div>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-3">
-            X-Ray Upload System
-          </h1>
-          <p className="text-slate-600 text-xl max-w-2xl mx-auto">
-            Upload and manage X-ray images
-          </p>
-        </div>
-
-        <div className="grid xl:grid-cols-3 gap-8">
-          {/* Patient Information Card */}
-          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
-                <User className="w-6 h-6" />
-                Patient Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="patientName" className="text-sm font-semibold text-slate-700">
-                  Patient Name
-                </Label>
-                <Input
-                  id="patientName"
-                  value={patientName}
-                  onChange={(e) => setPatientName(e.target.value)}
-                  placeholder="Enter patient full name"
-                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                />
+    <>
+      <SEOHead
+        title="X-Ray Imaging Services - Bethlehem Medical Center"
+        description="Advanced X-ray imaging services at Bethlehem Medical Center. Digital X-ray imaging, radiology services, and medical imaging for accurate diagnosis."
+        keywords="X-ray imaging, radiology services, medical imaging, digital X-ray, Bethlehem Medical Center, diagnostic imaging"
+        url="https://bethlehemmedcenter.com/xray"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-2xl shadow-lg">
+                <Camera className="w-10 h-10 text-white" />
               </div>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-3">
+              X-Ray Upload System
+            </h1>
+            <p className="text-slate-600 text-xl max-w-2xl mx-auto">
+              Upload and manage X-ray images
+            </p>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth" className="text-sm font-semibold text-slate-700">
-                  Date of Birth
-                </Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <div className="grid xl:grid-cols-3 gap-8">
+            {/* Patient Information Card */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3">
+                  <User className="w-6 h-6" />
+                  Patient Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="patientName" className="text-sm font-semibold text-slate-700">
+                    Patient Name
+                  </Label>
                   <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="h-12 pl-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                    id="patientName"
+                    value={patientName}
+                    onChange={(e) => setPatientName(e.target.value)}
+                    placeholder="Enter patient full name"
+                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="requestingDoctor" className="text-sm font-semibold text-slate-700">
-                  Requesting Doctor
-                </Label>
-                <Input
-                  id="requestingDoctor"
-                  value={requestingDoctor}
-                  onChange={(e) => setRequestingDoctor(e.target.value)}
-                  placeholder="Dr. Name"
-                  className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="clinicalIndication" className="text-sm font-semibold text-slate-700">
-                  Clinical Indication
-                </Label>
-                <Textarea
-                  id="clinicalIndication"
-                  value={clinicalIndication}
-                  onChange={(e) => setClinicalIndication(e.target.value)}
-                  placeholder="Enter clinical indication and symptoms"
-                  rows={4}
-                  className="border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Anatomical Selection Card */}
-          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
-                <Stethoscope className="w-6 h-6" />
-                Body Part Selection
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <AnatomicalSkeleton
-                selectedBodyPart={selectedBodyPart}
-                onBodyPartSelect={handleBodyPartSelect}
-              />
-
-              {/* Fallback Dropdown */}
-              <div className="mt-6 space-y-2">
-                <Label className="text-sm font-semibold text-slate-700">
-                  Manual Selection
-                </Label>
-                <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-                  <SelectTrigger className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue placeholder="Choose specific body part..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bodyPartsOptions.map((part) => (
-                      <SelectItem key={part.value} value={part.value}>{part.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* File Upload Card */}
-          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3">
-                <Upload className="w-6 h-6" />
-                X-Ray Image Upload
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div
-                className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer hover:bg-slate-50 ${isDragging
-                  ? "border-blue-500 bg-blue-50"
-                  : file
-                    ? "border-green-500 bg-green-50"
-                    : "border-slate-300"
-                  }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => document.getElementById('fileInput')?.click()}
-              >
-                <input
-                  id="fileInput"
-                  type="file"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  accept="image/jpeg,image/png,image/jpg"
-                />
-
-                {file ? (
-                  <div className="space-y-4">
-                    <div className="flex justify-center">
-                      <CheckCircle className="w-16 h-16 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold text-green-700">File Selected</p>
-                      <p className="text-slate-600 mt-1 break-all">{file.name}</p>
-                      <p className="text-sm text-slate-500 mt-1">
-                        {(file.size / (1024 * 1024)).toFixed(2)} MB
-                      </p>
-                    </div>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFile();
-                      }}
-                      variant="outline"
-                      className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Remove File
-                    </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="dateOfBirth" className="text-sm font-semibold text-slate-700">
+                    Date of Birth
+                  </Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className="h-12 pl-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                    />
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex justify-center">
-                      <Upload className={`w-16 h-16 ${isDragging ? "text-blue-500" : "text-slate-400"}`} />
-                    </div>
-                    <div>
-                      <p className="text-lg font-semibold text-slate-700">
-                        Drag and drop your X-ray image
-                      </p>
-                      <p className="text-slate-500 mt-1">or click to browse</p>
-                    </div>
-                    <div className="text-sm text-slate-500">
-                      Supported formats: JPEG, PNG (Max 10MB)
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                </div>
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex justify-center gap-4">
-          <Button
-            size="lg"
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-            disabled={!patientName || !selectedBodyPart || !file}
-          >
-            <CheckCircle className="w-5 h-5 mr-2" />
-            Save X-Ray Record
-          </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="requestingDoctor" className="text-sm font-semibold text-slate-700">
+                    Requesting Doctor
+                  </Label>
+                  <Input
+                    id="requestingDoctor"
+                    value={requestingDoctor}
+                    onChange={(e) => setRequestingDoctor(e.target.value)}
+                    placeholder="Dr. Name"
+                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
 
-          <Button
-            variant="outline"
-            size="lg"
-            className="px-8 py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl"
-            onClick={() => {
-              setPatientName("");
-              setDateOfBirth("");
-              setRequestingDoctor("");
-              setClinicalIndication("");
-              setSelectedBodyPart("");
-              setFile(null);
-            }}
-          >
-            Reset Form
-          </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="clinicalIndication" className="text-sm font-semibold text-slate-700">
+                    Clinical Indication
+                  </Label>
+                  <Textarea
+                    id="clinicalIndication"
+                    value={clinicalIndication}
+                    onChange={(e) => setClinicalIndication(e.target.value)}
+                    placeholder="Enter clinical indication and symptoms"
+                    rows={4}
+                    className="border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Anatomical Selection Card */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3">
+                  <Stethoscope className="w-6 h-6" />
+                  Body Part Selection
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <AnatomicalSkeleton
+                  selectedBodyPart={selectedBodyPart}
+                  onBodyPartSelect={handleBodyPartSelect}
+                />
+
+                {/* Fallback Dropdown */}
+                <div className="mt-6 space-y-2">
+                  <Label className="text-sm font-semibold text-slate-700">
+                    Manual Selection
+                  </Label>
+                  <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
+                    <SelectTrigger className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Choose specific body part..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bodyPartsOptions.map((part) => (
+                        <SelectItem key={part.value} value={part.value}>{part.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* File Upload Card */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3">
+                  <Upload className="w-6 h-6" />
+                  X-Ray Image Upload
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer hover:bg-slate-50 ${isDragging
+                    ? "border-blue-500 bg-blue-50"
+                    : file
+                      ? "border-green-500 bg-green-50"
+                      : "border-slate-300"
+                    }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => document.getElementById('fileInput')?.click()}
+                >
+                  <input
+                    id="fileInput"
+                    type="file"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/jpg"
+                  />
+
+                  {file ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <CheckCircle className="w-16 h-16 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-semibold text-green-700">File Selected</p>
+                        <p className="text-slate-600 mt-1 break-all">{file.name}</p>
+                        <p className="text-sm text-slate-500 mt-1">
+                          {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile();
+                        }}
+                        variant="outline"
+                        className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Remove File
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <Upload className={`w-16 h-16 ${isDragging ? "text-blue-500" : "text-slate-400"}`} />
+                      </div>
+                      <div>
+                        <p className="text-lg font-semibold text-slate-700">
+                          Drag and drop your X-ray image
+                        </p>
+                        <p className="text-slate-500 mt-1">or click to browse</p>
+                      </div>
+                      <div className="text-sm text-slate-500">
+                        Supported formats: JPEG, PNG (Max 10MB)
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-8 flex justify-center gap-4">
+            <Button
+              size="lg"
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              disabled={!patientName || !selectedBodyPart || !file}
+            >
+              <CheckCircle className="w-5 h-5 mr-2" />
+              Save X-Ray Record
+            </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8 py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl"
+              onClick={() => {
+                setPatientName("");
+                setDateOfBirth("");
+                setRequestingDoctor("");
+                setClinicalIndication("");
+                setSelectedBodyPart("");
+                setFile(null);
+              }}
+            >
+              Reset Form
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

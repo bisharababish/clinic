@@ -279,7 +279,7 @@ export function Header() {
                             className="flex items-center gap-3 group transition-all duration-200 hover:scale-105"
                             onClick={(e) => {
                                 e.preventDefault();
-                                navigate('/');
+                                navigate('/home');
                             }}
                         >
 

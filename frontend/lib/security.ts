@@ -1,20 +1,63 @@
 // src/lib/security.ts
 import bcrypt from 'bcrypt';
 
-// Note: In production, you would need to implement proper password hashing
-// This is a simplified version for demonstration purposes
-
+// Password hashing utilities for production use
 export const hashPassword = async (password: string): Promise<string> => {
-  // For now, we're storing in plain text for testing
-  // In production, use bcrypt or similar:
-  // const salt = await bcrypt.genSalt(10);
-  // return bcrypt.hash(password, salt);
-  return password;
+  try {
+    const salt = await bcrypt.genSalt(12);
+    return await bcrypt.hash(password, salt);
+  } catch (error) {
+    // Password hashing failed
+    throw new Error('Password hashing failed');
+  }
 };
 
 export const verifyPassword = async (password: string, hash: string): Promise<boolean> => {
-  // For now, we're doing a simple comparison
-  // In production, use:
-  // return bcrypt.compare(password, hash);
-  return password === hash;
+  try {
+    return await bcrypt.compare(password, hash);
+  } catch (error) {
+    // Password verification failed
+    return false;
+  }
+};
+
+// Password strength validation
+export const validatePasswordStrength = (password: string): {
+  isValid: boolean;
+  errors: string[];
+} => {
+  const errors: string[] = [];
+
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  }
+
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  }
+
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  }
+
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push('Password must contain at least one special character');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+// Input sanitization
+export const sanitizeInput = (input: string): string => {
+  return input
+    .trim()
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .substring(0, 1000); // Limit length
 };

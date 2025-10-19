@@ -168,7 +168,7 @@ const AdminDashboardContent = () => {
                         variant: "destructive",
                     });
                     setTimeout(() => {
-                        navigate('/', { replace: true });
+                        navigate('/home', { replace: true });
                     }, 2000);
                     return;
                 }
@@ -265,7 +265,7 @@ const AdminDashboardContent = () => {
                     </Button>
                     <Button
                         variant="outline"
-                        onClick={() => navigate('/', { replace: true })}
+                        onClick={() => navigate('/home', { replace: true })}
                         className="w-full"
                     >
                         {t('admin.returnToHome') || 'Return to Home'}
@@ -326,7 +326,7 @@ const AdminDashboardContent = () => {
                     <p className="text-gray-500 mb-6">
                         {t('admin.contactAdministrator') || 'Contact your administrator for access'}
                     </p>
-                    <Button onClick={() => navigate('/')} variant="outline">
+                    <Button onClick={() => navigate('/home')} variant="outline">
                         {t('admin.returnToHome') || 'Return to Home'}
                     </Button>
                 </div>

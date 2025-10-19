@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  
+  <!-- Home Page -->
+  <url>
+    <loc>https://bethlehemmedcenter.com/</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Home/Dashboard Page -->
+  <url>
+    <loc>https://bethlehemmedcenter.com/home</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Authentication Pages -->
+  <url>
+    <loc>https://bethlehemmedcenter.com/auth</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://bethlehemmedcenter.com/auth/reset-password</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Main Service Pages -->
+  <url>
+    <loc>https://bethlehemmedcenter.com/clinics</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <url>
+    <loc>https://bethlehemmedcenter.com/payment</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://bethlehemmedcenter.com/confirmation</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Medical Services -->
+  <url>
+    <loc>https://bethlehemmedcenter.com/labs</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://bethlehemmedcenter.com/xray</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Doctor Portal -->
+  <url>
+    <loc>https://bethlehemmedcenter.com/doctor/labs</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://bethlehemmedcenter.com/doctor/xray</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://bethlehemmedcenter.com/doctor/patients</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Patient Portal -->
+  <url>
+    <loc>https://bethlehemmedcenter.com/patient/dashboard</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Admin Portal -->
+  <url>
+    <loc>https://bethlehemmedcenter.com/admin</loc>
+    <lastmod>2024-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+</urlset>

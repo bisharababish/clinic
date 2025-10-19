@@ -9,6 +9,7 @@ import { Skeleton } from "./components/ui/skeleton";
 import CookieConsent from "react-cookie-consent";
 import { useLegalModals, PrivacyPolicyModal } from "./components/modals/LegalModals";
 import { useScrollToTop } from "./hooks/useScrollToTop";
+import { HelmetProvider } from "react-helmet-async";
 
 // Scroll to top component that works inside Router context
 function ScrollToTop() {
@@ -81,7 +82,7 @@ function App() {
   const { privacyOpen, openPrivacy, closePrivacy } = useLegalModals();
 
   return (
-    <>
+    <HelmetProvider>
       <AuthProvider>
         <AdminStateProvider>
           <GlobalErrorBoundary>
@@ -99,9 +100,15 @@ function App() {
                   <Route path="/auth/reset-password" element={<ResetPassword />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
 
-                  {/* Main routes */}
+                  {/* Root route - redirect to auth */}
                   <Route
                     path="/"
+                    element={<Auth />}
+                  />
+
+                  {/* Home/Dashboard route */}
+                  <Route
+                    path="/home"
                     element={
                       <MainLayout>
                         <Index />
@@ -254,7 +261,7 @@ function App() {
         </button>
       </CookieConsent>
       <PrivacyPolicyModal isOpen={privacyOpen} onClose={closePrivacy} />
-    </>
+    </HelmetProvider>
   );
 }
 

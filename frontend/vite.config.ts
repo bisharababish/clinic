@@ -36,19 +36,25 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       external: [],
-      output: {}
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
+          supabase: ['@supabase/supabase-js'],
+        }
+      }
     },
-    // Increase chunk size warning limit since we're optimizing
     chunkSizeWarningLimit: 1000,
     copyPublicDir: true,
-    // Add this to ensure proper environment handling
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: false,
+        drop_console: true, // Remove console.log in production
         drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'], // Remove these functions
       },
     },
+    sourcemap: false, // Disable sourcemaps in production
   },
   base: '/',
   publicDir: 'public'

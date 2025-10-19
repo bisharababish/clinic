@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "../hooks/useAuth";
+import SEOHead from "../src/components/seo/SEOHead";
 import { useNavigate } from "react-router-dom";
 import { getDefaultRouteForRole } from "../lib/rolePermissions";
 import { supabase } from "../lib/supabase";
@@ -1014,301 +1015,309 @@ const Labs = () => {
   }
 
   return (
-    <div className={cn("min-h-screen bg-background text-foreground", isRTL ? 'rtl' : 'ltr')} dir={isRTL ? 'rtl' : 'ltr'}>
-      <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            {t('labs.title') || 'Laboratory Management'}
-          </h1>
+    <>
+      <SEOHead
+        title="Laboratory Management - Bethlehem Medical Center"
+        description="Comprehensive laboratory management system at Bethlehem Medical Center. Manage lab results, patient testing, and medical laboratory services."
+        keywords="laboratory management, lab results, medical testing, Bethlehem Medical Center, laboratory services, patient testing"
+        url="https://bethlehemmedcenter.com/labs"
+      />
+      <div className={cn("min-h-screen bg-background text-foreground", isRTL ? 'rtl' : 'ltr')} dir={isRTL ? 'rtl' : 'ltr'}>
+        <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              {t('labs.title') || 'Laboratory Management'}
+            </h1>
 
-          {error && (
-            <Alert variant="destructive" className="mt-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{t('error') || 'Error'}</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            {error && (
+              <Alert variant="destructive" className="mt-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>{t('error') || 'Error'}</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
 
 
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>
-                {t('labs.labTestInformation') || 'Lab Test Information'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>
+                  {t('labs.labTestInformation') || 'Lab Test Information'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-                  {/* Patient Selection */}
-                  <div className="md:col-span-2">
-                    <Label htmlFor="patientSelect">
-                      {isRTL ? 'اختر المريض' : 'Select Patient'}
-                    </Label>
-                    <Select
-                      onValueChange={(value) => handlePatientSelect(value)}
-                      value={selectedPatient?.userid.toString() || ""}
-                      disabled={isLoading}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    >
-                      <SelectTrigger id="patientSelect" className="w-full">
-                        <SelectValue placeholder={
-                          isLoading
-                            ? (isRTL ? 'جاري تحميل المرضى...' : 'Loading patients...')
-                            : (isRTL ? 'اختر مريضاً' : 'Choose a patient')
-                        } />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.map((patient) => {
-                          const displayName = isRTL
-                            ? (patient.arabic_username_a || patient.english_username_a)
-                            : (patient.english_username_a || patient.arabic_username_a);
-
-                          return (
-                            <SelectItem key={patient.userid} value={patient.userid.toString()}>
-                              {displayName} - {patient.user_email}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {/* Patient Name (Read-only) */}
-                  <div>
-                    <Label htmlFor="patientName">{isRTL ? 'اسم المريض' : 'Patient Name'}</Label>
-                    <Input
-                      id="patientName"
-                      name="patientName"
-                      type="text"
-                      value={labData.patientName}
-                      readOnly
-                      placeholder={isRTL ? 'اختر مريضاً أولاً' : 'Select a patient first'}
-                    />
-                  </div>
-
-                  {/* Patient Email (Read-only) */}
-                  <div>
-                    <Label htmlFor="patientEmail">{isRTL ? 'البريد الإلكتروني للمريض' : 'Patient Email'}</Label>
-                    <Input
-                      id="patientEmail"
-                      name="patientEmail"
-                      type="email"
-                      value={labData.patientEmail}
-                      readOnly
-                      placeholder={isRTL ? 'البريد الإلكتروني للمريض' : 'Patient email'}
-                    />
-                  </div>
-
-                  {/* Date of Birth (Read-only) */}
-                  <div>
-                    <Label htmlFor="dateOfBirth">{isRTL ? 'تاريخ الميلاد' : 'Date of Birth'}</Label>
-                    <Input
-                      id="dateOfBirth"
-                      name="dateOfBirth"
-                      type="date"
-                      value={labData.dateOfBirth}
-                      readOnly
-                    />
-                  </div>
-
-                  {/* Blood Type - Select dropdown with Arabic translations */}
-                  <div>
-                    <Label htmlFor="bloodType">{isRTL ? 'فصيلة الدم' : 'Blood Type'}</Label>
-                    <Select
-                      onValueChange={handleBloodTypeChange}
-                      value={labData.bloodType || "not_specified"}
-                      disabled={isLoading}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    >
-                      <SelectTrigger id="bloodType" className="w-full">
-                        <SelectValue placeholder={isRTL ? 'اختر فصيلة الدم' : 'Select blood type'} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not_specified">
-                          {isRTL ? 'غير محدد' : 'Not specified'}
-                        </SelectItem>
-                        <SelectItem value="A+">
-                          {isRTL ? 'أ+' : 'A+'}
-                        </SelectItem>
-                        <SelectItem value="A-">
-                          {isRTL ? 'أ-' : 'A-'}
-                        </SelectItem>
-                        <SelectItem value="B+">
-                          {isRTL ? 'ب+' : 'B+'}
-                        </SelectItem>
-                        <SelectItem value="B-">
-                          {isRTL ? 'ب-' : 'B-'}
-                        </SelectItem>
-                        <SelectItem value="AB+">
-                          {isRTL ? 'أب+' : 'AB+'}
-                        </SelectItem>
-                        <SelectItem value="AB-">
-                          {isRTL ? 'أب-' : 'AB-'}
-                        </SelectItem>
-                        <SelectItem value="O+">
-                          {isRTL ? 'و+' : 'O+'}
-                        </SelectItem>
-                        <SelectItem value="O-">
-                          {isRTL ? 'و-' : 'O-'}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Test Date */}
-                  <div>
-                    <Label htmlFor="testDate">{isRTL ? 'تاريخ الفحص' : 'Test Date'}</Label>
-                    <input
-                      id="testDate"
-                      name="testDate"
-                      type="date"
-                      value={labData.testDate}
-                      onChange={handleChange}
-                      required
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    />
-                  </div>
-
-                  {/* Test Type */}
-                  <div className="md:col-span-2">
-                    <Label htmlFor="testType">{isRTL ? 'نوع الفحص' : 'Test Type'}</Label>
-                    <Input
-                      id="testType"
-                      name="testType"
-                      type="text"
-                      value={labData.testType}
-                      onChange={handleChange}
-                      placeholder={isRTL ? 'أدخل نوع الفحص (مثل: فحص الدم)' : 'Enter test type (e.g., Blood Test)'}
-                      required
-                    />
-                  </div>
-                  {/* Test Results */}
-                  {isClient && testResultsEditor && (
+                    {/* Patient Selection */}
                     <div className="md:col-span-2">
-                      <Label id="testResults-label">{isRTL ? 'نتائج الفحص' : 'Test Results'}</Label>
-                      <TiptapToolbar editor={testResultsEditor} isRTL={isRTL} />
-                      <EditorContent editor={testResultsEditor} className="tiptap-editor" aria-labelledby="testResults-label" />
+                      <Label htmlFor="patientSelect">
+                        {isRTL ? 'اختر المريض' : 'Select Patient'}
+                      </Label>
+                      <Select
+                        onValueChange={(value) => handlePatientSelect(value)}
+                        value={selectedPatient?.userid.toString() || ""}
+                        disabled={isLoading}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      >
+                        <SelectTrigger id="patientSelect" className="w-full">
+                          <SelectValue placeholder={
+                            isLoading
+                              ? (isRTL ? 'جاري تحميل المرضى...' : 'Loading patients...')
+                              : (isRTL ? 'اختر مريضاً' : 'Choose a patient')
+                          } />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {patients.map((patient) => {
+                            const displayName = isRTL
+                              ? (patient.arabic_username_a || patient.english_username_a)
+                              : (patient.english_username_a || patient.arabic_username_a);
+
+                            return (
+                              <SelectItem key={patient.userid} value={patient.userid.toString()}>
+                                {displayName} - {patient.user_email}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  )}
-
-                  {/* Doctor Notes */}
-                  {userRole !== 'lab' && isClient && doctorNotesEditor && (
-                    <div className="md:col-span-2">
-                      <Label id="doctorNotes-label">{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</Label>
-                      <TiptapToolbar editor={doctorNotesEditor} isRTL={isRTL} />
-                      <EditorContent editor={doctorNotesEditor} className="tiptap-editor" aria-labelledby="doctorNotes-label" />
+                    {/* Patient Name (Read-only) */}
+                    <div>
+                      <Label htmlFor="patientName">{isRTL ? 'اسم المريض' : 'Patient Name'}</Label>
+                      <Input
+                        id="patientName"
+                        name="patientName"
+                        type="text"
+                        value={labData.patientName}
+                        readOnly
+                        placeholder={isRTL ? 'اختر مريضاً أولاً' : 'Select a patient first'}
+                      />
                     </div>
-                  )}
 
-                  {/* File Upload */}
-                  <div className="md:col-span-2">
-                    <Label>{isRTL ? 'المرفقات' : 'Attachments'}</Label>
-                    <FileUpload
-                      onFilesSelected={handleFilesSelected}
-                      selectedFiles={selectedFiles}
-                      onFileRemove={handleFileRemove}
-                      maxFiles={5}
-                      maxFileSize={10 * 1024 * 1024} // 10MB
-                      disabled={isLoading || isUploading}
-                    />
-                  </div>
+                    {/* Patient Email (Read-only) */}
+                    <div>
+                      <Label htmlFor="patientEmail">{isRTL ? 'البريد الإلكتروني للمريض' : 'Patient Email'}</Label>
+                      <Input
+                        id="patientEmail"
+                        name="patientEmail"
+                        type="email"
+                        value={labData.patientEmail}
+                        readOnly
+                        placeholder={isRTL ? 'البريد الإلكتروني للمريض' : 'Patient email'}
+                      />
+                    </div>
 
-                  {/* Upload Progress */}
-                  {uploadProgress.length > 0 && (
+                    {/* Date of Birth (Read-only) */}
+                    <div>
+                      <Label htmlFor="dateOfBirth">{isRTL ? 'تاريخ الميلاد' : 'Date of Birth'}</Label>
+                      <Input
+                        id="dateOfBirth"
+                        name="dateOfBirth"
+                        type="date"
+                        value={labData.dateOfBirth}
+                        readOnly
+                      />
+                    </div>
+
+                    {/* Blood Type - Select dropdown with Arabic translations */}
+                    <div>
+                      <Label htmlFor="bloodType">{isRTL ? 'فصيلة الدم' : 'Blood Type'}</Label>
+                      <Select
+                        onValueChange={handleBloodTypeChange}
+                        value={labData.bloodType || "not_specified"}
+                        disabled={isLoading}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      >
+                        <SelectTrigger id="bloodType" className="w-full">
+                          <SelectValue placeholder={isRTL ? 'اختر فصيلة الدم' : 'Select blood type'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="not_specified">
+                            {isRTL ? 'غير محدد' : 'Not specified'}
+                          </SelectItem>
+                          <SelectItem value="A+">
+                            {isRTL ? 'أ+' : 'A+'}
+                          </SelectItem>
+                          <SelectItem value="A-">
+                            {isRTL ? 'أ-' : 'A-'}
+                          </SelectItem>
+                          <SelectItem value="B+">
+                            {isRTL ? 'ب+' : 'B+'}
+                          </SelectItem>
+                          <SelectItem value="B-">
+                            {isRTL ? 'ب-' : 'B-'}
+                          </SelectItem>
+                          <SelectItem value="AB+">
+                            {isRTL ? 'أب+' : 'AB+'}
+                          </SelectItem>
+                          <SelectItem value="AB-">
+                            {isRTL ? 'أب-' : 'AB-'}
+                          </SelectItem>
+                          <SelectItem value="O+">
+                            {isRTL ? 'و+' : 'O+'}
+                          </SelectItem>
+                          <SelectItem value="O-">
+                            {isRTL ? 'و-' : 'O-'}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Test Date */}
+                    <div>
+                      <Label htmlFor="testDate">{isRTL ? 'تاريخ الفحص' : 'Test Date'}</Label>
+                      <input
+                        id="testDate"
+                        name="testDate"
+                        type="date"
+                        value={labData.testDate}
+                        onChange={handleChange}
+                        required
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+
+                    {/* Test Type */}
                     <div className="md:col-span-2">
-                      <Label>{isRTL ? 'تقدم التحميل' : 'Upload Progress'}</Label>
-                      <div className="space-y-2">
-                        {uploadProgress.map((progress, index) => (
-                          <div key={index} className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">{progress.file.name}</p>
-                              <div className="w-full bg-background rounded-full h-2 mt-1">
-                                <div
-                                  className={`h-2 rounded-full transition-all duration-300 ${progress.status === 'completed' ? 'bg-green-500' : progress.status === 'error' ? 'bg-red-500' : 'bg-primary'}`}
-                                  style={{ width: `${progress.progress}%` }}
-                                />
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {progress.status === 'completed' ? 'Completed' : progress.status === 'error' ? progress.error : `${progress.progress}%`}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                      <Label htmlFor="testType">{isRTL ? 'نوع الفحص' : 'Test Type'}</Label>
+                      <Input
+                        id="testType"
+                        name="testType"
+                        type="text"
+                        value={labData.testType}
+                        onChange={handleChange}
+                        placeholder={isRTL ? 'أدخل نوع الفحص (مثل: فحص الدم)' : 'Enter test type (e.g., Blood Test)'}
+                        required
+                      />
+                    </div>
+                    {/* Test Results */}
+                    {isClient && testResultsEditor && (
+                      <div className="md:col-span-2">
+                        <Label id="testResults-label">{isRTL ? 'نتائج الفحص' : 'Test Results'}</Label>
+                        <TiptapToolbar editor={testResultsEditor} isRTL={isRTL} />
+                        <EditorContent editor={testResultsEditor} className="tiptap-editor" aria-labelledby="testResults-label" />
                       </div>
-                    </div>
-                  )}
-                  {/* Saved Attachments */}
-                  {attachments.length > 0 && (
+                    )}
+
+                    {/* Doctor Notes */}
+                    {userRole !== 'lab' && isClient && doctorNotesEditor && (
+                      <div className="md:col-span-2">
+                        <Label id="doctorNotes-label">{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</Label>
+                        <TiptapToolbar editor={doctorNotesEditor} isRTL={isRTL} />
+                        <EditorContent editor={doctorNotesEditor} className="tiptap-editor" aria-labelledby="doctorNotes-label" />
+                      </div>
+                    )}
+
+                    {/* File Upload */}
                     <div className="md:col-span-2">
-                      <Label>{isRTL ? 'المرفقات المحفوظة' : 'Saved Attachments'}</Label>
-                      <div className="space-y-2">
-                        {attachments.map((attachment) => (
-                          <div key={attachment.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                            <div className="flex items-center space-x-3">
-                              <File className="w-4 h-4" />
-                              <div>
-                                <p className="text-sm font-medium">{attachment.file_name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {formatFileSize(attachment.file_size)} • {new Date(attachment.created_at).toLocaleDateString()}
+                      <Label>{isRTL ? 'المرفقات' : 'Attachments'}</Label>
+                      <FileUpload
+                        onFilesSelected={handleFilesSelected}
+                        selectedFiles={selectedFiles}
+                        onFileRemove={handleFileRemove}
+                        maxFiles={5}
+                        maxFileSize={10 * 1024 * 1024} // 10MB
+                        disabled={isLoading || isUploading}
+                      />
+                    </div>
+
+                    {/* Upload Progress */}
+                    {uploadProgress.length > 0 && (
+                      <div className="md:col-span-2">
+                        <Label>{isRTL ? 'تقدم التحميل' : 'Upload Progress'}</Label>
+                        <div className="space-y-2">
+                          {uploadProgress.map((progress, index) => (
+                            <div key={index} className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{progress.file.name}</p>
+                                <div className="w-full bg-background rounded-full h-2 mt-1">
+                                  <div
+                                    className={`h-2 rounded-full transition-all duration-300 ${progress.status === 'completed' ? 'bg-green-500' : progress.status === 'error' ? 'bg-red-500' : 'bg-primary'}`}
+                                    style={{ width: `${progress.progress}%` }}
+                                  />
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {progress.status === 'completed' ? 'Completed' : progress.status === 'error' ? progress.error : `${progress.progress}%`}
                                 </p>
                               </div>
                             </div>
-                            <div className="flex space-x-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDownloadFile(attachment)}
-                                className="text-primary hover:text-primary/80"
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteAttachment(attachment)}
-                                className="text-destructive hover:text-destructive/80"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
+                    {/* Saved Attachments */}
+                    {attachments.length > 0 && (
+                      <div className="md:col-span-2">
+                        <Label>{isRTL ? 'المرفقات المحفوظة' : 'Saved Attachments'}</Label>
+                        <div className="space-y-2">
+                          {attachments.map((attachment) => (
+                            <div key={attachment.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                              <div className="flex items-center space-x-3">
+                                <File className="w-4 h-4" />
+                                <div>
+                                  <p className="text-sm font-medium">{attachment.file_name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatFileSize(attachment.file_size)} • {new Date(attachment.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDownloadFile(attachment)}
+                                  className="text-primary hover:text-primary/80"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteAttachment(attachment)}
+                                  className="text-destructive hover:text-destructive/80"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* Success message */}
+                  {isSaved && (
+                    <Alert variant="default" className="bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200">
+                      <CheckCircle className="h-4 w-4" />
+                      <AlertTitle>{t('success') || 'Success'}</AlertTitle>
+                      <AlertDescription>
+                        {t('labs.saveSuccess') || 'Lab results saved successfully!'}
+                      </AlertDescription>
+                    </Alert>
                   )}
-                </div>
-                {/* Success message */}
-                {isSaved && (
-                  <Alert variant="default" className="bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200">
-                    <CheckCircle className="h-4 w-4" />
-                    <AlertTitle>{t('success') || 'Success'}</AlertTitle>
-                    <AlertDescription>
-                      {t('labs.saveSuccess') || 'Lab results saved successfully!'}
-                    </AlertDescription>
-                  </Alert>
-                )}
-                {/* Submit button */}
-                <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    disabled={isLoading || !selectedPatient}
-                    className="w-full sm:w-auto"
-                  >
-                    {isLoading
-                      ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
-                      : (isRTL ? 'حفظ نتائج المختبر' : 'Save Lab Results')
-                    }
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    </div>
+                  {/* Submit button */}
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      disabled={isLoading || !selectedPatient}
+                      className="w-full sm:w-auto"
+                    >
+                      {isLoading
+                        ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
+                        : (isRTL ? 'حفظ نتائج المختبر' : 'Save Lab Results')
+                      }
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    </>
   );
 };
 
