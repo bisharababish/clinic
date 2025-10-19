@@ -30,7 +30,7 @@ import { Switch } from "../../../components/ui/switch";
 import { useEffect } from 'react';
 
 interface UserInfo {
-    user_id: string;
+    user_id?: string; // Optional field for auth integration
     userid: number;
     user_email: string;
     english_username_a: string;

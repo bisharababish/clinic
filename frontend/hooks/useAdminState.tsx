@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
 // Complete interfaces
 interface UserInfo {
+    user_id?: string; // Optional field for auth integration
     userid: number;
     user_email: string;
     english_username_a: string;

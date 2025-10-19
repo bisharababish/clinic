@@ -1,5 +1,5 @@
 // lib/supabase.ts - Updated configuration
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -8,32 +8,19 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 console.log('Supabase URL:', supabaseUrl);
 console.log('Supabase Key (first 10 chars):', supabaseAnonKey?.substring(0, 10) + '...');
 
-let supabase: any;
+let supabase: SupabaseClient;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables!');
   console.error('VITE_SUPABASE_URL:', !!supabaseUrl);
   console.error('VITE_SUPABASE_ANON_KEY:', !!supabaseAnonKey);
   console.error('Available env vars:', Object.keys(import.meta.env));
-  
+
   // In production, try to use fallback values or show a more user-friendly error
   if (import.meta.env.PROD) {
     console.error('Running in production mode but missing Supabase config');
-    // Don't throw error in production, create a mock client instead
-    supabase = {
-      from: () => ({
-        select: () => ({ data: [], error: { message: 'Supabase configuration missing' } }),
-        insert: () => ({ data: null, error: { message: 'Supabase configuration missing' } }),
-        update: () => ({ data: null, error: { message: 'Supabase configuration missing' } }),
-        delete: () => ({ data: null, error: { message: 'Supabase configuration missing' } })
-      }),
-      auth: {
-        getSession: () => Promise.resolve({ data: { session: null }, error: { message: 'Supabase configuration missing' } }),
-        signIn: () => Promise.resolve({ data: null, error: { message: 'Supabase configuration missing' } }),
-        signOut: () => Promise.resolve({ error: { message: 'Supabase configuration missing' } }),
-        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
-      }
-    };
+    // Create a minimal client with dummy values to prevent crashes
+    supabase = createClient('https://dummy.supabase.co', 'dummy-key');
   } else {
     throw new Error('Missing Supabase URL or Anonymous Key');
   }
