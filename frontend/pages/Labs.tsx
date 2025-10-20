@@ -42,6 +42,8 @@ import Image from '@tiptap/extension-image';
 import { LanguageContext } from '../components/contexts/LanguageContext';
 import type { Editor } from '@tiptap/react';
 import './LabsTiptap.css';
+import { offlineDataAccess } from '../lib/offlineDataAccess';
+import { handleOfflineError, isOfflineError } from '../lib/offlineErrorHandler';
 
 interface Patient {
   userid: number;
@@ -476,7 +478,19 @@ const Labs = () => {
 
     } catch (error) {
       console.error('Error fetching patients:', error);
-      setError(`Failed to load patients: ${error.message}`);
+
+      // Handle offline errors
+      if (isOfflineError(error as Error)) {
+        const offlineResult = handleOfflineError(error as Error, 'patients');
+        if (offlineResult.shouldShowOfflineMessage) {
+          setError(offlineResult.errorMessage);
+          setPatients(offlineResult.offlineData);
+        } else {
+          setError(`Failed to load patients: ${error.message}`);
+        }
+      } else {
+        setError(`Failed to load patients: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
       isFetchingRef.current = false;

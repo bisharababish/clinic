@@ -16,6 +16,8 @@ import { useToast } from "../hooks/use-toast";
 import { Link } from "react-router-dom";
 import { supabaseClient as supabase } from "../lib/supabase";
 import "./styles/index.css";
+import { offlineDataAccess } from '../lib/offlineDataAccess';
+import { handleOfflineError, isOfflineError } from '../lib/offlineErrorHandler';
 import {
   EyeIcon,
   EyeOffIcon,
@@ -693,11 +695,29 @@ const Index = () => {
     } catch (error) {
       console.error('❌ Error loading all patients:', error);
 
-      toast({
-        title: isRTL ? "خطأ في تحميل المرضى" : "Error Loading Patients",
-        description: t('usersManagement.failedToLoadPatientList'),
-        variant: "destructive",
-      });
+      // Handle offline errors
+      if (isOfflineError(error as Error)) {
+        const offlineResult = handleOfflineError(error as Error, 'patients');
+        if (offlineResult.shouldShowOfflineMessage) {
+          toast({
+            title: isRTL ? "استخدام البيانات المحفوظة" : "Using Cached Data",
+            description: offlineResult.errorMessage,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: isRTL ? "خطأ في تحميل المرضى" : "Error Loading Patients",
+            description: t('usersManagement.failedToLoadPatientList'),
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: isRTL ? "خطأ في تحميل المرضى" : "Error Loading Patients",
+          description: t('usersManagement.failedToLoadPatientList'),
+          variant: "destructive",
+        });
+      }
 
       setPatientLogs(prev => [...prev, {
         key: 'errorLoadingPatientList',
