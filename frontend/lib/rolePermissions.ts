@@ -243,6 +243,6 @@ export const getDefaultRouteForRole = (role: string): string => {
     case 'nurse':
     case 'patient':
     default:
-      return '/'; // Default to home for roles that can access it
+      return '/home'; // ✅ FIXED: Default to /home instead of / to avoid redirect loops
   }
 };

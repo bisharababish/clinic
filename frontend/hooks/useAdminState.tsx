@@ -4,8 +4,9 @@ import { supabaseClient as supabase } from '../lib/supabase';
 import { useToast } from './use-toast';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
+import { offlineAuthManager } from '../lib/offlineAuth';
 // Complete interfaces
-interface UserInfo {
+export interface UserInfo {
     user_id?: string; // Optional field for auth integration
     userid: number;
     user_email: string;
@@ -23,6 +24,20 @@ interface UserInfo {
     date_of_birth?: string;
     gender_user?: string;
     created_at?: string;
+    // Additional fields from database schema
+    blood_type?: string;
+    phone_number?: string;
+    address?: string;
+    medical_history?: string;
+    allergies?: string;
+    emergency_contact?: string;
+    emergency_phone?: string;
+    social_situation?: string;
+    unique_patient_id?: string;
+    user_password?: string;
+    pdated_at?: string;
+    updated_at?: string;
+    id?: string; // auth user UUID from auth.users table
 }
 
 interface ClinicInfo {
@@ -127,7 +142,7 @@ const AdminStateContext = createContext<AdminStateContextType | undefined>(undef
 
 export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { i18n } = useTranslation();
-    const { user } = useAuth();
+    const { user, isOfflineMode } = useAuth();
     const isRTL = i18n.language === 'ar'
     const [users, setUsers] = useState<UserInfo[]>([]);
     const [clinics, setClinics] = useState<ClinicInfo[]>([]);
@@ -147,6 +162,30 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
     const CACHE_DURATION = 20 * 60 * 1000; // 20 minutes (active session)
     const SESSION_EXTENSION_THRESHOLD = 2 * 60 * 1000; // 2 minutes (extend 2 minutes before cache expires)
     const SESSION_EXTENSION_DURATION = 20 * 60 * 1000; // 20 minutes (extended session length)
+
+    // Detect offline
+    const isOffline = isOfflineMode || (typeof navigator !== 'undefined' && !navigator.onLine);
+
+    // Helper: load cached data from offline auth
+    const loadFromCache = (keys: Array<'patients' | 'clinics' | 'doctors' | 'appointments'>) => {
+        const cached = offlineAuthManager.getCachedData() || {} as any;
+        if (keys.includes('patients')) {
+            setUsers((cached.patients || []) as unknown as UserInfo[]);
+            setLastUpdated(prev => ({ ...prev, users: Date.now() }));
+        }
+        if (keys.includes('clinics')) {
+            setClinics((cached.clinics || []) as ClinicInfo[]);
+            setLastUpdated(prev => ({ ...prev, clinics: Date.now() }));
+        }
+        if (keys.includes('doctors')) {
+            setDoctors((cached.doctors || []) as DoctorInfo[]);
+            setLastUpdated(prev => ({ ...prev, doctors: Date.now() }));
+        }
+        if (keys.includes('appointments')) {
+            setAppointments((cached.appointments || []) as AppointmentInfo[]);
+            setLastUpdated(prev => ({ ...prev, appointments: Date.now() }));
+        }
+    };
     useEffect(() => {
         const interval = setInterval(() => {
             if (activeOperationsRef.current.size > 0) {
@@ -199,6 +238,12 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         updateLoadingState();
 
         try {
+            // Offline fallback
+            if (isOffline) {
+                console.log('📦 Offline mode detected - loading users from cache');
+                loadFromCache(['patients']);
+                return;
+            }
             console.log('🔄 Loading users...');
             console.log('Supabase client:', !!supabase);
             console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
@@ -237,7 +282,37 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             // Ultra-optimized query - only essential fields for Overview tab
             const { data, error } = await supabase
                 .from('userinfo')
-                .select('userid, user_email, english_username_a, user_roles')
+                .select(`
+                    userid, 
+                    user_email, 
+                    english_username_a, 
+                    english_username_b,
+                    english_username_c,
+                    english_username_d,
+                    arabic_username_a,
+                    arabic_username_b,
+                    arabic_username_c,
+                    arabic_username_d,
+                    id_number,
+                    user_roles,
+                    user_phonenumber,
+                    date_of_birth,
+                    gender_user,
+                    created_at,
+                    blood_type,
+                    phone_number,
+                    address,
+                    medical_history,
+                    allergies,
+                    emergency_contact,
+                    emergency_phone,
+                    social_situation,
+                    unique_patient_id,
+                    user_password,
+                    pdated_at,
+                    updated_at,
+                    id
+                `)
                 .order('userid', { ascending: false })
                 .limit(100); // Limit to first 100 users for faster loading
 
@@ -317,6 +392,11 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         updateLoadingState();
 
         try {
+            if (isOffline) {
+                console.log('📦 Offline mode detected - loading clinics from cache');
+                loadFromCache(['clinics']);
+                return;
+            }
             console.log('🔄 Loading clinics...');
 
             // Optimized query - simplified select for faster loading
@@ -367,6 +447,11 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         updateLoadingState();
 
         try {
+            if (isOffline) {
+                console.log('📦 Offline mode detected - loading doctors from cache');
+                loadFromCache(['doctors']);
+                return;
+            }
             console.log('🔄 Loading doctors...');
 
             const { data, error } = await supabase
@@ -408,6 +493,11 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         updateLoadingState();
 
         try {
+            if (isOffline) {
+                console.log('📦 Offline mode detected - loading appointments from cache');
+                loadFromCache(['appointments']);
+                return;
+            }
             console.log('🔄 Loading appointments...');
 
             // Simplified query - only load from appointments table for better performance
@@ -476,6 +566,12 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         updateLoadingState();
 
         try {
+            if (isOffline) {
+                console.log('📦 Offline mode detected - loading categories from cache (none cached)');
+                setCategories([]);
+                setLastUpdated(prev => ({ ...prev, categories: Date.now() }));
+                return;
+            }
             console.log('🔄 Loading categories...');
 
             // Optimized query - only essential fields
@@ -581,6 +677,11 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             return;
         }
 
+        // Do not subscribe while offline
+        if (isOffline) {
+            console.log('📴 Offline - skipping realtime subscriptions');
+            return;
+        }
         console.log('🔗 Setting up optimized admin state subscriptions...');
         isSubscribedRef.current = true;
 
@@ -666,7 +767,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             debouncedOperations.current.clear();
             isSubscribedRef.current = false;
         };
-    }, []);
+    }, [isOffline]);
 
     // Initial data load - ULTRA-OPTIMIZED for fastest loading
     useEffect(() => {
@@ -684,21 +785,26 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             try {
                 console.log('📊 Loading initial admin data...');
 
-                // Load users first (most important for Overview tab)
-                await loadUsers(false);
-                console.log('✅ Users loaded - Overview tab can now display');
+                if (isOffline) {
+                    console.log('📦 Offline - populating state from cache');
+                    loadFromCache(['patients', 'clinics', 'doctors', 'appointments']);
+                } else {
+                    // Load users first (most important for Overview tab)
+                    await loadUsers(false);
+                    console.log('✅ Users loaded - Overview tab can now display');
 
-                // Load other data in parallel in background
-                Promise.all([
-                    loadClinics(false),
-                    loadDoctors(false),
-                    loadCategories(false),
-                    loadAppointments(false)
-                ]).then(() => {
-                    console.log('✅ All background data loaded');
-                }).catch(error => {
-                    console.error('❌ Background data failed:', error);
-                });
+                    // Load other data in parallel in background
+                    Promise.all([
+                        loadClinics(false),
+                        loadDoctors(false),
+                        loadCategories(false),
+                        loadAppointments(false)
+                    ]).then(() => {
+                        console.log('✅ All background data loaded');
+                    }).catch(error => {
+                        console.error('❌ Background data failed:', error);
+                    });
+                }
 
                 console.log('✅ Initial admin data loaded successfully');
             } catch (error) {
@@ -708,7 +814,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
         // Load immediately with no delay
         loadInitialData();
-    }, [user]); // Add user as dependency to trigger when user becomes available
+    }, [user, isOffline]); // Add user and offline state as dependency
 
     const value: AdminStateContextType = {
         // State

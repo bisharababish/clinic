@@ -12,12 +12,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "."),
     },
   },
-  define: {
-    // Fix for framer-motion and other libraries that check for DOM
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-    // Ensure proper environment variable access
-    'import.meta.env.DEV': JSON.stringify(process.env.NODE_ENV !== 'production'),
-  },
   server: {
     port: 3000,
     host: true,
@@ -55,6 +49,15 @@ export default defineConfig({
       },
     },
     sourcemap: false, // Disable sourcemaps in production
+  },
+  // Service Worker configuration
+  define: {
+    // Fix for framer-motion and other libraries that check for DOM
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    // Ensure proper environment variable access
+    'import.meta.env.DEV': JSON.stringify(process.env.NODE_ENV !== 'production'),
+    // Service Worker support
+    'import.meta.env.SW': JSON.stringify(true),
   },
   base: '/',
   publicDir: 'public'

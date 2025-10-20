@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabaseClient as supabase } from '../lib/supabase';
 import { SessionManager } from '../lib/sessionManager';
+import { offlineAuthManager } from '../lib/offlineAuth';
 
 export type UserRole = 'admin' | 'doctor' | 'secretary' | 'patient' | 'x ray' | 'xray' | 'x-ray' | 'lab' | 'nurse';
 
@@ -24,6 +25,11 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<User>;
     signup: (userData: SignupData) => Promise<void>;
     logout: () => Promise<void>;
+    // Offline authentication methods
+    isOfflineMode: boolean;
+    canLoginOffline: boolean;
+    loginOffline: (email: string, password: string) => Promise<User>;
+    storeOfflineAuth: (user: User, token: string, cachedData: any) => Promise<void>;
 }
 
 // Updated to include individual name fields
@@ -62,6 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
+    const [isOfflineMode, setIsOfflineMode] = useState(false);
 
     // Function to safely update user state and cache
     const updateUserState = (userData: User | null) => {
@@ -436,6 +443,67 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    // Offline authentication methods
+    const loginOffline = async (email: string, password: string): Promise<User> => {
+        setIsLoading(true);
+        setIsOfflineMode(true);
+
+        try {
+            console.log('Offline login attempt:', email);
+
+            // Check if offline auth is available
+            if (!offlineAuthManager.isOfflineAuthAvailable()) {
+                throw new Error('No offline authentication data available');
+            }
+
+            const authData = offlineAuthManager.getStoredAuthData();
+            if (!authData) {
+                throw new Error('Failed to load stored authentication data');
+            }
+
+            // Simple email verification
+            if (authData.user.email.toLowerCase() !== email.toLowerCase()) {
+                throw new Error('Invalid email address');
+            }
+
+            // Check if user has offline access
+            if (!offlineAuthManager.hasOfflineAccess()) {
+                throw new Error('You do not have permission for offline access');
+            }
+
+            // Create user object from stored data
+            const user: User = {
+                id: authData.user.id,
+                email: authData.user.email,
+                name: authData.user.name,
+                role: authData.user.role as UserRole
+            };
+
+            // Update user state
+            updateUserState(user);
+            console.log('Offline login successful:', user.email);
+
+            return user;
+        } catch (error) {
+            console.error('Offline login error:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const storeOfflineAuth = async (user: User, token: string, cachedData: any): Promise<void> => {
+        try {
+            await offlineAuthManager.storeOfflineAuth(user, token, cachedData);
+            console.log('Offline auth data stored for:', user.email);
+        } catch (error) {
+            console.error('Failed to store offline auth:', error);
+            throw error;
+        }
+    };
+
+    const canLoginOffline = offlineAuthManager.isOfflineAuthAvailable() && offlineAuthManager.hasOfflineAccess();
+
     // Modified to handle both the old and new field formats
     const signup = async (userData: SignupData) => {
         setIsLoading(true);
@@ -608,7 +676,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+        <AuthContext.Provider value={{
+            user,
+            isLoading,
+            login,
+            signup,
+            logout,
+            isOfflineMode,
+            canLoginOffline,
+            loginOffline,
+            storeOfflineAuth
+        }}>
             {children}
         </AuthContext.Provider>
     );

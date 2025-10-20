@@ -279,7 +279,12 @@ export function Header() {
                             className="flex items-center gap-3 group transition-all duration-200 hover:scale-105"
                             onClick={(e) => {
                                 e.preventDefault();
-                                navigate('/home');
+                                // For admin role, go to home page instead of admin dashboard
+                                if (effectiveRole === 'admin') {
+                                    navigate('/home');
+                                } else {
+                                    navigate(getDefaultRoute());
+                                }
                             }}
                         >
 
@@ -319,7 +324,21 @@ export function Header() {
                     <nav className="hidden lg:flex items-center gap-1 ml-8">
                         {canViewHome && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
-                                <Link to="/" className="font-medium">{t('navbar.home') || 'Home'}</Link>
+                                <Link
+                                    to="/home"
+                                    className="font-medium"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        // For admin role, go to home page instead of admin dashboard
+                                        if (effectiveRole === 'admin') {
+                                            navigate('/home');
+                                        } else {
+                                            navigate(getDefaultRoute());
+                                        }
+                                    }}
+                                >
+                                    {t('navbar.home') || 'Home'}
+                                </Link>
                             </Button>
                         )}
                         {canViewClinics && (
@@ -501,10 +520,15 @@ export function Header() {
                                     {canViewHome && (
                                         <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
                                             <Link
-                                                to="/"
+                                                to="/home"
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    handleMobileNavigation('/');
+                                                    // For admin role, go to home page instead of admin dashboard
+                                                    if (effectiveRole === 'admin') {
+                                                        handleMobileNavigation('/home');
+                                                    } else {
+                                                        handleMobileNavigation(getDefaultRoute());
+                                                    }
                                                 }}
                                                 className="font-medium"
                                             >

@@ -11,6 +11,9 @@ import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from "../components/ui/skeleton";
 import { hasPermission } from "../lib/rolePermissions";
+import OfflineIndicator from "../components/OfflineIndicator";
+import { useOfflineDataManager } from "../hooks/useOfflineDataManager";
+import { serviceWorkerManager } from "../lib/serviceWorker";
 
 // Lazy load components for better performance
 const ClinicManagement = lazy(() => import("./api/admin/ClinicManagement"));
@@ -41,6 +44,18 @@ const AdminDashboardContent = () => {
         extendSession,
         lastUpdated
     } = useAdminState();
+
+    // Offline data management
+    const {
+        isOnline,
+        isServiceWorkerActive,
+        cacheMedicalData,
+        isSyncing,
+        stopSync
+    } = useOfflineDataManager();
+
+    // Get offline auth methods
+    const { storeOfflineAuth, user: currentUser } = useAuth();
 
 
     const getDataAge = () => {
@@ -179,17 +194,12 @@ const AdminDashboardContent = () => {
                     const defaultTab = getDefaultTab();
                     setActiveTab(defaultTab);
 
-                    // If Overview is the default tab, ensure data is loaded
-                    if (defaultTab === 'overview') {
-                        console.log('🔄 Overview is default tab, ensuring data is loaded...');
-                        refreshAll();
-                    }
+                    // Always trigger data loading for admin dashboard
+                    console.log('🔄 Admin dashboard - triggering data load...');
+                    refreshAll();
                 }
 
                 console.log('✅ Admin dashboard initialized for role:', currentUserRole);
-
-                // Don't trigger heavy data loading here - let useAdminState handle it
-                // This prevents blocking the UI
 
             } catch (error) {
                 console.error('Error in dashboard initialization:', error);
@@ -208,6 +218,33 @@ const AdminDashboardContent = () => {
             refreshAll();
         }
     }, [activeTab, users.length, dataLoading, refreshAll]);
+
+    // Cache medical data for offline access when data is loaded
+    useEffect(() => {
+        if (isServiceWorkerActive && users.length > 0 && !dataLoading && currentUser) {
+            console.log('💾 Caching medical data for offline access...');
+
+            const medicalData = {
+                patients: users.filter(user => user.user_roles?.toLowerCase().includes('patient')),
+                appointments: appointments,
+                doctors: doctors,
+                clinics: clinics,
+            };
+
+            // Only cache if we have meaningful data
+            const hasData = Object.values(medicalData).some(data => data && data.length > 0);
+
+            if (hasData) {
+                // Cache the medical data
+                cacheMedicalData(medicalData);
+
+                // Store offline authentication data
+                storeOfflineAuth(currentUser, 'offline-token', medicalData).catch(error => {
+                    console.error('Failed to store offline auth:', error);
+                });
+            }
+        }
+    }, [users, appointments, doctors, clinics, dataLoading, isServiceWorkerActive, cacheMedicalData, currentUser, storeOfflineAuth]);
 
     // Handle tab changes with permission checking
     const handleTabChange = (newTab: string) => {
@@ -229,6 +266,12 @@ const AdminDashboardContent = () => {
         if (hasPermission) {
             setActiveTab(newTab);
             console.log('✅ Switched to tab:', newTab);
+
+            // Ensure data is loaded when switching to data-dependent tabs
+            if (['overview', 'users', 'clinics', 'doctors', 'appointments'].includes(newTab) && users.length === 0 && !dataLoading) {
+                console.log('🔄 Tab switch - ensuring data is loaded for:', newTab);
+                refreshAll();
+            }
         } else {
             const defaultTab = getDefaultTab();
             setActiveTab(defaultTab);
@@ -322,13 +365,41 @@ const AdminDashboardContent = () => {
                             </p>
                         </div>
                     )}
+                    {/* Offline indicator */}
+                    <div className="mt-2">
+                        <OfflineIndicator />
+                    </div>
                 </div>
 
-                {needsRefresh && (
-                    <Button onClick={extendSession} variant="outline" size="sm">
-                        🔄 {t('admin.refreshData') || 'Refresh Data'}
-                    </Button>
-                )}
+                <div className="flex items-center space-x-2">
+                    {needsRefresh && (
+                        <Button onClick={extendSession} variant="outline" size="sm">
+                            🔄 {t('admin.refreshData') || 'Refresh Data'}
+                        </Button>
+                    )}
+                    {/* Show syncing indicator */}
+                    {isSyncing && (
+                        <div className="flex items-center text-sm text-blue-600">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                            {i18n.language === 'ar' ? 'جاري المزامنة...' : 'Syncing...'}
+                            <button
+                                onClick={stopSync}
+                                className="ml-2 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                title={i18n.language === 'ar' ? 'إيقاف المزامنة' : 'Stop Sync'}
+                            >
+                                {i18n.language === 'ar' ? 'إيقاف' : 'Stop'}
+                            </button>
+                        </div>
+                    )}
+                    {/* Force Service Worker Update Button */}
+                    <button
+                        onClick={() => serviceWorkerManager.forceUpdate()}
+                        className="ml-2 px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
+                        title={i18n.language === 'ar' ? 'تحديث Service Worker' : 'Update Service Worker'}
+                    >
+                        🔄 {i18n.language === 'ar' ? 'تحديث' : 'Update SW'}
+                    </button>
+                </div>
             </div>
             {!hasAccessibleTabs ? (
                 <div className="text-center py-12">
@@ -470,7 +541,13 @@ const AdminDashboardContent = () => {
                     {/* OVERVIEW TAB */}
                     {canViewOverviewTab && (
                         <TabsContent value="overview" className="pt-6">
-                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                            <Suspense fallback={
+                                <div className="space-y-4">
+                                    <Skeleton className="h-8 w-1/4" />
+                                    <Skeleton className="h-64 w-full" />
+                                    <Skeleton className="h-32 w-full" />
+                                </div>
+                            }>
                                 <OverviewManagement
                                     users={users}
                                     clinics={clinics.map(clinic => ({ ...clinic, isActive: true }))}
