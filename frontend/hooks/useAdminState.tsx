@@ -5,6 +5,7 @@ import { useToast } from './use-toast';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './useAuth';
 import { offlineAuthManager } from '../lib/offlineAuth';
+import { handleOfflineError, isOfflineError } from '../lib/offlineErrorHandler';
 // Complete interfaces
 export interface UserInfo {
     user_id?: string; // Optional field for auth integration
@@ -413,7 +414,20 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             console.log(`✅ Loaded ${data?.length || 0} clinics`);
         } catch (error: unknown) {
             console.error('❌ Failed to load clinics:', error);
-            setError('Failed to load clinics: ' + (error instanceof Error ? error.message : String(error)));
+
+            // Handle offline errors
+            if (isOfflineError(error as Error)) {
+                const offlineResult = handleOfflineError(error as Error, 'clinics');
+                if (offlineResult.shouldShowOfflineMessage) {
+                    setError(offlineResult.errorMessage);
+                    setClinics(offlineResult.offlineData);
+                } else {
+                    setError('Failed to load clinics: ' + (error instanceof Error ? error.message : String(error)));
+                }
+            } else {
+                setError('Failed to load clinics: ' + (error instanceof Error ? error.message : String(error)));
+            }
+
             // Don't show toast for initial load to avoid UI blocking
             if (forceRefresh) {
                 toast({
@@ -466,7 +480,19 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             console.log(`✅ Loaded ${data?.length || 0} doctors`);
         } catch (error: unknown) {
             console.error('❌ Failed to load doctors:', error);
-            setError('Failed to load doctors: ' + (error instanceof Error ? error.message : String(error)));
+
+            // Handle offline errors
+            if (isOfflineError(error as Error)) {
+                const offlineResult = handleOfflineError(error as Error, 'doctors');
+                if (offlineResult.shouldShowOfflineMessage) {
+                    setError(offlineResult.errorMessage);
+                    setDoctors(offlineResult.offlineData);
+                } else {
+                    setError('Failed to load doctors: ' + (error instanceof Error ? error.message : String(error)));
+                }
+            } else {
+                setError('Failed to load doctors: ' + (error instanceof Error ? error.message : String(error)));
+            }
         } finally {
             activeOperationsRef.current.delete(operationId);
             updateLoadingState();
@@ -539,7 +565,19 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             console.log(`✅ Loaded ${mappedAppointments.length} appointments`);
         } catch (error: unknown) {
             console.error('❌ Failed to load appointments:', error);
-            setError('Failed to load appointments: ' + (error instanceof Error ? error.message : String(error)));
+
+            // Handle offline errors
+            if (isOfflineError(error as Error)) {
+                const offlineResult = handleOfflineError(error as Error, 'appointments');
+                if (offlineResult.shouldShowOfflineMessage) {
+                    setError(offlineResult.errorMessage);
+                    setAppointments(offlineResult.offlineData);
+                } else {
+                    setError('Failed to load appointments: ' + (error instanceof Error ? error.message : String(error)));
+                }
+            } else {
+                setError('Failed to load appointments: ' + (error instanceof Error ? error.message : String(error)));
+            }
         } finally {
             activeOperationsRef.current.delete(operationId);
             updateLoadingState();
