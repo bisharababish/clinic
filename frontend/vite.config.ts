@@ -40,15 +40,9 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000,
     copyPublicDir: true,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Remove console.log in production
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'], // Remove these functions
-      },
-    },
+    minify: 'esbuild', // ⚡ MUCH faster than terser
     sourcemap: false, // Disable sourcemaps in production
+    // Remove terser options for faster build
   },
   // Service Worker configuration
   define: {
