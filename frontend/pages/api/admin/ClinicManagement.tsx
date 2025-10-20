@@ -36,6 +36,8 @@ import {
     AlertDialogTitle,
 } from "../../../components/ui/alert-dialog";
 import { useAdminState } from "../../../hooks/useAdminState";
+import { useOfflineDataContext } from "../../../components/OfflineDataProvider";
+import { handleOfflineError, isOfflineError } from "../../../lib/offlineErrorHandler";
 
 interface ClinicInfo {
     id: string;
@@ -85,6 +87,13 @@ const ClinicManagement = () => {
         loadClinics,
         loadCategories,
     } = useAdminState();
+
+    // ✅ Add offline data support
+    const { clinics: offlineClinics, isOffline, hasData } = useOfflineDataContext();
+
+    // ✅ Use offline data as fallback
+    const effectiveClinics = clinics.length > 0 ? clinics : offlineClinics;
+    const effectiveCategories = categories.length > 0 ? categories : [];
 
     // ✅ Local state for component-specific functionality
     const [doctors, setDoctors] = useState<DoctorInfo[]>([]);
@@ -143,16 +152,16 @@ const ClinicManagement = () => {
     // Handle search filtering
     useEffect(() => {
         if (searchQuery.trim() === '') {
-            setFilteredClinics(clinics);
+            setFilteredClinics(effectiveClinics);
         } else {
             const query = searchQuery.toLowerCase();
-            const filtered = clinics.filter(clinic =>
+            const filtered = effectiveClinics.filter(clinic =>
                 clinic.name.toLowerCase().includes(query) ||
                 clinic.category.toLowerCase().includes(query)
             );
             setFilteredClinics(filtered);
         }
-    }, [searchQuery, clinics]);
+    }, [searchQuery, effectiveClinics]);
 
     // Load doctors from database
     const loadDoctors = async () => {
