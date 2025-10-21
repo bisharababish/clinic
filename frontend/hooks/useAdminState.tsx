@@ -234,10 +234,37 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
 
             console.log('✅ User has admin permissions, proceeding with user load');
 
-            // Ultra-optimized query - only essential fields for Overview tab
+            // Load all necessary fields for user management and editing
             const { data, error } = await supabase
                 .from('userinfo')
-                .select('userid, user_email, english_username_a, user_roles')
+                .select(`
+                    userid,
+                    user_email,
+                    english_username_a,
+                    english_username_b,
+                    english_username_c,
+                    english_username_d,
+                    arabic_username_a,
+                    arabic_username_b,
+                    arabic_username_c,
+                    arabic_username_d,
+                    user_roles,
+                    user_phonenumber,
+                    date_of_birth,
+                    gender_user,
+                    id_number,
+                    blood_type,
+                    phone_number,
+                    address,
+                    medical_history,
+                    allergies,
+                    emergency_contact,
+                    emergency_phone,
+                    social_situation,
+                    unique_patient_id,
+                    created_at,
+                    updated_at
+                `)
                 .order('userid', { ascending: false })
                 .limit(100); // Limit to first 100 users for faster loading
 

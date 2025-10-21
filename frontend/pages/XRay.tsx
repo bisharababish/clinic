@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import SEOHead from "../src/components/seo/SEOHead";
 import {
   Upload,
@@ -9,6 +9,8 @@ import {
   Stethoscope,
   Camera,
   X,
+  Search,
+  Loader2,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -16,6 +18,29 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { supabase } from "../lib/supabase";
+import { useToast } from "../hooks/use-toast";
+
+// Patient interface
+interface Patient {
+  userid: number;
+  user_email: string;
+  english_username_a: string;
+  english_username_b?: string;
+  english_username_c?: string;
+  english_username_d?: string;
+  arabic_username_a?: string;
+  arabic_username_b?: string;
+  arabic_username_c?: string;
+  arabic_username_d?: string;
+  id_number?: string;
+  user_phonenumber?: string;
+  date_of_birth?: string;
+  gender_user?: string;
+  user_roles: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 // Anatomical Skeleton Component (embedded)
 interface AnatomicalSkeletonProps {
@@ -1389,6 +1414,7 @@ const AnatomicalSkeleton: React.FC<AnatomicalSkeletonProps> = ({
 
 // Main XRay Component
 const XRay = () => {
+  const { toast } = useToast();
   const [selectedBodyPart, setSelectedBodyPart] = useState("");
   const [patientName, setPatientName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -1396,6 +1422,114 @@ const XRay = () => {
   const [clinicalIndication, setClinicalIndication] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Patient search states
+  const [patientSearchTerm, setPatientSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState<Patient[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Patient search function
+  const searchPatients = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+
+      const { data: patients, error } = await supabase
+        .from('userinfo')
+        .select('*')
+        .or(`user_email.ilike.%${searchTerm}%,english_username_a.ilike.%${searchTerm}%,english_username_d.ilike.%${searchTerm}%,arabic_username_a.ilike.%${searchTerm}%,arabic_username_d.ilike.%${searchTerm}%,id_number.ilike.%${searchTerm}%`)
+        .eq('user_roles', 'Patient')
+        .order('english_username_a', { ascending: true })
+        .limit(10);
+
+      if (error) {
+        throw error;
+      }
+
+      setSearchResults(patients || []);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Error searching patients:', error);
+      toast({
+        title: "Search Error",
+        description: "Failed to search for patients. Please try again.",
+        variant: "destructive",
+      });
+      setSearchResults([]);
+      setShowSearchResults(false);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle search input change with debouncing
+  const handleSearchChange = (value: string) => {
+    setPatientSearchTerm(value);
+
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced search
+    searchTimeoutRef.current = setTimeout(() => {
+      searchPatients(value);
+    }, 300);
+  };
+
+  // Handle patient selection
+  const handlePatientSelect = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setPatientName(`${patient.english_username_a} ${patient.english_username_d || ''}`.trim());
+    setDateOfBirth(patient.date_of_birth || '');
+    setPatientSearchTerm(`${patient.english_username_a} ${patient.english_username_d || ''}`.trim());
+    setShowSearchResults(false);
+    setSearchResults([]);
+  };
+
+  // Clear patient selection
+  const clearPatientSelection = () => {
+    setSelectedPatient(null);
+    setPatientName("");
+    setDateOfBirth("");
+    setPatientSearchTerm("");
+    setShowSearchResults(false);
+    setSearchResults([]);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.patient-search-container')) {
+        setShowSearchResults(false);
+      }
+    };
+
+    if (showSearchResults) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showSearchResults]);
 
   // Body parts list for dropdown
   const bodyPartsOptions = [
@@ -1735,34 +1869,154 @@ const XRay = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="patientName" className="text-sm font-semibold text-slate-700">
-                    Patient Name
-                  </Label>
-                  <Input
-                    id="patientName"
-                    value={patientName}
-                    onChange={(e) => setPatientName(e.target.value)}
-                    placeholder="Enter patient full name"
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dateOfBirth" className="text-sm font-semibold text-slate-700">
-                    Date of Birth
+                {/* Patient Search */}
+                <div className="space-y-2 patient-search-container">
+                  <Label htmlFor="patientSearch" className="text-sm font-semibold text-slate-700">
+                    Search Patient
                   </Label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <Input
-                      id="dateOfBirth"
-                      type="date"
-                      value={dateOfBirth}
-                      onChange={(e) => setDateOfBirth(e.target.value)}
-                      className="h-12 pl-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                      id="patientSearch"
+                      value={patientSearchTerm}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      placeholder="Search by name, email, or ID number..."
+                      className="h-12 pl-10 pr-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
                     />
+                    {isSearching && (
+                      <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 animate-spin" />
+                    )}
+                    {selectedPatient && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearPatientSelection}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100"
+                      >
+                        <X className="w-4 h-4 text-red-500" />
+                      </Button>
+                    )}
                   </div>
+
+                  {/* Search Results Dropdown */}
+                  {showSearchResults && searchResults.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {searchResults.map((patient) => (
+                        <div
+                          key={patient.userid}
+                          onClick={() => handlePatientSelect(patient)}
+                          className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-slate-900">
+                                {patient.english_username_a} {patient.english_username_d || ''}
+                              </p>
+                              <p className="text-sm text-slate-600">{patient.user_email}</p>
+                              {patient.id_number && (
+                                <p className="text-xs text-slate-500">ID: {patient.id_number}</p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              {patient.date_of_birth && (
+                                <p className="text-sm text-slate-600">
+                                  DOB: {new Date(patient.date_of_birth).toLocaleDateString()}
+                                </p>
+                              )}
+                              {patient.gender_user && (
+                                <p className="text-xs text-slate-500 capitalize">{patient.gender_user}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* No Results Message */}
+                  {showSearchResults && searchResults.length === 0 && patientSearchTerm.trim() && !isSearching && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
+                      <p className="text-slate-600 text-center">No patients found</p>
+                    </div>
+                  )}
                 </div>
+
+                {/* Selected Patient Info */}
+                {selectedPatient && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span className="font-semibold text-green-800">Patient Selected</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="font-medium text-slate-700">Name:</span>
+                        <span className="ml-2 text-slate-600">
+                          {selectedPatient.english_username_a} {selectedPatient.english_username_d || ''}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-slate-700">Email:</span>
+                        <span className="ml-2 text-slate-600">{selectedPatient.user_email}</span>
+                      </div>
+                      {selectedPatient.id_number && (
+                        <div>
+                          <span className="font-medium text-slate-700">ID:</span>
+                          <span className="ml-2 text-slate-600">{selectedPatient.id_number}</span>
+                        </div>
+                      )}
+                      {selectedPatient.gender_user && (
+                        <div>
+                          <span className="font-medium text-slate-700">Gender:</span>
+                          <span className="ml-2 text-slate-600 capitalize">{selectedPatient.gender_user}</span>
+                        </div>
+                      )}
+                      {selectedPatient.date_of_birth && (
+                        <div>
+                          <span className="font-medium text-slate-700">Date of Birth:</span>
+                          <span className="ml-2 text-slate-600">
+                            {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Manual Entry Fields (Hidden when patient is selected) */}
+                {!selectedPatient && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="patientName" className="text-sm font-semibold text-slate-700">
+                        Patient Name (Manual Entry)
+                      </Label>
+                      <Input
+                        id="patientName"
+                        value={patientName}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        placeholder="Enter patient full name"
+                        className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="dateOfBirth" className="text-sm font-semibold text-slate-700">
+                        Date of Birth (Manual Entry)
+                      </Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                        <Input
+                          id="dateOfBirth"
+                          type="date"
+                          value={dateOfBirth}
+                          onChange={(e) => setDateOfBirth(e.target.value)}
+                          className="h-12 pl-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="requestingDoctor" className="text-sm font-semibold text-slate-700">
@@ -1905,7 +2159,7 @@ const XRay = () => {
             <Button
               size="lg"
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              disabled={!patientName || !selectedBodyPart || !file}
+              disabled={!(selectedPatient || patientName) || !selectedBodyPart || !file}
             >
               <CheckCircle className="w-5 h-5 mr-2" />
               Save X-Ray Record
@@ -1922,6 +2176,7 @@ const XRay = () => {
                 setClinicalIndication("");
                 setSelectedBodyPart("");
                 setFile(null);
+                clearPatientSelection();
               }}
             >
               Reset Form

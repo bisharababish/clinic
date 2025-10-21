@@ -46,7 +46,17 @@ interface UserInfo {
     user_phonenumber?: string;
     date_of_birth?: string;
     gender_user?: string;
+    blood_type?: string;
+    phone_number?: string;
+    address?: string;
+    medical_history?: string;
+    allergies?: string;
+    emergency_contact?: string;
+    emergency_phone?: string;
+    social_situation?: string;
+    unique_patient_id?: string;
     created_at?: string;
+    updated_at?: string;
     // Optional fields for auth integration
     user_id?: string; // uuid/text primary key
     id?: string; // auth user UUID from auth.users table
