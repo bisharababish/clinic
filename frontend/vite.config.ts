@@ -12,6 +12,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "."),
     },
   },
+  define: {
+    // Fix for framer-motion and other libraries that check for DOM
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    // Ensure proper environment variable access
+    'import.meta.env.DEV': JSON.stringify(process.env.NODE_ENV !== 'production'),
+  },
   server: {
     port: 3000,
     host: true,
@@ -40,18 +46,15 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000,
     copyPublicDir: true,
-    minify: 'esbuild', // ⚡ MUCH faster than terser
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'], // Remove these functions
+      },
+    },
     sourcemap: false, // Disable sourcemaps in production
-    // Remove terser options for faster build
-  },
-  // Service Worker configuration
-  define: {
-    // Fix for framer-motion and other libraries that check for DOM
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-    // Ensure proper environment variable access
-    'import.meta.env.DEV': JSON.stringify(process.env.NODE_ENV !== 'production'),
-    // Service Worker support
-    'import.meta.env.SW': JSON.stringify(true),
   },
   base: '/',
   publicDir: 'public'

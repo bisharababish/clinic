@@ -37,17 +37,12 @@ import {
 } from '../../../lib/deletionRequests';
 import { useAuth } from '../../../hooks/useAuth';
 import { Skeleton } from "../../../components/ui/skeleton";
-import { useOfflineDataContext } from "../../../components/OfflineDataProvider";
-import { handleOfflineError, isOfflineError } from "../../../lib/offlineErrorHandler";
 
 const DeletionRequestsTab: React.FC = () => {
     const { toast } = useToast();
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const isRTL = i18n.language === 'ar';
-
-    // Add offline data support
-    const { isOffline, hasData } = useOfflineDataContext();
 
     const [requests, setRequests] = useState<DeletionRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -77,19 +72,7 @@ const DeletionRequestsTab: React.FC = () => {
             }
         } catch (err) {
             console.error('Error loading deletion requests:', err);
-
-            // Handle offline errors
-            if (isOfflineError(err as Error)) {
-                const offlineResult = handleOfflineError(err as Error, 'deletion-requests');
-                if (offlineResult.shouldShowOfflineMessage) {
-                    setError(offlineResult.errorMessage);
-                    setRequests(offlineResult.offlineData);
-                } else {
-                    setError('Error loading deletion requests');
-                }
-            } else {
-                setError('Unexpected error occurred');
-            }
+            setError('Failed to load deletion requests');
         } finally {
             setIsLoading(false);
         }
@@ -321,26 +304,16 @@ const DeletionRequestsTab: React.FC = () => {
                 <CardContent className="p-4 sm:p-6 text-center">
                     <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-red-600 mb-2">
-                        {isOffline ? (isRTL ? 'وضع عدم الاتصال' : 'Offline Mode') : 'Error Loading Requests'}
+                        Error Loading Requests
                     </h3>
                     <p className="text-gray-600 mb-4">
-                        {isOffline
-                            ? (isRTL
-                                ? 'أنت غير متصل بالإنترنت. البيانات المخزنة مؤقتاً ستكون متاحة عند استعادة الاتصال.'
-                                : 'You are offline. Cached data will be available when connection is restored.')
-                            : error
-                        }
+                        {error}
                     </p>
                     <div className="flex gap-2 justify-center">
                         <Button onClick={loadRequests}>
                             <RefreshCw className="h-4 w-4 mr-2" />
                             {isRTL ? 'إعادة المحاولة' : 'Try Again'}
                         </Button>
-                        {isOffline && (
-                            <Button variant="outline" onClick={() => window.location.reload()}>
-                                {isRTL ? 'تحديث الصفحة' : 'Refresh Page'}
-                            </Button>
-                        )}
                     </div>
                 </CardContent>
             </Card>

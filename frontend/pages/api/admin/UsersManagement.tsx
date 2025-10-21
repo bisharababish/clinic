@@ -22,13 +22,35 @@ import "../../styles/usersmanagement.css"
 import { Skeleton } from "../../../components/ui/skeleton";
 import { createClient } from '@supabase/supabase-js';
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { useAdminState, UserInfo } from "../../../hooks/useAdminState";
+import { useAdminState } from "../../../hooks/useAdminState";
 import DeletionRequestModal from '../../../components/DeletionRequestModal';
 import { createDeletionRequest } from '../../../lib/deletionRequests';
 import { hasPermission } from '../../../lib/rolePermissions';
 // Add these imports to your existing imports
 import { isValidPalestinianID } from '../../../lib/PalID_temp';
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
+
+interface UserInfo {
+    userid: number;
+    user_email: string;
+    english_username_a: string;
+    english_username_b?: string;
+    english_username_c?: string;
+    english_username_d?: string;
+    arabic_username_a?: string;
+    arabic_username_b?: string;
+    arabic_username_c?: string;
+    arabic_username_d?: string;
+    id_number?: string;
+    user_roles: string;
+    user_phonenumber?: string;
+    date_of_birth?: string;
+    gender_user?: string;
+    created_at?: string;
+    // Optional fields for auth integration
+    user_id?: string; // uuid/text primary key
+    id?: string; // auth user UUID from auth.users table
+}
 
 const UsersManagement = () => {
     const { toast, dismiss } = useToast();
@@ -78,16 +100,6 @@ const UsersManagement = () => {
         gender_user: "",
         user_roles: "patient" as UserRole,
         user_password: "",
-        // Additional fields from database schema
-        blood_type: "",
-        phone_number: "",
-        address: "",
-        medical_history: "",
-        allergies: "",
-        emergency_contact: "",
-        emergency_phone: "",
-        social_situation: "",
-        unique_patient_id: "",
     });
     // Deletion request state
     const [showDeletionModal, setShowDeletionModal] = useState(false);
@@ -294,16 +306,6 @@ const UsersManagement = () => {
             gender_user: "",
             user_roles: "patient",
             user_password: "",
-            // Reset additional fields
-            blood_type: "",
-            phone_number: "",
-            address: "",
-            medical_history: "",
-            allergies: "",
-            emergency_contact: "",
-            emergency_phone: "",
-            social_situation: "",
-            unique_patient_id: "",
         });
         setIdValidationStatus('unchecked');
 
@@ -338,16 +340,6 @@ const UsersManagement = () => {
             gender_user: userToEdit.gender_user || "",
             user_roles: capitalizeRole(userToEdit.user_roles) as UserRole,
             user_password: "", // Password is not loaded for security
-            // Load additional fields from database
-            blood_type: userToEdit.blood_type || "",
-            phone_number: userToEdit.phone_number || "",
-            address: userToEdit.address || "",
-            medical_history: userToEdit.medical_history || "",
-            allergies: userToEdit.allergies || "",
-            emergency_contact: userToEdit.emergency_contact || "",
-            emergency_phone: userToEdit.emergency_phone || "",
-            social_situation: userToEdit.social_situation || "",
-            unique_patient_id: userToEdit.unique_patient_id || "",
         });
         setIdValidationStatus('unchecked');
 
@@ -727,16 +719,6 @@ const UsersManagement = () => {
                         gender_user: userFormData.gender_user || null,
                         user_roles: capitalizedRole,
                         user_password: userFormData.user_password,
-                        // Include additional fields from database schema
-                        blood_type: userFormData.blood_type || null,
-                        phone_number: userFormData.phone_number || null,
-                        address: userFormData.address || null,
-                        medical_history: userFormData.medical_history || null,
-                        allergies: userFormData.allergies || null,
-                        emergency_contact: userFormData.emergency_contact || null,
-                        emergency_phone: userFormData.emergency_phone || null,
-                        social_situation: userFormData.social_situation || null,
-                        unique_patient_id: userFormData.unique_patient_id || null,
                         created_at: timestamp,
                         updated_at: timestamp
                     })
@@ -804,16 +786,6 @@ const UsersManagement = () => {
                     date_of_birth: userFormData.date_of_birth || null,
                     gender_user: userFormData.gender_user || null,
                     user_roles: capitalizedRole,
-                    // Include additional fields from database schema
-                    blood_type: userFormData.blood_type || null,
-                    phone_number: userFormData.phone_number || null,
-                    address: userFormData.address || null,
-                    medical_history: userFormData.medical_history || null,
-                    allergies: userFormData.allergies || null,
-                    emergency_contact: userFormData.emergency_contact || null,
-                    emergency_phone: userFormData.emergency_phone || null,
-                    social_situation: userFormData.social_situation || null,
-                    unique_patient_id: userFormData.unique_patient_id || null,
                     updated_at: new Date().toISOString()
                 };
 

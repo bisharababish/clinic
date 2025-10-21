@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from "../../../hooks/use-toast";
 import { useAuth } from "../../../hooks/useAuth";
 import { useAdminState } from "../../../hooks/useAdminState";
-import { offlineAuthManager } from "../../../lib/offlineAuth";
 import { supabase } from "../../../lib/supabase";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -106,8 +105,6 @@ const PaymentManagement: React.FC = () => {
     const { toast } = useToast();
     const { user } = useAuth();
     const { isLoading, loadAppointments } = useAdminState();
-    const { isOfflineMode } = useAuth();
-    const isOffline = isOfflineMode || !navigator.onLine;
 
     // Debug logging
     console.log('PaymentManagement Debug:', {
@@ -179,24 +176,6 @@ const PaymentManagement: React.FC = () => {
         try {
             setIsLoadingPayments(true);
             setPaymentsError(null);
-
-            // Check if offline
-            if (isOffline) {
-                console.log('📱 PaymentManagement: Offline mode - loading cached data');
-                const cachedData = offlineAuthManager.getCachedData();
-                if (cachedData && cachedData.payments) {
-                    setPayments(cachedData.payments);
-                    setFilteredPayments(cachedData.payments);
-                    calculateStats(cachedData.payments);
-                    return;
-                } else {
-                    setPayments([]);
-                    setFilteredPayments([]);
-                    calculateStats([]);
-                    setPaymentsError('No cached payment data available offline');
-                    return;
-                }
-            }
 
             // First, check if user is authenticated
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();

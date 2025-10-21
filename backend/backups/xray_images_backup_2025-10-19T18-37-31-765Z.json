@@ -1,0 +1,18 @@
+{
+  "table": "xray_images",
+  "timestamp": "2025-10-19T18:37:31.765Z",
+  "recordCount": 1,
+  "data": [
+    {
+      "id": 11,
+      "patient_id": 1746219539651,
+      "patient_name": "asdhfgasdasd asdfhghfgsd",
+      "date_of_birth": "2002-02-10",
+      "body_part": "elbow",
+      "indication": "kj",
+      "requesting_doctor": "Judah Sleibi",
+      "image_url": "xrays/1753783092178-images.png",
+      "created_at": "2025-07-29T09:58:12.408807+00:00"
+    }
+  ]
+}

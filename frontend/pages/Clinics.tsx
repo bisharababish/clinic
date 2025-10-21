@@ -8,8 +8,6 @@ import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/use-toast";
 import "./styles/Clinics.css";
 import { Skeleton } from "../components/ui/skeleton";
-import { offlineDataAccess } from '../lib/offlineDataAccess';
-import { handleOfflineError, isOfflineError } from '../lib/offlineErrorHandler';
 
 type AvailabilitySlot = {
     id: string;
@@ -216,25 +214,7 @@ const Clinics = () => {
             setClinics(transformedClinics);
         } catch (error) {
             console.error('Error loading clinic data:', error);
-
-            // Handle offline errors
-            if (isOfflineError(error as Error)) {
-                const offlineResult = handleOfflineError(error as Error, 'clinics');
-                if (offlineResult.shouldShowOfflineMessage) {
-                    setLoadError(offlineResult.errorMessage);
-                    setClinics(offlineResult.offlineData);
-                } else {
-                    setLoadError(t('clinics.errorDescription') || 'An error occurred while loading clinics.');
-                }
-            } else {
-                setLoadError(t('clinics.errorDescription') || 'An error occurred while loading clinics.');
-            }
-
-            toast({
-                title: t('clinics.errorTitle'),
-                description: t('clinics.errorDescription'),
-                variant: "destructive",
-            });
+            setLoadError(t('clinics.errorDescription') || 'An error occurred while loading clinics.');
         } finally {
             setIsLoading(false);
             isFetchingRef.current = false;

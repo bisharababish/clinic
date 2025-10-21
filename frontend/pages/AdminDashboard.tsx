@@ -11,11 +11,6 @@ import { getRolePermissions } from '../lib/rolePermissions';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from "../components/ui/skeleton";
 import { hasPermission } from "../lib/rolePermissions";
-import OfflineIndicator from "../components/OfflineIndicator";
-import { useOfflineDataManager } from "../hooks/useOfflineDataManager";
-import { serviceWorkerManager } from "../lib/serviceWorker";
-import { offlineDataAccess } from "../lib/offlineDataAccess";
-import OfflineDataProvider from "../components/OfflineDataProvider";
 
 // Lazy load components for better performance
 const ClinicManagement = lazy(() => import("./api/admin/ClinicManagement"));
@@ -46,18 +41,6 @@ const AdminDashboardContent = () => {
         extendSession,
         lastUpdated
     } = useAdminState();
-
-    // Offline data management
-    const {
-        isOnline,
-        isServiceWorkerActive,
-        cacheMedicalData,
-        isSyncing,
-        stopSync
-    } = useOfflineDataManager();
-
-    // Get offline auth methods
-    const { storeOfflineAuth, user: currentUser } = useAuth();
 
 
     const getDataAge = () => {
@@ -196,12 +179,17 @@ const AdminDashboardContent = () => {
                     const defaultTab = getDefaultTab();
                     setActiveTab(defaultTab);
 
-                    // Always trigger data loading for admin dashboard
-                    console.log('🔄 Admin dashboard - triggering data load...');
-                    refreshAll();
+                    // If Overview is the default tab, ensure data is loaded
+                    if (defaultTab === 'overview') {
+                        console.log('🔄 Overview is default tab, ensuring data is loaded...');
+                        refreshAll();
+                    }
                 }
 
                 console.log('✅ Admin dashboard initialized for role:', currentUserRole);
+
+                // Don't trigger heavy data loading here - let useAdminState handle it
+                // This prevents blocking the UI
 
             } catch (error) {
                 console.error('Error in dashboard initialization:', error);
@@ -220,51 +208,6 @@ const AdminDashboardContent = () => {
             refreshAll();
         }
     }, [activeTab, users.length, dataLoading, refreshAll]);
-
-    // Cache medical data for offline access when data is loaded
-    useEffect(() => {
-        if (isServiceWorkerActive && users.length > 0 && !dataLoading && currentUser) {
-            console.log('💾 Caching medical data for offline access...');
-
-            const medicalData = {
-                patients: users.filter(user => user.user_roles?.toLowerCase().includes('patient')),
-                appointments: appointments,
-                doctors: doctors,
-                clinics: clinics,
-                payments: [], // Add empty payments array for now
-                patientHealth: [] // Add empty patient health array for now
-            };
-
-            // Only cache if we have meaningful data
-            const hasData = Object.values(medicalData).some(data => data && data.length > 0);
-
-            if (hasData) {
-                // Cache the medical data
-                cacheMedicalData(medicalData);
-
-                // Store offline authentication data
-                storeOfflineAuth(currentUser, 'offline-token', medicalData).catch(error => {
-                    console.error('Failed to store offline auth:', error);
-                });
-            }
-        }
-    }, [users, appointments, doctors, clinics, dataLoading, isServiceWorkerActive, cacheMedicalData, currentUser, storeOfflineAuth]);
-
-    // Get offline data fallback when online data fails
-    const getOfflineDataFallback = useCallback(() => {
-        if (!isOnline && offlineDataAccess.isOfflineDataAvailable()) {
-            console.log('🔄 Using offline data fallback...');
-            return {
-                users: offlineDataAccess.getCachedPatients(),
-                clinics: offlineDataAccess.getCachedClinics(),
-                doctors: offlineDataAccess.getCachedDoctors(),
-                appointments: offlineDataAccess.getCachedAppointments(),
-                payments: offlineDataAccess.getCachedPayments(),
-                patientHealth: offlineDataAccess.getCachedPatientHealth()
-            };
-        }
-        return null;
-    }, [isOnline]);
 
     // Handle tab changes with permission checking
     const handleTabChange = (newTab: string) => {
@@ -286,12 +229,6 @@ const AdminDashboardContent = () => {
         if (hasPermission) {
             setActiveTab(newTab);
             console.log('✅ Switched to tab:', newTab);
-
-            // Ensure data is loaded when switching to data-dependent tabs
-            if (['overview', 'users', 'clinics', 'doctors', 'appointments'].includes(newTab) && users.length === 0 && !dataLoading) {
-                console.log('🔄 Tab switch - ensuring data is loaded for:', newTab);
-                refreshAll();
-            }
         } else {
             const defaultTab = getDefaultTab();
             setActiveTab(defaultTab);
@@ -367,188 +304,99 @@ const AdminDashboardContent = () => {
 
     // Main render
     return (
-        <OfflineDataProvider>
-            <div className="max-w-7xl mx-auto py-8 px-4">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold">{getDashboardTitle()}</h1>
-                        {getDataAge() && (
-                            <p className="text-sm text-gray-500 mt-1">
-                                {i18n.language === 'ar' ? 'آخر تحديث' : 'Last updated'}: {getDataAge()}
-                            </p>
-                        )}
-                        {/* Show loading indicator when data is still loading */}
-                        {dataLoading && (
-                            <div className="flex items-center mt-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                                <p className="text-sm text-blue-600">
-                                    {i18n.language === 'ar' ? 'جاري تحميل البيانات...' : 'Loading data...'}
-                                </p>
-                            </div>
-                        )}
-                        {/* Offline indicator */}
-                        <div className="mt-2">
-                            <OfflineIndicator />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                        {needsRefresh && (
-                            <Button onClick={extendSession} variant="outline" size="sm">
-                                🔄 {t('admin.refreshData') || 'Refresh Data'}
-                            </Button>
-                        )}
-                        {/* Show syncing indicator */}
-                        {isSyncing && (
-                            <div className="flex items-center text-sm text-blue-600">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                                {i18n.language === 'ar' ? 'جاري المزامنة...' : 'Syncing...'}
-                                <button
-                                    onClick={stopSync}
-                                    className="ml-2 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                    title={i18n.language === 'ar' ? 'إيقاف المزامنة' : 'Stop Sync'}
-                                >
-                                    {i18n.language === 'ar' ? 'إيقاف' : 'Stop'}
-                                </button>
-                            </div>
-                        )}
-                        {/* Force Service Worker Update Button */}
-                        <button
-                            onClick={() => serviceWorkerManager.forceUpdate()}
-                            className="ml-2 px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
-                            title={i18n.language === 'ar' ? 'تحديث Service Worker' : 'Update Service Worker'}
-                        >
-                            🔄 {i18n.language === 'ar' ? 'تحديث' : 'Update SW'}
-                        </button>
-                    </div>
-                </div>
-                {!hasAccessibleTabs ? (
-                    <div className="text-center py-12">
-                        <h2 className="text-xl font-semibold text-gray-600 mb-4">
-                            {t('admin.noAccessibleSections') || 'No accessible sections'}
-                        </h2>
-                        <p className="text-gray-500 mb-6">
-                            {t('admin.contactAdministrator') || 'Contact your administrator for access'}
+        <div className="max-w-7xl mx-auto py-8 px-4">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold">{getDashboardTitle()}</h1>
+                    {getDataAge() && (
+                        <p className="text-sm text-gray-500 mt-1">
+                            {i18n.language === 'ar' ? 'آخر تحديث' : 'Last updated'}: {getDataAge()}
                         </p>
-                        <Button onClick={() => navigate('/home')} variant="outline">
-                            {t('admin.returnToHome') || 'Return to Home'}
-                        </Button>
-                    </div>
-                ) : (
-                    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                        {/* MOBILE: Two rows for tabs */}
-                        <div className="md:hidden">
-                            <TabsList className={`flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                {canViewOverviewTab && (
-                                    <TabsTrigger value="overview" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {t('admin.overview') || 'Overview'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewUsersTab && (
-                                    <TabsTrigger value="users" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {t('admin.users') || 'Users'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewClinicsTab && (
-                                    <TabsTrigger value="clinics" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {t('admin.clinics') || 'Clinics'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewDoctorsTab && (
-                                    <TabsTrigger value="doctors" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {t('admin.doctors') || 'Doctors'}
-                                    </TabsTrigger>
-                                )}
-
-                            </TabsList>
-                            <TabsList className={`flex w-full gap-0.5 mt-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                {canViewPatientHealthTab && (
-                                    <TabsTrigger value="patient-health" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {i18n.language === 'ar' ? 'الصحة' : 'Health'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewAppointmentsTab && (
-                                    <TabsTrigger value="appointments" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewPaymentTab && (
-                                    <TabsTrigger value="payments" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {isRTL ? 'المدفوعات' : 'Payments'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewPaymentTab && (
-                                    <TabsTrigger value="paid-patients" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {i18n.language === 'ar' ? 'المرضى المدفوعين' : 'Paid Patients'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewCalendarTab && (
-                                    <TabsTrigger value="calendar" className="flex-1 text-[9px] px-0 truncate min-w-0">
-                                        {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewAppointmentLogsTab && (
-                                    <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] px-0 truncate min-w-0">
-                                        {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
-                                    </TabsTrigger>
-                                )}
-                                {canViewDeletionRequests && (
-                                    <TabsTrigger value="deletion-requests" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                        {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
-                                    </TabsTrigger>
-                                )}
-                            </TabsList>
+                    )}
+                    {/* Show loading indicator when data is still loading */}
+                    {dataLoading && (
+                        <div className="flex items-center mt-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                            <p className="text-sm text-blue-600">
+                                {i18n.language === 'ar' ? 'جاري تحميل البيانات...' : 'Loading data...'}
+                            </p>
                         </div>
+                    )}
+                </div>
 
-                        {/* DESKTOP: All tabs in one row */}
-                        <TabsList className={`hidden md:flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                {needsRefresh && (
+                    <Button onClick={extendSession} variant="outline" size="sm">
+                        🔄 {t('admin.refreshData') || 'Refresh Data'}
+                    </Button>
+                )}
+            </div>
+            {!hasAccessibleTabs ? (
+                <div className="text-center py-12">
+                    <h2 className="text-xl font-semibold text-gray-600 mb-4">
+                        {t('admin.noAccessibleSections') || 'No accessible sections'}
+                    </h2>
+                    <p className="text-gray-500 mb-6">
+                        {t('admin.contactAdministrator') || 'Contact your administrator for access'}
+                    </p>
+                    <Button onClick={() => navigate('/home')} variant="outline">
+                        {t('admin.returnToHome') || 'Return to Home'}
+                    </Button>
+                </div>
+            ) : (
+                <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+                    {/* MOBILE: Two rows for tabs */}
+                    <div className="md:hidden">
+                        <TabsList className={`flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewOverviewTab && (
-                                <TabsTrigger value="overview" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="overview" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {t('admin.overview') || 'Overview'}
                                 </TabsTrigger>
                             )}
                             {canViewUsersTab && (
-                                <TabsTrigger value="users" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="users" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {t('admin.users') || 'Users'}
                                 </TabsTrigger>
                             )}
                             {canViewClinicsTab && (
-                                <TabsTrigger value="clinics" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="clinics" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {t('admin.clinics') || 'Clinics'}
                                 </TabsTrigger>
                             )}
                             {canViewDoctorsTab && (
-                                <TabsTrigger value="doctors" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="doctors" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {t('admin.doctors') || 'Doctors'}
                                 </TabsTrigger>
                             )}
+
+                        </TabsList>
+                        <TabsList className={`flex w-full gap-0.5 mt-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewPatientHealthTab && (
-                                <TabsTrigger value="patient-health" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="patient-health" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {i18n.language === 'ar' ? 'الصحة' : 'Health'}
                                 </TabsTrigger>
                             )}
                             {canViewAppointmentsTab && (
-                                <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="appointments" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
                                 </TabsTrigger>
                             )}
                             {canViewPaymentTab && (
-                                <TabsTrigger value="payments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="payments" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {isRTL ? 'المدفوعات' : 'Payments'}
                                 </TabsTrigger>
                             )}
                             {canViewPaymentTab && (
-                                <TabsTrigger value="paid-patients" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="paid-patients" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {i18n.language === 'ar' ? 'المرضى المدفوعين' : 'Paid Patients'}
                                 </TabsTrigger>
                             )}
                             {canViewCalendarTab && (
-                                <TabsTrigger value="calendar" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="calendar" className="flex-1 text-[9px] px-0 truncate min-w-0">
                                     {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
                                 </TabsTrigger>
                             )}
                             {canViewAppointmentLogsTab && (
-                                <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] px-0 truncate min-w-0">
                                     {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
                                 </TabsTrigger>
                             )}
@@ -558,168 +406,221 @@ const AdminDashboardContent = () => {
                                 </TabsTrigger>
                             )}
                         </TabsList>
+                    </div>
 
-                        {/* OVERVIEW TAB */}
+                    {/* DESKTOP: All tabs in one row */}
+                    <TabsList className={`hidden md:flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         {canViewOverviewTab && (
-                            <TabsContent value="overview" className="pt-6">
-                                <Suspense fallback={
-                                    <div className="space-y-4">
-                                        <Skeleton className="h-8 w-1/4" />
-                                        <Skeleton className="h-64 w-full" />
-                                        <Skeleton className="h-32 w-full" />
-                                    </div>
-                                }>
-                                    <OverviewManagement
-                                        users={users.length > 0 ? users : (getOfflineDataFallback()?.users || [])}
-                                        clinics={clinics.length > 0 ? clinics.map(clinic => ({ ...clinic, isActive: true })) : (getOfflineDataFallback()?.clinics || []).map(clinic => ({ ...clinic, isActive: true }))}
-                                        doctors={doctors.length > 0 ? doctors.map(doctor => ({ ...doctor, isAvailable: true })) : (getOfflineDataFallback()?.doctors || []).map(doctor => ({ ...doctor, isAvailable: true }))}
-                                        appointments={appointments.length > 0 ? appointments : (getOfflineDataFallback()?.appointments || [])}
-                                        reportData={null}
-                                        isLoading={dataLoading}
-                                        error={dataError}
-                                        refreshReportData={refreshAll}
-                                        setActiveTab={setActiveTab}
-                                        checkSystemStatus={async () => { }}
-                                    />
-                                </Suspense>
-                            </TabsContent>
+                            <TabsTrigger value="overview" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {t('admin.overview') || 'Overview'}
+                            </TabsTrigger>
                         )}
-
-                        {/* USERS TAB */}
                         {canViewUsersTab && (
-                            <TabsContent value="users" className="pt-6">
-                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                    <UsersManagement />
-                                </Suspense>
-                            </TabsContent>
+                            <TabsTrigger value="users" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {t('admin.users') || 'Users'}
+                            </TabsTrigger>
                         )}
-
-                        {/* CLINICS TAB */}
                         {canViewClinicsTab && (
-                            <TabsContent value="clinics" className="pt-6">
-                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                    <ClinicManagement />
-                                </Suspense>
-                            </TabsContent>
+                            <TabsTrigger value="clinics" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {t('admin.clinics') || 'Clinics'}
+                            </TabsTrigger>
                         )}
-
-                        {/* DOCTORS TAB */}
                         {canViewDoctorsTab && (
-                            <TabsContent value="doctors" className="pt-6">
-                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                    <DoctorManagement />
-                                </Suspense>
-                            </TabsContent>
+                            <TabsTrigger value="doctors" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {t('admin.doctors') || 'Doctors'}
+                            </TabsTrigger>
                         )}
-
-                        {/* PATIENT HEALTH TAB */}
                         {canViewPatientHealthTab && (
-                            <TabsContent value="patient-health" className="pt-6">
-                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                    <PatientHealthManagement />
-                                </Suspense>
-                            </TabsContent>
+                            <TabsTrigger value="patient-health" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'الصحة' : 'Health'}
+                            </TabsTrigger>
                         )}
-
-                        {/* APPOINTMENTS TAB */}
                         {canViewAppointmentsTab && (
-                            <TabsContent value="appointments" className="pt-6">
-                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                    <AppointmentsManagement
-                                        userEmail={user?.email || 'admin'}
-                                    />
-                                </Suspense>
-                            </TabsContent>
+                            <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
+                            </TabsTrigger>
                         )}
-
-                        {/* CALENDAR TAB */}
-                        {canViewCalendarTab && (
-                            <TabsContent value="calendar" className="pt-6">
-                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                    <CalendarTab
-                                        appointments={appointments}
-                                        doctors={doctors.map(doctor => ({
-                                            ...doctor,
-                                            isAvailable: true // Add missing isAvailable property
-                                        }))}
-                                        clinics={clinics.map(clinic => ({
-                                            ...clinic,
-                                            isActive: true // Add missing isActive property
-                                        }))}
-                                        isLoading={dataLoading}
-                                        t={t}
-                                        i18n={i18n}
-                                        setActiveTab={setActiveTab}
-                                    />
-                                </Suspense>
-                            </TabsContent>
-                        )}
-
-                        {/* PAYMENTS TAB */}
                         {canViewPaymentTab && (
-                            <TabsContent value="payments" className="pt-6">
-                                <div className="space-y-6">
-                                    <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                        <PaymentManagement />
+                            <TabsTrigger value="payments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {isRTL ? 'المدفوعات' : 'Payments'}
+                            </TabsTrigger>
+                        )}
+                        {canViewPaymentTab && (
+                            <TabsTrigger value="paid-patients" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'المرضى المدفوعين' : 'Paid Patients'}
+                            </TabsTrigger>
+                        )}
+                        {canViewCalendarTab && (
+                            <TabsTrigger value="calendar" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
+                            </TabsTrigger>
+                        )}
+                        {canViewAppointmentLogsTab && (
+                            <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
+                            </TabsTrigger>
+                        )}
+                        {canViewDeletionRequests && (
+                            <TabsTrigger value="deletion-requests" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
+                            </TabsTrigger>
+                        )}
+                    </TabsList>
+
+                    {/* OVERVIEW TAB */}
+                    {canViewOverviewTab && (
+                        <TabsContent value="overview" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <OverviewManagement
+                                    users={users}
+                                    clinics={clinics.map(clinic => ({ ...clinic, isActive: true }))}
+                                    doctors={doctors.map(doctor => ({ ...doctor, isAvailable: true }))}
+                                    appointments={appointments}
+                                    reportData={null}
+                                    isLoading={dataLoading}
+                                    error={dataError}
+                                    refreshReportData={refreshAll}
+                                    setActiveTab={setActiveTab}
+                                    checkSystemStatus={async () => { }}
+                                />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+
+                    {/* USERS TAB */}
+                    {canViewUsersTab && (
+                        <TabsContent value="users" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <UsersManagement />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+
+                    {/* CLINICS TAB */}
+                    {canViewClinicsTab && (
+                        <TabsContent value="clinics" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <ClinicManagement />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+
+                    {/* DOCTORS TAB */}
+                    {canViewDoctorsTab && (
+                        <TabsContent value="doctors" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <DoctorManagement />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+
+                    {/* PATIENT HEALTH TAB */}
+                    {canViewPatientHealthTab && (
+                        <TabsContent value="patient-health" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <PatientHealthManagement />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+
+                    {/* APPOINTMENTS TAB */}
+                    {canViewAppointmentsTab && (
+                        <TabsContent value="appointments" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <AppointmentsManagement
+                                    userEmail={user?.email || 'admin'}
+                                />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+
+                    {/* CALENDAR TAB */}
+                    {canViewCalendarTab && (
+                        <TabsContent value="calendar" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <CalendarTab
+                                    appointments={appointments}
+                                    doctors={doctors.map(doctor => ({
+                                        ...doctor,
+                                        isAvailable: true // Add missing isAvailable property
+                                    }))}
+                                    clinics={clinics.map(clinic => ({
+                                        ...clinic,
+                                        isActive: true // Add missing isActive property
+                                    }))}
+                                    isLoading={dataLoading}
+                                    t={t}
+                                    i18n={i18n}
+                                    setActiveTab={setActiveTab}
+                                />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+
+                    {/* PAYMENTS TAB */}
+                    {canViewPaymentTab && (
+                        <TabsContent value="payments" className="pt-6">
+                            <div className="space-y-6">
+                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                    <PaymentManagement />
+                                </Suspense>
+                            </div>
+                        </TabsContent>
+                    )}
+
+                    {/* PAID PATIENTS TAB */}
+                    {canViewPaymentTab && (
+                        <TabsContent value="paid-patients" className="pt-6">
+                            <div className="space-y-6">
+                                {/* All Paid Patients */}
+                                <div>
+                                    <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                                        {i18n.language === 'ar' ? "جميع المدفوعات" : "All Payments"}
+                                    </h2>
+                                    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                                        <PaidPatientsList
+                                            showOnlyPaid={true}
+                                            compact={false}
+                                        />
                                     </Suspense>
                                 </div>
-                            </TabsContent>
-                        )}
 
-                        {/* PAID PATIENTS TAB */}
-                        {canViewPaymentTab && (
-                            <TabsContent value="paid-patients" className="pt-6">
-                                <div className="space-y-6">
-                                    {/* All Paid Patients */}
-                                    <div>
-                                        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                                            {i18n.language === 'ar' ? "جميع المدفوعات" : "All Payments"}
-                                        </h2>
-                                        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-                                            <PaidPatientsList
-                                                showOnlyPaid={true}
-                                                compact={false}
-                                            />
-                                        </Suspense>
-                                    </div>
-
-                                    {/* Pending Payments */}
-                                    <div>
-                                        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                                            {i18n.language === 'ar' ? "المدفوعات المعلقة" : "Pending Payments"}
-                                        </h2>
-                                        <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-                                            <PaidPatientsList
-                                                showOnlyPending={true}
-                                                compact={false}
-                                            />
-                                        </Suspense>
-                                    </div>
+                                {/* Pending Payments */}
+                                <div>
+                                    <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                                        {i18n.language === 'ar' ? "المدفوعات المعلقة" : "Pending Payments"}
+                                    </h2>
+                                    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                                        <PaidPatientsList
+                                            showOnlyPending={true}
+                                            compact={false}
+                                        />
+                                    </Suspense>
                                 </div>
-                            </TabsContent>
-                        )}
+                            </div>
+                        </TabsContent>
+                    )}
 
-                        {/* APPOINTMENT CHANGE LOGS TAB */}
-                        {canViewAppointmentLogsTab && (
-                            <TabsContent value="appointment-logs" className="pt-6">
-                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                    <AppointmentChangeLogs />
-                                </Suspense>
-                            </TabsContent>
-                        )}
+                    {/* APPOINTMENT CHANGE LOGS TAB */}
+                    {canViewAppointmentLogsTab && (
+                        <TabsContent value="appointment-logs" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <AppointmentChangeLogs />
+                            </Suspense>
+                        </TabsContent>
+                    )}
 
-                        {/* DELETION REQUESTS TAB */}
-                        {canViewDeletionRequests && (
-                            <TabsContent value="deletion-requests" className="pt-6">
-                                <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-                                    <DeletionRequestsTab />
-                                </Suspense>
-                            </TabsContent>
-                        )}
-                    </Tabs>
-                )}
-            </div>
-        </OfflineDataProvider>
+                    {/* DELETION REQUESTS TAB */}
+                    {canViewDeletionRequests && (
+                        <TabsContent value="deletion-requests" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <DeletionRequestsTab />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+                </Tabs>
+            )}
+        </div>
     );
 };
 

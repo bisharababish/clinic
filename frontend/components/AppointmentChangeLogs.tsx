@@ -19,8 +19,6 @@ import {
     Trash2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { offlineDataAccess } from '../lib/offlineDataAccess';
-import { handleOfflineError, isOfflineError } from '../lib/offlineErrorHandler';
 
 interface AppointmentChangeLog {
     id: string;
@@ -77,30 +75,11 @@ const AppointmentChangeLogs: React.FC = () => {
             setFilteredLogs(logsData || []);
         } catch (error) {
             console.error('Error loading change logs:', error);
-            
-            // Handle offline errors
-            if (isOfflineError(error as Error)) {
-                const offlineResult = handleOfflineError(error as Error, 'appointments');
-                if (offlineResult.shouldShowOfflineMessage) {
-                    toast({
-                        title: isRTL ? 'استخدام البيانات المحفوظة' : 'Using Cached Data',
-                        description: offlineResult.errorMessage,
-                        variant: 'default',
-                    });
-                } else {
-                    toast({
-                        title: isRTL ? 'خطأ' : 'Error',
-                        description: isRTL ? 'خطأ في تحميل سجل التغييرات' : 'Error loading change logs',
-                        variant: 'destructive',
-                    });
-                }
-            } else {
-                toast({
-                    title: isRTL ? 'خطأ' : 'Error',
-                    description: isRTL ? 'خطأ في تحميل سجل التغييرات' : 'Error loading change logs',
-                    variant: 'destructive',
-                });
-            }
+            toast({
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL ? 'خطأ في تحميل سجل التغييرات' : 'Error loading change logs',
+                variant: 'destructive',
+            });
         } finally {
             setIsLoading(false);
         }

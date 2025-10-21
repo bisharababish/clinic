@@ -11,7 +11,6 @@ import { useLegalModals, PrivacyPolicyModal } from "./components/modals/LegalMod
 import { useScrollToTop } from "./hooks/useScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
 import './src/lib/sentry';
-import './lib/serviceWorker'; // Initialize Service Worker
 
 // Scroll to top component that works inside Router context
 function ScrollToTop() {

@@ -1,0 +1,42 @@
+{
+  "backupDate": "2025-10-19T18:37:32.738Z",
+  "totalTables": 14,
+  "successfulBackups": 13,
+  "backupFiles": [
+    "userinfo_backup_2025-10-19T18-37-31-167Z.json",
+    "appointments_backup_2025-10-19T18-37-31-314Z.json",
+    "payment_bookings_backup_2025-10-19T18-37-31-435Z.json",
+    "lab_results_backup_2025-10-19T18-37-31-542Z.json",
+    "lab_attachments_backup_2025-10-19T18-37-31-646Z.json",
+    "xray_images_backup_2025-10-19T18-37-31-765Z.json",
+    "patient_health_info_backup_2025-10-19T18-37-31-876Z.json",
+    "clinical_notes_backup_2025-10-19T18-37-31-988Z.json",
+    "doctors_backup_2025-10-19T18-37-32-095Z.json",
+    "doctor_availability_backup_2025-10-19T18-37-32-197Z.json",
+    "activity_log_backup_2025-10-19T18-37-32-378Z.json",
+    "appointment_change_logs_backup_2025-10-19T18-37-32-511Z.json",
+    "deletion_requests_backup_2025-10-19T18-37-32-623Z.json",
+    "notifications_backup_2025-10-19T18-37-32-737Z.json"
+  ],
+  "config": {
+    "tables": [
+      "userinfo",
+      "appointments",
+      "payment_bookings",
+      "lab_results",
+      "lab_attachments",
+      "xray_images",
+      "patient_health_info",
+      "clinical_notes",
+      "doctors",
+      "doctor_availability",
+      "activity_log",
+      "appointment_change_logs",
+      "deletion_requests",
+      "notifications"
+    ],
+    "backupDir": "./backups",
+    "retentionDays": 30,
+    "compressBackups": true
+  }
+}

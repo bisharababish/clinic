@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: clinic
+    env: static
+    buildCommand: cd frontend && npm ci && npm run build:fast
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_BUILD_FAST
+        value: true

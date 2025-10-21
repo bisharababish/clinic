@@ -1,0 +1,2287 @@
+{
+  "table": "activity_log",
+  "timestamp": "2025-10-19T18:37:32.378Z",
+  "recordCount": 285,
+  "data": [
+    {
+      "id": "d048728b-1041-4aa1-bc6d-e4997540482e",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User codefusion218@gmail.com (ID: 1746219539519) was deleted",
+      "status": "success",
+      "created_at": "2025-05-09T22:25:36.827273+00:00"
+    },
+    {
+      "id": "fddecf5a-669b-40fb-be2c-523a0d298d6b",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User shima.faroun.22@gmail.com (ID: 1746219539521) was deleted",
+      "status": "success",
+      "created_at": "2025-05-09T22:33:33.322404+00:00"
+    },
+    {
+      "id": "e9fe0a3c-0cad-4934-8463-b1f0b5ff4d86",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User shima.faroun@students.alquds.edu (ID: 1746219539522) was deleted",
+      "status": "success",
+      "created_at": "2025-05-09T22:36:06.78038+00:00"
+    },
+    {
+      "id": "59bf1f7d-bd4c-4ae4-bcf4-7970ee214d10",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User bishara.babish36@gmail.com (ID: 1746219539524) was deleted",
+      "status": "success",
+      "created_at": "2025-05-12T10:29:04.167459+00:00"
+    },
+    {
+      "id": "a7a34d98-a0d8-4b5e-bd33-dac62796c31c",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User pnkhoury77@gmail.com (ID: 1746219539513) was deleted",
+      "status": "success",
+      "created_at": "2025-05-12T10:29:07.540069+00:00"
+    },
+    {
+      "id": "48fe6216-a6c6-4e22-ba68-f4d3d8c71102",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User bishara.albabish@students.alquds.edu (ID: 1746219539512) was deleted",
+      "status": "success",
+      "created_at": "2025-05-12T10:29:10.693212+00:00"
+    },
+    {
+      "id": "5075cbb1-b4b8-4c50-a768-55ecc7fe31ef",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User admin@clinic.com (ID: 1746219539505) was deleted",
+      "status": "success",
+      "created_at": "2025-05-13T07:48:43.625912+00:00"
+    },
+    {
+      "id": "00c8c3cb-fd8e-477d-a477-cff9ca6827f1",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User bishara.babish36@gmail.com (ID: 1746219539525) was deleted",
+      "status": "success",
+      "created_at": "2025-05-13T07:50:23.324453+00:00"
+    },
+    {
+      "id": "99a9e2b9-8156-4c04-ae3f-9507c340a22e",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539528) was deleted",
+      "status": "success",
+      "created_at": "2025-05-13T15:14:57.079179+00:00"
+    },
+    {
+      "id": "e7c8f20a-1ed9-4242-b2b6-407e9ebf21f4",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User bishara.babish36@gmail.com (ID: 1746219539531) was deleted",
+      "status": "success",
+      "created_at": "2025-05-13T22:25:39.457312+00:00"
+    },
+    {
+      "id": "588c3f62-f200-46a2-9053-4243cad5b2b7",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539530) was deleted",
+      "status": "success",
+      "created_at": "2025-05-18T20:40:24.804904+00:00"
+    },
+    {
+      "id": "b12593c2-418e-4858-8952-f3431f94fec2",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539532) was deleted",
+      "status": "success",
+      "created_at": "2025-05-18T20:41:44.12773+00:00"
+    },
+    {
+      "id": "73d84066-e984-4dfc-b257-c3fc43bdfbce",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User codefusion218@gmail.com (ID: 1746219539534) was deleted",
+      "status": "success",
+      "created_at": "2025-05-20T12:05:01.41036+00:00"
+    },
+    {
+      "id": "9c8b8b75-22c2-4033-9e5e-20e5345db132",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User onlyforgames880@gmail.com (ID: 1746219539544) was deleted",
+      "status": "success",
+      "created_at": "2025-05-20T12:27:19.754231+00:00"
+    },
+    {
+      "id": "8b27fe24-ef95-480f-9c3e-8a3602af353b",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User codefusion218@gmail.com (ID: 1746219539546) was deleted",
+      "status": "success",
+      "created_at": "2025-05-20T12:27:23.010234+00:00"
+    },
+    {
+      "id": "84541d9c-a21e-4647-a5b4-95229ca69099",
+      "action": "User Deleted",
+      "user_email": "admin@clinic.com",
+      "details": "User bishara.babish36@gmail.com (ID: 1746219539538) was deleted",
+      "status": "success",
+      "created_at": "2025-05-20T12:27:24.826411+00:00"
+    },
+    {
+      "id": "f254e8b1-9a18-4618-9995-0664624a5094",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539555) was deleted",
+      "status": "success",
+      "created_at": "2025-05-23T13:52:31.014846+00:00"
+    },
+    {
+      "id": "6dfda36f-ac6c-4c37-aeb2-0e212048d20a",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User bishara.albabish@students.alquds.edu (ID: 1746219539552) was deleted",
+      "status": "success",
+      "created_at": "2025-05-28T21:13:46.973558+00:00"
+    },
+    {
+      "id": "aad4d4ee-e2ba-4e9c-8ea5-3c470171ed74",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User onlyforgames880@gmail.com (ID: 1746219539551) was deleted",
+      "status": "success",
+      "created_at": "2025-05-28T21:13:49.184097+00:00"
+    },
+    {
+      "id": "eeb84496-c3e1-4b6a-9c61-84c53194b33e",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539560) was deleted",
+      "status": "success",
+      "created_at": "2025-05-30T18:27:50.663824+00:00"
+    },
+    {
+      "id": "45de59be-80bf-4d9d-8627-a835ebef1679",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User taneawhawash@gmail.com (ID: 1746219539562) was deleted",
+      "status": "success",
+      "created_at": "2025-05-31T11:10:31.012249+00:00"
+    },
+    {
+      "id": "87df17e7-4643-406b-b21d-0b4522efefe4",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User tanyawhawash@gmail.com (ID: 1746219539563) was deleted",
+      "status": "success",
+      "created_at": "2025-06-02T20:39:46.371575+00:00"
+    },
+    {
+      "id": "53c07014-c9b9-4888-8749-234381d20ac3",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User tania.alhawash@students.alquds.edu (ID: 1746219539564) was deleted",
+      "status": "success",
+      "created_at": "2025-06-02T20:39:48.679575+00:00"
+    },
+    {
+      "id": "d13641b6-1d3d-459c-9df8-990d2ba63b73",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User j.sleibi@student.aaup.edu (ID: 1746219539569) was deleted",
+      "status": "success",
+      "created_at": "2025-06-06T08:58:31.128415+00:00"
+    },
+    {
+      "id": "ce52cf81-fa86-4ac7-ae97-2c403205ed0e",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User jhlsgdajhsd@gmail.com (ID: 1746219539570) was deleted",
+      "status": "success",
+      "created_at": "2025-06-06T10:12:07.872459+00:00"
+    },
+    {
+      "id": "7ad37a6d-8d0f-4234-b390-40dc1129bb2f",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User onlyforgames880@gmail.com (ID: 1746219539568) was deleted",
+      "status": "success",
+      "created_at": "2025-06-08T11:25:47.366592+00:00"
+    },
+    {
+      "id": "8c89a0d3-09bb-4e81-8516-5bae35a1c0e8",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User bishara.babish@gmail.com (ID: 1746219539572) was deleted",
+      "status": "success",
+      "created_at": "2025-06-09T23:32:07.579621+00:00"
+    },
+    {
+      "id": "43aa5aa9-ed63-4c51-9d3b-9218b19ba002",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User codefusion218@gmail.com (ID: 1746219539549) was deleted",
+      "status": "success",
+      "created_at": "2025-06-09T23:33:48.313003+00:00"
+    },
+    {
+      "id": "b0c942f2-c9af-4073-8d25-f00636114e9a",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User bisharajbaasdsadbish@gmail.com (ID: 1746219539601) was deleted",
+      "status": "success",
+      "created_at": "2025-06-17T15:44:41.693667+00:00"
+    },
+    {
+      "id": "3777b998-d7d9-4261-8ae0-0fe643ded558",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User jeriesbasbdasd@gmail.com (ID: 1746219539597) was deleted",
+      "status": "success",
+      "created_at": "2025-06-17T15:44:43.156321+00:00"
+    },
+    {
+      "id": "a897d1ed-cb4f-419a-815d-4c2f30e66be7",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User asdjnakshdasklndkj@gmail.com (ID: 1746219539603) was deleted",
+      "status": "success",
+      "created_at": "2025-06-17T15:47:17.570224+00:00"
+    },
+    {
+      "id": "7f3f8984-891b-4d0a-a295-9b2c150ab3d2",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User askjdhbaskjhd@gmail.com (ID: 1746219539604) was deleted",
+      "status": "success",
+      "created_at": "2025-06-23T09:54:13.941856+00:00"
+    },
+    {
+      "id": "0ebb9a2c-85d9-4894-8615-61c9aa5f6d26",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User bishara.albabish@students.alquds.edu (ID: 1746219539594) was deleted",
+      "status": "success",
+      "created_at": "2025-07-04T18:48:40.985409+00:00"
+    },
+    {
+      "id": "8b5fb472-98eb-4c08-98fe-24a64fb1dc15",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539586) was deleted",
+      "status": "success",
+      "created_at": "2025-07-06T07:44:52.765696+00:00"
+    },
+    {
+      "id": "3cf77ce4-4551-4234-81ba-8dac71bafc18",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User test@test.com (ID: 1746219539613) was deleted",
+      "status": "success",
+      "created_at": "2025-07-06T17:59:19.536642+00:00"
+    },
+    {
+      "id": "78564796-d8b2-4471-b346-1172f87f1bd1",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User codefusion218@gmail.com (ID: 1746219539616) was deleted",
+      "status": "success",
+      "created_at": "2025-07-08T10:20:35.950353+00:00"
+    },
+    {
+      "id": "a3a33d6e-23f0-426e-a737-2574d82963cf",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User codefusion218@gmail.com (ID: 1746219539617) was deleted",
+      "status": "success",
+      "created_at": "2025-07-09T09:15:44.686828+00:00"
+    },
+    {
+      "id": "77c7aa05-4476-4019-aa9f-d55cdd0c9920",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User codefusion218@gmail.com (ID: 1746219539623) was deleted",
+      "status": "success",
+      "created_at": "2025-07-09T09:17:05.609865+00:00"
+    },
+    {
+      "id": "6308d6a1-c493-47f5-ad23-fbf2a8aa3afa",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User onlyforgames880@gmail.com (ID: 1746219539620) was deleted",
+      "status": "success",
+      "created_at": "2025-07-09T09:17:11.717081+00:00"
+    },
+    {
+      "id": "e2b5db4d-9837-446a-a37f-3452f5f7c963",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User bishara.babish36@gmail.com (ID: 1746219539619) was deleted",
+      "status": "success",
+      "created_at": "2025-07-09T09:18:42.19775+00:00"
+    },
+    {
+      "id": "4e1c9f68-b1f2-4adc-94eb-698b4d0d0a19",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User bishara.albabish@students.alquds.edu (ID: 1746219539618) was deleted",
+      "status": "success",
+      "created_at": "2025-07-09T09:18:48.045007+00:00"
+    },
+    {
+      "id": "f78c29f1-86da-4e00-b157-dc06683ab9bb",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User bisharababishofficial@gmail.com (ID: 1746219539621) was deleted",
+      "status": "success",
+      "created_at": "2025-07-09T09:18:50.685256+00:00"
+    },
+    {
+      "id": "35f4f2e2-6cd2-4bd0-b0f2-d9d988587fc3",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User onlyforgames880@gmail.com (ID: 1746219539624) was deleted",
+      "status": "success",
+      "created_at": "2025-07-09T09:18:52.466431+00:00"
+    },
+    {
+      "id": "c5fd227d-c504-4ee2-8aff-40890e044ab6",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User abosleibi@gmail.com (ID: 1746219539626) was deleted",
+      "status": "success",
+      "created_at": "2025-07-10T08:29:25.084918+00:00"
+    },
+    {
+      "id": "e6e239ad-61e8-4bd6-849c-052177b23ec8",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": null,
+      "status": "success",
+      "created_at": "2025-07-10T08:29:26.986511+00:00"
+    },
+    {
+      "id": "b830978a-2f7d-4afb-8600-4cdac10d29a2",
+      "action": "User Deleted",
+      "user_email": "bishara@gmail.com",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539625) was deleted",
+      "status": "success",
+      "created_at": "2025-07-10T09:23:10.232281+00:00"
+    },
+    {
+      "id": "b2b91762-d940-4d4d-ac08-d032f1f8ff23",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 0c50e514-3839-40fd-8693-29925657cd94 was deleted",
+      "status": "success",
+      "created_at": "2025-07-10T11:58:05.763+00:00"
+    },
+    {
+      "id": "b5a98031-1448-42f9-a0cb-f9042b97c660",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara  with Dr. Judah Sleibi at QA tester ",
+      "status": "success",
+      "created_at": "2025-07-10T11:58:11.975+00:00"
+    },
+    {
+      "id": "6c54c874-9cd5-495c-b558-03fd93a48191",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 2c10cb5f-eabf-46e4-8001-739720861795 was deleted",
+      "status": "success",
+      "created_at": "2025-07-10T11:59:26.315+00:00"
+    },
+    {
+      "id": "25887021-6197-4114-92bd-f53f7fcd0aa1",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara  with Dr. Judah Sleibi at QA tester ",
+      "status": "success",
+      "created_at": "2025-07-10T11:59:31.998+00:00"
+    },
+    {
+      "id": "e875d0be-240d-4a23-8d64-ade2a9319888",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID f6223cf9-897c-416f-9857-f7f77c5de7e5 was deleted",
+      "status": "success",
+      "created_at": "2025-07-10T13:26:38.851+00:00"
+    },
+    {
+      "id": "f6a12247-faca-4852-8877-08dcce05c09b",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara  with Dr. Judah Sleibi at QA tester ",
+      "status": "success",
+      "created_at": "2025-07-10T13:27:39.944+00:00"
+    },
+    {
+      "id": "44771c6a-8a94-4ea6-89bd-be5e5ede0364",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara  with Dr. Judah Sleibi at QA tester ",
+      "status": "success",
+      "created_at": "2025-07-10T13:27:48.707+00:00"
+    },
+    {
+      "id": "20772876-0922-4157-847c-2fe69e73ffdf",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara  with Dr. Judah Sleibi at QA tester ",
+      "status": "success",
+      "created_at": "2025-07-10T13:28:19.793+00:00"
+    },
+    {
+      "id": "4621c05f-7c6b-4f46-9579-77694ed0b3f0",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara  with Dr. doctor1 at doctor1",
+      "status": "success",
+      "created_at": "2025-07-10T13:36:44.546+00:00"
+    },
+    {
+      "id": "7ce086a8-6f66-4fd8-a9f0-8af968502795",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara  with Dr. doctor2 at doctor2",
+      "status": "success",
+      "created_at": "2025-07-10T13:36:50.377+00:00"
+    },
+    {
+      "id": "aa1a1233-21fb-4be9-80a5-b8d95e1ee2a3",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara  with Dr. doctor3 at doctor3",
+      "status": "success",
+      "created_at": "2025-07-10T13:36:58.776+00:00"
+    },
+    {
+      "id": "8ca58593-51ea-41b3-9a16-9acc2fe7251d",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user judahsleibi34@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-07-11T08:53:30.498728+00:00"
+    },
+    {
+      "id": "e7c76cc6-a76c-4aa7-8e3e-0a7815bad067",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539631) was updated",
+      "status": "success",
+      "created_at": "2025-07-11T09:01:33.734285+00:00"
+    },
+    {
+      "id": "5ff4bd87-15c8-4391-9283-7b1950ad9be0",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539631) was updated",
+      "status": "success",
+      "created_at": "2025-07-11T09:30:43.128351+00:00"
+    },
+    {
+      "id": "e09fc6f3-1309-4bcd-96f3-73584f38d21e",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539631) was updated",
+      "status": "success",
+      "created_at": "2025-07-11T09:46:51.993503+00:00"
+    },
+    {
+      "id": "e5175554-c0c0-467f-8aa8-cde64a19e90c",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539631) was updated",
+      "status": "success",
+      "created_at": "2025-07-11T09:50:37.963273+00:00"
+    },
+    {
+      "id": "d35abcc0-4565-4767-9fc5-45b7022d89c0",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539615) was updated",
+      "status": "success",
+      "created_at": "2025-07-11T12:02:21.721385+00:00"
+    },
+    {
+      "id": "64b4b8a8-53a8-4fc8-8205-3942c996de16",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Secretary) created",
+      "status": "success",
+      "created_at": "2025-07-11T19:41:01.188634+00:00"
+    },
+    {
+      "id": "b9eb1671-3b2b-4334-b68d-8c95ed63ce34",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user judahsleibi34@gmail.com (Lab) created",
+      "status": "success",
+      "created_at": "2025-07-12T07:33:26.148547+00:00"
+    },
+    {
+      "id": "1806d0c6-05a0-4e17-9aab-b0f2a43e763a",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539634) was updated",
+      "status": "success",
+      "created_at": "2025-07-12T07:43:41.653535+00:00"
+    },
+    {
+      "id": "c608ba2f-4622-44a3-96a9-57a01a09a6d1",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User abosleibi@gmail.com (ID: 1746219539637) was updated",
+      "status": "success",
+      "created_at": "2025-07-20T11:18:48.192186+00:00"
+    },
+    {
+      "id": "9c78c12d-17c9-49c6-9b5a-15a8b6c9f93b",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User abosleibi@gmail.com (ID: 1746219539637) was updated",
+      "status": "success",
+      "created_at": "2025-07-20T11:19:58.242679+00:00"
+    },
+    {
+      "id": "56aaa7f8-c3d6-418b-a834-26f89f7708cf",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539633) was updated",
+      "status": "success",
+      "created_at": "2025-07-20T11:28:35.801906+00:00"
+    },
+    {
+      "id": "a2695ffe-d5db-47b9-bab8-b7079b0486b8",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User abosleibi@gmail.com (ID: 1746219539637) was updated",
+      "status": "success",
+      "created_at": "2025-07-20T11:37:29.048466+00:00"
+    },
+    {
+      "id": "37298057-3407-426d-af7b-0fad16885104",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Judah with Dr. Judah Sleibi at Clinic",
+      "status": "success",
+      "created_at": "2025-07-20T11:45:29.598+00:00"
+    },
+    {
+      "id": "781c11cc-7456-4a76-a338-1e0d9ee3d7ff",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Secretary) created",
+      "status": "success",
+      "created_at": "2025-07-21T10:38:59.328239+00:00"
+    },
+    {
+      "id": "00140515-0504-402b-bee3-246c761bddaa",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.albabish@students.alquds.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-07-21T11:10:58.742883+00:00"
+    },
+    {
+      "id": "66bfd84b-bbae-4620-8e58-7a812f486727",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.albabish@students.alquds.com (ID: 1746219539651) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T10:00:20.944838+00:00"
+    },
+    {
+      "id": "14421fd1-6c29-454a-8ed5-8c8f73ca0057",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user judahsleibi34@gmail.com (Secretary) created",
+      "status": "success",
+      "created_at": "2025-07-25T10:01:51.471024+00:00"
+    },
+    {
+      "id": "32f78075-9202-454b-b2cc-7df96ec3401c",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539645) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T10:06:54.518066+00:00"
+    },
+    {
+      "id": "69864c24-891a-4adc-be0f-1a2f25a5083e",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Judah Sleibi (ID: 1746219539653) was deleted",
+      "status": "success",
+      "created_at": "2025-07-25T10:39:46.437743+00:00"
+    },
+    {
+      "id": "c57f2bf0-6edc-440c-a1c7-f6347a98f30b",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539653) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T10:39:58.335782+00:00"
+    },
+    {
+      "id": "463572dd-6588-4db5-b107-57d07ef507f4",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user judahsleibi34@gmail.com (Lab) created",
+      "status": "success",
+      "created_at": "2025-07-25T10:40:41.251866+00:00"
+    },
+    {
+      "id": "333a15e2-9456-47f1-bf8a-841af1124e90",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T10:42:25.39374+00:00"
+    },
+    {
+      "id": "05052ea8-bdc4-47cc-b4c4-505f06ef633c",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T10:46:57.506505+00:00"
+    },
+    {
+      "id": "686aaf6d-f427-4b9b-a6e5-32778edb163a",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539645) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T10:47:36.307973+00:00"
+    },
+    {
+      "id": "ffdefbc7-29c2-49cb-a598-96c788acd0c1",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T10:48:47.5963+00:00"
+    },
+    {
+      "id": "dc475b46-3463-43d8-a113-5127946814fa",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T10:59:38.218391+00:00"
+    },
+    {
+      "id": "06cf4474-b678-45af-b42d-6450ac4798a1",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T11:08:42.980414+00:00"
+    },
+    {
+      "id": "d40a1cdd-1495-44ff-8bc7-c8e77e190e59",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-25T11:18:26.353211+00:00"
+    },
+    {
+      "id": "4f1415ae-eb08-45e7-b403-a8f1e7162cd9",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-26T08:16:36.453933+00:00"
+    },
+    {
+      "id": "fbe6fe59-d49f-4442-878c-a8992613ab71",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539645) was updated",
+      "status": "success",
+      "created_at": "2025-07-26T11:50:40.568245+00:00"
+    },
+    {
+      "id": "3b4df39a-da2a-4cbd-8ceb-642ae55603a2",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-29T04:54:29.449632+00:00"
+    },
+    {
+      "id": "2930479c-d88c-481a-85da-39934b0f9e9f",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-29T05:01:15.75806+00:00"
+    },
+    {
+      "id": "6409d3d0-7578-4102-add9-bd416cdd2eac",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara dasdasd (ID: 1746219539645) was deleted",
+      "status": "success",
+      "created_at": "2025-07-29T05:02:36.830779+00:00"
+    },
+    {
+      "id": "d4f47746-4797-4abf-864e-0c3497beb544",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-29T09:56:21.31002+00:00"
+    },
+    {
+      "id": "9c36cbc2-cbf2-4678-9897-9df2262344f8",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-07-29T09:56:27.392116+00:00"
+    },
+    {
+      "id": "ba1e0cbf-a522-410c-ad74-b930006f6804",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:36:05.017233+00:00"
+    },
+    {
+      "id": "f53507bd-0e6f-4b15-9187-63591abe5b6a",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:36:30.932679+00:00"
+    },
+    {
+      "id": "04f6b4fb-adbb-49b9-a2dd-9886ab2198e7",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:43:46.793917+00:00"
+    },
+    {
+      "id": "e4481338-7454-494e-b776-903ccd2cf617",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:46:26.883268+00:00"
+    },
+    {
+      "id": "dba47526-f491-4d10-b122-fc88727cc776",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:46:58.51455+00:00"
+    },
+    {
+      "id": "a19e7991-2da5-41c8-8340-4a0461a3ea74",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:48:40.136936+00:00"
+    },
+    {
+      "id": "93f0ad51-9c84-4126-af2c-8ab731dc6826",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:49:37.1169+00:00"
+    },
+    {
+      "id": "3540abd8-0f78-4ac5-bc8b-6cd3984a7a92",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User adad Sleibida (ID: 1746219539656) was deleted",
+      "status": "success",
+      "created_at": "2025-08-02T11:49:58.395621+00:00"
+    },
+    {
+      "id": "0809d351-b057-4f1d-9eba-e30c1cb3f605",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.albabish@students.alquds.com (ID: 1746219539651) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:52:18.660534+00:00"
+    },
+    {
+      "id": "45210081-c04c-46b5-8765-53f5505e1ce9",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.albabish@students.alquds.com (ID: 1746219539651) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:53:35.653955+00:00"
+    },
+    {
+      "id": "9009f236-a707-43a9-8d0b-a3d06f527a4a",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T11:58:00.183653+00:00"
+    },
+    {
+      "id": "750b5e13-ac70-4554-b08f-c1c1758207c0",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.albabish@students.alquds.com (ID: 1746219539651) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T12:00:35.086896+00:00"
+    },
+    {
+      "id": "d15894c2-7764-4316-a316-d80cc39a31cb",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T12:00:39.48593+00:00"
+    },
+    {
+      "id": "8356a011-3053-4c04-869c-31c8299b3301",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T12:05:29.712827+00:00"
+    },
+    {
+      "id": "26bf7dee-b101-4453-958c-35319093a19e",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user abosleibi@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-08-02T12:09:55.576456+00:00"
+    },
+    {
+      "id": "272ba890-5096-4ff5-9302-995062955748",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-02T12:10:16.426666+00:00"
+    },
+    {
+      "id": "be57e469-b33b-4bb2-a17a-4adbe2498ff5",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-08-02T20:42:57.197921+00:00"
+    },
+    {
+      "id": "bb16f7f7-8332-410d-af4c-57af69b05df0",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539661) was updated",
+      "status": "success",
+      "created_at": "2025-08-03T09:53:52.593826+00:00"
+    },
+    {
+      "id": "d3caa719-fa1c-4167-b7a6-6f4265f08d8f",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539661) was updated",
+      "status": "success",
+      "created_at": "2025-08-03T10:13:02.492672+00:00"
+    },
+    {
+      "id": "55a8ccc5-ed81-4cc4-b390-7863c0c07093",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-03T10:18:26.119136+00:00"
+    },
+    {
+      "id": "3dbdeba8-6119-4f8d-9cb6-106ef4b50272",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-04T10:30:50.563327+00:00"
+    },
+    {
+      "id": "6307fcaf-e85e-4c47-90e2-787ec28402cf",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-04T20:08:28.490769+00:00"
+    },
+    {
+      "id": "5c5e63eb-40b4-4581-b3c3-0eea237da50d",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Judah with Dr. Bishara Babish at Dentist",
+      "status": "success",
+      "created_at": "2025-08-07T08:44:05.96+00:00"
+    },
+    {
+      "id": "8d65d646-988d-4b58-b96a-300af9435e97",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID b1cf1b7f-cd4e-4589-8227-76388320acd0 was deleted",
+      "status": "success",
+      "created_at": "2025-08-07T08:44:51.713+00:00"
+    },
+    {
+      "id": "74667ce8-b788-454a-8e79-153e22d5bcad",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID b1cf1b7f-cd4e-4589-8227-76388320acd0 was deleted",
+      "status": "success",
+      "created_at": "2025-08-07T08:45:08.538+00:00"
+    },
+    {
+      "id": "3201fd30-8174-456d-bebf-160abc6cdd76",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID b1cf1b7f-cd4e-4589-8227-76388320acd0 was deleted",
+      "status": "success",
+      "created_at": "2025-08-07T08:45:15.896+00:00"
+    },
+    {
+      "id": "80f75123-fa93-455b-8bf3-b0caf5d5afa0",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID b1cf1b7f-cd4e-4589-8227-76388320acd0 was deleted",
+      "status": "success",
+      "created_at": "2025-08-07T09:04:52.017+00:00"
+    },
+    {
+      "id": "ae91918b-a2cc-4680-a87c-027043c736fa",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Judah with Dr. Bishara Babish at Dentist",
+      "status": "success",
+      "created_at": "2025-08-07T09:15:19.647+00:00"
+    },
+    {
+      "id": "e38b73aa-cb85-45af-b401-ec825710cae3",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 4cb17133-9261-4260-a3ed-fb38e9eb9d28 was deleted",
+      "status": "success",
+      "created_at": "2025-08-07T09:15:24.505+00:00"
+    },
+    {
+      "id": "100ef6c5-b911-477e-85c5-d6b414b53653",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 4cb17133-9261-4260-a3ed-fb38e9eb9d28 was deleted",
+      "status": "success",
+      "created_at": "2025-08-07T09:23:16.922+00:00"
+    },
+    {
+      "id": "0c82193a-0714-4e55-baea-7938aea60dcf",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 4cb17133-9261-4260-a3ed-fb38e9eb9d28 was deleted",
+      "status": "success",
+      "created_at": "2025-08-07T09:23:31.833+00:00"
+    },
+    {
+      "id": "264905b6-d3d8-4f9d-915c-d921aeba0af1",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Judah with Dr. Bishara Babish at Dentist",
+      "status": "success",
+      "created_at": "2025-08-07T09:23:46.341+00:00"
+    },
+    {
+      "id": "1d9df624-0239-4f9e-8a00-adedf200508b",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 53cce1f0-680e-4412-b3d7-89af1873e5a0 was deleted",
+      "status": "success",
+      "created_at": "2025-08-07T09:23:52.58+00:00"
+    },
+    {
+      "id": "49ef827d-01c9-4d4b-bc13-a1819da04106",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539661) was updated",
+      "status": "success",
+      "created_at": "2025-08-11T07:33:35.598434+00:00"
+    },
+    {
+      "id": "653eedf3-a627-4fb2-b6f9-dbeb3151074d",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-15T08:08:39.780878+00:00"
+    },
+    {
+      "id": "7a556708-d8b0-49d4-9dd2-25d58d259133",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539661) was updated",
+      "status": "success",
+      "created_at": "2025-08-15T08:08:55.040898+00:00"
+    },
+    {
+      "id": "41fcc66e-90f8-4697-8b3e-606b8ddeb66d",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-15T08:15:55.980027+00:00"
+    },
+    {
+      "id": "37e30382-0a65-4f80-b6ea-6c02ca61c269",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user abosleibi@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-08-15T08:27:55.115808+00:00"
+    },
+    {
+      "id": "290444e6-b754-4e61-8504-69900af6a75c",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Gassan Sleibi (ID: 1746219539664) was deleted",
+      "status": "success",
+      "created_at": "2025-08-15T08:28:43.489272+00:00"
+    },
+    {
+      "id": "5c132495-2cf8-4dd0-81b4-1b9aa4fe2086",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user abosleibi@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-08-15T08:30:13.806257+00:00"
+    },
+    {
+      "id": "7b8a9d28-6827-4441-8184-c734a3bb8ada",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-18T09:22:40.974786+00:00"
+    },
+    {
+      "id": "bf738783-8c5a-4bf1-b071-babbd606c6cc",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-18T09:23:06.320982+00:00"
+    },
+    {
+      "id": "0720a1d7-ce82-4c8c-af6f-8c8d0db89b62",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-08-18T09:30:33.1214+00:00"
+    },
+    {
+      "id": "086d13fd-156d-4b77-ac3e-482267041133",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Gassan Sleibi (ID: 1746219539665) was deleted",
+      "status": "success",
+      "created_at": "2025-10-03T17:38:43.103671+00:00"
+    },
+    {
+      "id": "3ad74a20-2390-410b-8705-5f39a7c811f8",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539654) was updated",
+      "status": "success",
+      "created_at": "2025-10-03T17:49:09.88355+00:00"
+    },
+    {
+      "id": "cb647780-01cd-4b39-a3d2-5cd71e1ec764",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539671) was updated",
+      "status": "success",
+      "created_at": "2025-10-05T08:30:42.260431+00:00"
+    },
+    {
+      "id": "9dcd2f2b-9a72-41b5-a39a-34731c45b2ca",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-05T08:33:18.75966+00:00"
+    },
+    {
+      "id": "05c58fb1-a560-4a3b-b0f8-db095af34494",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539671) was updated",
+      "status": "success",
+      "created_at": "2025-10-05T08:34:28.727208+00:00"
+    },
+    {
+      "id": "6f95b407-d57b-43ce-8ea0-ef54f09e5e5e",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539671) was updated",
+      "status": "success",
+      "created_at": "2025-10-05T08:54:46.702331+00:00"
+    },
+    {
+      "id": "65e8c8b3-83fb-4dfb-a8d4-05359fc96924",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539671) was updated",
+      "status": "success",
+      "created_at": "2025-10-05T09:26:15.785831+00:00"
+    },
+    {
+      "id": "8133bf84-70ac-4269-993e-214fee964d77",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-07T15:57:37.149691+00:00"
+    },
+    {
+      "id": "14040dc1-b060-4c16-bee5-0cbecfc975f0",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-07T15:59:37.923817+00:00"
+    },
+    {
+      "id": "50a5c6b3-2621-4871-8bc4-5e1883fa8b52",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-07T16:14:17.826503+00:00"
+    },
+    {
+      "id": "0d9989e0-e2f6-4a4f-a445-9718ff802a37",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539671) was updated",
+      "status": "success",
+      "created_at": "2025-10-11T06:33:48.17716+00:00"
+    },
+    {
+      "id": "44990ff7-7953-4729-a8d2-76b31e121705",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539671) was updated",
+      "status": "success",
+      "created_at": "2025-10-11T06:34:47.793426+00:00"
+    },
+    {
+      "id": "ec623baf-fa4f-4715-8477-2b446afa419b",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539671) was updated",
+      "status": "success",
+      "created_at": "2025-10-11T08:24:53.243362+00:00"
+    },
+    {
+      "id": "6da1653b-f52d-41a1-9f94-56989a143b33",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-11T16:41:55.014639+00:00"
+    },
+    {
+      "id": "81ca01dc-57ec-4ad0-a600-841788087184",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for asdasdasd with Dr. judah issa at Dentist",
+      "status": "success",
+      "created_at": "2025-10-12T13:51:50.336+00:00"
+    },
+    {
+      "id": "e033db73-df18-45a9-82aa-e19a01a8534b",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for asdasdasd with Dr. asdasdasd at ENNNNT",
+      "status": "success",
+      "created_at": "2025-10-12T13:54:06.206+00:00"
+    },
+    {
+      "id": "5c5ce487-b75d-4d36-9cc5-bdcf8100d13e",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539671) was updated",
+      "status": "success",
+      "created_at": "2025-10-12T14:23:20.537513+00:00"
+    },
+    {
+      "id": "ab01b2ed-0c65-4524-a11c-78b15f8618f4",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-13T07:22:41.99483+00:00"
+    },
+    {
+      "id": "02c3e4db-f51d-4843-8e0a-e3b64f128d0b",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-13T07:22:42.018461+00:00"
+    },
+    {
+      "id": "5023515e-240f-4d3a-92a7-707b20e93862",
+      "action": "تم تحديث مستخدم",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-13T07:25:14.547161+00:00"
+    },
+    {
+      "id": "b65b2c29-c2ca-4b63-97b7-e369763f59b7",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 8ace4b81-f924-4219-91a4-8121cbc56dea was deleted",
+      "status": "success",
+      "created_at": "2025-10-15T05:41:36.424+00:00"
+    },
+    {
+      "id": "5d26b5f5-b9ed-4653-9b0e-118a2e53817f",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 8ace4b81-f924-4219-91a4-8121cbc56dea was deleted",
+      "status": "success",
+      "created_at": "2025-10-15T05:41:41.096+00:00"
+    },
+    {
+      "id": "19be3719-f9ea-44f7-9426-c399f780dc66",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID b74ce7ea-b9ee-48c9-8260-c54d0c0214a4 was deleted",
+      "status": "success",
+      "created_at": "2025-10-15T05:41:43.693+00:00"
+    },
+    {
+      "id": "70c9b25e-4a27-4df0-bf83-7d80172c8e26",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID b74ce7ea-b9ee-48c9-8260-c54d0c0214a4 was deleted",
+      "status": "success",
+      "created_at": "2025-10-15T05:41:43.897+00:00"
+    },
+    {
+      "id": "c6265415-f9e6-48cb-bc16-07a0d5e48f60",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User dodo@gmail.com (ID: 1746219539689) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T06:19:47.241025+00:00"
+    },
+    {
+      "id": "9fd0c3ec-ecd3-4d97-b40b-3e535b3690d1",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID 3913ea13-6520-4351-9bb3-b8671eda9b33 was deleted",
+      "status": "success",
+      "created_at": "2025-10-16T06:25:55.538+00:00"
+    },
+    {
+      "id": "debcbac4-fe38-4a4e-be5b-07be651dd3f2",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T06:40:23.353352+00:00"
+    },
+    {
+      "id": "e54d9347-0666-4866-8ca3-0e8b769b3c72",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User dodo@gmail.com (ID: 1746219539689) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T06:42:52.266333+00:00"
+    },
+    {
+      "id": "2b81bb55-b01a-4006-97bb-3c95ca908b57",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T06:43:04.129505+00:00"
+    },
+    {
+      "id": "c68aa2aa-1d86-4e51-a40b-a14e4012c921",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T06:44:51.710532+00:00"
+    },
+    {
+      "id": "fc418572-2c13-4509-8755-8f59f81374f3",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539673) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T06:46:16.334464+00:00"
+    },
+    {
+      "id": "a4550f63-79dd-424b-a1d9-e208e1fc9114",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539689) was deleted",
+      "status": "success",
+      "created_at": "2025-10-16T07:21:51.696746+00:00"
+    },
+    {
+      "id": "73787adf-3b75-4a47-9123-fdf496819cbf",
+      "action": "تم حذف مستخدم",
+      "user_email": "admin",
+      "details": "User asdasdas dasdasdasdasd (ID: 1746219539687) was deleted",
+      "status": "success",
+      "created_at": "2025-10-16T07:22:03.831737+00:00"
+    },
+    {
+      "id": "30ca2105-80a5-4eb8-b2c8-5db20c4fd1d1",
+      "action": "تم حذف مستخدم",
+      "user_email": "admin",
+      "details": "User asdasdasd asdasdsadasd (ID: 1746219539685) was deleted",
+      "status": "success",
+      "created_at": "2025-10-16T07:22:38.602209+00:00"
+    },
+    {
+      "id": "8e42eec6-cceb-4de3-8d40-912b8f2dcd15",
+      "action": "تم حذف مستخدم",
+      "user_email": "admin",
+      "details": "User issa handal (ID: 1746219539671) was deleted",
+      "status": "success",
+      "created_at": "2025-10-16T07:22:43.005764+00:00"
+    },
+    {
+      "id": "436cb83b-d746-4fff-b3f4-948a964600f9",
+      "action": "تم حذف مستخدم",
+      "user_email": "admin",
+      "details": "User Judah Sleibi (ID: 1746219539673) was deleted",
+      "status": "success",
+      "created_at": "2025-10-16T07:22:46.673496+00:00"
+    },
+    {
+      "id": "5ed426ae-d9dd-4962-985b-4b4395769bc4",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-16T10:06:45.253885+00:00"
+    },
+    {
+      "id": "e8f183ed-516d-409d-894d-fe5bf70bba69",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish36@gmail.com (ID: 1746219539690) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T10:08:11.781257+00:00"
+    },
+    {
+      "id": "12459d53-d6f4-4dea-a960-f04e45709c3a",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-16T10:10:26.145192+00:00"
+    },
+    {
+      "id": "c1912db0-df48-41e8-80a2-01c55b90229b",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara with Dr. Bishara Babish at Dentist ",
+      "status": "success",
+      "created_at": "2025-10-16T11:21:59.884+00:00"
+    },
+    {
+      "id": "f88b9c0c-4233-4fc1-bcff-e0ab20076df4",
+      "action": "Appointment Created",
+      "user_email": "bishara@gmail.com",
+      "details": "New appointment created for Bishara with Dr. Judah Sleibi at ENT",
+      "status": "success",
+      "created_at": "2025-10-16T11:22:21.468+00:00"
+    },
+    {
+      "id": "fea59544-ee7b-4b06-a764-72c1717e75a6",
+      "action": "Appointment deleted successfully.",
+      "user_email": "bishara@gmail.com",
+      "details": "Appointment ID c59d2d17-1fb4-44be-8ac5-02e696a0490e was deleted",
+      "status": "success",
+      "created_at": "2025-10-16T12:33:54.834+00:00"
+    },
+    {
+      "id": "68820a45-e1d3-4487-b722-79fbba408a5e",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-16T12:35:19.720758+00:00"
+    },
+    {
+      "id": "880f2ab4-ea01-407a-8a97-8fef04a45fc2",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User kjsbdaksj dasdasd (ID: 1746219539692) was deleted",
+      "status": "success",
+      "created_at": "2025-10-16T12:36:29.784219+00:00"
+    },
+    {
+      "id": "d59d8a9b-d66c-483d-a2d6-ecce47994201",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-16T12:37:27.931644+00:00"
+    },
+    {
+      "id": "fd277533-3cd1-4fed-a2e4-c044eb12247c",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539693) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T14:26:41.20174+00:00"
+    },
+    {
+      "id": "98d429d3-c9cf-4060-9e35-94f6e89290e2",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539693) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T14:26:52.792916+00:00"
+    },
+    {
+      "id": "f686bae0-2404-4cfa-bbf7-acd9af136b82",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539693) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T14:27:13.873277+00:00"
+    },
+    {
+      "id": "bcbdadff-3513-40dd-960c-cc63eface355",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User bishara.babish23@gmail.com (ID: 1746219539693) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T14:30:12.563029+00:00"
+    },
+    {
+      "id": "64629ee1-e9ae-4ec1-85da-8f022a098ca5",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539694) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T15:29:00.777381+00:00"
+    },
+    {
+      "id": "5f20bc4a-fc10-42ed-98e6-0a3d0eaa8951",
+      "action": "User Updated",
+      "user_email": "admin",
+      "details": "User judahsleibi34@gmail.com (ID: 1746219539694) was updated",
+      "status": "success",
+      "created_at": "2025-10-16T15:30:55.210725+00:00"
+    },
+    {
+      "id": "88dd949b-78b5-4e33-9a0a-4e7b5cf917dd",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Judah Sleibi (ID: 1746219539694) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:23:35.88951+00:00"
+    },
+    {
+      "id": "beb53e4f-0ebe-4cbe-bd55-f93304c091a1",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish3666@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T15:25:13.367814+00:00"
+    },
+    {
+      "id": "9f549e70-9ca2-4f4c-8349-3f8bd3f47a1c",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasdfdgfdg dasdasddfgdfgdfg (ID: 1746219539697) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:26:09.676478+00:00"
+    },
+    {
+      "id": "4c0061fd-1cc4-4f1d-9555-c7f3d2302e72",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36666@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T15:28:06.258004+00:00"
+    },
+    {
+      "id": "effaa7e0-1192-4a3d-b176-59cc8b98d7b9",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T15:30:28.116025+00:00"
+    },
+    {
+      "id": "bbcf4d8b-3872-46cf-a2e0-4af4d5cc8702",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User sdlkjmfdnaslkdjasdasd lknwadlkasdasd (ID: 1746219539716) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:34:27.873997+00:00"
+    },
+    {
+      "id": "c06c3284-5670-4607-a943-d364bbb68d4f",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasdDASDASD ASDASDASD (ID: 1746219539717) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:37:01.069274+00:00"
+    },
+    {
+      "id": "eb92adb2-5b3c-4259-87f9-8f3ef107a9ac",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd asdsa (ID: 1746219539693) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:37:23.561476+00:00"
+    },
+    {
+      "id": "ecaed378-c486-4ce0-9647-a064089769c3",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T15:38:52.501274+00:00"
+    },
+    {
+      "id": "fb3126bb-6293-4365-8bb9-a4dd5ccfee7f",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T15:39:56.951549+00:00"
+    },
+    {
+      "id": "fbd65dd1-1e59-4b59-8564-fb47a213feb9",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bisharaasdsad asdasdasd (ID: 1746219539719) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:40:19.540624+00:00"
+    },
+    {
+      "id": "16817154-9b85-43c4-9112-11f476506f56",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara babish (ID: 1746219539718) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:41:13.749385+00:00"
+    },
+    {
+      "id": "defb5016-d45a-4d4c-944c-afd10e5d36e5",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T15:43:01.078037+00:00"
+    },
+    {
+      "id": "19cd457c-0969-495f-a405-a58a7d99d1ab",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539720) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:53:57.772772+00:00"
+    },
+    {
+      "id": "67853ea7-7158-46d7-9934-5259bd1acfec",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T15:57:09.213614+00:00"
+    },
+    {
+      "id": "c95bbb39-4052-44b1-93a2-9edbb7904e00",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539723) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T15:59:04.864472+00:00"
+    },
+    {
+      "id": "f6bdca48-9dc7-4575-bbed-a6b6eb23c8c1",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:00:25.80957+00:00"
+    },
+    {
+      "id": "a55ea0ee-5af1-46cf-a09e-80ee5b9af9fd",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539724) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:02:13.283871+00:00"
+    },
+    {
+      "id": "fc1ecf63-9731-4fc8-b16e-e22983ea8b7a",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:03:06.479793+00:00"
+    },
+    {
+      "id": "1fe3ba7b-fe2b-4f6d-989f-22e8369225f3",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539725) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:11:02.84872+00:00"
+    },
+    {
+      "id": "027cd9b4-5fe9-4c11-9760-76e9ff78dfea",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539725) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:15:46.155299+00:00"
+    },
+    {
+      "id": "04e93592-0b35-426d-81f6-864ec48637de",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:21:59.233956+00:00"
+    },
+    {
+      "id": "88687b2f-b720-457c-aebf-4aed30ce32fb",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539726) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:22:58.074184+00:00"
+    },
+    {
+      "id": "c16c2578-6979-4a48-ad71-04fbefdee86e",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539726) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:23:27.005961+00:00"
+    },
+    {
+      "id": "1162c36c-dbcc-4049-b245-35e66173808a",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539726) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:23:37.285384+00:00"
+    },
+    {
+      "id": "5f556874-69ca-46f2-acbf-278501f59bd2",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539726) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:25:17.963996+00:00"
+    },
+    {
+      "id": "03a4eca1-f4ce-4c72-bde5-530dc888a6d4",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:26:23.728333+00:00"
+    },
+    {
+      "id": "8664c682-4d55-4b24-8c13-213ce16c1cd8",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:26:51.936575+00:00"
+    },
+    {
+      "id": "9f4e4f99-5d61-4e5a-847b-40c5abb38348",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasdkjbasdbk kjnbaskdjnba (ID: 1746219539728) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:28:41.733402+00:00"
+    },
+    {
+      "id": "08cac022-79a7-4326-b409-a77c564aea58",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:30:10.422136+00:00"
+    },
+    {
+      "id": "81ba8ca3-4a20-4747-8978-f827334d780a",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:31:01.348868+00:00"
+    },
+    {
+      "id": "38da0bf9-34ee-4d95-a9ff-4e45ba9117da",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User kljnhlkjnlk nkllknlk (ID: 1746219539730) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:33:36.647625+00:00"
+    },
+    {
+      "id": "46990688-c921-4adc-a799-74d360935d76",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:35:01.644359+00:00"
+    },
+    {
+      "id": "d97a0f45-32c8-4f5f-8736-6463a4de3731",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:35:35.143477+00:00"
+    },
+    {
+      "id": "ba5f4a31-d32c-410e-a114-7a0fecf64fd0",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User dfgdfg dfgdfgdf (ID: 1746219539733) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:36:48.248387+00:00"
+    },
+    {
+      "id": "503823e5-2981-4bd2-8608-91b6c2871967",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd asdasdasd (ID: 1746219539731) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:36:50.404575+00:00"
+    },
+    {
+      "id": "b563d4f3-8e76-40f8-b252-c3cdf739b11e",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:37:35.186365+00:00"
+    },
+    {
+      "id": "e79ef6a6-b116-4f03-9875-4db003194bd6",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:38:25.278872+00:00"
+    },
+    {
+      "id": "0ac54fe9-0d77-4232-aad4-6b7357f3f7ee",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User dfsdfdsf sdfsdfsdfsdf (ID: 1746219539735) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:44:09.499124+00:00"
+    },
+    {
+      "id": "accfc5d7-d9b9-4e13-94d5-0b8e2df14c01",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:45:54.176381+00:00"
+    },
+    {
+      "id": "224e41bf-6e4c-42b6-a037-6ac2c655552f",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:46:26.210505+00:00"
+    },
+    {
+      "id": "ced1791d-5137-4a44-a79a-e2bc4575490f",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User lkasjnlk ljkdnaskj (ID: 1746219539737) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:47:32.827997+00:00"
+    },
+    {
+      "id": "b4781846-04ad-4592-97a6-9d3be7401452",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:48:16.261728+00:00"
+    },
+    {
+      "id": "dfcfc713-89f5-43e0-aaea-3f1770b7b64a",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T16:50:03.121295+00:00"
+    },
+    {
+      "id": "e16d169f-f324-4ccc-8d71-78d6b35e3ce8",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User nojh dkjfns kljnlkajs (ID: 1746219539739) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:53:05.538958+00:00"
+    },
+    {
+      "id": "f422e10b-3f25-4de6-9140-9ee89b28c805",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdsadsa dasdasd (ID: 1746219539736) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:53:13.088656+00:00"
+    },
+    {
+      "id": "4d47d640-160f-49f3-9ea5-e44438241632",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdsadsa dasdasd (ID: 1746219539736) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:54:54.175853+00:00"
+    },
+    {
+      "id": "735f86c3-4bb0-4c4d-a122-200dc97394db",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdsadsa dasdasd (ID: 1746219539736) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T16:56:08.631705+00:00"
+    },
+    {
+      "id": "aaadbcb4-622c-4a27-a9eb-56b047498c23",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User nojh dkjfns kljnlkajs (ID: 1746219539739) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:04:56.556655+00:00"
+    },
+    {
+      "id": "049a8738-73a3-4d58-a63d-151957a8e7b4",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdsadsa dasdasd (ID: 1746219539736) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:05:18.76594+00:00"
+    },
+    {
+      "id": "106b7f64-103e-4454-9640-2f94167f3469",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T17:06:33.056934+00:00"
+    },
+    {
+      "id": "2ed5c220-1e13-4384-80c2-22af274695cc",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T17:07:28.137587+00:00"
+    },
+    {
+      "id": "e7972227-e9d9-44a6-a865-c70ad6831de9",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User lksdnfk lkmdlka (ID: 1746219539742) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:08:25.150356+00:00"
+    },
+    {
+      "id": "aff39688-be9a-41ff-a9fe-6e889cf5ce33",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bisharaaas asd (ID: 1746219539740) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:11:21.359827+00:00"
+    },
+    {
+      "id": "5224200b-8e39-4199-a4a8-c70f1f928985",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T17:12:25.14743+00:00"
+    },
+    {
+      "id": "4818ff2e-907c-4968-ab0e-0c8300d75262",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd ad (ID: 1746219539743) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:13:21.214834+00:00"
+    },
+    {
+      "id": "134feb7b-cf89-491e-9ffe-34d549ba0c6c",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T17:14:47.495153+00:00"
+    },
+    {
+      "id": "cadda700-6068-46c1-850f-2151ac87b74f",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdsad dasdasd (ID: 1746219539744) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:25:04.099528+00:00"
+    },
+    {
+      "id": "5a34568f-792f-4d1e-a9e9-9767954bfb16",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T17:36:32.086934+00:00"
+    },
+    {
+      "id": "646cee54-b3b9-4caa-be58-f4c0a58f81b7",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdsa dasdasd (ID: 1746219539745) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:38:16.498843+00:00"
+    },
+    {
+      "id": "bba82f58-0c1f-4b0f-9584-b21f0a0f2f51",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T17:41:18.107399+00:00"
+    },
+    {
+      "id": "91e8d6f6-b308-4233-986f-40cb45577943",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User ASDAS ASDASD (ID: 1746219539746) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:43:12.916253+00:00"
+    },
+    {
+      "id": "feccefe9-1a7f-4c7b-bb89-fc74998871f4",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User ASDAS ASDASD (ID: 1746219539746) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:48:38.643007+00:00"
+    },
+    {
+      "id": "21faf20e-3d87-4f63-ad59-b72e38816e61",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User ASDAS ASDASD (ID: 1746219539746) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:50:41.55241+00:00"
+    },
+    {
+      "id": "8ef04328-3ae4-4881-92d9-1a8052091ed5",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User ASDAS ASDASD (ID: 1746219539746) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:53:37.167483+00:00"
+    },
+    {
+      "id": "4204aa86-3632-4f86-af4b-05996f96ccfa",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User ASDAS ASDASD (ID: 1746219539746) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:54:04.873757+00:00"
+    },
+    {
+      "id": "5b250b90-9b0d-4d43-acb8-168b706a6d29",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User ASDAS ASDASD (ID: 1746219539746) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:55:52.102774+00:00"
+    },
+    {
+      "id": "236cf718-e911-4c85-a143-e4321f92c03c",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T17:57:41.92985+00:00"
+    },
+    {
+      "id": "d9066117-b152-4be1-8fdc-129ed6275019",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asasd dasdsad (ID: 1746219539747) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T17:59:02.555119+00:00"
+    },
+    {
+      "id": "864b2db5-228a-4d75-9849-bd4480109f4d",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T18:08:08.657483+00:00"
+    },
+    {
+      "id": "1315f122-f5d5-41f1-8ea5-6c16e5346654",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdas asd (ID: 1746219539748) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T18:13:22.019272+00:00"
+    },
+    {
+      "id": "b30748c8-8f1f-4d18-8e80-74b49cc42a54",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T18:15:23.61758+00:00"
+    },
+    {
+      "id": "89f32635-1272-4fea-bde4-43dd4e61e665",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asd asdasd (ID: 1746219539749) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T18:16:08.091025+00:00"
+    },
+    {
+      "id": "d5e08137-ccdc-49e8-ae17-b0fe3958cb68",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T18:17:45.764483+00:00"
+    },
+    {
+      "id": "dbe8ef39-e2ea-402b-b929-d92df02824e0",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish36@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T18:18:51.424669+00:00"
+    },
+    {
+      "id": "ef23f815-ce6c-40be-9cd1-a59baa7cb4c3",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasdasdasdkkk asdasdasdkk (ID: 1746219539755) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T18:19:44.352409+00:00"
+    },
+    {
+      "id": "98b2bd71-b7da-429a-a643-bb4fa8aea969",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdas dasd (ID: 1746219539750) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T18:20:22.759827+00:00"
+    },
+    {
+      "id": "40f827e5-49c6-4524-bb85-21479e3c7b70",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdas dasd (ID: 1746219539750) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T18:21:25.664252+00:00"
+    },
+    {
+      "id": "f0c70e0c-a2e6-4e82-a465-1e5bac0b4b2f",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdas dasd (ID: 1746219539750) was COMPLETELY deleted - All related data removed including appointments, payments, medical records, and auth user",
+      "status": "success",
+      "created_at": "2025-10-17T18:25:24.861425+00:00"
+    },
+    {
+      "id": "e30bc2f5-4fd4-4238-8460-bda7cd174301",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdas dasd (ID: 1746219539750) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:28:59.990329+00:00"
+    },
+    {
+      "id": "81a1ae5b-f4ed-4123-a0d2-113ac4ef7230",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdas dasd (ID: 1746219539750) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:29:26.376272+00:00"
+    },
+    {
+      "id": "0d6783fe-c147-4471-a75c-2c87476b1b09",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T19:30:22.556645+00:00"
+    },
+    {
+      "id": "a5084abd-55f6-4061-886d-9533eee4f189",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd asdsa (ID: 1746219539756) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:30:43.927046+00:00"
+    },
+    {
+      "id": "21eac317-54f2-49c6-85a4-4708aa2a758f",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd asdsa (ID: 1746219539756) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:32:52.712772+00:00"
+    },
+    {
+      "id": "4396ff1a-0bc4-41ba-ba8a-b7087acde027",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd asdsa (ID: 1746219539756) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:33:31.293468+00:00"
+    },
+    {
+      "id": "cad302ea-a4b6-4519-bbc8-7669d676299e",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd asdsa (ID: 1746219539756) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:34:09.090805+00:00"
+    },
+    {
+      "id": "6eb36f31-395c-4fa5-9851-5cbf11896c40",
+      "action": "User Created",
+      "user_email": "admin",
+      "details": "New user bishara.babish23@gmail.com (Patient) created",
+      "status": "success",
+      "created_at": "2025-10-17T19:35:22.551127+00:00"
+    },
+    {
+      "id": "93faa878-3fbe-4c62-98a3-2e0aa1562dc4",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd Babish (ID: 1746219539757) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:36:20.402971+00:00"
+    },
+    {
+      "id": "0e84307b-a424-4c5a-bbd2-0d54e6d37edb",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User bishsra babish (ID: 1746219539758) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:38:28.175743+00:00"
+    },
+    {
+      "id": "8175bd38-757b-4657-b4a2-c5f05e56c2bf",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasd asdasd (ID: 1746219539761) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:44:43.734341+00:00"
+    },
+    {
+      "id": "acf049f6-1656-474b-98c2-40613b0c3e74",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User asdasdkk asdasdkk (ID: 1746219539762) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T19:48:15.213808+00:00"
+    },
+    {
+      "id": "2d55667a-c216-47fa-bbb8-8da4400b3ef3",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User a d (ID: 1746219539767) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T20:00:51.426514+00:00"
+    },
+    {
+      "id": "8f39b4e0-1c2a-476c-91e2-0c27e662f35f",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User Bishara Babish (ID: 1746219539768) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T20:03:32.1135+00:00"
+    },
+    {
+      "id": "09f285b2-c4fa-4adb-9ec1-b805154a02cb",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User a d (ID: 1746219539769) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T20:06:07.909662+00:00"
+    },
+    {
+      "id": "8e8285f9-af6a-4dda-8a69-b4c473019897",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User a d (ID: 1746219539770) was COMPLETELY deleted - All related data removed including auth user",
+      "status": "success",
+      "created_at": "2025-10-17T20:07:43.559757+00:00"
+    },
+    {
+      "id": "05776ac8-d4a8-4115-86a1-48bde61a961c",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User a c (ID: 1746219539771) was deleted successfully",
+      "status": "success",
+      "created_at": "2025-10-18T09:15:49.794431+00:00"
+    },
+    {
+      "id": "bba9239c-7ad6-4a82-ab3b-e2b33fd38a7b",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User a c (ID: 1746219539771) was deleted successfully",
+      "status": "success",
+      "created_at": "2025-10-18T09:15:49.974846+00:00"
+    },
+    {
+      "id": "61022acc-0782-402a-a34a-617440a9612f",
+      "action": "User Deleted",
+      "user_email": "admin",
+      "details": "User a c (ID: 1746219539771) was deleted successfully",
+      "status": "success",
+      "created_at": "2025-10-18T09:15:50.017118+00:00"
+    }
+  ]
+}

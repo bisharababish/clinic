@@ -1,0 +1,47 @@
+{
+  "table": "payment_bookings",
+  "timestamp": "2025-10-19T18:37:31.435Z",
+  "recordCount": 2,
+  "data": [
+    {
+      "id": "246de438-1569-43cf-b203-65583604c1cb",
+      "patient_id": "b1de5d51-832a-4f13-8ace-3f9ea2afa188",
+      "clinic_name": "ENT",
+      "doctor_name": "Bishara Babish",
+      "specialty": "Dentist",
+      "appointment_day": "2025-10-21",
+      "appointment_time": "08:00-16:00",
+      "price": 1,
+      "currency": "ILS",
+      "payment_status": "paid",
+      "booking_status": "scheduled",
+      "created_at": "2025-10-18T15:24:14.506791+00:00",
+      "updated_at": "2025-10-18T15:25:12.655611+00:00",
+      "patient_name": "a d",
+      "patient_email": "bishara.babish23@gmail.com",
+      "patient_phone": "+970568302915",
+      "unique_patient_id": "184909133095",
+      "deleted": false
+    },
+    {
+      "id": "6460c09a-aa06-4c8f-ae3f-6e0fc1c53a7d",
+      "patient_id": "d6cbfe0f-922b-4e37-b42d-37ef01555381",
+      "clinic_name": "ENT",
+      "doctor_name": "Bishara Babish",
+      "specialty": "Dentist",
+      "appointment_day": "2025-10-21",
+      "appointment_time": "08:00-16:00",
+      "price": 1,
+      "currency": "ILS",
+      "payment_status": "paid",
+      "booking_status": "scheduled",
+      "created_at": "2025-10-18T15:23:47.566655+00:00",
+      "updated_at": "2025-10-18T15:25:14.93571+00:00",
+      "patient_name": "Admin Admin",
+      "patient_email": "bishara@gmail.com",
+      "patient_phone": "1234567890",
+      "unique_patient_id": "",
+      "deleted": false
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "table": "doctor_availability",
+  "timestamp": "2025-10-19T18:37:32.197Z",
+  "recordCount": 1,
+  "data": [
+    {
+      "id": "5bf1c6ad-2dbd-48a1-a4d0-5cbbb9186a6d",
+      "doctor_id": "fddb7d45-73d7-4ef5-88ea-fbf88972a622",
+      "day": "Tuesday",
+      "start_time": "08:00:00",
+      "end_time": "16:00:00",
+      "created_at": "2025-10-18T15:23:25.947165+00:00",
+      "updated_at": "2025-10-18T15:23:25.947165+00:00"
+    }
+  ]
+}

@@ -36,8 +36,6 @@ import {
     AlertDialogTitle,
 } from "../../../components/ui/alert-dialog";
 import { useAdminState } from "../../../hooks/useAdminState";
-import { useOfflineDataContext } from "../../../components/OfflineDataProvider";
-import { handleOfflineError, isOfflineError } from "../../../lib/offlineErrorHandler";
 
 interface ClinicInfo {
     id: string;
@@ -88,12 +86,9 @@ const ClinicManagement = () => {
         loadCategories,
     } = useAdminState();
 
-    // ✅ Add offline data support
-    const { clinics: offlineClinics, isOffline, hasData } = useOfflineDataContext();
-
-    // ✅ Use offline data as fallback
-    const effectiveClinics = clinics.length > 0 ? clinics : offlineClinics;
-    const effectiveCategories = categories.length > 0 ? categories : [];
+    // Use clinics and categories directly
+    const effectiveClinics = clinics;
+    const effectiveCategories = categories;
 
     // ✅ Local state for component-specific functionality
     const [doctors, setDoctors] = useState<DoctorInfo[]>([]);

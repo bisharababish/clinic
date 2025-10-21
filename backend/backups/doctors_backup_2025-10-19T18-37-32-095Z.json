@@ -1,0 +1,25 @@
+{
+  "table": "doctors",
+  "timestamp": "2025-10-19T18:37:32.095Z",
+  "recordCount": 1,
+  "data": [
+    {
+      "id": "fddb7d45-73d7-4ef5-88ea-fbf88972a622",
+      "name": "Bishara Babish",
+      "specialty": "Dentist",
+      "clinic_id": "fef5c4fd-98bd-4b36-b470-7b9f14c00ac7",
+      "email": "bishara.babish23@gmail.com",
+      "phone": "+970568302915",
+      "is_available": true,
+      "price": 1,
+      "user_id": null,
+      "created_at": "2025-10-17T14:39:05.733+00:00",
+      "updated_at": "2025-10-18T15:23:36.068+00:00",
+      "available_hours": [],
+      "name_ar": "بشارة بابيش",
+      "name_en": null,
+      "specialty_ar": "طبيب أسنان",
+      "specialty_en": null
+    }
+  ]
+}
