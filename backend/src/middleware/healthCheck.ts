@@ -4,7 +4,7 @@ import { logInfo, logError } from '../utils/logger.js';
 
 // Health check endpoint with detailed system status
 export const healthCheck = async (req: Request, res: Response): Promise<void> => {
-    const healthStatus = {
+    const healthStatus: any = {
         status: 'ok',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),

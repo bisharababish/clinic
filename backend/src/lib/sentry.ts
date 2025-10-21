@@ -13,11 +13,9 @@ Sentry.init({
     integrations: [
         // Enable HTTP calls tracing
         Sentry.httpIntegration({
-            tracing: {
-                // Disable tracing for health checks
-                ignoreIncomingRequestHook: (request) => {
-                    return request.url?.includes('/health') || false;
-                },
+            // Disable tracing for health checks
+            ignoreIncomingRequests: (request: any) => {
+                return request.url?.includes('/health') || false;
             },
         }),
         // Enable profiling
@@ -62,15 +60,10 @@ Sentry.init({
 });
 
 // Custom error handler for Express
-export const sentryErrorHandler = Sentry.errorHandler({
-    // Don't report 4xx errors (client errors)
-    shouldHandleError(error: any) {
-        if (error.status && error.status >= 400 && error.status < 500) {
-            return false;
-        }
-        return true;
-    },
-});
+export const sentryErrorHandler = (req: any, res: any, next: any) => {
+    // Simple error handler that doesn't use Sentry for now
+    next();
+};
 
 // Utility functions for manual error reporting
 export const captureException = Sentry.captureException;

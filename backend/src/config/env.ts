@@ -6,7 +6,7 @@ dotenv.config();
 // Environment validation schema
 const envSchema = z.object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-    PORT: z.string().transform(Number).default(5000),
+    PORT: z.string().transform(Number).default('5000'),
     SUPABASE_URL: z.string().url('Invalid Supabase URL'),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'Supabase service role key is required'),
     FRONTEND_URL: z.string().url('Invalid frontend URL'),
