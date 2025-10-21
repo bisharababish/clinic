@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/use-toast";
+import { useTranslation } from 'react-i18next';
 
 // Patient interface
 interface Patient {
@@ -42,6 +43,23 @@ interface Patient {
   updated_at?: string;
 }
 
+// Doctor interface
+interface Doctor {
+  id: string;
+  name: string;
+  name_ar?: string;
+  specialty: string;
+  specialty_ar?: string;
+  clinic_id: string;
+  clinic_name?: string;
+  email: string;
+  phone?: string;
+  is_available: boolean;
+  price: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Anatomical Skeleton Component (embedded)
 interface AnatomicalSkeletonProps {
   selectedBodyPart: string;
@@ -52,6 +70,8 @@ const AnatomicalSkeleton: React.FC<AnatomicalSkeletonProps> = ({
   selectedBodyPart,
   onBodyPartSelect
 }) => {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [hoveredPart, setHoveredPart] = useState<string | null>(null);
 
   // Comprehensive anatomical body parts with detailed SVG paths
@@ -1305,9 +1325,9 @@ const AnatomicalSkeleton: React.FC<AnatomicalSkeletonProps> = ({
   };
 
   return (
-    <div className="bg-gradient-to-br from-xray-background via-slate-900 to-xray-background rounded-xl p-6 border border-slate-700 shadow-2xl">
+    <div className={`bg-gradient-to-br from-xray-background via-slate-900 to-xray-background rounded-xl p-6 border border-slate-700 shadow-2xl ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <h3 className="text-xl font-bold text-xray-bone mb-6 text-center">
-        Select Body Part
+        {t('xray.bodyPartSelection.title')}
       </h3>
 
       <div className="flex justify-center">
@@ -1396,13 +1416,13 @@ const AnatomicalSkeleton: React.FC<AnatomicalSkeletonProps> = ({
       </div>
 
       {selectedBodyPart && (
-        <div className="mt-6 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-xray-highlight/20 to-blue-600/20 border border-xray-highlight/50">
+        <div className={`mt-6 ${isRTL ? 'text-right' : 'text-center'}`}>
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-xray-highlight/20 to-blue-600/20 border border-xray-highlight/50 ${isRTL ? 'flex-row-reverse' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="w-3 h-3 rounded-full bg-xray-highlight animate-pulse"></div>
-            <span className="text-xray-bone font-semibold">
-              Selected:
+            <span className={`text-xray-bone font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>
+              {t('xray.selected')}:
               <span className="text-xray-highlight">
-                {anatomicalParts[selectedBodyPart as keyof typeof anatomicalParts]?.label || selectedBodyPart}
+                {t(`xray.bodyParts.${selectedBodyPart}`) || anatomicalParts[selectedBodyPart as keyof typeof anatomicalParts]?.label || selectedBodyPart}
               </span>
             </span>
           </div>
@@ -1415,6 +1435,8 @@ const AnatomicalSkeleton: React.FC<AnatomicalSkeletonProps> = ({
 // Main XRay Component
 const XRay = () => {
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [selectedBodyPart, setSelectedBodyPart] = useState("");
   const [patientName, setPatientName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -1423,6 +1445,14 @@ const XRay = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Doctor selection states
+  const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
+  const [doctorSearchResults, setDoctorSearchResults] = useState<Doctor[]>([]);
+  const [isSearchingDoctors, setIsSearchingDoctors] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [showDoctorSearchResults, setShowDoctorSearchResults] = useState(false);
+  const doctorSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Patient search states
   const [patientSearchTerm, setPatientSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Patient[]>([]);
@@ -1430,6 +1460,82 @@ const XRay = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Doctor search function
+  const searchDoctors = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setDoctorSearchResults([]);
+      setShowDoctorSearchResults(false);
+      return;
+    }
+
+    try {
+      setIsSearchingDoctors(true);
+
+      const { data: doctors, error } = await supabase
+        .from('doctors')
+        .select(`
+          *,
+          clinics:clinic_id (
+            name,
+            name_ar
+          )
+        `)
+        .or(`name.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,specialty.ilike.%${searchTerm}%,specialty_ar.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+        .eq('is_available', true)
+        .order('name', { ascending: true })
+        .limit(10);
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform the data to match our interface
+      const transformedDoctors: Doctor[] = (doctors || []).map((doctor: {
+        id: string;
+        name: string;
+        name_ar?: string;
+        specialty: string;
+        specialty_ar?: string;
+        clinic_id: string;
+        clinics?: { name?: string };
+        email: string;
+        phone?: string;
+        is_available: boolean;
+        price: number;
+        created_at?: string;
+        updated_at?: string;
+      }) => ({
+        id: doctor.id,
+        name: doctor.name,
+        name_ar: doctor.name_ar,
+        specialty: doctor.specialty,
+        specialty_ar: doctor.specialty_ar,
+        clinic_id: doctor.clinic_id,
+        clinic_name: doctor.clinics?.name || "Unknown Clinic",
+        email: doctor.email,
+        phone: doctor.phone,
+        is_available: doctor.is_available,
+        price: doctor.price,
+        created_at: doctor.created_at,
+        updated_at: doctor.updated_at
+      }));
+
+      setDoctorSearchResults(transformedDoctors);
+      setShowDoctorSearchResults(true);
+    } catch (error) {
+      console.error('Error searching doctors:', error);
+      toast({
+        title: t('xray.errors.searchError'),
+        description: t('xray.errors.doctorSearchFailed'),
+        variant: "destructive",
+      });
+      setDoctorSearchResults([]);
+      setShowDoctorSearchResults(false);
+    } finally {
+      setIsSearchingDoctors(false);
+    }
+  };
 
   // Patient search function
   const searchPatients = async (searchTerm: string) => {
@@ -1459,8 +1565,8 @@ const XRay = () => {
     } catch (error) {
       console.error('Error searching patients:', error);
       toast({
-        title: "Search Error",
-        description: "Failed to search for patients. Please try again.",
+        title: t('xray.errors.searchError'),
+        description: t('xray.errors.patientSearchFailed'),
         variant: "destructive",
       });
       setSearchResults([]);
@@ -1468,6 +1574,39 @@ const XRay = () => {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  // Handle doctor search input change with debouncing
+  const handleDoctorSearchChange = (value: string) => {
+    setDoctorSearchTerm(value);
+
+    // Clear existing timeout
+    if (doctorSearchTimeoutRef.current) {
+      clearTimeout(doctorSearchTimeoutRef.current);
+    }
+
+    // Set new timeout for debounced search
+    doctorSearchTimeoutRef.current = setTimeout(() => {
+      searchDoctors(value);
+    }, 300);
+  };
+
+  // Handle doctor selection
+  const handleDoctorSelect = (doctor: Doctor) => {
+    setSelectedDoctor(doctor);
+    setRequestingDoctor(doctor.name);
+    setDoctorSearchTerm(doctor.name);
+    setShowDoctorSearchResults(false);
+    setDoctorSearchResults([]);
+  };
+
+  // Clear doctor selection
+  const clearDoctorSelection = () => {
+    setSelectedDoctor(null);
+    setRequestingDoctor("");
+    setDoctorSearchTerm("");
+    setShowDoctorSearchResults(false);
+    setDoctorSearchResults([]);
   };
 
   // Handle search input change with debouncing
@@ -1511,6 +1650,9 @@ const XRay = () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
+      if (doctorSearchTimeoutRef.current) {
+        clearTimeout(doctorSearchTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -1521,15 +1663,18 @@ const XRay = () => {
       if (!target.closest('.patient-search-container')) {
         setShowSearchResults(false);
       }
+      if (!target.closest('.doctor-search-container')) {
+        setShowDoctorSearchResults(false);
+      }
     };
 
-    if (showSearchResults) {
+    if (showSearchResults || showDoctorSearchResults) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [showSearchResults]);
+  }, [showSearchResults, showDoctorSearchResults]);
 
   // Body parts list for dropdown
   const bodyPartsOptions = [
@@ -1837,54 +1982,55 @@ const XRay = () => {
   return (
     <>
       <SEOHead
-        title="X-Ray Imaging Services - Bethlehem Medical Center"
-        description="Advanced X-ray imaging services at Bethlehem Medical Center. Digital X-ray imaging, radiology services, and medical imaging for accurate diagnosis."
-        keywords="X-ray imaging, radiology services, medical imaging, digital X-ray, Bethlehem Medical Center, diagnostic imaging"
+        title={t('xray.seo.title')}
+        description={t('xray.seo.description')}
+        keywords={t('xray.seo.keywords')}
         url="https://bethlehemmedcenter.com/xray"
       />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-6">
-        <div className="max-w-7xl mx-auto">
+      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="max-w-7xl mx-auto px-2">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
+          <div className="mb-12 text-center px-2">
+            <div className="flex items-center mb-4 justify-center">
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-2xl shadow-lg">
                 <Camera className="w-10 h-10 text-white" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-3">
-              X-Ray Upload System
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-6 text-center px-2 break-words leading-tight whitespace-normal">
+              {t('xray.title')}
             </h1>
-            <p className="text-slate-600 text-xl max-w-2xl mx-auto">
-              Upload and manage X-ray images
+            <p className="text-slate-600 text-xl w-full text-center mx-auto px-2 break-words">
+              {t('xray.subtitle')}
             </p>
           </div>
 
-          <div className="grid xl:grid-cols-3 gap-8">
+          <div className={`grid xl:grid-cols-3 gap-8 ${isRTL ? 'rtl' : 'ltr'}`}>
             {/* Patient Information Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3">
+              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <User className="w-6 h-6" />
-                  Patient Information
+                  {t('xray.patientInfo.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
                 {/* Patient Search */}
                 <div className="space-y-2 patient-search-container">
-                  <Label htmlFor="patientSearch" className="text-sm font-semibold text-slate-700">
-                    Search Patient
+                  <Label htmlFor="patientSearch" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {t('xray.patientInfo.searchPatient')}
                   </Label>
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
                     <Input
                       id="patientSearch"
                       value={patientSearchTerm}
                       onChange={(e) => handleSearchChange(e.target.value)}
-                      placeholder="Search by name, email, or ID number..."
-                      className="h-12 pl-10 pr-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder={t('xray.patientInfo.searchPlaceholder')}
+                      className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
+                      dir={isRTL ? 'rtl' : 'ltr'}
                     />
                     {isSearching && (
-                      <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 animate-spin" />
+                      <Loader2 className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 animate-spin ${isRTL ? 'left-3' : 'right-3'}`} />
                     )}
                     {selectedPatient && (
                       <Button
@@ -1892,7 +2038,7 @@ const XRay = () => {
                         variant="ghost"
                         size="sm"
                         onClick={clearPatientSelection}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100"
+                        className={`absolute top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100 ${isRTL ? 'left-3' : 'right-3'}`}
                       >
                         <X className="w-4 h-4 text-red-500" />
                       </Button>
@@ -1908,20 +2054,20 @@ const XRay = () => {
                           onClick={() => handlePatientSelect(patient)}
                           className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
                         >
-                          <div className="flex items-center justify-between">
-                            <div>
+                          <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
+                            <div className={isRTL ? 'text-right' : 'text-left'}>
                               <p className="font-medium text-slate-900">
                                 {patient.english_username_a} {patient.english_username_d || ''}
                               </p>
                               <p className="text-sm text-slate-600">{patient.user_email}</p>
                               {patient.id_number && (
-                                <p className="text-xs text-slate-500">ID: {patient.id_number}</p>
+                                <p className="text-xs text-slate-500">{t('xray.patientInfo.id')}: {patient.id_number}</p>
                               )}
                             </div>
-                            <div className="text-right">
+                            <div className={isRTL ? 'text-left' : 'text-right'}>
                               {patient.date_of_birth && (
                                 <p className="text-sm text-slate-600">
-                                  DOB: {new Date(patient.date_of_birth).toLocaleDateString()}
+                                  {t('xray.patientInfo.dob')}: {new Date(patient.date_of_birth).toLocaleDateString()}
                                 </p>
                               )}
                               {patient.gender_user && (
@@ -1937,7 +2083,7 @@ const XRay = () => {
                   {/* No Results Message */}
                   {showSearchResults && searchResults.length === 0 && patientSearchTerm.trim() && !isSearching && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
-                      <p className="text-slate-600 text-center">No patients found</p>
+                      <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('xray.patientInfo.noPatientsFound')}</p>
                     </div>
                   )}
                 </div>
@@ -1945,37 +2091,37 @@ const XRay = () => {
                 {/* Selected Patient Info */}
                 {selectedPatient && (
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-green-800">Patient Selected</span>
+                      <span className="font-semibold text-green-800">{t('xray.patientInfo.patientSelected')}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="font-medium text-slate-700">Name:</span>
-                        <span className="ml-2 text-slate-600">
+                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                        <span className="font-medium text-slate-700">{t('xray.patientInfo.name')}:</span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>
                           {selectedPatient.english_username_a} {selectedPatient.english_username_d || ''}
                         </span>
                       </div>
-                      <div>
-                        <span className="font-medium text-slate-700">Email:</span>
-                        <span className="ml-2 text-slate-600">{selectedPatient.user_email}</span>
+                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                        <span className="font-medium text-slate-700">{t('xray.patientInfo.email')}:</span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedPatient.user_email}</span>
                       </div>
                       {selectedPatient.id_number && (
-                        <div>
-                          <span className="font-medium text-slate-700">ID:</span>
-                          <span className="ml-2 text-slate-600">{selectedPatient.id_number}</span>
+                        <div className={isRTL ? 'text-right' : 'text-left'}>
+                          <span className="font-medium text-slate-700">{t('xray.patientInfo.id')}:</span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedPatient.id_number}</span>
                         </div>
                       )}
                       {selectedPatient.gender_user && (
-                        <div>
-                          <span className="font-medium text-slate-700">Gender:</span>
-                          <span className="ml-2 text-slate-600 capitalize">{selectedPatient.gender_user}</span>
+                        <div className={isRTL ? 'text-right' : 'text-left'}>
+                          <span className="font-medium text-slate-700">{t('xray.patientInfo.gender')}:</span>
+                          <span className={`text-slate-600 capitalize ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedPatient.gender_user}</span>
                         </div>
                       )}
                       {selectedPatient.date_of_birth && (
-                        <div>
-                          <span className="font-medium text-slate-700">Date of Birth:</span>
-                          <span className="ml-2 text-slate-600">
+                        <div className={isRTL ? 'text-right' : 'text-left'}>
+                          <span className="font-medium text-slate-700">{t('xray.patientInfo.dateOfBirth')}:</span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>
                             {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
                           </span>
                         </div>
@@ -1988,60 +2134,159 @@ const XRay = () => {
                 {!selectedPatient && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="patientName" className="text-sm font-semibold text-slate-700">
-                        Patient Name (Manual Entry)
+                      <Label htmlFor="patientName" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {t('xray.patientInfo.manualName')}
                       </Label>
                       <Input
                         id="patientName"
                         value={patientName}
                         onChange={(e) => setPatientName(e.target.value)}
-                        placeholder="Enter patient full name"
-                        className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder={t('xray.patientInfo.namePlaceholder')}
+                        className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
+                        dir={isRTL ? 'rtl' : 'ltr'}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="dateOfBirth" className="text-sm font-semibold text-slate-700">
-                        Date of Birth (Manual Entry)
+                      <Label htmlFor="dateOfBirth" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                        {t('xray.patientInfo.manualDob')}
                       </Label>
                       <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                        <Calendar className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           id="dateOfBirth"
                           type="date"
                           value={dateOfBirth}
                           onChange={(e) => setDateOfBirth(e.target.value)}
-                          className="h-12 pl-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+                          className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 text-right [&::-webkit-datetime-edit-text]:text-right [&::-webkit-datetime-edit-month-field]:text-right [&::-webkit-datetime-edit-day-field]:text-right [&::-webkit-datetime-edit-year-field]:text-right [&::-webkit-datetime-edit]:text-right' : 'pl-10 text-left'}`}
+                          dir={isRTL ? 'rtl' : 'ltr'}
+                          style={isRTL ? {
+                            textAlign: 'right',
+                            direction: 'rtl'
+                          } : {
+                            textAlign: 'left',
+                            direction: 'ltr'
+                          }}
                         />
                       </div>
                     </div>
                   </>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="requestingDoctor" className="text-sm font-semibold text-slate-700">
-                    Requesting Doctor
+                {/* Doctor Search */}
+                <div className="space-y-2 doctor-search-container">
+                  <Label htmlFor="doctorSearch" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {t('xray.doctorInfo.title')}
                   </Label>
-                  <Input
-                    id="requestingDoctor"
-                    value={requestingDoctor}
-                    onChange={(e) => setRequestingDoctor(e.target.value)}
-                    placeholder="Dr. Name"
-                    className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                  />
+                  <div className="relative">
+                    <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
+                    <Input
+                      id="doctorSearch"
+                      value={doctorSearchTerm}
+                      onChange={(e) => handleDoctorSearchChange(e.target.value)}
+                      placeholder={t('xray.doctorInfo.searchPlaceholder')}
+                      className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    />
+                    {isSearchingDoctors && (
+                      <Loader2 className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 animate-spin ${isRTL ? 'left-3' : 'right-3'}`} />
+                    )}
+                    {selectedDoctor && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearDoctorSelection}
+                        className={`absolute top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100 ${isRTL ? 'left-3' : 'right-3'}`}
+                      >
+                        <X className="w-4 h-4 text-red-500" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Doctor Search Results Dropdown */}
+                  {showDoctorSearchResults && doctorSearchResults.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {doctorSearchResults.map((doctor) => (
+                        <div
+                          key={doctor.id}
+                          onClick={() => handleDoctorSelect(doctor)}
+                          className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
+                        >
+                          <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
+                            <div className={isRTL ? 'text-right' : 'text-left'}>
+                              <p className="font-medium text-slate-900">
+                                {t('xray.doctorInfo.drPrefix')} {doctor.name}
+                              </p>
+                              <p className="text-sm text-slate-600">{doctor.specialty}</p>
+                              <p className="text-xs text-slate-500">{doctor.clinic_name}</p>
+                            </div>
+                            <div className={isRTL ? 'text-left' : 'text-right'}>
+                              <p className="text-sm text-slate-600">{doctor.email}</p>
+                              {doctor.phone && (
+                                <p className="text-xs text-slate-500">{doctor.phone}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* No Doctor Results Message */}
+                  {showDoctorSearchResults && doctorSearchResults.length === 0 && doctorSearchTerm.trim() && !isSearchingDoctors && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
+                      <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('xray.doctorInfo.noDoctorsFound')}</p>
+                    </div>
+                  )}
                 </div>
 
+                {/* Selected Doctor Info */}
+                {selectedDoctor && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <CheckCircle className="w-5 h-5 text-blue-600" />
+                      <span className="font-semibold text-blue-800">{t('xray.doctorInfo.doctorSelected')}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.name')}:</span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{t('xray.doctorInfo.drPrefix')} {selectedDoctor.name}</span>
+                      </div>
+                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.specialty')}:</span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedDoctor.specialty}</span>
+                      </div>
+                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.clinic')}:</span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedDoctor.clinic_name}</span>
+                      </div>
+                      <div className={isRTL ? 'text-right' : 'text-left'}>
+                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.email')}:</span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedDoctor.email}</span>
+                      </div>
+                      {selectedDoctor.phone && (
+                        <div className={isRTL ? 'text-right' : 'text-left'}>
+                          <span className="font-medium text-slate-700">{t('xray.doctorInfo.phone')}:</span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedDoctor.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor="clinicalIndication" className="text-sm font-semibold text-slate-700">
-                    Clinical Indication
+                  <Label htmlFor="clinicalIndication" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {t('xray.clinicalIndication.title')}
                   </Label>
                   <Textarea
                     id="clinicalIndication"
                     value={clinicalIndication}
                     onChange={(e) => setClinicalIndication(e.target.value)}
-                    placeholder="Enter clinical indication and symptoms"
+                    placeholder={t('xray.clinicalIndication.placeholder')}
                     rows={4}
-                    className="border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none"
+                    className={`border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none ${isRTL ? 'text-right' : 'text-left'}`}
+                    dir={isRTL ? 'rtl' : 'ltr'}
                   />
                 </div>
               </CardContent>
@@ -2049,10 +2294,10 @@ const XRay = () => {
 
             {/* Anatomical Selection Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3">
+              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <Stethoscope className="w-6 h-6" />
-                  Body Part Selection
+                  {t('xray.bodyPartSelection.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -2063,16 +2308,18 @@ const XRay = () => {
 
                 {/* Fallback Dropdown */}
                 <div className="mt-6 space-y-2">
-                  <Label className="text-sm font-semibold text-slate-700">
-                    Manual Selection
+                  <Label className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {t('xray.bodyPartSelection.manualSelection')}
                   </Label>
                   <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-                    <SelectTrigger className="h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="Choose specific body part..." />
+                    <SelectTrigger className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'} ${isRTL ? '[&>svg]:right-3 [&>svg]:left-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                      <SelectValue placeholder={t('xray.bodyPartSelection.placeholder')} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'text-right' : 'text-left'}>
                       {bodyPartsOptions.map((part) => (
-                        <SelectItem key={part.value} value={part.value}>{part.label}</SelectItem>
+                        <SelectItem key={part.value} value={part.value} className={isRTL ? 'text-right' : 'text-left'}>
+                          {t(`xray.bodyParts.${part.value}`) || part.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -2082,20 +2329,20 @@ const XRay = () => {
 
             {/* File Upload Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3">
+              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <Upload className="w-6 h-6" />
-                  X-Ray Image Upload
+                  {t('xray.fileUpload.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <div
-                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer hover:bg-slate-50 ${isDragging
+                  className={`border-2 border-dashed rounded-xl p-8 transition-all duration-300 cursor-pointer hover:bg-slate-50 ${isDragging
                     ? "border-blue-500 bg-blue-50"
                     : file
                       ? "border-green-500 bg-green-50"
                       : "border-slate-300"
-                    }`}
+                    } ${isRTL ? 'text-right' : 'text-center'}`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
@@ -2110,42 +2357,44 @@ const XRay = () => {
                   />
 
                   {file ? (
-                    <div className="space-y-4">
-                      <div className="flex justify-center">
+                    <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
                         <CheckCircle className="w-16 h-16 text-green-500" />
                       </div>
-                      <div>
-                        <p className="text-lg font-semibold text-green-700">File Selected</p>
+                      <div className={isRTL ? 'text-right' : 'text-center'}>
+                        <p className="text-lg font-semibold text-green-700">{t('xray.fileUpload.fileSelected')}</p>
                         <p className="text-slate-600 mt-1 break-all">{file.name}</p>
                         <p className="text-sm text-slate-500 mt-1">
                           {(file.size / (1024 * 1024)).toFixed(2)} MB
                         </p>
                       </div>
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFile();
-                        }}
-                        variant="outline"
-                        className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Remove File
-                      </Button>
+                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFile();
+                          }}
+                          variant="outline"
+                          className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                        >
+                          <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          {t('xray.fileUpload.removeFile')}
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="flex justify-center">
+                    <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
                         <Upload className={`w-16 h-16 ${isDragging ? "text-blue-500" : "text-slate-400"}`} />
                       </div>
-                      <div>
+                      <div className={isRTL ? 'text-right' : 'text-center'}>
                         <p className="text-lg font-semibold text-slate-700">
-                          Drag and drop your X-ray image
+                          {t('xray.fileUpload.dragDropText')}
                         </p>
-                        <p className="text-slate-500 mt-1">or click to browse</p>
+                        <p className="text-slate-500 mt-1">{t('xray.fileUpload.clickToBrowse')}</p>
                       </div>
-                      <div className="text-sm text-slate-500">
-                        Supported formats: JPEG, PNG (Max 10MB)
+                      <div className={`text-sm text-slate-500 ${isRTL ? 'text-right' : 'text-center'}`}>
+                        {t('xray.fileUpload.supportedFormats')}
                       </div>
                     </div>
                   )}
@@ -2155,20 +2404,20 @@ const XRay = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-8 flex justify-center gap-4">
+          <div className={`mt-8 flex gap-4 ${isRTL ? 'justify-center flex-row-reverse' : 'justify-center'}`}>
             <Button
               size="lg"
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              disabled={!(selectedPatient || patientName) || !selectedBodyPart || !file}
+              className={`px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
+              disabled={!(selectedPatient || patientName) || !selectedBodyPart || !file || !selectedDoctor}
             >
-              <CheckCircle className="w-5 h-5 mr-2" />
-              Save X-Ray Record
+              <CheckCircle className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t('xray.actions.saveRecord')}
             </Button>
 
             <Button
               variant="outline"
               size="lg"
-              className="px-8 py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl"
+              className={`px-8 py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
               onClick={() => {
                 setPatientName("");
                 setDateOfBirth("");
@@ -2177,9 +2426,10 @@ const XRay = () => {
                 setSelectedBodyPart("");
                 setFile(null);
                 clearPatientSelection();
+                clearDoctorSelection();
               }}
             >
-              Reset Form
+              {t('xray.actions.resetForm')}
             </Button>
           </div>
         </div>

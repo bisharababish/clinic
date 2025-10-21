@@ -2,11 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 const AuthCallback = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [error, setError] = useState<string | null>(null);
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
 
     useEffect(() => {
         const handleCallback = async () => {
@@ -86,22 +89,30 @@ const AuthCallback = () => {
 
     if (error) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full text-center">
-                    <h2 className="text-xl font-semibold text-red-800 mb-2">Authentication Error</h2>
-                    <p className="text-gray-700 mb-4">{error}</p>
-                    <p className="text-gray-600">Redirecting to login page...</p>
+            <div className={`flex flex-col items-center justify-center min-h-screen p-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+                <div className={`bg-red-50 border border-red-200 rounded-lg p-6 max-w-md w-full ${isRTL ? 'text-right' : 'text-center'}`}>
+                    <h2 className={`text-xl font-semibold text-red-800 mb-2 ${isRTL ? 'text-right' : 'text-center'}`}>
+                        {t('authCallback.error') || 'Authentication Error'}
+                    </h2>
+                    <p className={`text-gray-700 mb-4 ${isRTL ? 'text-right' : 'text-center'}`}>{error}</p>
+                    <p className={`text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>
+                        {t('authCallback.redirecting') || 'Redirecting to login page...'}
+                    </p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
+        <div className={`flex items-center justify-center min-h-screen ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className={`text-center ${isRTL ? 'text-right' : 'text-center'}`}>
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-                <p className="mt-6 text-xl font-medium">Verifying your account...</p>
-                <p className="mt-2 text-gray-600">You'll be redirected automatically in a moment.</p>
+                <p className={`mt-6 text-xl font-medium ${isRTL ? 'text-right' : 'text-center'}`}>
+                    {t('authCallback.verifying') || 'Verifying your account...'}
+                </p>
+                <p className={`mt-2 text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>
+                    {t('authCallback.redirectingAuto') || 'You\'ll be redirected automatically in a moment.'}
+                </p>
             </div>
         </div>
     );

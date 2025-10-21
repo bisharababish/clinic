@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useToast } from '../hooks/use-toast';
 import Footer from "../components/layout/Footer";
 import { Skeleton } from "../components/ui/skeleton";
+import { useTranslation } from 'react-i18next';
 
 export default function ResetPassword() {
     const [password, setPassword] = useState('');
@@ -18,6 +19,8 @@ export default function ResetPassword() {
     const navigate = useNavigate();
     const location = useLocation();
     const { toast } = useToast();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
     useEffect(() => {
         console.log("Full URL:", window.location.href);
         console.log("Search params:", window.location.search);
@@ -143,13 +146,15 @@ export default function ResetPassword() {
 
     if (initializing) {
         return (
-            <div className="min-h-screen flex flex-col">
+            <div className={`min-h-screen flex flex-col ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                 <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
-                    <div className="text-center">
+                    <div className={`text-center ${isRTL ? 'text-right' : 'text-center'}`}>
                         <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
                         <Skeleton width={180} height={20} className="mx-auto mb-2" />
                         <Skeleton width={120} height={16} className="mx-auto" />
-                        <p className="mt-4 text-gray-600">Verifying your reset session...</p>
+                        <p className={`mt-4 text-gray-600 ${isRTL ? 'text-right' : 'text-center'}`}>
+                            {t('resetPassword.verifying') || 'Verifying your reset session...'}
+                        </p>
                     </div>
                 </main>
                 <Footer />
@@ -158,7 +163,7 @@ export default function ResetPassword() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className={`min-h-screen flex flex-col ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
                 <div className="w-full max-w-md">
                     <div className="text-center mb-8">
