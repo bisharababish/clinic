@@ -12,17 +12,8 @@ export const supabaseAdmin = createClient(
     }
 );
 
-export const supabaseClient = createClient(
-    process.env.SUPABASE_URL as string,
-    process.env.SUPABASE_ANON_KEY as string,
-    {
-        auth: {
-            autoRefreshToken: true,
-            persistSession: true,
-            detectSessionInUrl: true,
-            flowType: 'pkce'
-        }
-    }
-);
+// For client-side operations, we'll use the same admin client
+// since this is a backend-only service
+export const supabaseClient = supabaseAdmin;
 
 export default { supabaseAdmin, supabaseClient };
