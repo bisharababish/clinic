@@ -359,12 +359,12 @@ const UsersManagement = () => {
     const capitalizeRole = (role: string): string => {
         const lowerRole = role.toLowerCase();
 
-        // Handle specific role mappings to match Select options
+        // Handle specific role mappings to match database constraints
         switch (lowerRole) {
             case "patient":
                 return "Patient";
             case "doctor":
-                return "doctor"; // Keep lowercase as per Select option
+                return "Doctor";
             case "secretary":
                 return "Secretary";
             case "nurse":
@@ -798,6 +798,8 @@ const UsersManagement = () => {
                     user_roles: capitalizedRole,
                     updated_at: new Date().toISOString()
                 };
+
+                console.log("Updating user with role:", capitalizedRole, "from:", userFormData.user_roles);
 
                 if (userFormData.user_password) {
                     try {

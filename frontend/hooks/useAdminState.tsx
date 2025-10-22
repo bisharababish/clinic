@@ -228,7 +228,8 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             }
 
             const userRole = currentUserData.user_roles?.toLowerCase();
-            if (userRole !== 'admin') {
+            // Allow admin and secretary roles to view users
+            if (userRole !== 'admin' && userRole !== 'secretary') {
                 throw new Error(`Access denied: User role '${userRole}' does not have permission to view users`);
             }
 
