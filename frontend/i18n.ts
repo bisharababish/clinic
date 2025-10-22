@@ -856,7 +856,19 @@ const enTranslations = {
             "left_thumb_sesamoid": "Left Thumb Sesamoid Bones",
             "right_thumb_sesamoid": "Right Thumb Sesamoid Bones",
             "left_big_toe_sesamoid": "Left Big Toe Sesamoid Bones",
-            "right_big_toe_sesamoid": "Right Big Toe Sesamoid Bones"
+            "right_big_toe_sesamoid": "Right Big Toe Sesamoid Bones",
+            
+            // Basic body parts for DoctorXRayPage dropdown
+            "chest": "Chest",
+            "knee": "Knee", 
+            "spine": "Spine",
+            "hand": "Hand",
+            "foot": "Foot",
+            "shoulder": "Shoulder",
+            "elbow": "Elbow",
+            "wrist": "Wrist",
+            "ankle": "Ankle",
+            "hip": "Hip"
         },
 
         // Errors
@@ -3545,7 +3557,19 @@ const arTranslations = {
             left_thumb_sesamoid: 'العظام السمسمية لإبهام اليد الأيسر',
             right_thumb_sesamoid: 'العظام السمسمية لإبهام اليد الأيمن',
             left_big_toe_sesamoid: 'العظام السمسمية لإبهام القدم الأيسر',
-            right_big_toe_sesamoid: 'العظام السمسمية لإبهام القدم الأيمن'
+            right_big_toe_sesamoid: 'العظام السمسمية لإبهام القدم الأيمن',
+            
+            // Basic body parts for DoctorXRayPage dropdown
+            chest: 'الصدر',
+            knee: 'الركبة',
+            spine: 'العمود الفقري',
+            hand: 'اليد',
+            foot: 'القدم',
+            shoulder: 'الكتف',
+            elbow: 'المرفق',
+            wrist: 'الرسغ',
+            ankle: 'الكاحل',
+            hip: 'الورك'
         },
 
         // Errors
