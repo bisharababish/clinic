@@ -288,37 +288,59 @@ const DoctorManagement = () => {
         setShowDeleteDialog(true);
     };
 
-    // Handle actual doctor deletion - COMPLETE DELETION
+    // Handle actual doctor deletion - SIMPLE DELETION
     const handleDeleteDoctor = async () => {
         if (!doctorToDelete) return;
 
         try {
-            console.log("🗑️ Starting COMPLETE doctor deletion for:", doctorToDelete.name);
+            console.log("🗑️ Starting doctor deletion for:", doctorToDelete.name);
 
-            // Use the comprehensive deletion function
-            const { data: deletionResult, error: deletionError } = await supabase.rpc('delete_doctor_completely', {
-                doctor_id_to_delete: doctorToDelete.id
-            });
+            // Step 1: Delete appointments where this doctor is assigned
+            const { error: appointmentsError } = await supabase
+                .from('appointments')
+                .delete()
+                .eq('doctor_id', doctorToDelete.id);
 
-            if (deletionError) {
-                console.error('Complete doctor deletion failed:', deletionError);
-                throw new Error(`Complete deletion failed: ${deletionError.message}`);
+            if (appointmentsError) {
+                console.warn('Error deleting appointments:', appointmentsError);
             }
 
-            console.log('✅ Complete doctor deletion successful:', deletionResult);
+            // Step 2: Delete doctor availability slots
+            const { error: availabilityError } = await supabase
+                .from('doctor_availability')
+                .delete()
+                .eq('doctor_id', doctorToDelete.id);
 
+            if (availabilityError) {
+                console.warn('Error deleting availability slots:', availabilityError);
+            }
+
+            // Step 3: Delete doctor from doctors table
+            const { error: doctorError } = await supabase
+                .from('doctors')
+                .delete()
+                .eq('id', doctorToDelete.id);
+
+            if (doctorError) {
+                console.error('Error deleting doctor:', doctorError);
+                throw new Error(`Failed to delete doctor: ${doctorError.message}`);
+            }
+
+            console.log('✅ Doctor deletion successful');
+
+            // Refresh the doctors list
             await loadDoctors(true);
 
             toast({
                 title: t('common.success'),
-                description: t('doctorManagement.doctorDeletedSuccessfully', { name: doctorToDelete.name }) + ' - All data removed from Supabase',
-                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
+                description: t('doctorManagement.doctorDeletedSuccessfully', { name: doctorToDelete.name }),
+                style: { backgroundColor: '#16a34a', color: '#fff' },
             });
 
             setShowDeleteDialog(false);
             setDoctorToDelete(null);
         } catch (error) {
-            console.error("❌ Error in complete doctor deletion:", error);
+            console.error("❌ Error in doctor deletion:", error);
             toast({
                 title: t('common.error'),
                 description: t('doctorManagement.failedToDeleteDoctor'),
