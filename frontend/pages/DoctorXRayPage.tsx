@@ -189,6 +189,104 @@ const DoctorXRayPage: React.FC = () => {
         return translation !== `xray.bodyParts.${bodyParts}` ? translation : bodyParts || '';
     };
 
+    // Helper function to get body part category based on XRay component categories
+    const getBodyPartCategory = (bodyPart: string): string => {
+        const lowerPart = bodyPart.toLowerCase();
+
+        // Skull
+        if (lowerPart.includes('skull') || lowerPart.includes('frontal') || lowerPart.includes('parietal') ||
+            lowerPart.includes('temporal') || lowerPart.includes('occipital') || lowerPart.includes('sphenoid') ||
+            lowerPart.includes('ethmoid')) {
+            return 'skull';
+        }
+
+        // Facial Bones
+        if (lowerPart.includes('nasal') || lowerPart.includes('maxilla') || lowerPart.includes('mandible') ||
+            lowerPart.includes('zygomatic') || lowerPart.includes('lacrimal') || lowerPart.includes('palatine') ||
+            lowerPart.includes('concha') || lowerPart.includes('vomer')) {
+            return 'facialBones';
+        }
+
+        // Cervical Spine
+        if (lowerPart.includes('cervical') || lowerPart.includes('c1') || lowerPart.includes('c2') ||
+            lowerPart.includes('c3') || lowerPart.includes('c4') || lowerPart.includes('c5') ||
+            lowerPart.includes('c6') || lowerPart.includes('c7') || lowerPart.includes('atlas') ||
+            lowerPart.includes('axis')) {
+            return 'cervicalSpine';
+        }
+
+        // Thoracic Spine
+        if (lowerPart.includes('thoracic') || lowerPart.includes('t1') || lowerPart.includes('t2') ||
+            lowerPart.includes('t3') || lowerPart.includes('t4') || lowerPart.includes('t5') ||
+            lowerPart.includes('t6') || lowerPart.includes('t7') || lowerPart.includes('t8') ||
+            lowerPart.includes('t9') || lowerPart.includes('t10') || lowerPart.includes('t11') ||
+            lowerPart.includes('t12')) {
+            return 'thoracicSpine';
+        }
+
+        // Lumbar Spine
+        if (lowerPart.includes('lumbar') || lowerPart.includes('l1') || lowerPart.includes('l2') ||
+            lowerPart.includes('l3') || lowerPart.includes('l4') || lowerPart.includes('l5') ||
+            lowerPart.includes('sacrum') || lowerPart.includes('coccyx')) {
+            return 'lumbarSpine';
+        }
+
+        // Sternum
+        if (lowerPart.includes('sternum') || lowerPart.includes('manubrium') || lowerPart.includes('xiphoid')) {
+            return 'sternum';
+        }
+
+        // Ribs
+        if (lowerPart.includes('rib')) {
+            return 'ribs';
+        }
+
+        // Shoulder
+        if (lowerPart.includes('clavicle') || lowerPart.includes('scapula')) {
+            return 'shoulder';
+        }
+
+        // Arm
+        if (lowerPart.includes('humerus') || lowerPart.includes('radius') || lowerPart.includes('ulna')) {
+            return 'arm';
+        }
+
+        // Hand
+        if (lowerPart.includes('hand') || lowerPart.includes('carpal') || lowerPart.includes('metacarpal') ||
+            lowerPart.includes('phalanx') || lowerPart.includes('scaphoid') || lowerPart.includes('lunate') ||
+            lowerPart.includes('triquetral') || lowerPart.includes('pisiform') || lowerPart.includes('trapezium') ||
+            lowerPart.includes('trapezoid') || lowerPart.includes('capitate') || lowerPart.includes('hamate') ||
+            lowerPart.includes('thumb') || lowerPart.includes('index') || lowerPart.includes('middle') ||
+            lowerPart.includes('ring') || lowerPart.includes('pinky') || lowerPart.includes('sesamoid')) {
+            return 'hand';
+        }
+
+        // Pelvis
+        if (lowerPart.includes('pelvis') || lowerPart.includes('ilium') || lowerPart.includes('ischium') ||
+            lowerPart.includes('pubis') || lowerPart.includes('sacroiliac')) {
+            return 'pelvis';
+        }
+
+        // Thigh
+        if (lowerPart.includes('femur') || lowerPart.includes('patella')) {
+            return 'thigh';
+        }
+
+        // Leg
+        if (lowerPart.includes('tibia') || lowerPart.includes('fibula')) {
+            return 'leg';
+        }
+
+        // Foot
+        if (lowerPart.includes('foot') || lowerPart.includes('tarsal') || lowerPart.includes('metatarsal') ||
+            lowerPart.includes('toe') || lowerPart.includes('calcaneus') || lowerPart.includes('talus') ||
+            lowerPart.includes('navicular') || lowerPart.includes('cuboid') || lowerPart.includes('cuneiform')) {
+            return 'foot';
+        }
+
+        return 'other';
+    };
+
     // Helper function to get image URL from Supabase storage
     const getImageUrl = (imagePath: string): string => {
         if (!imagePath) return '';
@@ -337,8 +435,8 @@ const DoctorXRayPage: React.FC = () => {
 
         const matchesBodyPart = !filterBodyPart ||
             (image.body_part && Array.isArray(image.body_part)
-                ? image.body_part.some(part => part.toLowerCase().includes(filterBodyPart.toLowerCase()))
-                : (image.body_part || '').toString().toLowerCase().includes(filterBodyPart.toLowerCase()));
+                ? image.body_part.some(part => getBodyPartCategory(part) === filterBodyPart)
+                : getBodyPartCategory((image.body_part || '').toString()) === filterBodyPart);
 
         return matchesSearch && matchesDate && matchesBodyPart;
     });
@@ -554,18 +652,20 @@ const DoctorXRayPage: React.FC = () => {
                                 className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <option value="">{t('doctorPages.allBodyParts') || 'All Body Parts'}</option>
-                                <option value="chest">{t('xray.bodyParts.chest') || 'Chest'}</option>
-                                <option value="knee">{t('xray.bodyParts.knee') || 'Knee'}</option>
-                                <option value="spine">{t('xray.bodyParts.spine') || 'Spine'}</option>
-                                <option value="hand">{t('xray.bodyParts.hand') || 'Hand'}</option>
-                                <option value="foot">{t('xray.bodyParts.foot') || 'Foot'}</option>
-                                <option value="skull">{t('xray.bodyParts.skull') || 'Skull'}</option>
-                                <option value="pelvis">{t('xray.bodyParts.pelvis') || 'Pelvis'}</option>
-                                <option value="shoulder">{t('xray.bodyParts.shoulder') || 'Shoulder'}</option>
-                                <option value="elbow">{t('xray.bodyParts.elbow') || 'Elbow'}</option>
-                                <option value="wrist">{t('xray.bodyParts.wrist') || 'Wrist'}</option>
-                                <option value="ankle">{t('xray.bodyParts.ankle') || 'Ankle'}</option>
-                                <option value="hip">{t('xray.bodyParts.hip') || 'Hip'}</option>
+                                <option value="skull">{t('doctorPages.bodyPartCategories.skull') || 'Skull'}</option>
+                                <option value="facialBones">{t('doctorPages.bodyPartCategories.facialBones') || 'Facial Bones'}</option>
+                                <option value="cervicalSpine">{t('doctorPages.bodyPartCategories.cervicalSpine') || 'Cervical Spine'}</option>
+                                <option value="thoracicSpine">{t('doctorPages.bodyPartCategories.thoracicSpine') || 'Thoracic Spine'}</option>
+                                <option value="lumbarSpine">{t('doctorPages.bodyPartCategories.lumbarSpine') || 'Lumbar Spine'}</option>
+                                <option value="sternum">{t('doctorPages.bodyPartCategories.sternum') || 'Sternum'}</option>
+                                <option value="ribs">{t('doctorPages.bodyPartCategories.ribs') || 'Ribs'}</option>
+                                <option value="shoulder">{t('doctorPages.bodyPartCategories.shoulder') || 'Shoulder'}</option>
+                                <option value="arm">{t('doctorPages.bodyPartCategories.arm') || 'Arm'}</option>
+                                <option value="hand">{t('doctorPages.bodyPartCategories.hand') || 'Hand'}</option>
+                                <option value="pelvis">{t('doctorPages.bodyPartCategories.pelvis') || 'Pelvis'}</option>
+                                <option value="thigh">{t('doctorPages.bodyPartCategories.thigh') || 'Thigh'}</option>
+                                <option value="leg">{t('doctorPages.bodyPartCategories.leg') || 'Leg'}</option>
+                                <option value="foot">{t('doctorPages.bodyPartCategories.foot') || 'Foot'}</option>
                             </select>
                         </div>
                         <div className="relative">

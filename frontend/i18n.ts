@@ -216,6 +216,24 @@ const enTranslations = {
         noXrayImagesFound: 'No X-ray images found matching your criteria.',
         noXrayImagesUploaded: 'No X-ray images have been uploaded yet.',
         tryAdjustingSearch: 'Try adjusting your search or filter criteria.',
+
+        // Body part categories for DoctorXRayPage (matching XRay component categories)
+        bodyPartCategories: {
+            skull: 'Skull',
+            facialBones: 'Facial Bones',
+            cervicalSpine: 'Cervical Spine',
+            thoracicSpine: 'Thoracic Spine',
+            lumbarSpine: 'Lumbar Spine',
+            sternum: 'Sternum',
+            ribs: 'Ribs',
+            shoulder: 'Shoulder',
+            arm: 'Arm',
+            hand: 'Hand',
+            pelvis: 'Pelvis',
+            thigh: 'Thigh',
+            leg: 'Leg',
+            foot: 'Foot'
+        },
         testResults: 'Test Results',
         doctorsNotes: 'Doctor\'s Notes',
         labTechnician: 'Lab Technician',
@@ -857,10 +875,10 @@ const enTranslations = {
             "right_thumb_sesamoid": "Right Thumb Sesamoid Bones",
             "left_big_toe_sesamoid": "Left Big Toe Sesamoid Bones",
             "right_big_toe_sesamoid": "Right Big Toe Sesamoid Bones",
-            
+
             // Basic body parts for DoctorXRayPage dropdown
             "chest": "Chest",
-            "knee": "Knee", 
+            "knee": "Knee",
             "spine": "Spine",
             "hand": "Hand",
             "foot": "Foot",
@@ -2571,6 +2589,24 @@ const arTranslations = {
         noXrayImagesFound: 'لم يتم العثور على صور أشعة تطابق المعايير.',
         noXrayImagesUploaded: 'لم يتم رفع أي صور أشعة بعد.',
         tryAdjustingSearch: 'حاول تعديل معايير البحث أو التصفية.',
+
+        // Body part categories for DoctorXRayPage (matching XRay component categories)
+        bodyPartCategories: {
+            skull: 'الجمجمة',
+            facialBones: 'العظام الوجهية',
+            cervicalSpine: 'العمود الفقري العنقي',
+            thoracicSpine: 'العمود الفقري الصدري',
+            lumbarSpine: 'العمود الفقري القطني',
+            sternum: 'عظم القص',
+            ribs: 'الأضلاع',
+            shoulder: 'الكتف',
+            arm: 'الذراع',
+            hand: 'اليد',
+            pelvis: 'الحوض',
+            thigh: 'الفخذ',
+            leg: 'الساق',
+            foot: 'القدم'
+        },
         testResults: 'نتائج الفحص',
         doctorsNotes: 'ملاحظات الطبيب',
         labTechnician: 'فني المختبر',
@@ -3558,7 +3594,7 @@ const arTranslations = {
             right_thumb_sesamoid: 'العظام السمسمية لإبهام اليد الأيمن',
             left_big_toe_sesamoid: 'العظام السمسمية لإبهام القدم الأيسر',
             right_big_toe_sesamoid: 'العظام السمسمية لإبهام القدم الأيمن',
-            
+
             // Basic body parts for DoctorXRayPage dropdown
             chest: 'الصدر',
             knee: 'الركبة',
