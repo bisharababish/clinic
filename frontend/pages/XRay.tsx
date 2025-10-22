@@ -1987,19 +1987,19 @@ const XRay = () => {
         keywords={t('xray.seo.keywords')}
         url="https://bethlehemmedcenter.com/xray"
       />
-      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 md:p-6 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2 md:p-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-2">
-          {/* Header */}
-          <div className="mb-12 text-center px-2">
-            <div className="flex items-center mb-4 justify-center">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 rounded-2xl shadow-lg">
-                <Camera className="w-10 h-10 text-white" />
-              </div>
-            </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-6 text-center px-2 break-words leading-tight whitespace-normal">
-              {t('xray.title')}
-            </h1>
-            <p className="text-slate-600 text-xl w-full text-center mx-auto px-2 break-words">
+{/* Header */}
+<div className="mb-6 text-center px-2 pt-8">
+  <div className="flex items-center mb-4 justify-center">
+    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
+      <Camera className="w-8 h-8 text-white" />
+    </div>
+  </div>
+  <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4 text-center px-2 break-words leading-loose whitespace-normal py-2">
+    {t('xray.title')}
+  </h1>
+  <p className="text-slate-600 text-base md:text-lg w-full text-center mx-auto px-2 break-words">
               {t('xray.subtitle')}
             </p>
           </div>
