@@ -92,7 +92,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         // Store session in localStorage
         localStorage.setItem('supabase.auth.token', JSON.stringify({
           currentSession: data.session,
-          expiresAt: Date.now() + 3600000 // 1 hour
+          expiresAt: Date.now() + (20 * 60 * 1000) // 20 minutes
         }));
 
         // Get user info from database - simple query

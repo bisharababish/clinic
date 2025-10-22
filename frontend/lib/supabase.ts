@@ -31,6 +31,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
       persistSession: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
+      // Extend session duration
+      refreshTokenRetryInterval: 2000, // Retry refresh every 2 seconds
+      refreshTokenRetryAttempts: 3, // Retry up to 3 times
       // Session timeout configuration
       storage: {
         getItem: (key: string) => {
@@ -40,6 +43,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
               const parsed = JSON.parse(item);
               // Check if session is expired (20 minutes = 1200000 ms)
               if (parsed.expires_at && Date.now() > parsed.expires_at) {
+                localStorage.removeItem(key);
+                return null;
+              }
+              // Also check our custom session timeout
+              if (parsed.session_timeout && Date.now() > parsed.session_timeout) {
                 localStorage.removeItem(key);
                 return null;
               }
@@ -55,7 +63,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
             const parsed = JSON.parse(value);
             // Set custom expiration time (20 minutes from now)
             if (parsed.expires_at) {
+              // Extend the session to 20 minutes from now
               parsed.expires_at = Date.now() + (20 * 60 * 1000); // 20 minutes
+            }
+            // Also set a custom session timeout for our app
+            if (parsed.access_token) {
+              parsed.session_timeout = Date.now() + (20 * 60 * 1000); // 20 minutes
             }
             localStorage.setItem(key, JSON.stringify(parsed));
           } catch {

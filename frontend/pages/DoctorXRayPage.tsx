@@ -24,7 +24,7 @@ interface XRayImage {
     patient_id: number;
     patient_name: string;
     date_of_birth: string;
-    body_part: string;
+    body_part: string[]; // Changed from string to string[] for multiple body parts
     indication: string;
     requesting_doctor: string;
     image_url: string;
@@ -176,11 +176,30 @@ const DoctorXRayPage: React.FC = () => {
     const { toast } = useToast();
     const isFetchingRef = useRef(false);
 
+    // Helper function to format body parts for display with translations
+    const formatBodyParts = (bodyParts: string[] | string): string => {
+        if (Array.isArray(bodyParts)) {
+            return bodyParts.map(part => {
+                // Try to get translation for the body part
+                const translation = t(`xray.bodyParts.${part}`);
+                return translation !== `xray.bodyParts.${part}` ? translation : part;
+            }).join(', ');
+        }
+        const translation = t(`xray.bodyParts.${bodyParts}`);
+        return translation !== `xray.bodyParts.${bodyParts}` ? translation : bodyParts || '';
+    };
+
     // Helper function to get image URL from Supabase storage
     const getImageUrl = (imagePath: string): string => {
         if (!imagePath) return '';
 
         try {
+            // If the path already contains the full URL, return it
+            if (imagePath.startsWith('http')) {
+                return imagePath;
+            }
+
+            // Otherwise, construct the public URL
             const { data } = supabase.storage
                 .from('xray-images')
                 .getPublicUrl(imagePath);
@@ -309,13 +328,17 @@ const DoctorXRayPage: React.FC = () => {
         const matchesSearch =
             (image.patient_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (image.patient_id || '').toString().includes(searchTerm) ||
-            (image.body_part || '').toLowerCase().includes(searchTerm.toLowerCase());
+            (image.body_part && Array.isArray(image.body_part)
+                ? image.body_part.some(part => part.toLowerCase().includes(searchTerm.toLowerCase()))
+                : (image.body_part || '').toString().toLowerCase().includes(searchTerm.toLowerCase()));
 
         const matchesDate = !filterDate ||
             (image.created_at && image.created_at.includes(filterDate));
 
         const matchesBodyPart = !filterBodyPart ||
-            (image.body_part && image.body_part.toLowerCase().includes(filterBodyPart.toLowerCase()));
+            (image.body_part && Array.isArray(image.body_part)
+                ? image.body_part.some(part => part.toLowerCase().includes(filterBodyPart.toLowerCase()))
+                : (image.body_part || '').toString().toLowerCase().includes(filterBodyPart.toLowerCase()));
 
         return matchesSearch && matchesDate && matchesBodyPart;
     });
@@ -358,7 +381,7 @@ const DoctorXRayPage: React.FC = () => {
 
             // Create filename with proper extension
             const fileExtension = image.imageUrl.split('.').pop()?.toLowerCase() || 'jpg';
-            const fileName = `xray_${image.patient_name.replace(/\s+/g, '_')}_${image.body_part}_${new Date(image.created_at).toLocaleDateString().replace(/\//g, '-')}.${fileExtension}`;
+            const fileName = `xray_${image.patient_name.replace(/\s+/g, '_')}_${formatBodyParts(image.body_part).replace(/\s+/g, '_')}_${new Date(image.created_at).toLocaleDateString().replace(/\//g, '-')}.${fileExtension}`;
 
             link.download = fileName;
             link.style.display = 'none';
@@ -607,7 +630,7 @@ const DoctorXRayPage: React.FC = () => {
                                 <div className="aspect-square bg-gray-900 relative">
                                     <img
                                         src={image.imageUrl}
-                                        alt={`${image.body_part} X-ray for ${image.patient_name}`}
+                                        alt={`${formatBodyParts(image.body_part)} X-ray for ${image.patient_name}`}
                                         className="w-full h-full object-contain"
                                         onError={(e) => {
                                             const target = e.target as HTMLImageElement;
@@ -631,9 +654,9 @@ const DoctorXRayPage: React.FC = () => {
                                     </div>
 
                                     <div className="space-y-1 text-sm text-gray-600 mb-4">
-                                        <p><span className="font-medium">{t('xray.bodyPart') || 'Body Part'}:</span> {image.body_part}</p>
+                                        <p><span className="font-medium">{t('xray.doctorXRayPage.bodyPart') || 'Body Part'}:</span> {formatBodyParts(image.body_part)}</p>
                                         <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(image.created_at).toLocaleDateString()}</p>
-                                        <p><span className="font-medium">{t('xray.requestingDoctor') || 'Requesting Doctor'}:</span> {image.requesting_doctor || 'N/A'}</p>
+                                        <p><span className="font-medium">{t('xray.doctorXRayPage.requestingDoctor') || 'Requesting Doctor'}:</span> {image.requesting_doctor || 'N/A'}</p>
                                     </div>
 
                                     {image.indication && (
@@ -715,8 +738,8 @@ const DoctorXRayPage: React.FC = () => {
                         <p className="text-gray-500 text-lg">{t('doctorPages.noXrayImagesFound') || 'No X-ray images found matching your criteria.'}</p>
                         <p className="text-gray-400 text-sm mt-2">
                             {xrayImages.length === 0
-                                ? 'No X-ray images have been uploaded yet.'
-                                : 'Try adjusting your search or filter criteria.'}
+                                ? t('doctorPages.noXrayImagesUploaded') || 'No X-ray images have been uploaded yet.'
+                                : t('doctorPages.tryAdjustingSearch') || 'Try adjusting your search or filter criteria.'}
                         </p>
                     </div>
                 )}
@@ -730,7 +753,7 @@ const DoctorXRayPage: React.FC = () => {
                         <div className="p-3 sm:p-4 border-b flex items-center justify-between flex-shrink-0">
                             <div className="min-w-0 flex-1">
                                 <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">
-                                    {selectedImage.body_part} X-Ray - {selectedImage.patient_name}
+                                    {formatBodyParts(selectedImage.body_part)} X-Ray - {selectedImage.patient_name}
                                 </h2>
                                 <p className="text-xs sm:text-sm text-gray-500 truncate">
                                     {t('common.date') || 'Date'}: {new Date(selectedImage.created_at).toLocaleDateString()} | {t('usersManagement.id') || 'ID'}: {selectedImage.patient_id}
@@ -779,7 +802,7 @@ const DoctorXRayPage: React.FC = () => {
                                 <div className="w-full h-full flex items-center justify-center p-2">
                                     <img
                                         src={selectedImage.imageUrl}
-                                        alt={`${selectedImage.body_part} X-ray`}
+                                        alt={`${formatBodyParts(selectedImage.body_part)} X-ray`}
                                         className="max-w-full max-h-full object-contain transition-transform duration-200"
                                         style={{
                                             transform: `scale(${imageZoom / 100}) rotate(${imageRotation}deg)`,
@@ -797,12 +820,12 @@ const DoctorXRayPage: React.FC = () => {
                                     {/* Patient Information */}
                                     <div>
                                         <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">
-                                            {t('xray.patientInformation') || 'Patient Information'}
+                                            {t('doctorPages.patientInformation') || 'Patient Information'}
                                         </h3>
                                         <div className="space-y-1 text-xs sm:text-sm">
                                             <p><span className="font-medium">{t('common.name') || 'Name'}:</span> {selectedImage.patient_name}</p>
                                             <p><span className="font-medium">{t('usersManagement.id') || 'ID'}:</span> {selectedImage.patient_id}</p>
-                                            <p><span className="font-medium">{t('xray.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.date_of_birth || 'N/A'}</p>
+                                            <p><span className="font-medium">{t('xray.patientInfo.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.date_of_birth || 'N/A'}</p>
                                         </div>
                                     </div>
                                     {/* Exam Information */}
@@ -811,9 +834,9 @@ const DoctorXRayPage: React.FC = () => {
                                             {t('doctorPages.examInformation') || 'Exam Information'}
                                         </h3>
                                         <div className="space-y-1 text-xs sm:text-sm">
-                                            <p><span className="font-medium">{t('xray.bodyPart') || 'Body Part'}:</span> {selectedImage.body_part}</p>
+                                            <p><span className="font-medium">{t('xray.doctorXRayPage.bodyPart') || 'Body Part'}:</span> {formatBodyParts(selectedImage.body_part)}</p>
                                             <p><span className="font-medium">{t('common.date') || 'Date'}:</span> {new Date(selectedImage.created_at).toLocaleDateString()}</p>
-                                            <p><span className="font-medium">{t('xray.requestingDoctor') || 'Requesting Doctor'}:</span> {selectedImage.requesting_doctor || 'N/A'}</p>
+                                            <p><span className="font-medium">{t('xray.doctorXRayPage.requestingDoctor') || 'Requesting Doctor'}:</span> {selectedImage.requesting_doctor || 'N/A'}</p>
                                             <p className="flex items-center">
                                                 <span className="font-medium">{t('common.status') || 'Status'}:</span>
                                                 <span className="ml-2 px-2 py-0.5 text-xs rounded bg-green-100 text-green-800">
