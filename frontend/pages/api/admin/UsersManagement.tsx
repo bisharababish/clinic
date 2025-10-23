@@ -108,7 +108,7 @@ const UsersManagement = () => {
         user_phonenumber: "",
         date_of_birth: "",
         gender_user: "",
-        user_roles: "patient" as UserRole,
+        user_roles: "Patient" as UserRole,
         user_password: "",
     });
     // Deletion request state
@@ -314,7 +314,7 @@ const UsersManagement = () => {
             user_phonenumber: "",
             date_of_birth: "",
             gender_user: "",
-            user_roles: "patient",
+            user_roles: "Patient",
             user_password: "",
         });
         setIdValidationStatus('unchecked');
@@ -1381,7 +1381,7 @@ const UsersManagement = () => {
                                             <SelectItem value="Patient" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
                                                 {t('roles.patient')}
                                             </SelectItem>
-                                            <SelectItem value="doctor" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                            <SelectItem value="Doctor" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
                                                 {t('roles.doctor')}
                                             </SelectItem>
                                             <SelectItem value="Secretary" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>

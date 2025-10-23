@@ -153,35 +153,6 @@ const PatientSearchSkeletonLoading = ({ isRTL }: { isRTL: boolean }) => (
   </div>
 );
 
-const PatientSidebarSkeletonLoading = () => (
-  <div className="p-2">
-    <div className="space-y-2">
-      {[...Array(6)].map((_, index) => (
-        <div key={index} className="border rounded-lg p-3">
-          <div className="space-y-2">
-            <div>
-              <Skeleton className="h-4 w-40 mb-1" />
-              <Skeleton className="h-3 w-32" />
-            </div>
-            <div className="space-y-1">
-              <Skeleton className="h-3 w-48" />
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-3 w-36" />
-            </div>
-            <div className="flex items-center justify-between pt-2 border-t">
-              <Skeleton className="h-4 w-16" />
-              <div className="flex gap-1">
-                <Skeleton className="h-3 w-6" />
-                <Skeleton className="h-3 w-6" />
-                <Skeleton className="h-3 w-6" />
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 const Index = () => {
   const { user } = useAuth();
   const userRole = user?.role?.toLowerCase() || "";
@@ -207,11 +178,10 @@ const Index = () => {
   const [socialSituation, setSocialSituation] = useState<"married" | "single" | "">("");
   const [isLoadingHealthData, setIsLoadingHealthData] = useState(false);
 
-  // NEW: State for patient list sidebar
+  // State for patient management
   const [allPatients, setAllPatients] = useState<PatientWithHealthInfo[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState(false);
-  const [showPatientSidebar, setShowPatientSidebar] = useState(false);
-  const [patientListFilter, setPatientListFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [createIdValidationStatus, setCreateIdValidationStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
 
 
@@ -1177,6 +1147,11 @@ const Index = () => {
     }
   }, [searchTerm]);
 
+  // Reset pagination when search results change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchResults]);
+
 
   useEffect(() => {
     return () => {
@@ -1185,20 +1160,32 @@ const Index = () => {
   }, []);
   const [customAllergy, setCustomAllergy] = useState("");
 
-  // Filter patients based on search term
-  const filteredPatients = allPatients.filter(patient => {
-    if (!patientListFilter.trim()) return true;
+  // Pagination logic
+  const patientsPerPage = 2;
+  const totalPages = Math.ceil(searchResults.length / patientsPerPage);
+  const startIndex = (currentPage - 1) * patientsPerPage;
+  const endIndex = startIndex + patientsPerPage;
+  const currentPatients = searchResults.slice(startIndex, endIndex);
 
-    const searchLower = patientListFilter.toLowerCase();
-    return (
-      patient.english_username_a?.toLowerCase().includes(searchLower) ||
-      patient.english_username_d?.toLowerCase().includes(searchLower) ||
-      patient.arabic_username_a?.toLowerCase().includes(searchLower) ||
-      patient.arabic_username_d?.toLowerCase().includes(searchLower) ||
-      patient.user_email?.toLowerCase().includes(searchLower) ||
-      patient.id_number?.toLowerCase().includes(searchLower)
-    );
-  });
+  // Pagination handlers
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
 
   // UPDATED: Enhanced loadPatientHealthData function with user tracking
   const loadPatientHealthData = async () => {
@@ -1687,265 +1674,9 @@ const Index = () => {
         url="https://bethlehemmedcenter.com/home"
       />
       <div className={`index-flex-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-        {/* NEW: Patient Sidebar - Only visible to nurses, doctors, and admins */}
-        {canSearchPatients() && (
-          <>
-            {/* Sidebar Toggle Button - Fixed Position */}
-            <Button
-              onClick={() => setShowPatientSidebar(!showPatientSidebar)}
-              className={` patient-list ${isRTL ? 'rtl' : 'ltr'}`}
-              size="sm"
-            >
-              <List className="h-4 w-4" />
-              {showPatientSidebar ?
-                (isRTL ? " " : " ") :
-                (isRTL ? "" : " ")
-              }
-              {showPatientSidebar ? <X className="h-4 w-4 ml-2" /> : <Users className="h-4 w-4 ml-2" />}
-            </Button>
-
-            {/* Sidebar */}
-            <div className={`patient-sidebar ${isRTL ? 'rtl' : 'ltr'} ${showPatientSidebar ? 'show' : ''}`}>
-              {/* Sidebar Header */}
-              <div className="p-4 border-b bg-blue-50 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-blue-800 flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    {isRTL ? "سجل المرضى" : "All Patients"}
-                  </h3>
-                  <Badge variant="secondary">
-                    {filteredPatients.length}
-                  </Badge>
-                </div>
-                {/* Sidebar Hide Button - Only show when sidebar is open */}
-                {showPatientSidebar && (
-                  <Button
-                    onClick={() => setShowPatientSidebar(false)}
-                    className={`patient-list hide-list-btn ${isRTL ? 'rtl' : 'ltr'}`}
-                    size="sm"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Sidebar Search Filter */}
-              <div className="relative">
-                <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-2.5 h-4 w-4 text-gray-400`} />
-                <Input
-                  type="text"
-                  placeholder={isRTL ? "فلترة المرضى..." : "Filter patients..."}
-                  value={patientListFilter}
-                  onChange={(e) => setPatientListFilter(e.target.value)}
-                  className={`${isRTL ? 'pr-10' : 'pl-10'} text-sm`}
-                />
-              </div>
-
-              {/* Refresh Button */}
-              <Button
-                onClick={loadAllPatients}
-                disabled={isLoadingPatients}
-                variant="outline"
-                size="sm"
-                className="w-full mt-2 text-xs"
-              >
-                {isLoadingPatients ? (
-                  <>
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                    {isRTL ? "جاري التحميل..." : "Loading..."}
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-3 w-3 mr-1" />
-                    {isRTL ? "تحديث القائمة" : "Refresh List"}
-                  </>
-                )}
-              </Button>
-
-              {/* Sidebar Content */}
-              <ScrollArea className="h-full pb-20">
-                <div className="p-2">
-                  {isLoadingPatients ? (
-                    <PatientSidebarSkeletonLoading />
-                  ) : filteredPatients.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                      <p className="text-sm">
-                        {patientListFilter ?
-                          (isRTL ? "لا توجد مرضى مطابقة للفلتر" : "No patients match filter") :
-                          (isRTL ? "لا توجد مرضى" : "No patients found")
-                        }
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {filteredPatients.map((patient) => (
-                        <Card
-                          key={patient.userid}
-                          className={`cursor-pointer transition-all hover:shadow-md border-l-4 ${selectedPatient?.userid === patient.userid
-                            ? 'border-l-blue-500 bg-blue-50 shadow-md'
-                            : 'border-l-gray-200 hover:border-l-blue-300'
-                            }`}
-                          onClick={() => selectPatient(patient)}
-                        >
-                          <CardContent className="p-3">
-                            <div className="space-y-2">
-                              {/* Patient Name */}
-                              <div>
-                                {patient.arabic_username_a ? (
-                                  <>
-                                    <p className="font-medium text-sm text-gray-900 text-left" dir="ltr" style={{ fontFamily: 'Arial, sans-serif' }}>
-                                      {patient.arabic_username_a} {patient.arabic_username_d}
-                                    </p>
-                                    <p className="text-xs text-gray-600 text-left" dir="ltr">
-                                      {patient.english_username_a} {patient.english_username_d}
-                                    </p>
-                                  </>
-                                ) : (
-                                  <p className="font-medium text-sm text-gray-900 text-left" dir="ltr">
-                                    {patient.english_username_a} {patient.english_username_d}
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Patient Info */}
-                              <div className="space-y-1">
-                                <div className={`flex items-center gap-1 text-xs text-gray-600 ${isRTL ? 'justify-end' : 'justify-start'}`}>
-                                  {isRTL ? (
-                                    <>
-                                      <span className="truncate" dir="ltr">{patient.user_email}</span>
-                                      <Mail className="h-3 w-3" />
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Mail className="h-3 w-3" />
-                                      <span className="truncate" dir="ltr">{patient.user_email}</span>
-                                    </>
-                                  )}
-                                </div>
-
-                                {patient.id_number && (
-                                  <div className={`flex items-center gap-1 text-xs text-gray-600 ${isRTL ? 'justify-end' : 'justify-start'}`}>
-                                    {isRTL ? (
-                                      <>
-                                        <CreditCard className="h-3 w-3" />
-                                        <span dir="ltr">{patient.id_number}</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <CreditCard className="h-3 w-3" />
-                                        <span>{patient.id_number}</span>
-                                      </>
-                                    )}
-                                  </div>
-                                )}
-                                {patient.user_phonenumber && (
-                                  <div className={`flex items-center gap-1 text-xs text-gray-600 ${isRTL ? 'justify-end' : 'justify-start'}`}>
-                                    {isRTL ? (
-                                      <>
-                                        <Phone className="h-3 w-3" />
-                                        <span dir="ltr">{patient.user_phonenumber}</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Phone className="h-3 w-3" />
-                                        <span>{patient.user_phonenumber}</span>
-                                      </>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Health Status Indicator */}
-                              <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                                {isRTL ? (
-                                  <>
-                                    {/* Quick Stats - Right side in English */}
-                                    {patient.health_data && (
-                                      <div className="flex gap-1 text-xs">
-                                        {(() => {
-                                          const stats = calculatePatientStats(patient.health_data);
-                                          return (
-                                            <>
-                                              <span className="text-orange-600">{stats.diseaseCount}C</span>
-                                              <span className="text-green-600">{stats.medicationCount}M</span>
-                                              <span className="text-red-600">{stats.allergyCount}A</span> {/* NEW: Add allergies */}
-                                              {stats.bmi && <span className="text-blue-600">{stats.bmi}</span>}
-                                            </>
-                                          );
-                                        })()}
-                                      </div>
-                                    )}
-
-                                    {/* Badge - Right side in Arabic */}
-                                    {patient.health_data ? (
-                                      <Badge variant="secondary" className="text-xs">
-                                        <Database className="h-3 w-3 mr-1" />
-                                        <span dir="rtl" className="text-right">بيانات متوفرة</span>
-                                      </Badge>
-                                    ) : (
-                                      <Badge variant="outline" className="text-xs">
-                                        <span dir="rtl" className="text-right">لا توجد بيانات</span>
-                                      </Badge>
-                                    )}
-                                  </>
-                                ) : (
-                                  <>
-                                    {/* Badge - Left side in English */}
-                                    {patient.health_data ? (
-                                      <Badge variant="secondary" className="text-xs">
-                                        <Database className="h-3 w-3 mr-1" />
-                                        Has Data
-                                      </Badge>
-                                    ) : (
-                                      <Badge variant="outline" className="text-xs">
-                                        No Data
-                                      </Badge>
-                                    )}
-
-                                    {/* Quick Stats - Right side in English */}
-                                    {patient.health_data && (
-                                      <div className="flex gap-1 text-xs">
-                                        {(() => {
-                                          const stats = calculatePatientStats(patient.health_data);
-                                          return (
-                                            <>
-                                              <span className="text-orange-600">{stats.diseaseCount}C</span>
-                                              <span className="text-green-600">{stats.medicationCount}M</span>
-                                              {stats.bmi && <span className="text-blue-600">{stats.bmi}</span>}
-                                            </>
-                                          );
-                                        })()}
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-
-
-
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-
-            {/* Sidebar Overlay */}
-            {showPatientSidebar && (
-              <div
-                className="sidebar-overlay"
-                onClick={() => setShowPatientSidebar(false)}
-              />
-            )}
-          </>
-        )}
 
         {/* Main Content */}
-        <div className={`main-content ${canSearchPatients() && showPatientSidebar ? (isRTL ? 'with-sidebar-rtl' : 'with-sidebar-ltr') : ''}`}>
+        <div className="main-content">
           <div className="main-content-inner space-y-4 md:space-y-8">
             {/* Notification Alert - visible to patients and secretaries */}
             {(userRole === 'patient' || userRole === 'secretary') && (
@@ -1959,13 +1690,43 @@ const Index = () => {
               </Alert>
             )}
 
-            {/* NEW: Patient Search Section - Only visible to nurses, doctors, and admins */}
+            {/* Enhanced Patient Management Section - Only visible to nurses, doctors, and admins */}
             {canSearchPatients() && (
-              <section className="bg-white p-6 rounded-lg shadow">
-                <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-                  <Search className="h-6 w-6" />
-                  {isRTL ? "البحث عن المرضى" : "Patient Search"}
-                </h2>
+              <section className="search-section bg-white p-6 rounded-lg shadow-lg">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
+                  <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <Search className="h-6 w-6" />
+                    {isRTL ? "إدارة المرضى" : "Patient Management"}
+                  </h2>
+                  {/* Enhanced Patient Counter */}
+                  <div className="flex items-center gap-3 patient-counters">
+                    {/* Total Patients Only */}
+                    <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg border border-blue-200 patient-counter-item">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        <span className="font-semibold text-sm">
+                          {isLoadingPatients ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            `${allPatients.length} ${isRTL ? "إجمالي المرضى" : "Total Patients"}`
+                          )}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Refresh Button */}
+                    <Button
+                      onClick={loadAllPatients}
+                      disabled={isLoadingPatients}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isLoadingPatients ? 'animate-spin' : ''}`} />
+                      {isRTL ? "تحديث" : "Refresh"}
+                    </Button>
+                  </div>
+                </div>
 
                 {/* Search Input */}
                 <div className="search-controls">
@@ -1993,17 +1754,34 @@ const Index = () => {
                     )}
                   </Button>
 
-                  {/* NEW: Create Patient Button - Only for nurses and admins */}
-                  {canCreatePatients() && (
+                  {/* Quick Actions */}
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    {/* Show All Patients Button */}
                     <Button
-                      onClick={() => setShowCreatePatientForm(true)}
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSearchResults(allPatients);
+                        setCurrentPage(1); // Reset to first page
+                      }}
                       variant="outline"
-                      className="flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
+                      className="flex items-center gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
                     >
-                      <UserPlus className="h-4 w-4" />
-                      {isRTL ? "إنشاء مريض جديد" : "Create New Patient"}
+                      <Users className="h-4 w-4" />
+                      {isRTL ? "عرض جميع المرضى" : "Show All Patients"}
                     </Button>
-                  )}
+
+                    {/* NEW: Create Patient Button - Only for nurses and admins */}
+                    {canCreatePatients() && (
+                      <Button
+                        onClick={() => setShowCreatePatientForm(true)}
+                        variant="outline"
+                        className="flex items-center gap-2 border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        {isRTL ? "إنشاء مريض جديد" : "Create New Patient"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Search Error with Create Patient Option */}
@@ -2026,18 +1804,38 @@ const Index = () => {
                   </Alert>
                 )}
 
-                {/* Search Results */}
+                {/* Patient List with Pagination */}
                 {isSearching ? (
                   <PatientSearchSkeletonLoading isRTL={isRTL} />
                 ) : searchResults.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-                      <UserCheck className="h-5 w-5" />
-                      {isRTL ? "نتائج البحث" : "Search Results"} ({searchResults.length})
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                        <UserCheck className="h-5 w-5" />
+                        {isRTL ? "قائمة المرضى" : "Patient List"} ({searchResults.length})
+                      </h3>
+                      {/* Quick Stats */}
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Database className="h-4 w-4" />
+                          {searchResults.filter(p => p.health_data).length} {isRTL ? "مع بيانات" : "with data"}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <AlertCircle className="h-4 w-4" />
+                          {searchResults.filter(p => !p.health_data).length} {isRTL ? "بدون بيانات" : "no data"}
+                        </span>
+                      </div>
+                    </div>
 
-                    <div className="search-results-grid">
-                      {searchResults.map((patient) => (
+                    {/* Pagination Info */}
+                    {totalPages > 1 && (
+                      <div className="text-sm text-gray-600 text-center">
+                        {isRTL ? "صفحة" : "Page"} {currentPage} {isRTL ? "من" : "of"} {totalPages}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {currentPatients.map((patient) => (
                         <Card
                           key={patient.userid}
                           className={`cursor-pointer transition-all hover:shadow-md ${selectedPatient?.userid === patient.userid ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
@@ -2118,8 +1916,52 @@ const Index = () => {
                         </Card>
                       ))}
                     </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="mt-6 flex items-center justify-between">
+                        <Button
+                          onClick={goToPreviousPage}
+                          disabled={currentPage === 1}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          {isRTL ? "السابق" : "Previous"}
+                        </Button>
+
+                        {/* Page Numbers */}
+                        <div className="flex items-center gap-2">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <Button
+                              key={page}
+                              onClick={() => goToPage(page)}
+                              variant={currentPage === page ? "default" : "outline"}
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                            >
+                              {page}
+                            </Button>
+                          ))}
+                        </div>
+
+                        <Button
+                          onClick={goToNextPage}
+                          disabled={currentPage === totalPages}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          {isRTL ? "التالي" : "Next"}
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
+
+
 
                 {/* Selected Patient Info */}
                 {selectedPatient && (
@@ -2651,7 +2493,7 @@ const Index = () => {
               </section>
             )}
 
-            <section className="bg-white p-6 rounded-lg shadow">
+            <section className="section bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-2xl font-bold mb-6 text-gray-800">
                 {selectedPatient ?
                   `${isRTL ? "معلومات المريض:" : "Patient Information:"} ${selectedPatient.english_username_a} ${selectedPatient.english_username_d}` :
@@ -2778,9 +2620,9 @@ const Index = () => {
                 </div>
               )}
             </section>
-            {/* ADD THIS COMPLETE NEW SECTION: Social Situation Section - Only show for secretary when female patient is selected */}
+            {/* Enhanced Social Situation Section - Only show for secretary when female patient is selected */}
             {userRole === 'secretary' && selectedPatient && selectedPatient.gender_user === 'female' && (
-              <section className="bg-white p-6 rounded-lg shadow">
+              <section className="section bg-white p-6 rounded-lg shadow-lg">
                 <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                   <User className="h-6 w-6" />
                   {isRTL ? "الحالة الاجتماعية" : "Social Situation"}
@@ -2845,8 +2687,8 @@ const Index = () => {
                 </div>
               </section>
             )}
-            {/* Common Diseases - FIXED: Changed to checkboxes for multiple selection */}
-            <section className="bg-white p-6 rounded-lg shadow">
+            {/* Enhanced Common Diseases - FIXED: Changed to checkboxes for multiple selection */}
+            <section className="section bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.commonDiseases")}</h2>
               {isLoadingHealthData ? (
                 <div className="grid grid-cols-3 gap-3">
@@ -2905,8 +2747,8 @@ const Index = () => {
               )}
             </section>
 
-            {/* Medicine Categories - visible to ALL users */}
-            <section className="bg-white p-6 rounded-lg shadow">
+            {/* Enhanced Medicine Categories - visible to ALL users */}
+            <section className="section bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.medicinesTitle")}</h2>
               {isLoadingHealthData ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2949,8 +2791,8 @@ const Index = () => {
               )}
             </section>
 
-            {/* Allergies Section - visible to ALL users */}
-            <section className="bg-white p-6 rounded-lg shadow mt-6">
+            {/* Enhanced Allergies Section - visible to ALL users */}
+            <section className="section bg-white p-6 rounded-lg shadow-lg mt-6">
               <h2 className="text-2xl font-bold mb-6 text-gray-800">{isRTL ? 'الحساسية الدوائية' : 'Drug Allergies'}</h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -3081,7 +2923,7 @@ const Index = () => {
             </div>
 
             {/* Enhanced Patient Logs with User Tracking - visible to ALL users */}
-            <section className="bg-white p-6 rounded-lg shadow">
+            <section className="section bg-white p-6 rounded-lg shadow-lg">
               <h2 className="text-2xl font-bold mb-6 text-gray-800">{t("home.patientLogs")}</h2>
 
               {/* User Tracking Information - Show if data exists */}
@@ -3189,9 +3031,9 @@ const Index = () => {
               </div>
             </section>
 
-            {/* Health Summary Statistics - Only shown when health data exists */}
+            {/* Enhanced Health Summary Statistics - Only shown when health data exists */}
             {healthData && (
-              <section className="bg-white p-6 rounded-lg shadow">
+              <section className="section bg-white p-6 rounded-lg shadow-lg">
                 <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                   <BarChart3 className="h-6 w-6" />
                   {isRTL ? "ملخص الحالة الصحية" : "Health Summary"}
@@ -3370,9 +3212,9 @@ const Index = () => {
               </section>
             )}
 
-            {/* Paid Patients List - Only visible to doctors (not nurses, admin/secretary since they have it in dashboard) */}
+            {/* Enhanced Paid Patients List - Only visible to doctors (not nurses, admin/secretary since they have it in dashboard) */}
             {userRole === 'doctor' && (
-              <section className="bg-white p-6 rounded-lg shadow mt-8">
+              <section className="section bg-white p-6 rounded-lg shadow-lg mt-8">
                 <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
                   <DollarSign className="h-6 w-6" />
                   {isRTL ? "المرضى المدفوعين" : "Paid Patients"}
