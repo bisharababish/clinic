@@ -1219,6 +1219,17 @@ const Labs = () => {
                         maxFiles={5}
                         maxFileSize={10 * 1024 * 1024} // 10MB
                         disabled={isLoading || isUploading}
+                        isRTL={isRTL}
+                        translations={{
+                          dragAndDrop: isRTL ? 'اسحب وأفلت الملفات هنا، أو' : 'Drag and drop files here, or',
+                          browse: isRTL ? 'تصفح' : 'browse',
+                          maxFiles: isRTL ? 'حد أقصى {maxFiles} ملفات، حتى {maxSize} ميجابايت لكل ملف' : 'Maximum {maxFiles} files, up to {maxSize}MB each',
+                          acceptedTypes: isRTL ? 'المقبول: PDF، الصور، النصوص، مستندات Word' : 'Accepted: PDF, Images, Text, Word documents',
+                          selectedFiles: isRTL ? 'الملفات المحددة' : 'Selected Files',
+                          fileTooLarge: isRTL ? 'الملف {fileName} كبير جداً. الحد الأقصى للحجم هو {maxSize} ميجابايت' : 'File {fileName} is too large. Maximum size is {maxSize}MB',
+                          fileTypeNotAllowed: isRTL ? 'نوع الملف {fileType} غير مسموح' : 'File type {fileType} is not allowed',
+                          maximumFilesAllowed: isRTL ? 'حد أقصى {maxFiles} ملفات مسموح' : 'Maximum {maxFiles} files allowed'
+                        }}
                       />
                     </div>
 

@@ -14,6 +14,18 @@ interface FileUploadProps {
     acceptedTypes?: string[];
     disabled?: boolean;
     className?: string;
+    // Translation props
+    isRTL?: boolean;
+    translations?: {
+        dragAndDrop: string;
+        browse: string;
+        maxFiles: string;
+        acceptedTypes: string;
+        selectedFiles: string;
+        fileTooLarge: string;
+        fileTypeNotAllowed: string;
+        maximumFilesAllowed: string;
+    };
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
@@ -24,7 +36,18 @@ const FileUpload: React.FC<FileUploadProps> = ({
     maxFileSize = 10 * 1024 * 1024, // 10MB default
     acceptedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
     disabled = false,
-    className
+    className,
+    isRTL = false,
+    translations = {
+        dragAndDrop: 'Drag and drop files here, or',
+        browse: 'browse',
+        maxFiles: `Maximum {maxFiles} files, up to {maxSize}MB each`,
+        acceptedTypes: 'Accepted: PDF, Images, Text, Word documents',
+        selectedFiles: 'Selected Files',
+        fileTooLarge: 'File {fileName} is too large. Maximum size is {maxSize}MB',
+        fileTypeNotAllowed: 'File type {fileType} is not allowed',
+        maximumFilesAllowed: 'Maximum {maxFiles} files allowed'
+    }
 }) => {
     const [isDragOver, setIsDragOver] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -32,11 +55,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
     const validateFile = (file: File): string | null => {
         if (maxFileSize && file.size > maxFileSize) {
-            return `File ${file.name} is too large. Maximum size is ${Math.round(maxFileSize / 1024 / 1024)}MB`;
+            return translations.fileTooLarge
+                .replace('{fileName}', file.name)
+                .replace('{maxSize}', Math.round(maxFileSize / 1024 / 1024).toString());
         }
 
         if (acceptedTypes.length > 0 && !acceptedTypes.includes(file.type)) {
-            return `File type ${file.type} is not allowed`;
+            return translations.fileTypeNotAllowed.replace('{fileType}', file.type);
         }
 
         return null;
@@ -50,7 +75,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
         // Check if adding these files would exceed maxFiles
         if (selectedFiles.length + fileArray.length > maxFiles) {
-            setError(`Maximum ${maxFiles} files allowed`);
+            setError(translations.maximumFilesAllowed.replace('{maxFiles}', maxFiles.toString()));
             return;
         }
 
@@ -142,24 +167,30 @@ const FileUpload: React.FC<FileUploadProps> = ({
             >
                 <CardContent className="p-6">
                     <div
-                        className="flex flex-col items-center justify-center space-y-4 text-center"
+                        className={cn(
+                            "flex flex-col items-center justify-center space-y-4 text-center",
+                            isRTL ? "rtl" : "ltr"
+                        )}
                         onDrop={handleDrop}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
+                        dir={isRTL ? 'rtl' : 'ltr'}
                     >
                         <Upload className="w-8 h-8 text-muted-foreground" />
                         <div className="space-y-2">
                             <p className="text-sm font-medium">
-                                Drag and drop files here, or{' '}
+                                {translations.dragAndDrop}{' '}
                                 <span className="text-primary hover:underline font-medium">
-                                    browse
+                                    {translations.browse}
                                 </span>
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                Maximum {maxFiles} files, up to {Math.round(maxFileSize / 1024 / 1024)}MB each
+                                {translations.maxFiles
+                                    .replace('{maxFiles}', maxFiles.toString())
+                                    .replace('{maxSize}', Math.round(maxFileSize / 1024 / 1024).toString())}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                                Accepted: PDF, Images, Text, Word documents
+                                {translations.acceptedTypes}
                             </p>
                         </div>
                     </div>
@@ -175,18 +206,32 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
             {selectedFiles.length > 0 && (
                 <div className="space-y-2">
-                    <h4 className="text-sm font-medium">Selected Files ({selectedFiles.length}/{maxFiles})</h4>
+                    <h4 className={cn("text-sm font-medium", isRTL ? "text-right" : "text-left")}>
+                        {translations.selectedFiles} ({selectedFiles.length}/{maxFiles})
+                    </h4>
                     <div className="space-y-2">
                         {selectedFiles.map((file, index) => (
                             <div
                                 key={`${file.name}-${index}`}
-                                className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                                className={cn(
+                                    "flex items-center justify-between p-3 bg-muted rounded-lg",
+                                    isRTL ? "flex-row-reverse" : "flex-row"
+                                )}
                             >
-                                <div className="flex items-center space-x-3">
+                                <div className={cn(
+                                    "flex items-center",
+                                    isRTL ? "space-x-reverse space-x-3" : "space-x-3"
+                                )}>
                                     {getFileIcon(file)}
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{file.name}</p>
-                                        <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                                        <p className={cn(
+                                            "text-sm font-medium truncate",
+                                            isRTL ? "text-right" : "text-left"
+                                        )}>{file.name}</p>
+                                        <p className={cn(
+                                            "text-xs text-muted-foreground",
+                                            isRTL ? "text-right" : "text-left"
+                                        )}>{formatFileSize(file.size)}</p>
                                     </div>
                                 </div>
                                 <Button
