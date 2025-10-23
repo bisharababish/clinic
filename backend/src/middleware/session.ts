@@ -41,7 +41,7 @@ export const validateSession = async (req: Request, res: Response, next: NextFun
 
         // Check if session is expired
         const sessionExpiry = user.aud === 'authenticated' ?
-            new Date(user.created_at).getTime() + (24 * 60 * 60 * 1000) : // 24 hours
+            new Date(user.created_at).getTime() + (20 * 60 * 1000) : // 20 minutes
             Date.now();
 
         if (Date.now() > sessionExpiry) {
