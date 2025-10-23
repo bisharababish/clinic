@@ -406,7 +406,7 @@ const Payment = () => {
                 });
 
                 // First, check if appointment already exists
-                const { data: existingAppointment, error: checkError } = await supabase
+                const { data: existingAppointment, error: appointmentCheckError } = await supabase
                     .from('payment_bookings')
                     .select('*')
                     .eq('patient_id', user.id)
@@ -417,10 +417,10 @@ const Payment = () => {
                     .eq('deleted', false)
                     .single();
 
-                if (checkError && checkError.code !== 'PGRST116') {
+                if (appointmentCheckError && appointmentCheckError.code !== 'PGRST116') {
                     // PGRST116 is "not found" error, which is expected if no appointment exists
-                    console.error('Error checking for existing appointment:', checkError);
-                    throw checkError;
+                    console.error('Error checking for existing appointment:', appointmentCheckError);
+                    throw appointmentCheckError;
                 }
 
                 let appointment;
