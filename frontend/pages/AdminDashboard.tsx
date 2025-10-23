@@ -344,64 +344,70 @@ const AdminDashboardContent = () => {
                 </div>
             ) : (
                 <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                    {/* MOBILE: Two rows for tabs */}
-                    <div className="md:hidden">
-                        <TabsList className={`flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    {/* MOBILE: Two rows with improved styling */}
+                    <div className="md:hidden space-y-2">
+                        {/* First Row */}
+                        <TabsList className={`flex w-full gap-1 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewOverviewTab && (
-                                <TabsTrigger value="overview" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="overview" className="flex-1 text-xs px-2 py-2 truncate">
                                     {t('admin.overview') || 'Overview'}
                                 </TabsTrigger>
                             )}
                             {canViewUsersTab && (
-                                <TabsTrigger value="users" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="users" className="flex-1 text-xs px-2 py-2 truncate">
                                     {t('admin.users') || 'Users'}
                                 </TabsTrigger>
                             )}
                             {canViewClinicsTab && (
-                                <TabsTrigger value="clinics" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="clinics" className="flex-1 text-xs px-2 py-2 truncate">
                                     {t('admin.clinics') || 'Clinics'}
                                 </TabsTrigger>
                             )}
                             {canViewDoctorsTab && (
-                                <TabsTrigger value="doctors" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="doctors" className="flex-1 text-xs px-2 py-2 truncate">
                                     {t('admin.doctors') || 'Doctors'}
                                 </TabsTrigger>
                             )}
-
                         </TabsList>
-                        <TabsList className={`flex w-full gap-0.5 mt-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+
+                        {/* Second Row */}
+                        <TabsList className={`flex w-full gap-1 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewPatientHealthTab && (
-                                <TabsTrigger value="patient-health" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="patient-health" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'الصحة' : 'Health'}
                                 </TabsTrigger>
                             )}
                             {canViewAppointmentsTab && (
-                                <TabsTrigger value="appointments" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="appointments" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
                                 </TabsTrigger>
                             )}
                             {canViewPaymentTab && (
-                                <TabsTrigger value="payments" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="payments" className="flex-1 text-xs px-2 py-2 truncate">
                                     {isRTL ? 'المدفوعات' : 'Payments'}
                                 </TabsTrigger>
                             )}
                             {canViewPaymentTab && (
-                                <TabsTrigger value="paid-patients" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="paid-patients" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'المرضى المدفوعين' : 'Paid Patients'}
                                 </TabsTrigger>
                             )}
+                        </TabsList>
+
+                        {/* Third Row (if needed) */}
+                        <TabsList className={`flex w-full gap-1 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewCalendarTab && (
-                                <TabsTrigger value="calendar" className="flex-1 text-[9px] px-0 truncate min-w-0">
+                                <TabsTrigger value="calendar" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
                                 </TabsTrigger>
                             )}
                             {canViewAppointmentLogsTab && (
-                                <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] px-0 truncate min-w-0">
+                                <TabsTrigger value="appointment-logs" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
                                 </TabsTrigger>
                             )}
                             {canViewDeletionRequests && (
-                                <TabsTrigger value="deletion-requests" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                <TabsTrigger value="deletion-requests" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
                                 </TabsTrigger>
                             )}
