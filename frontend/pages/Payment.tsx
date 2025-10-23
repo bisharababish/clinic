@@ -405,78 +405,72 @@ const Payment = () => {
                     full_data: insertData
                 });
 
-                // Try to insert the appointment
-                const { data: appointment, error } = await supabase
+                // First, check if appointment already exists
+                const { data: existingAppointment, error: checkError } = await supabase
                     .from('payment_bookings')
-                    .insert([insertData])
                     .select('*')
+                    .eq('patient_id', user.id)
+                    .eq('clinic_name', clinicName)
+                    .eq('doctor_name', doctorName)
+                    .eq('appointment_day', actualDate)
+                    .eq('appointment_time', appointmentTime)
+                    .eq('deleted', false)
                     .single();
 
-                if (error) {
-                    console.error('payment_bookings insert error:', {
-                        message: error.message,
-                        details: error.details,
-                        hint: error.hint,
-                        code: error.code,
-                    });
+                if (checkError && checkError.code !== 'PGRST116') {
+                    // PGRST116 is "not found" error, which is expected if no appointment exists
+                    console.error('Error checking for existing appointment:', checkError);
+                    throw checkError;
+                }
 
-                    // Handle duplicate appointment error specifically
-                    if (error.code === '23505' || error.message?.includes('unique_appointment_booking')) {
-                        console.log('🚫 DATABASE CONSTRAINT VIOLATION - Duplicate detected at database level:', {
-                            error: error.message,
-                            details: error.details,
-                            newAppointment: { clinicName, doctorName, actualDate, appointmentTime }
+                let appointment;
+                if (existingAppointment) {
+                    // Appointment already exists, use the existing one
+                    console.log('✅ Using existing appointment:', existingAppointment);
+                    appointment = existingAppointment;
+                } else {
+                    // No existing appointment, create a new one
+                    console.log('🆕 Creating new appointment...');
+                    const { data: newAppointment, error: insertError } = await supabase
+                        .from('payment_bookings')
+                        .insert([insertData])
+                        .select('*')
+                        .single();
+
+                    if (insertError) {
+                        console.error('payment_bookings insert error:', {
+                            message: insertError.message,
+                            details: insertError.details,
+                            hint: insertError.hint,
+                            code: insertError.code,
                         });
 
-                        // Instead of showing error, let's try to find and delete the conflicting record
-                        console.log('🔧 Attempting to resolve constraint violation by cleaning up conflicting records...');
+                        // Handle duplicate appointment error specifically
+                        if (insertError.code === '23505' || insertError.message?.includes('unique_appointment_booking')) {
+                            console.log('🚫 DATABASE CONSTRAINT VIOLATION - Duplicate detected at database level:', {
+                                error: insertError.message,
+                                details: insertError.details,
+                                newAppointment: { clinicName, doctorName, actualDate, appointmentTime }
+                            });
 
-                        const { error: deleteError } = await supabase
-                            .from('payment_bookings')
-                            .delete()
-                            .eq('patient_id', user.id)
-                            .eq('clinic_name', clinicName)
-                            .eq('doctor_name', doctorName)
-                            .eq('appointment_day', actualDate)
-                            .eq('appointment_time', appointmentTime);
-
-                        if (deleteError) {
-                            console.error('Failed to delete conflicting record:', deleteError);
-                        } else {
-                            console.log('✅ Deleted conflicting record, retrying insert...');
-
-                            // Retry the insert
-                            const { data: retryAppointment, error: retryError } = await supabase
-                                .from('payment_bookings')
-                                .insert([insertData])
-                                .select('*')
-                                .single();
-
-                            if (retryError) {
-                                console.error('Retry insert failed:', retryError);
-                                throw new Error(retryError.message || 'Insert failed after cleanup');
-                            } else {
-                                console.log('✅ Successfully inserted after cleanup:', retryAppointment);
-                                const appt = retryAppointment as PaymentBookingRecord;
-                                setAppointmentId(appt.id);
-                                setConfirmationNumber(`#${appt.id.toString().slice(-8)}`);
-                                return; // Success, exit early
-                            }
+                            toast({
+                                title: isRTL ? "موعد مكرر" : "Duplicate Appointment",
+                                description: isRTL
+                                    ? `لديك موعد موجود مسبقاً مع ${doctorName} في ${clinicName} في ${actualDate} الساعة ${appointmentTime}. لا يمكن حجز نفس الموعد مرتين.`
+                                    : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
+                                variant: "destructive",
+                            });
+                            navigate("/clinics");
+                            return;
                         }
 
-                        toast({
-                            title: isRTL ? "موعد مكرر" : "Duplicate Appointment",
-                            description: isRTL
-                                ? `لديك موعد موجود مسبقاً مع ${doctorName} في ${clinicName} في ${actualDate} الساعة ${appointmentTime}. لا يمكن حجز نفس الموعد مرتين.`
-                                : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
-                            variant: "destructive",
-                        });
-                        navigate("/clinics");
-                        return;
+                        throw new Error(insertError.message || 'Insert failed');
                     }
 
-                    throw new Error(error.message || 'Insert failed');
+                    console.log('✅ Successfully created new appointment:', newAppointment);
+                    appointment = newAppointment;
                 }
+
                 if (appointment) {
                     const appt = appointment as PaymentBookingRecord;
                     setAppointmentId(appt.id);

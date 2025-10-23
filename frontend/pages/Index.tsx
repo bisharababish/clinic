@@ -45,6 +45,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Filter,
   Users,
   XCircle,
@@ -1160,6 +1161,17 @@ const Index = () => {
     }
   }, [allPatients, userRole]);
 
+  // Back to top button visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      setShowBackToTop(scrollTop > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
 
 
   useEffect(() => {
@@ -1183,6 +1195,7 @@ const Index = () => {
     };
   }, []);
   const [customAllergy, setCustomAllergy] = useState("");
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   // Pagination logic
   const patientsPerPage = 2;
@@ -1208,6 +1221,14 @@ const Index = () => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  // Back to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
 
@@ -3283,6 +3304,17 @@ const Index = () => {
           </div>
         </div >
       </div >
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <Button
+          onClick={scrollToTop}
+          className="back-to-top-btn fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 shadow-lg transition-all duration-300 hover:scale-110"
+          size="sm"
+        >
+          <ChevronUp className="h-5 w-5" />
+        </Button>
+      )}
     </>
   );
 };
