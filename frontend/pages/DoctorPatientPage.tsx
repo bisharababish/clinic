@@ -28,7 +28,6 @@ interface Patient {
     gender?: string;
     blood_type?: string;
     address?: string;
-    emergency_contact?: string;
     medical_history?: string;
     allergies?: string;
     current_medications?: string;
@@ -167,30 +166,82 @@ const DoctorPatientsPage: React.FC = () => {
             setLoading(true);
             setError(null);
 
-            const { data, error } = await supabase
+            // First, get all patients from userinfo
+            const { data: patientsData, error: patientsError } = await supabase
                 .from('userinfo')
-                .select('*')
+                .select('*, arabic_username_a, arabic_username_b, arabic_username_c, arabic_username_d')
                 .ilike('user_roles', '%Patient%') // Note: your schema shows 'Patient' with capital P
                 .order('created_at', { ascending: false })
 
-            if (error) throw error;
+            if (patientsError) throw patientsError;
 
-            const transformedPatients: Patient[] = (data || []).map(user => ({
-                id: user.userid, // Use userid instead of id
-                name: `${user.english_username_a} ${user.english_username_b} ${user.english_username_c} ${user.english_username_d}`.trim(),
-                email: user.user_email,
-                phone: user.user_phonenumber,
-                date_of_birth: user.date_of_birth,
-                gender: user.gender_user,
-                blood_type: user.blood_type,
-                address: user.address,
-                emergency_contact: user.emergency_contact,
-                medical_history: user.medical_history,
-                allergies: user.allergies,
-                current_medications: user.current_medications, // This might be null in your schema
-                created_at: user.created_at,
-                updated_at: user.updated_at
-            }));
+            if (!patientsData || patientsData.length === 0) {
+                setPatients([]);
+                return;
+            }
+
+            // Get all patient IDs
+            const patientIds = patientsData.map(p => p.userid);
+
+            // Fetch blood types for all patients from patient_health_info
+            const { data: healthData, error: healthError } = await supabase
+                .from('patient_health_info')
+                .select('patient_id, blood_type')
+                .in('patient_id', patientIds);
+
+            if (healthError) {
+                console.warn('Could not fetch health data:', healthError);
+            }
+
+            // Create a map of patient_id to blood_type for quick lookup
+            const bloodTypeMap = new Map();
+            if (healthData) {
+                healthData.forEach(item => {
+                    bloodTypeMap.set(item.patient_id, item.blood_type);
+                });
+            }
+
+            const transformedPatients: Patient[] = patientsData.map(user => {
+                // Use Arabic names when in Arabic translation mode, fallback to English
+                console.log('Processing user:', user.userid, 'isRTL:', isRTL, 'Arabic names:', {
+                    a: user.arabic_username_a,
+                    b: user.arabic_username_b,
+                    c: user.arabic_username_c,
+                    d: user.arabic_username_d
+                });
+
+                const firstName = isRTL
+                    ? (user.arabic_username_a || user.english_username_a)
+                    : (user.english_username_a || user.arabic_username_a);
+                const secondName = isRTL
+                    ? (user.arabic_username_b || user.english_username_b)
+                    : (user.english_username_b || user.arabic_username_b);
+                const thirdName = isRTL
+                    ? (user.arabic_username_c || user.english_username_c)
+                    : (user.english_username_c || user.arabic_username_c);
+                const fourthName = isRTL
+                    ? (user.arabic_username_d || user.english_username_d)
+                    : (user.english_username_d || user.arabic_username_d);
+
+                const fullName = `${firstName} ${secondName} ${thirdName} ${fourthName}`.trim();
+                console.log('Generated name:', fullName);
+
+                return {
+                    id: user.userid, // Use userid instead of id
+                    name: fullName,
+                    email: user.user_email,
+                    phone: user.user_phonenumber,
+                    date_of_birth: user.date_of_birth,
+                    gender: user.gender_user,
+                    blood_type: bloodTypeMap.get(user.userid) || null, // Get blood type from health info
+                    address: user.address,
+                    medical_history: user.medical_history,
+                    allergies: user.allergies,
+                    current_medications: user.current_medications, // This might be null in your schema
+                    created_at: user.created_at,
+                    updated_at: user.updated_at
+                };
+            });
 
             setPatients(transformedPatients);
         } catch (err) {
@@ -238,24 +289,39 @@ const DoctorPatientsPage: React.FC = () => {
         }
 
         try {
-            // The logged-in doctor's info should be automatically available
-            // Let's get the doctor's userid from userinfo table using their email
-            const { data: doctorInfo, error: doctorError } = await supabase
+            // The logged-in user's info should be automatically available
+            // Let's get the user's userid from userinfo table using their email
+            // Allow both Doctor and Admin roles to save clinical notes
+            const { data: userInfo, error: userError } = await supabase
                 .from('userinfo')
-                .select('userid, english_username_a, english_username_b, english_username_c, english_username_d')
+                .select('userid, english_username_a, english_username_b, english_username_c, english_username_d, arabic_username_a, arabic_username_b, arabic_username_c, arabic_username_d, user_roles')
                 .eq('user_email', user.email)
-                .eq('user_roles', 'Doctor') // Make sure they're actually a doctor
+                .in('user_roles', ['Doctor', 'Admin', 'Administrator']) // Allow doctors and admins
                 .single();
 
-            if (doctorError || !doctorInfo) {
-                throw new Error('Doctor information not found. Please make sure you are logged in as a doctor.');
+            if (userError || !userInfo) {
+                throw new Error('User information not found. Please make sure you are logged in as a doctor or admin.');
             }
 
-            const doctorName = `${doctorInfo.english_username_a} ${doctorInfo.english_username_b} ${doctorInfo.english_username_c} ${doctorInfo.english_username_d}`.trim();
+            // Use Arabic names when in Arabic translation mode, fallback to English
+            const firstName = isRTL
+                ? (userInfo.arabic_username_a || userInfo.english_username_a)
+                : (userInfo.english_username_a || userInfo.arabic_username_a);
+            const secondName = isRTL
+                ? (userInfo.arabic_username_b || userInfo.english_username_b)
+                : (userInfo.english_username_b || userInfo.arabic_username_b);
+            const thirdName = isRTL
+                ? (userInfo.arabic_username_c || userInfo.english_username_c)
+                : (userInfo.english_username_c || userInfo.arabic_username_c);
+            const fourthName = isRTL
+                ? (userInfo.arabic_username_d || userInfo.english_username_d)
+                : (userInfo.english_username_d || userInfo.arabic_username_d);
+
+            const doctorName = `${firstName} ${secondName} ${thirdName} ${fourthName}`.trim();
 
             const noteData = {
                 patient_id: selectedPatient.id,
-                doctor_id: doctorInfo.userid, // This is the doctor's userid from userinfo table
+                doctor_id: userInfo.userid, // This is the user's userid from userinfo table
                 doctor_name: doctorName,
                 note_type: newNote.note_type || 'general',
                 status: newNote.status || 'active',
@@ -272,11 +338,33 @@ const DoctorPatientsPage: React.FC = () => {
 
             console.log('Saving note with data:', noteData);
 
-            const { data, error } = await supabase
-                .from('clinical_notes')
-                .insert([noteData])
-                .select()
-                .single();
+            let data, error;
+
+            // Check if we're editing an existing note or creating a new one
+            if (editingNote) {
+                // Update existing note
+                console.log('Updating existing note with ID:', editingNote.id);
+                const { data: updateData, error: updateError } = await supabase
+                    .from('clinical_notes')
+                    .update(noteData)
+                    .eq('id', editingNote.id)
+                    .select()
+                    .single();
+
+                data = updateData;
+                error = updateError;
+            } else {
+                // Insert new note
+                console.log('Creating new note');
+                const { data: insertData, error: insertError } = await supabase
+                    .from('clinical_notes')
+                    .insert([noteData])
+                    .select()
+                    .single();
+
+                data = insertData;
+                error = insertError;
+            }
 
             if (error) {
                 console.error('Database error:', error);
@@ -287,10 +375,14 @@ const DoctorPatientsPage: React.FC = () => {
             await fetchClinicalNotes(selectedPatient.id);
             resetNoteForm();
             setIsAddingNote(false);
+            setEditingNote(null); // Clear editing state
 
             toast({
-                title: 'Success',
-                description: 'Clinical note added successfully!',
+                title: isRTL ? 'نجح' : 'Success',
+                description: editingNote
+                    ? t('common.clinicalNoteUpdated')
+                    : t('common.clinicalNoteAdded'),
+                className: 'bg-green-50 border-green-200 text-green-800',
             });
 
         } catch (err) {
@@ -346,6 +438,13 @@ const DoctorPatientsPage: React.FC = () => {
             initializeComponent();
         }
     }, [user]);
+
+    // Refetch patients when language changes to update names
+    useEffect(() => {
+        if (user && !initializing) {
+            fetchPatients();
+        }
+    }, [i18n.language]);
 
     // Filter patients
     const filteredPatients = patients.filter(patient => {
@@ -419,8 +518,8 @@ const DoctorPatientsPage: React.FC = () => {
                         <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <div className={isRTL ? 'order-2' : 'order-1'}>
                                 <h1 className={`text-2xl font-bold text-gray-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <Users className="h-8 w-8 text-blue-600 " />
-                                    {isRTL ? 'إدارة المرضى' : 'Patient Management'}
+                                    <Users className={`h-8 w-8 text-blue-600 ${isRTL ? 'order-2' : ''}`} />
+                                    <span className={isRTL ? 'order-1' : ''}>{isRTL ? 'إدارة المرضى' : 'Patient Management'}</span>
                                 </h1>
                                 <p className="mt-1 text-sm text-gray-600">
                                     {isRTL ? 'إدارة المرضى والملاحظات السريرية' : 'Manage patients and clinical notes'}
@@ -448,7 +547,7 @@ const DoctorPatientsPage: React.FC = () => {
                         <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400`} />
                         <input
                             type="text"
-                            placeholder={isRTL ? 'البحث عن المرضى بالاسم أو البريد الإلكتروني أو الهاتف...' : 'Search patients by name, email, or phone...'}
+                            placeholder={isRTL ? 'البحث عن المرضى...' : 'Search patients...'}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -467,13 +566,13 @@ const DoctorPatientsPage: React.FC = () => {
                         <div key={patient.id} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
                             <div className="p-6">
                                 <div className={`flex items-start justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                                        <div className={`w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center ${isRTL ? 'order-2' : ''}`}>
                                             <User className="h-6 w-6 text-blue-600" />
                                         </div>
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900">{patient.name}</h3>
-                                            <p className="text-sm text-gray-500">{patient.email}</p>
+                                        <div className={`${isRTL ? 'order-1 text-right' : ''}`}>
+                                            <h3 className={`font-semibold text-gray-900 ${isRTL ? 'text-right' : ''}`}>{patient.name}</h3>
+                                            <p className={`text-sm text-gray-500 ${isRTL ? 'text-right' : ''}`}>{patient.email}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -552,7 +651,7 @@ const DoctorPatientsPage: React.FC = () => {
                             {/* Patient Summary */}
                             <div className="bg-blue-50 rounded-lg p-4 mb-6">
                                 <h3 className="font-medium text-gray-900 mb-2">{isRTL ? 'ملخص المريض' : 'Patient Summary'}</h3>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                                     <div>
                                         <span className="font-medium">{isRTL ? 'تاريخ الميلاد' : 'DOB'}:</span>
                                         <p>{selectedPatient.date_of_birth ? new Date(selectedPatient.date_of_birth).toLocaleDateString() : (isRTL ? 'غير متوفر' : 'N/A')}</p>
@@ -564,11 +663,6 @@ const DoctorPatientsPage: React.FC = () => {
                                     <div>
                                         <span className="font-medium">{isRTL ? 'الهاتف' : 'Phone'}:</span>
                                         <p>{selectedPatient.phone || (isRTL ? 'غير متوفر' : 'N/A')}</p>
-
-                                    </div>
-                                    <div>
-                                        <span className="font-medium">{isRTL ? 'جهة الاتصال للطوارئ' : 'Emergency Contact'}:</span>
-                                        <p>{selectedPatient.emergency_contact || (isRTL ? 'غير متوفر' : 'N/A')}</p>
                                     </div>
                                 </div>
                                 {selectedPatient.allergies && (
@@ -683,13 +777,13 @@ const DoctorPatientsPage: React.FC = () => {
                                             <div className="flex items-start justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(note.priority)}`}>
-                                                        {note.priority.toUpperCase()}
+                                                        {t(`common.${note.priority}`).toUpperCase()}
                                                     </span>
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(note.status)}`}>
-                                                        {note.status.toUpperCase()}
+                                                        {t(`common.${note.status}`).toUpperCase()}
                                                     </span>
                                                     <span className="text-xs text-gray-500">
-                                                        {note.note_type.replace('_', ' ').toUpperCase()}
+                                                        {t(`common.${note.note_type === 'follow_up' ? 'followUp' : note.note_type.replace('_', '')}`).toUpperCase()}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
