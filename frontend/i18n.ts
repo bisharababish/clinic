@@ -3292,7 +3292,7 @@ const arTranslations = {
         patientInfo: {
             title: 'معلومات المريض',
             searchPatient: 'البحث عن المريض',
-            searchPlaceholder: 'البحث بالاسم، البريد الإلكتروني، أو رقم الهوية...',
+            searchPlaceholder: 'البحث بالاسم أو البريد...',
             noPatientsFound: 'لم يتم العثور على مرضى',
             patientSelected: 'تم اختيار المريض',
             name: 'الاسم',
@@ -3309,7 +3309,7 @@ const arTranslations = {
         // Doctor Information
         doctorInfo: {
             title: 'الطبيب الطالب',
-            searchPlaceholder: 'البحث باسم الطبيب، التخصص، أو البريد الإلكتروني...',
+            searchPlaceholder: 'البحث بالاسم أو التخصص...',
             noDoctorsFound: 'لم يتم العثور على أطباء',
             doctorSelected: 'تم اختيار الطبيب',
             drPrefix: 'د.',

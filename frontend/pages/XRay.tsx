@@ -435,22 +435,22 @@ const XRay = () => {
       />
       <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2 md:p-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-2">
-{/* Header */}
-<div className="mb-6 text-center px-2 pt-8">
-  <div className="flex items-center mb-4 justify-center">
-    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
-      <Camera className="w-8 h-8 text-white" />
-    </div>
-  </div>
-  <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4 text-center px-2 break-words leading-loose whitespace-normal py-2">
-    {t('xray.title')}
-  </h1>
-  <p className="text-slate-600 text-base md:text-lg w-full text-center mx-auto px-2 break-words">
+          {/* Header */}
+          <div className="mb-6 text-center px-2 pt-8">
+            <div className="flex items-center mb-4 justify-center">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
+                <Camera className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4 text-center px-2 break-words leading-loose whitespace-normal py-2">
+              {t('xray.title')}
+            </h1>
+            <p className="text-slate-600 text-base md:text-lg w-full text-center mx-auto px-2 break-words">
               {t('xray.subtitle')}
             </p>
           </div>
 
-          <div className={`grid xl:grid-cols-3 gap-8 ${isRTL ? 'rtl' : 'ltr'}`}>
+          <div className={`grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 lg:gap-8 ${isRTL ? 'rtl' : 'ltr'}`}>
             {/* Patient Information Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -536,38 +536,38 @@ const XRay = () => {
 
                 {/* Selected Patient Info */}
                 {selectedPatient && (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="font-semibold text-green-800">{t('xray.patientInfo.patientSelected')}</span>
+                  <div className="p-3 md:p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      <span className="font-semibold text-green-800 text-sm md:text-base">{t('xray.patientInfo.patientSelected')}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <span className="font-medium text-slate-700">{t('xray.patientInfo.name')}:</span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
+                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                        <span className="font-medium text-slate-700">{t('xray.patientInfo.name')}: </span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>
                           {selectedPatient.english_username_a} {selectedPatient.english_username_d || ''}
                         </span>
                       </div>
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <span className="font-medium text-slate-700">{t('xray.patientInfo.email')}:</span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedPatient.user_email}</span>
+                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                        <span className="font-medium text-slate-700">{t('xray.patientInfo.email')}: </span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'} block sm:inline`}>{selectedPatient.user_email}</span>
                       </div>
                       {selectedPatient.id_number && (
-                        <div className={isRTL ? 'text-right' : 'text-left'}>
-                          <span className="font-medium text-slate-700">{t('xray.patientInfo.id')}:</span>
-                          <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedPatient.id_number}</span>
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('xray.patientInfo.id')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedPatient.id_number}</span>
                         </div>
                       )}
                       {selectedPatient.gender_user && (
-                        <div className={isRTL ? 'text-right' : 'text-left'}>
-                          <span className="font-medium text-slate-700">{t('xray.patientInfo.gender')}:</span>
-                          <span className={`text-slate-600 capitalize ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedPatient.gender_user}</span>
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('xray.patientInfo.gender')}: </span>
+                          <span className={`text-slate-600 capitalize ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedPatient.gender_user}</span>
                         </div>
                       )}
                       {selectedPatient.date_of_birth && (
-                        <div className={isRTL ? 'text-right' : 'text-left'}>
-                          <span className="font-medium text-slate-700">{t('xray.patientInfo.dateOfBirth')}:</span>
-                          <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('xray.patientInfo.dateOfBirth')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>
                             {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
                           </span>
                         </div>
@@ -689,32 +689,32 @@ const XRay = () => {
 
                 {/* Selected Doctor Info */}
                 {selectedDoctor && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <CheckCircle className="w-5 h-5 text-blue-600" />
-                      <span className="font-semibold text-blue-800">{t('xray.doctorInfo.doctorSelected')}</span>
+                  <div className="p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                      <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                      <span className="font-semibold text-blue-800 text-sm md:text-base">{t('xray.doctorInfo.doctorSelected')}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.name')}:</span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{t('xray.doctorInfo.drPrefix')} {selectedDoctor.name}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
+                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.name')}: </span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{t('xray.doctorInfo.drPrefix')} {selectedDoctor.name}</span>
                       </div>
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.specialty')}:</span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedDoctor.specialty}</span>
+                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.specialty')}: </span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.specialty}</span>
                       </div>
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.clinic')}:</span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedDoctor.clinic_name}</span>
+                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.clinic')}: </span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.clinic_name}</span>
                       </div>
-                      <div className={isRTL ? 'text-right' : 'text-left'}>
-                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.email')}:</span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedDoctor.email}</span>
+                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                        <span className="font-medium text-slate-700">{t('xray.doctorInfo.email')}: </span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'} block sm:inline`}>{selectedDoctor.email}</span>
                       </div>
                       {selectedDoctor.phone && (
-                        <div className={isRTL ? 'text-right' : 'text-left'}>
-                          <span className="font-medium text-slate-700">{t('xray.doctorInfo.phone')}:</span>
-                          <span className={`text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{selectedDoctor.phone}</span>
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('xray.doctorInfo.phone')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.phone}</span>
                         </div>
                       )}
                     </div>
@@ -811,17 +811,17 @@ const XRay = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-center'}`}>
-                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                    <div className="space-y-4 text-center">
+                      <div className="flex justify-center">
                         <Upload className={`w-16 h-16 ${isDragging ? "text-blue-500" : "text-slate-400"}`} />
                       </div>
-                      <div className={isRTL ? 'text-right' : 'text-center'}>
+                      <div className="text-center">
                         <p className="text-lg font-semibold text-slate-700">
                           {t('xray.fileUpload.dragDropText')}
                         </p>
                         <p className="text-slate-500 mt-1">{t('xray.fileUpload.clickToBrowse')}</p>
                       </div>
-                      <div className={`text-sm text-slate-500 ${isRTL ? 'text-right' : 'text-center'}`}>
+                      <div className="text-sm text-slate-500 text-center">
                         {t('xray.fileUpload.supportedFormats')}
                       </div>
                     </div>
@@ -832,10 +832,10 @@ const XRay = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className={`mt-8 flex gap-4 ${isRTL ? 'justify-center flex-row-reverse' : 'justify-center'}`}>
+          <div className={`mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4 ${isRTL ? 'justify-center' : 'justify-center'}`}>
             <Button
               size="lg"
-              className={`px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
               disabled={!(selectedPatient || patientName) || selectedBodyParts.length === 0 || !file || !selectedDoctor}
               onClick={handleSubmit}
             >
@@ -846,7 +846,7 @@ const XRay = () => {
             <Button
               variant="outline"
               size="lg"
-              className={`px-8 py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
+              className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
               onClick={() => {
                 setPatientName("");
                 setDateOfBirth("");
