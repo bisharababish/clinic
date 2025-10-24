@@ -233,6 +233,7 @@ const ClinicManagement = () => {
             toast({
                 title: t('common.success'),
                 description: t('clinicManagement.orderUpdated'),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             toast({
@@ -260,6 +261,7 @@ const ClinicManagement = () => {
             toast({
                 title: t('common.success'),
                 description: 'Clinic moved down successfully',
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             toast({
@@ -286,6 +288,7 @@ const ClinicManagement = () => {
             toast({
                 title: t('common.success'),
                 description: 'Category moved up successfully',
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             toast({
@@ -313,6 +316,7 @@ const ClinicManagement = () => {
             toast({
                 title: t('common.success'),
                 description: 'Category moved down successfully',
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             toast({
@@ -607,6 +611,7 @@ const ClinicManagement = () => {
                     toast({
                         title: t('common.success'),
                         description: t('clinicManagement.clinicUpdatedSuccessfully'),
+                        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                     });
                     resetClinicForm();
                 }
@@ -729,6 +734,7 @@ const ClinicManagement = () => {
             toast({
                 title: t('common.success'),
                 description: t('clinicManagement.categoryDeletedSuccessfully'),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             toast({
@@ -779,6 +785,7 @@ const ClinicManagement = () => {
             toast({
                 title: t('common.success'),
                 description: t('clinicManagement.doctorDeletedSuccessfully'),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             toast({
@@ -833,6 +840,7 @@ const ClinicManagement = () => {
                 toast({
                     title: t('common.success'),
                     description: t('clinicManagement.categoryCreatedSuccessfully'),
+                    style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                 });
 
                 resetCategoryForm();
@@ -877,6 +885,7 @@ const ClinicManagement = () => {
                 toast({
                     title: t('common.success'),
                     description: t('clinicManagement.categoryUpdatedSuccessfully'),
+                    style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                 });
 
                 resetCategoryForm();

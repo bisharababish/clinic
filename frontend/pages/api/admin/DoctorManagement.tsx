@@ -415,6 +415,7 @@ const DoctorManagement = () => {
                     toast({
                         title: t('common.success'),
                         description: t('doctorManagement.doctorCreatedSuccessfully'),
+                        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                     });
                 }
 
@@ -445,6 +446,7 @@ const DoctorManagement = () => {
                     toast({
                         title: t('common.success'),
                         description: t('doctorManagement.doctorUpdatedSuccessfully'),
+                        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                     });
                 }
 
@@ -587,7 +589,7 @@ const DoctorManagement = () => {
                 toast({
                     title: t('common.success'),
                     description: t('doctorManagement.slotAddedSuccessfully'),
-                    variant: 'success', // Use green background for success
+                    style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                 });
             }
         } catch (error) {
@@ -615,7 +617,7 @@ const DoctorManagement = () => {
             toast({
                 title: t('common.success'),
                 description: t('doctorManagement.slotRemovedSuccessfully'),
-                variant: 'destructive', // Use red background for removal
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
         } catch (error) {
             console.error("Error deleting availability slot:", error);

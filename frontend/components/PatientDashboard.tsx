@@ -74,6 +74,14 @@ interface AppointmentData {
     updated_at: string;
 }
 
+interface AvailabilitySlot {
+    id: string;
+    doctor_id: string;
+    day: string;
+    start_time: string;
+    end_time: string;
+}
+
 const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
@@ -86,8 +94,12 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
     const [showRescheduleDialog, setShowRescheduleDialog] = useState(false);
     const [newDate, setNewDate] = useState('');
     const [newTime, setNewTime] = useState('');
+    const [selectedDay, setSelectedDay] = useState('');
+    const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
     const [reason, setReason] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [doctorAvailability, setDoctorAvailability] = useState<AvailabilitySlot[]>([]);
+    const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
     // Load patient appointments
     const loadAppointments = useCallback(async () => {
@@ -289,6 +301,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
             toast({
                 title: isRTL ? 'تم إلغاء الموعد' : 'Appointment Cancelled',
                 description: isRTL ? 'تم إلغاء الموعد بنجاح' : 'Appointment cancelled successfully',
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             setShowCancelDialog(false);
@@ -307,15 +320,93 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
         }
     };
 
+    // Load doctor availability
+    const loadDoctorAvailability = async (doctorName: string) => {
+        try {
+            setIsLoadingAvailability(true);
+
+            // Get doctor ID from doctor name
+            const { data: doctorData, error: doctorError } = await supabase
+                .from('doctors')
+                .select('id')
+                .eq('name', doctorName)
+                .single();
+
+            if (doctorError || !doctorData) {
+                console.error('Error finding doctor:', doctorError);
+                return;
+            }
+
+            // Load doctor's availability
+            const { data: availabilityData, error: availabilityError } = await supabase
+                .from('doctor_availability')
+                .select('*')
+                .eq('doctor_id', doctorData.id)
+                .order('day', { ascending: true })
+                .order('start_time', { ascending: true });
+
+            if (availabilityError) {
+                console.error('Error loading availability:', availabilityError);
+                return;
+            }
+
+            setDoctorAvailability(availabilityData || []);
+        } catch (error) {
+            console.error('Error loading doctor availability:', error);
+        } finally {
+            setIsLoadingAvailability(false);
+        }
+    };
+
+    // Helper function to get day names
+    const getDayNames = () => {
+        return [
+            { key: 'Monday', label: isRTL ? 'الإثنين' : 'Mon' },
+            { key: 'Tuesday', label: isRTL ? 'الثلاثاء' : 'Tue' },
+            { key: 'Wednesday', label: isRTL ? 'الأربعاء' : 'Wed' },
+            { key: 'Thursday', label: isRTL ? 'الخميس' : 'Thu' },
+            { key: 'Friday', label: isRTL ? 'الجمعة' : 'Fri' },
+            { key: 'Saturday', label: isRTL ? 'السبت' : 'Sat' },
+            { key: 'Sunday', label: isRTL ? 'الأحد' : 'Sun' }
+        ];
+    };
+
+    // Get available time slots for selected day
+    const getAvailableTimeSlots = () => {
+        if (!selectedDay) return [];
+        return doctorAvailability
+            .filter(slot => slot.day === selectedDay)
+            .map(slot => `${slot.start_time}-${slot.end_time}`);
+    };
+
     // Reschedule appointment
     const handleRescheduleAppointment = async () => {
-        if (!selectedAppointment || !newDate || !newTime) return;
+        if (!selectedAppointment || !selectedDay || !selectedTimeSlot) return;
 
         try {
             setIsProcessing(true);
 
+            // Extract start time from the selected time slot (format: "HH:MM-HH:MM")
+            const startTime = selectedTimeSlot.split('-')[0];
+
+            // Calculate the new date based on selected day
+            const today = new Date();
+            const currentDay = today.toLocaleDateString('en-US', { weekday: 'long' });
+            const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const currentDayIndex = daysOfWeek.indexOf(currentDay);
+            const targetDayIndex = daysOfWeek.indexOf(selectedDay);
+
+            let daysUntilTarget = targetDayIndex - currentDayIndex;
+            if (daysUntilTarget <= 0) {
+                daysUntilTarget += 7; // Move to next week
+            }
+
+            const newDate = new Date(today);
+            newDate.setDate(today.getDate() + daysUntilTarget);
+            const newDateString = newDate.toISOString().split('T')[0];
+
             // Log the reschedule
-            await logAppointmentChange(selectedAppointment, 'reschedule', newDate, newTime);
+            await logAppointmentChange(selectedAppointment, 'reschedule', newDateString, startTime);
 
             let error: unknown = null;
 
@@ -325,8 +416,8 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                 const { error: appointmentError } = await supabase
                     .from('appointments')
                     .update({
-                        date: newDate,
-                        time: newTime,
+                        date: newDateString,
+                        time: startTime,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', selectedAppointment.id);
@@ -337,8 +428,8 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                 const { error: bookingError } = await supabase
                     .from('payment_bookings')
                     .update({
-                        appointment_day: newDate,
-                        appointment_time: newTime,
+                        appointment_day: newDateString,
+                        appointment_time: selectedTimeSlot,
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', selectedAppointment.id);
@@ -354,13 +445,17 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
             toast({
                 title: isRTL ? 'تم تغيير الموعد' : 'Appointment Rescheduled',
                 description: isRTL ? 'تم تغيير الموعد بنجاح' : 'Appointment rescheduled successfully',
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             setShowRescheduleDialog(false);
             setSelectedAppointment(null);
+            setSelectedDay('');
+            setSelectedTimeSlot('');
             setNewDate('');
             setNewTime('');
             setReason('');
+            setDoctorAvailability([]);
             loadAppointments();
         } catch (error) {
             console.error('Error rescheduling appointment:', error);
@@ -466,7 +561,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                             <Badge variant={getStatusBadgeVariant(appointment.payment_status)}>
                                                 {isRTL ?
                                                     (appointment.payment_status === 'paid' ? 'مدفوع' :
-                                                        appointment.payment_status === 'pending' ? 'معلق' :
+                                                        appointment.payment_status === 'pending' ? 'قيد الانتظار' :
                                                             appointment.payment_status === 'failed' ? 'فاشل' : appointment.payment_status) :
                                                     appointment.payment_status
                                                 }
@@ -501,7 +596,10 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => setSelectedAppointment(appointment)}
+                                                    onClick={() => {
+                                                        setSelectedAppointment(appointment);
+                                                        loadDoctorAvailability(appointment.doctor_name);
+                                                    }}
                                                     disabled={appointment.payment_status === 'paid'}
                                                 >
                                                     <Edit3 className="h-4 w-4 mr-1" />
@@ -514,29 +612,77 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                         {isRTL ? 'تغيير الموعد' : 'Reschedule Appointment'}
                                                     </DialogTitle>
                                                     <DialogDescription className={isRTL ? 'text-right' : 'text-left'}>
-                                                        {isRTL ? 'اختر التاريخ والوقت الجديد للموعد' : 'Select new date and time for your appointment'}
+                                                        {isRTL ? 'اختر اليوم والوقت من أوقات الطبيب المتاحة' : 'Select day and time from doctor\'s available hours'}
                                                     </DialogDescription>
                                                 </DialogHeader>
 
                                                 <div className="space-y-4">
-                                                    <div className="space-y-2">
-                                                        <Label>{isRTL ? 'التاريخ الجديد' : 'New Date'}</Label>
-                                                        <Input
-                                                            type="date"
-                                                            value={newDate}
-                                                            onChange={(e) => setNewDate(e.target.value)}
-                                                            min={new Date().toISOString().split('T')[0]}
-                                                        />
-                                                    </div>
+                                                    {isLoadingAvailability ? (
+                                                        <div className="text-center py-4">
+                                                            <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                                                            <p className="text-sm text-gray-500">{isRTL ? 'جاري تحميل الأوقات المتاحة...' : 'Loading available times...'}</p>
+                                                        </div>
+                                                    ) : doctorAvailability.length === 0 ? (
+                                                        <Alert>
+                                                            <AlertCircle className="h-4 w-4" />
+                                                            <AlertDescription>
+                                                                {isRTL ? 'لا توجد أوقات متاحة لهذا الطبيب' : 'No available times for this doctor'}
+                                                            </AlertDescription>
+                                                        </Alert>
+                                                    ) : (
+                                                        <>
+                                                            <div className="space-y-2">
+                                                                <Label>{isRTL ? 'اختر اليوم' : 'Select Day'}</Label>
+                                                                <div className="grid grid-cols-3 sm:grid-cols-7 gap-2">
+                                                                    {getDayNames().map(day => {
+                                                                        const hasSlots = doctorAvailability.some(slot => slot.day === day.key);
+                                                                        return (
+                                                                            <Button
+                                                                                key={day.key}
+                                                                                type="button"
+                                                                                variant={selectedDay === day.key ? 'default' : 'outline'}
+                                                                                size="sm"
+                                                                                onClick={() => {
+                                                                                    setSelectedDay(day.key);
+                                                                                    setSelectedTimeSlot('');
+                                                                                }}
+                                                                                disabled={!hasSlots}
+                                                                                className="text-xs"
+                                                                            >
+                                                                                {day.label}
+                                                                            </Button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
 
-                                                    <div className="space-y-2">
-                                                        <Label>{isRTL ? 'الوقت الجديد' : 'New Time'}</Label>
-                                                        <Input
-                                                            type="time"
-                                                            value={newTime}
-                                                            onChange={(e) => setNewTime(e.target.value)}
-                                                        />
-                                                    </div>
+                                                            {selectedDay && (
+                                                                <div className="space-y-2">
+                                                                    <Label>{isRTL ? 'اختر الوقت' : 'Select Time'}</Label>
+                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                        {getAvailableTimeSlots().length === 0 ? (
+                                                                            <div className="col-span-2 text-center py-3 text-yellow-600 bg-yellow-50 rounded-md">
+                                                                                {isRTL ? 'لا توجد أوقات متاحة لهذا اليوم' : 'No available times for this day'}
+                                                                            </div>
+                                                                        ) : (
+                                                                            getAvailableTimeSlots().map(slot => (
+                                                                                <Button
+                                                                                    key={slot}
+                                                                                    type="button"
+                                                                                    variant={selectedTimeSlot === slot ? 'default' : 'outline'}
+                                                                                    size="sm"
+                                                                                    onClick={() => setSelectedTimeSlot(slot)}
+                                                                                    className="text-xs"
+                                                                                >
+                                                                                    {slot}
+                                                                                </Button>
+                                                                            ))
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
 
                                                     <div className="space-y-2">
                                                         <Label>{isRTL ? 'السبب (اختياري)' : 'Reason (Optional)'}</Label>
@@ -554,16 +700,19 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                             onClick={() => {
                                                                 setShowRescheduleDialog(false);
                                                                 setSelectedAppointment(null);
+                                                                setSelectedDay('');
+                                                                setSelectedTimeSlot('');
                                                                 setNewDate('');
                                                                 setNewTime('');
                                                                 setReason('');
+                                                                setDoctorAvailability([]);
                                                             }}
                                                         >
                                                             {isRTL ? 'إلغاء' : 'Cancel'}
                                                         </Button>
                                                         <Button
                                                             onClick={handleRescheduleAppointment}
-                                                            disabled={!newDate || !newTime || isProcessing}
+                                                            disabled={!selectedDay || !selectedTimeSlot || isProcessing}
                                                         >
                                                             {isProcessing ? (
                                                                 <>

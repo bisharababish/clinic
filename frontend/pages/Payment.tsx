@@ -146,8 +146,8 @@ const Payment = () => {
 
                 if (!user) {
                     toast({
-                        title: "Authentication Required",
-                        description: "Please log in to continue with payment",
+                        title: isRTL ? "المصادقة مطلوبة" : "Authentication Required",
+                        description: isRTL ? "يرجى تسجيل الدخول للمتابعة مع الدفع" : "Please log in to continue with payment",
                         variant: "destructive",
                     });
                     navigate("/login");
@@ -488,8 +488,8 @@ const Payment = () => {
                 }
 
                 toast({
-                    title: "Error",
-                    description: error instanceof Error ? error.message : "Failed to initialize payment. Please try again.",
+                    title: isRTL ? "خطأ" : "Error",
+                    description: error instanceof Error ? error.message : (isRTL ? "فشل تهيئة الدفع. يرجى المحاولة مرة أخرى." : "Failed to initialize payment. Please try again."),
                     variant: "destructive",
                 });
             } finally {
@@ -533,6 +533,7 @@ const Payment = () => {
                 toast({
                     title: isRTL ? "تم تسجيل الدفع النقدي" : "Cash Payment Registered",
                     description: isRTL ? "تم جدولة موعدك. يرجى الدفع في العيادة." : "Your appointment has been scheduled. Please pay at the clinic.",
+                    style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                 });
                 navigate("/confirmation", {
                     state: {
@@ -556,8 +557,8 @@ const Payment = () => {
         } catch (error) {
             console.error('Cash payment error:', error);
             toast({
-                title: "Registration Error",
-                description: error instanceof Error ? error.message : "Failed to register cash payment. Please try again.",
+                title: isRTL ? "خطأ في التسجيل" : "Registration Error",
+                description: error instanceof Error ? error.message : (isRTL ? "فشل تسجيل الدفع النقدي. يرجى المحاولة مرة أخرى." : "Failed to register cash payment. Please try again."),
                 variant: "destructive",
             });
         } finally {

@@ -309,7 +309,7 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
     // Get title based on props
     const getTitle = () => {
         if (showOnlyPaid) return isRTL ? 'المرضى المدفوعين' : 'Paid Patients';
-        if (showOnlyPending) return isRTL ? 'المدفوعات المعلقة' : 'Pending Payments';
+        if (showOnlyPending) return isRTL ? 'المدفوعات قيد الانتظار' : 'Pending Payments';
         if (showTodayOnly) return isRTL ? 'مواعيد اليوم' : 'Today\'s Appointments';
         return isRTL ? 'جميع المرضى' : 'All Patients';
     };
@@ -373,7 +373,7 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                         >
                             <option value="all">{isRTL ? 'جميع الحالات' : 'All Statuses'}</option>
                             <option value="completed">{isRTL ? 'مدفوع' : 'Paid'}</option>
-                            <option value="pending">{isRTL ? 'معلق' : 'Pending'}</option>
+                            <option value="pending">{isRTL ? 'قيد الانتظار' : 'Pending'}</option>
                             <option value="failed">{isRTL ? 'فاشل' : 'Failed'}</option>
                         </select>
                     </div>
@@ -404,7 +404,7 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                                                 <Badge variant={getStatusBadgeVariant(patient.payment_status)}>
                                                     {isRTL ?
                                                         (patient.payment_status === 'paid' ? 'مدفوع' :
-                                                            patient.payment_status === 'pending' ? 'معلق' :
+                                                            patient.payment_status === 'pending' ? 'قيد الانتظار' :
                                                                 patient.payment_status === 'failed' ? 'فاشل' : patient.payment_status) :
                                                         patient.payment_status
                                                     }
@@ -505,7 +505,7 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                                     <Badge variant={getStatusBadgeVariant(patientToDelete.payment_status)} className={isRTL ? 'mr-2' : 'ml-2'}>
                                         {isRTL ?
                                             (patientToDelete.payment_status === 'paid' ? 'مدفوع' :
-                                                patientToDelete.payment_status === 'pending' ? 'معلق' :
+                                                patientToDelete.payment_status === 'pending' ? 'قيد الانتظار' :
                                                     patientToDelete.payment_status === 'failed' ? 'فاشل' : patientToDelete.payment_status) :
                                             patientToDelete.payment_status
                                         }

@@ -136,7 +136,7 @@ const PaymentManagement: React.FC = () => {
     const translatePaymentStatus = (status: string) => {
         if (isRTL) {
             switch (status) {
-                case 'pending': return 'معلق';
+                case 'pending': return 'قيد الانتظار';
                 case 'completed': return 'مكتمل';
                 case 'paid': return 'مدفوع';
                 case 'failed': return 'فشل';
@@ -645,8 +645,8 @@ const PaymentManagement: React.FC = () => {
                 if (error) throw error;
 
                 toast({
-                    title: isRTL ? 'تم حذف جميع المدفوعات المعلقة' : 'All Pending Payments Deleted',
-                    description: isRTL ? `تم حذف ${pendingPayments.length} مدفوع معلق بنجاح` : `${pendingPayments.length} pending payments deleted successfully`,
+                    title: isRTL ? 'تم حذف جميع المدفوعات قيد الانتظار' : 'All Pending Payments Deleted',
+                    description: isRTL ? `تم حذف ${pendingPayments.length} دفع قيد الانتظار بنجاح` : `${pendingPayments.length} pending payments deleted successfully`,
                 });
             } else {
                 // Delete single payment
@@ -776,7 +776,7 @@ const PaymentManagement: React.FC = () => {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
-                            {isRTL ? 'المدفوعات المعلقة' : 'Pending Payments'}
+                            {isRTL ? 'المدفوعات قيد الانتظار' : 'Pending Payments'}
                         </CardTitle>
                         <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
@@ -851,7 +851,7 @@ const PaymentManagement: React.FC = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">{isRTL ? 'جميع الحالات' : 'All Statuses'}</SelectItem>
-                                    <SelectItem value="pending">{isRTL ? 'معلق' : 'Pending'}</SelectItem>
+                                    <SelectItem value="pending">{isRTL ? 'قيد الانتظار' : 'Pending'}</SelectItem>
                                     <SelectItem value="completed">{isRTL ? 'مكتمل' : 'Completed'}</SelectItem>
                                     <SelectItem value="failed">{isRTL ? 'فشل' : 'Failed'}</SelectItem>
                                     <SelectItem value="refunded">{isRTL ? 'مسترد' : 'Refunded'}</SelectItem>
@@ -904,7 +904,7 @@ const PaymentManagement: React.FC = () => {
                                         className="ml-2 px-4 py-2 font-medium shadow-md hover:shadow-lg transition-all duration-200 border-2 border-red-300 hover:border-red-400"
                                     >
                                         <XCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                        {isRTL ? `حذف ${stats.pendingPayments} معلق` : `Delete ${stats.pendingPayments} Pending`}
+                                        {isRTL ? `حذف ${stats.pendingPayments} قيد الانتظار` : `Delete ${stats.pendingPayments} Pending`}
                                     </Button>
                                 )}
                             </div>
@@ -1193,13 +1193,13 @@ const PaymentManagement: React.FC = () => {
                     <AlertDialogHeader>
                         <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>
                             {paymentToDelete?.isBulkDelete
-                                ? (isRTL ? 'تأكيد حذف جميع المدفوعات المعلقة' : 'Confirm Delete All Pending Payments')
+                                ? (isRTL ? 'تأكيد حذف جميع المدفوعات قيد الانتظار' : 'Confirm Delete All Pending Payments')
                                 : (isRTL ? 'تأكيد حذف الدفع' : 'Confirm Delete Payment')
                             }
                         </AlertDialogTitle>
                         <AlertDialogDescription className={isRTL ? 'text-right' : 'text-left'}>
                             {paymentToDelete?.isBulkDelete
-                                ? (isRTL ? `هل أنت متأكد من حذف جميع المدفوعات المعلقة (${paymentToDelete?.pendingCount})؟ لا يمكن التراجع عن هذا الإجراء.` : `Are you sure you want to delete all pending payments (${paymentToDelete?.pendingCount})? This action cannot be undone.`)
+                                ? (isRTL ? `هل أنت متأكد من حذف جميع المدفوعات قيد الانتظار (${paymentToDelete?.pendingCount})؟ لا يمكن التراجع عن هذا الإجراء.` : `Are you sure you want to delete all pending payments (${paymentToDelete?.pendingCount})? This action cannot be undone.`)
                                 : (isRTL ? 'هل أنت متأكد من حذف هذا الدفع؟ لا يمكن التراجع عن هذا الإجراء.' : 'Are you sure you want to delete this payment? This action cannot be undone.')
                             }
                         </AlertDialogDescription>
@@ -1225,7 +1225,7 @@ const PaymentManagement: React.FC = () => {
                             className="bg-red-600 hover:bg-red-700 ml-4"
                         >
                             {paymentToDelete?.isBulkDelete
-                                ? (isRTL ? `حذف جميع المعلقة` : `Delete All Pending`)
+                                ? (isRTL ? `حذف جميع قيد الانتظار` : `Delete All Pending`)
                                 : (isRTL ? 'حذف' : 'Delete')
                             }
                         </AlertDialogAction>

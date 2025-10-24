@@ -737,9 +737,43 @@ const UsersManagement = () => {
                 if (userError) {
                     console.error("Error creating user profile:", userError);
                     let errorMsg = userError.message;
+
+                    // Check if it's a duplicate key error and provide specific messages
                     if (errorMsg && (errorMsg.includes('duplicate key value') || errorMsg.includes('unique constraint'))) {
-                        errorMsg = 'A user with this information already exists. Please use a different username, email, or ID.';
+                        let title = t('common.error');
+                        let description = '';
+
+                        // Check which field caused the duplicate
+                        if (errorMsg.includes('phonenumber')) {
+                            title = isRTL ? "رقم الهاتف موجود مسبقاً" : "Phone Number Already Exists";
+                            description = isRTL
+                                ? "يوجد مستخدم بنفس رقم الهاتف. يرجى استخدام رقم هاتف مختلف."
+                                : "A user with this phone number already exists. Please use a different phone number.";
+                        } else if (errorMsg.includes('email')) {
+                            title = isRTL ? "البريد الإلكتروني موجود مسبقاً" : "Email Already Exists";
+                            description = isRTL
+                                ? "يوجد مستخدم بنفس البريد الإلكتروني. يرجى استخدام بريد إلكتروني مختلف."
+                                : "A user with this email already exists. Please use a different email.";
+                        } else if (errorMsg.includes('id_number')) {
+                            title = isRTL ? "رقم الهوية موجود مسبقاً" : "ID Number Already Exists";
+                            description = isRTL
+                                ? "يوجد مستخدم بنفس رقم الهوية. يرجى استخدام رقم هوية مختلف."
+                                : "A user with this ID number already exists. Please use a different ID number.";
+                        } else {
+                            title = isRTL ? "معلومات موجودة مسبقاً" : "Information Already Exists";
+                            description = isRTL
+                                ? "يوجد مستخدم بنفس المعلومات. يرجى استخدام معلومات مختلفة."
+                                : "A user with this information already exists. Please use different information.";
+                        }
+
+                        toast({
+                            title: title,
+                            description: description,
+                            variant: "destructive",
+                        });
+                        return;
                     }
+
                     toast({
                         title: t('common.error'),
                         description: errorMsg || t('usersManagement.failedToCreateUser'),

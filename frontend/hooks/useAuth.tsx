@@ -472,7 +472,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 // Handle rate limiting error gracefully
                 if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
-                    throw new Error('Please try again in a moment');
+                    // Extract the number of seconds from the error message
+                    const secondsMatch = authError.message.match(/(\d+)\s*seconds?/i);
+                    const waitTime = secondsMatch ? parseInt(secondsMatch[1]) : 60;
+                    throw new Error(`Please try again after ${waitTime} seconds`);
                 }
 
                 throw authError;

@@ -485,8 +485,10 @@ const PatientHealthForm: React.FC<{
 
                     if (existingEmail) {
                         toast({
-                            title: "Email Already Exists",
-                            description: "This email address is already in use",
+                            title: isRTL ? "البريد الإلكتروني موجود مسبقاً" : "Email Already Exists",
+                            description: isRTL
+                                ? "هذا البريد الإلكتروني مستخدم بالفعل"
+                                : "This email address is already in use",
                             variant: "destructive",
                         });
                         return;
@@ -494,8 +496,10 @@ const PatientHealthForm: React.FC<{
 
                     if (existingId) {
                         toast({
-                            title: "ID Number Already Exists",
-                            description: "This ID number is already in use",
+                            title: isRTL ? "رقم الهوية موجود مسبقاً" : "ID Number Already Exists",
+                            description: isRTL
+                                ? "رقم الهوية هذا مستخدم بالفعل"
+                                : "This ID number is already in use",
                             variant: "destructive",
                         });
                         return;
@@ -516,10 +520,17 @@ const PatientHealthForm: React.FC<{
                 if (authError) {
                     // Handle rate limiting error gracefully
                     if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
+                        // Extract the number of seconds from the error message
+                        const secondsMatch = authError.message.match(/(\d+)\s*seconds?/i);
+                        const waitTime = secondsMatch ? parseInt(secondsMatch[1]) : 60;
+
                         toast({
                             title: isRTL ? "فشل في إنشاء المريض" : "Failed to create patient",
-                            description: isRTL ? "يرجى المحاولة مرة أخرى بعد لحظة" : "Please try again in a moment",
+                            description: isRTL
+                                ? `يرجى المحاولة مرة أخرى بعد ${waitTime} ثانية`
+                                : `Please try again after ${waitTime} seconds`,
                             variant: "destructive",
+                            duration: 5000, // Show for 5 seconds
                         });
                         return;
                     }
@@ -570,6 +581,31 @@ const PatientHealthForm: React.FC<{
                     } catch (cleanupError) {
                         console.error('Failed to cleanup auth user:', cleanupError);
                     }
+
+                    // Check if it's a duplicate key error
+                    let errorMsg = insertError.message;
+                    if (errorMsg && (errorMsg.includes('duplicate key value') || errorMsg.includes('unique constraint'))) {
+                        // Check which field caused the duplicate
+                        if (errorMsg.includes('phonenumber')) {
+                            toast({
+                                title: isRTL ? "رقم الهاتف موجود مسبقاً" : "Phone Number Already Exists",
+                                description: isRTL
+                                    ? "يوجد مريض بنفس رقم الهاتف. يرجى استخدام رقم هاتف مختلف."
+                                    : "A patient with this phone number already exists. Please use a different phone number.",
+                                variant: "destructive",
+                            });
+                        } else {
+                            toast({
+                                title: isRTL ? "معلومات موجودة مسبقاً" : "Information Already Exists",
+                                description: isRTL
+                                    ? "يوجد مستخدم بنفس المعلومات. يرجى استخدام معلومات مختلفة."
+                                    : "A user with this information already exists. Please use different information.",
+                                variant: "destructive",
+                            });
+                        }
+                        return;
+                    }
+
                     throw new Error(`Failed to create patient record: ${insertError.message}`);
                 }
 
@@ -580,8 +616,10 @@ const PatientHealthForm: React.FC<{
                 const newPatient = insertData[0] as PatientWithHealth;
 
                 toast({
-                    title: "Patient Created Successfully",
-                    description: `Successfully created account for ${newPatient.english_username_a} ${newPatient.english_username_d}`,
+                    title: isRTL ? "تم إنشاء المريض بنجاح" : "Patient Created Successfully",
+                    description: isRTL
+                        ? `تم إنشاء حساب ${newPatient.english_username_a} ${newPatient.english_username_d} بنجاح`
+                        : `Successfully created account for ${newPatient.english_username_a} ${newPatient.english_username_d}`,
                 });
 
                 // Reset form and close
@@ -611,9 +649,9 @@ const PatientHealthForm: React.FC<{
 
             } catch (error) {
                 console.error('❌ Error creating patient:', error);
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                const errorMessage = error instanceof Error ? error.message : (isRTL ? 'حدث خطأ غير معروف' : 'Unknown error occurred');
                 toast({
-                    title: "Failed to Create Patient",
+                    title: isRTL ? "فشل في إنشاء المريض" : "Failed to Create Patient",
                     description: errorMessage,
                     variant: "destructive",
                     style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
@@ -712,8 +750,8 @@ const PatientHealthForm: React.FC<{
 
             if (!selectedPatient || formData.patient_id === 0) {
                 toast({
-                    title: "Error",
-                    description: "Please select a patient",
+                    title: isRTL ? "خطأ" : "Error",
+                    description: isRTL ? "يرجى اختيار مريض" : "Please select a patient",
                     variant: "destructive",
                 });
                 return;
@@ -1743,10 +1781,12 @@ const PatientHealthManagement: React.FC = () => {
     // ✅ OPTIMIZED: Handle patient creation
     const handlePatientCreated = useCallback((newPatient: PatientWithHealth) => {
         toast({
-            title: "Patient Added",
-            description: `${newPatient.english_username_a} ${newPatient.english_username_d} has been added to the system`,
+            title: isRTL ? "تمت إضافة المريض" : "Patient Added",
+            description: isRTL
+                ? `تمت إضافة ${newPatient.english_username_a} ${newPatient.english_username_d} إلى النظام`
+                : `${newPatient.english_username_a} ${newPatient.english_username_d} has been added to the system`,
         });
-    }, [toast]);
+    }, [toast, isRTL]);
 
     // Helper functions (keeping your existing ones)
     const calculateDiseaseCount = (record: PatientWithHealthData) => {

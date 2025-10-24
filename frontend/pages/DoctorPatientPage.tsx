@@ -1,6 +1,6 @@
 // DoctorPatientsPage.tsx - Patient Management with Clinical Notes
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Users, Calendar, User, Filter, Plus, Edit, Save, X, FileText, AlertCircle, Clock, Stethoscope } from 'lucide-react';
+import { Search, Users, Calendar, User, Filter, Plus, Edit, Save, X, FileText, AlertCircle, Clock, Stethoscope, Eye } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -146,6 +146,7 @@ const DoctorPatientsPage: React.FC = () => {
     const [showNotesModal, setShowNotesModal] = useState<boolean>(false);
     const [isAddingNote, setIsAddingNote] = useState<boolean>(false);
     const [editingNote, setEditingNote] = useState<ClinicalNote | null>(null);
+    const [viewingNote, setViewingNote] = useState<ClinicalNote | null>(null);
     const [newNote, setNewNote] = useState<Partial<ClinicalNote>>({
         note_type: 'general',
         status: 'active',
@@ -267,8 +268,8 @@ const DoctorPatientsPage: React.FC = () => {
         } catch (err) {
             console.error('Error fetching clinical notes:', err);
             toast({
-                title: 'Error',
-                description: 'Failed to load clinical notes.',
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL ? 'فشل تحميل الملاحظات السريرية.' : 'Failed to load clinical notes.',
                 variant: 'destructive',
             });
         }
@@ -281,8 +282,8 @@ const DoctorPatientsPage: React.FC = () => {
 
         if (!newNote.notes?.trim()) {
             toast({
-                title: 'Error',
-                description: 'Clinical notes are required.',
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL ? 'الملاحظات السريرية مطلوبة.' : 'Clinical notes are required.',
                 variant: 'destructive',
             });
             return;
@@ -382,17 +383,25 @@ const DoctorPatientsPage: React.FC = () => {
                 description: editingNote
                     ? t('common.clinicalNoteUpdated')
                     : t('common.clinicalNoteAdded'),
-                className: 'bg-green-50 border-green-200 text-green-800',
+                style: { backgroundColor: '#16a34a', color: '#fff' },
             });
 
         } catch (err) {
             console.error('Error saving clinical note:', err);
             toast({
-                title: 'Error',
-                description: `Failed to save note: ${err.message}`,
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL ? `فشل حفظ الملاحظة: ${err.message}` : `Failed to save note: ${err.message}`,
                 variant: 'destructive',
             });
         }
+    };
+
+    // Check if note can be edited (within 1 hour of creation)
+    const canEditNote = (note: ClinicalNote): boolean => {
+        const now = new Date();
+        const createdAt = new Date(note.created_at);
+        const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+        return hoursSinceCreation < 1;
     };
 
     // Reset note form
@@ -406,6 +415,7 @@ const DoctorPatientsPage: React.FC = () => {
         });
 
         setEditingNote(null);
+        setViewingNote(null);
     };
 
     // Initialize component
@@ -788,15 +798,33 @@ const DoctorPatientsPage: React.FC = () => {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <button
-                                                        onClick={() => {
-                                                            setEditingNote(note);
-                                                            setNewNote(note);
-                                                            setIsAddingNote(false);
-                                                        }}
-                                                        className="text-blue-600 hover:text-blue-800"
+                                                        onClick={() => setViewingNote(note)}
+                                                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                                        title={isRTL ? 'عرض الملاحظة' : 'View Note'}
                                                     >
-                                                        <Edit className="h-4 w-4" />
+                                                        <Eye className="h-4 w-4" />
                                                     </button>
+                                                    {canEditNote(note) ? (
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingNote(note);
+                                                                setNewNote(note);
+                                                                setIsAddingNote(false);
+                                                            }}
+                                                            className="text-green-600 hover:text-green-800 flex items-center gap-1"
+                                                            title={isRTL ? 'تعديل الملاحظة' : 'Edit Note'}
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            disabled
+                                                            className="text-gray-400 cursor-not-allowed flex items-center gap-1"
+                                                            title={isRTL ? 'لا يمكن التعديل بعد ساعة واحدة' : 'Cannot edit after 1 hour'}
+                                                        >
+                                                            <Edit className="h-4 w-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="mb-3">
@@ -840,6 +868,209 @@ const DoctorPatientsPage: React.FC = () => {
                                         </div>
                                     ))
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Note Modal */}
+            {viewingNote && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="p-6 border-b">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                    <Eye className="h-6 w-6 text-blue-600" />
+                                    {isRTL ? 'عرض الملاحظة السريرية' : 'View Clinical Note'}
+                                </h2>
+                                <button
+                                    onClick={() => setViewingNote(null)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                    title={isRTL ? 'إغلاق' : 'Close'}
+                                >
+                                    <X className="h-6 w-6" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6">
+                            {/* Note Metadata */}
+                            <div className="mb-6 pb-4 border-b">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className={`px-3 py-1 text-sm font-medium rounded-full ${getPriorityColor(viewingNote.priority)}`}>
+                                        {t(`common.${viewingNote.priority}`).toUpperCase()}
+                                    </span>
+                                    <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(viewingNote.status)}`}>
+                                        {t(`common.${viewingNote.status}`).toUpperCase()}
+                                    </span>
+                                    <span className="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">
+                                        {t(`common.${viewingNote.note_type === 'follow_up' ? 'followUp' : viewingNote.note_type.replace('_', '')}`).toUpperCase()}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <Clock className="h-4 w-4" />
+                                    <span>{isRTL ? 'تاريخ الإنشاء:' : 'Created:'} {new Date(viewingNote.created_at).toLocaleString()}</span>
+                                    <span>•</span>
+                                    <span>{isRTL ? 'الطبيب:' : 'Doctor:'} {viewingNote.doctor_name}</span>
+                                </div>
+                                {!canEditNote(viewingNote) && (
+                                    <div className="mt-2 text-sm text-amber-600 flex items-center gap-1">
+                                        <AlertCircle className="h-4 w-4" />
+                                        {isRTL ? 'لا يمكن تعديل هذه الملاحظة (تم إنشاؤها منذ أكثر من ساعة)' : 'This note cannot be edited (created more than 1 hour ago)'}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Note Content */}
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                        {isRTL ? 'الملاحظات السريرية' : 'Clinical Notes'}
+                                    </h3>
+                                    <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap text-gray-800">
+                                        {viewingNote.notes}
+                                    </div>
+                                </div>
+
+                                {viewingNote.chief_complaint && (
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                            {isRTL ? 'الشكوى الرئيسية' : 'Chief Complaint'}
+                                        </h3>
+                                        <div className="p-4 bg-blue-50 rounded-lg text-gray-800">
+                                            {viewingNote.chief_complaint}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {viewingNote.diagnosis && (
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                            {isRTL ? 'التشخيص' : 'Diagnosis'}
+                                        </h3>
+                                        <div className="p-4 bg-blue-50 rounded-lg text-gray-800">
+                                            {viewingNote.diagnosis}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {viewingNote.treatment_plan && (
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                            {isRTL ? 'خطة العلاج' : 'Treatment Plan'}
+                                        </h3>
+                                        <div className="p-4 bg-green-50 rounded-lg text-gray-800">
+                                            {viewingNote.treatment_plan}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {viewingNote.medications && (
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                            {isRTL ? 'الأدوية' : 'Medications'}
+                                        </h3>
+                                        <div className="p-4 bg-purple-50 rounded-lg text-gray-800">
+                                            {viewingNote.medications}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {viewingNote.follow_up_date && (
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                            {isRTL ? 'موعد المتابعة' : 'Follow-up Date'}
+                                        </h3>
+                                        <div className="p-4 bg-yellow-50 rounded-lg text-gray-800">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="h-5 w-5 text-yellow-700" />
+                                                <span>{new Date(viewingNote.follow_up_date).toLocaleDateString()}</span>
+                                            </div>
+                                            {viewingNote.follow_up_notes && (
+                                                <p className="mt-2 text-gray-700">{viewingNote.follow_up_notes}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {viewingNote.vital_signs && Object.keys(viewingNote.vital_signs).length > 0 && (
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                            {isRTL ? 'العلامات الحيوية' : 'Vital Signs'}
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-3 p-4 bg-teal-50 rounded-lg">
+                                            {viewingNote.vital_signs.blood_pressure && (
+                                                <div>
+                                                    <span className="font-medium text-gray-700">{isRTL ? 'ضغط الدم:' : 'Blood Pressure:'}</span>
+                                                    <p className="text-gray-800">{viewingNote.vital_signs.blood_pressure}</p>
+                                                </div>
+                                            )}
+                                            {viewingNote.vital_signs.heart_rate && (
+                                                <div>
+                                                    <span className="font-medium text-gray-700">{isRTL ? 'معدل نبضات القلب:' : 'Heart Rate:'}</span>
+                                                    <p className="text-gray-800">{viewingNote.vital_signs.heart_rate}</p>
+                                                </div>
+                                            )}
+                                            {viewingNote.vital_signs.temperature && (
+                                                <div>
+                                                    <span className="font-medium text-gray-700">{isRTL ? 'درجة الحرارة:' : 'Temperature:'}</span>
+                                                    <p className="text-gray-800">{viewingNote.vital_signs.temperature}</p>
+                                                </div>
+                                            )}
+                                            {viewingNote.vital_signs.respiratory_rate && (
+                                                <div>
+                                                    <span className="font-medium text-gray-700">{isRTL ? 'معدل التنفس:' : 'Respiratory Rate:'}</span>
+                                                    <p className="text-gray-800">{viewingNote.vital_signs.respiratory_rate}</p>
+                                                </div>
+                                            )}
+                                            {viewingNote.vital_signs.oxygen_saturation && (
+                                                <div>
+                                                    <span className="font-medium text-gray-700">{isRTL ? 'تشبع الأكسجين:' : 'Oxygen Saturation:'}</span>
+                                                    <p className="text-gray-800">{viewingNote.vital_signs.oxygen_saturation}</p>
+                                                </div>
+                                            )}
+                                            {viewingNote.vital_signs.weight && (
+                                                <div>
+                                                    <span className="font-medium text-gray-700">{isRTL ? 'الوزن:' : 'Weight:'}</span>
+                                                    <p className="text-gray-800">{viewingNote.vital_signs.weight}</p>
+                                                </div>
+                                            )}
+                                            {viewingNote.vital_signs.height && (
+                                                <div>
+                                                    <span className="font-medium text-gray-700">{isRTL ? 'الطول:' : 'Height:'}</span>
+                                                    <p className="text-gray-800">{viewingNote.vital_signs.height}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="mt-6 pt-4 border-t flex items-center gap-3">
+                                {canEditNote(viewingNote) && (
+                                    <button
+                                        onClick={() => {
+                                            setEditingNote(viewingNote);
+                                            setNewNote(viewingNote);
+                                            setIsAddingNote(false);
+                                            setViewingNote(null);
+                                        }}
+                                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                        {isRTL ? 'تعديل الملاحظة' : 'Edit Note'}
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setViewingNote(null)}
+                                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                                >
+                                    {isRTL ? 'إغلاق' : 'Close'}
+                                </button>
                             </div>
                         </div>
                     </div>

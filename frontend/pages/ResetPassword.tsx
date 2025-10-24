@@ -120,8 +120,10 @@ export default function ResetPassword() {
 
             // Show success message
             toast({
-                title: "Success",
-                description: "Your password has been reset successfully. You can now log in with your new password.",
+                title: isRTL ? "نجح" : "Success",
+                description: isRTL
+                    ? "تم إعادة تعيين كلمة المرور الخاصة بك بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة."
+                    : "Your password has been reset successfully. You can now log in with your new password.",
             });
 
             // Sign out and redirect after delay

@@ -2078,7 +2078,7 @@ const arTranslations = {
         paymentManagement: {
             totalRevenue: "إجمالي الإيرادات",
             fromCompletedPayments: "من المدفوعات المكتملة",
-            pendingPayments: "المدفوعات المعلقة",
+            pendingPayments: "المدفوعات قيد الانتظار",
             awaitingPayment: "بانتظار الدفع",
             todayRevenue: "إيرادات اليوم",
             todayOnly: "اليوم فقط",
@@ -2088,7 +2088,7 @@ const arTranslations = {
             searchPayments: "البحث في المدفوعات...",
             paymentStatus: "حالة الدفع",
             allStatuses: "جميع الحالات",
-            pending: "معلق",
+            pending: "قيد الانتظار",
             completed: "مكتمل",
             failed: "فشل",
             refunded: "مسترد",
@@ -2137,7 +2137,7 @@ const arTranslations = {
         // إشعارات المدفوعات
         paymentNotification: {
             completed: 'تم إتمام الدفع بنجاح',
-            pending: 'الدفع معلق - يرجى الدفع في العيادة',
+            pending: 'الدفع قيد الانتظار - يرجى الدفع في العيادة',
             failed: 'فشل الدفع - يرجى المحاولة مرة أخرى',
             refunded: 'تم استرداد المبلغ',
             unknown: 'حالة الدفع غير معروفة',
@@ -2147,13 +2147,13 @@ const arTranslations = {
         // قائمة المرضى المدفوعين
         paidPatients: {
             paidPatients: 'المرضى المدفوعين',
-            pendingPayments: 'المدفوعات المعلقة',
+            pendingPayments: 'المدفوعات قيد الانتظار',
             todayAppointments: 'مواعيد اليوم',
             allPatients: 'جميع المرضى',
             searchPatients: 'البحث عن المرضى...',
             allStatuses: 'جميع الحالات',
             paid: 'مدفوع',
-            pending: 'معلق',
+            pending: 'قيد الانتظار',
             failed: 'فاشل',
             completed: 'مكتمل',
             confirmation: 'تأكيد',

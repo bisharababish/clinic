@@ -189,8 +189,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
           sessionStorage.setItem('admin_login_success', 'true');
 
           toast({
-            title: t("auth.adminLogin") || "Admin Login",
-            description: t("auth.secureAdminAccess") || "Secure admin access granted",
+            title: isRTL ? 'تسجيل دخول المسؤول' : 'Admin Login',
+            description: isRTL ? 'تم منح وصول آمن للمسؤول' : 'Secure admin access granted',
             style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
           });
 
@@ -209,20 +209,22 @@ const LoginForm: React.FC<LoginFormProps> = ({
         } else {
           // Handle other roles
           if (userRole === 'lab') {
+            const redirectMsg = isRTL ? 'جارٍ التوجيه إلى المختبرات...' : 'Redirecting to Labs...';
             toast({
-              title: t("common.login") || "Login Successful",
-              description: toastMessage + " Redirecting to Labs...",
+              title: isRTL ? 'تسجيل الدخول' : 'Login Successful',
+              description: `${toastMessage} ${redirectMsg}`,
               style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
           } else if (userRole === 'xray' || userRole === 'x ray') {
+            const redirectMsg = isRTL ? 'جارٍ التوجيه إلى الأشعة...' : 'Redirecting to X-Ray...';
             toast({
-              title: t("common.login") || "Login Successful",
-              description: toastMessage + " Redirecting to X-Ray...",
+              title: isRTL ? 'تسجيل الدخول' : 'Login Successful',
+              description: `${toastMessage} ${redirectMsg}`,
               style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
           } else {
             toast({
-              title: t("common.login") || "Login Successful",
+              title: isRTL ? 'تسجيل الدخول' : 'Login Successful',
               description: toastMessage,
               style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });

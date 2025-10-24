@@ -337,10 +337,17 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
                 // Handle rate limiting error gracefully
                 if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
+                    // Extract the number of seconds from the error message
+                    const secondsMatch = authError.message.match(/(\d+)\s*seconds?/i);
+                    const waitTime = secondsMatch ? parseInt(secondsMatch[1]) : 60;
+
                     toast({
                         title: t("auth.registrationFailed"),
-                        description: "Please try again in a moment",
+                        description: isRTL
+                            ? `يرجى المحاولة مرة أخرى بعد ${waitTime} ثانية`
+                            : `Please try again after ${waitTime} seconds`,
                         variant: "destructive",
+                        duration: 5000, // Show for 5 seconds
                     });
                     return;
                 }

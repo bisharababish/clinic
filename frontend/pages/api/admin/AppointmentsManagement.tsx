@@ -282,6 +282,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             toast({
                 title: t('common.success'),
                 description: t('appointmentsManagement.statusUpdated', { status: t(`appointmentsManagement.${status}`) }),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             console.log(`✅ Appointment status updated successfully`);
@@ -329,6 +330,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             toast({
                 title: t('common.success'),
                 description: t('appointmentsManagement.paymentStatusUpdated', { status: t(`appointmentsManagement.${status}`) }),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             console.log(`✅ Payment status updated successfully`);
@@ -376,6 +378,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             toast({
                 title: t('common.success'),
                 description: t('appointmentsManagement.notesUpdated'),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             console.log(`✅ Notes updated successfully`);
@@ -447,6 +450,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
             toast({
                 title: t('common.success'),
                 description: t('appointmentsManagement.appointmentDeleted'),
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             console.log(`✅ Appointment deleted successfully`);
@@ -1701,6 +1705,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
                                             toast({
                                                 title: t('common.success'),
                                                 description: t('appointmentsManagement.priceUpdated'),
+                                                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                                             });
                                         }
                                     }}

@@ -194,6 +194,7 @@ export const usePatientHealth = () => {
             toast({
                 title: "Success",
                 description: "Health information saved successfully",
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             return true;
@@ -313,6 +314,7 @@ export const usePatientHealth = () => {
             toast({
                 title: "Success",
                 description: "Health information deleted successfully",
+                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
             return true;

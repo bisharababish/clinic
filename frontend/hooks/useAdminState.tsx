@@ -578,7 +578,7 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
         toast({
             title: isRTL ? 'تم تمديد الجلسة' : 'Session Extended',
             description: isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully',
-            variant: 'default',
+            style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
         });
     };
     useEffect(() => {

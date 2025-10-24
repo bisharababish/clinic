@@ -594,7 +594,7 @@ const AdminDashboardContent = () => {
                                 {/* Pending Payments */}
                                 <div>
                                     <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                                        {i18n.language === 'ar' ? "المدفوعات المعلقة" : "Pending Payments"}
+                                        {i18n.language === 'ar' ? "المدفوعات قيد الانتظار" : "Pending Payments"}
                                     </h2>
                                     <Suspense fallback={<Skeleton className="h-64 w-full" />}>
                                         <PaidPatientsList

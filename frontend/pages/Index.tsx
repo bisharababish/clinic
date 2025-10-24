@@ -347,8 +347,8 @@ const Index = () => {
         setCreatePatientForm(prev => ({ ...prev, [name]: value }));
       } else {
         toast({
-          title: t('usersManagement.englishNameErrorTitle'),
-          description: t('usersManagement.englishNameErrorDesc'),
+          title: isRTL ? "خطأ في الاسم الإنجليزي" : "English Name Error",
+          description: isRTL ? "يجب أن يحتوي الاسم الإنجليزي على أحرف إنجليزية فقط" : "English name must contain only English letters",
           variant: 'destructive',
         });
       }
@@ -360,8 +360,8 @@ const Index = () => {
         setCreatePatientForm(prev => ({ ...prev, [name]: value }));
       } else {
         toast({
-          title: t('usersManagement.arabicNameErrorTitle'),
-          description: t('usersManagement.arabicNameErrorDesc'),
+          title: isRTL ? "خطأ في الاسم العربي" : "Arabic Name Error",
+          description: isRTL ? "يجب أن يحتوي الاسم العربي على أحرف عربية فقط" : "Arabic name must contain only Arabic letters",
           variant: 'destructive',
         });
       }
@@ -423,8 +423,8 @@ const Index = () => {
 
         if (!isValid) {
           toast({
-            title: t('usersManagement.invalidId'),
-            description: t('usersManagement.invalidIdDesc') || 'This ID number is not valid according to Palestinian ID standards',
+            title: isRTL ? "رقم هوية غير صحيح" : "Invalid ID",
+            description: isRTL ? "رقم الهوية هذا غير صحيح وفقاً لمعايير الهوية الفلسطينية" : "This ID number is not valid according to Palestinian ID standards",
             variant: 'destructive',
           });
         }
@@ -456,7 +456,7 @@ const Index = () => {
     if (!form.english_username_a.trim() || !form.english_username_d.trim()) {
       toast({
         title: isRTL ? "خطأ في النموذج" : "Form Error",
-        description: t('usersManagement.firstLastNameRequired'),
+        description: isRTL ? "الاسم الأول والأخير باللغة الإنجليزية مطلوبان" : "First and last names in English are required",
         variant: "destructive",
       });
       return false;
@@ -467,7 +467,7 @@ const Index = () => {
       if (field && !englishNameRegex.test(field)) {
         toast({
           title: isRTL ? "خطأ في الاسم الإنجليزي" : "English Name Error",
-          description: t('usersManagement.englishLettersOnly'),
+          description: isRTL ? "يجب أن يحتوي الاسم الإنجليزي على أحرف إنجليزية فقط" : "English name must contain only English letters",
           variant: "destructive",
         });
         return false;
@@ -478,7 +478,7 @@ const Index = () => {
     if (!form.arabic_username_a.trim() || !form.arabic_username_d.trim()) {
       toast({
         title: isRTL ? "خطأ في النموذج" : "Form Error",
-        description: t('usersManagement.firstLastNameArabicRequired'),
+        description: isRTL ? "الاسم الأول والأخير بالعربية مطلوبان" : "First and last names in Arabic are required",
         variant: "destructive",
       });
       return false;
@@ -489,7 +489,7 @@ const Index = () => {
       if (field && !arabicNameRegex.test(field)) {
         toast({
           title: isRTL ? "خطأ في الاسم العربي" : "Arabic Name Error",
-          description: t('usersManagement.arabicLettersOnly'),
+          description: isRTL ? "يجب أن يحتوي الاسم العربي على أحرف عربية فقط" : "Arabic name must contain only Arabic letters",
           variant: "destructive",
         });
         return false;
@@ -501,7 +501,7 @@ const Index = () => {
     if (!emailRegex.test(form.user_email)) {
       toast({
         title: isRTL ? "بريد إلكتروني غير صحيح" : "Invalid Email",
-        description: t('usersManagement.enterValidEmail'),
+        description: isRTL ? "يرجى إدخال عنوان بريد إلكتروني صحيح" : "Please enter a valid email address",
         variant: "destructive",
       });
       return false;
@@ -512,7 +512,7 @@ const Index = () => {
       if (!form.id_number.trim() || form.id_number.length !== 9) {
         toast({
           title: isRTL ? "رقم هوية غير صحيح" : "Invalid ID Number",
-          description: t('usersManagement.idNumberMustBe9Digits'),
+          description: isRTL ? "يجب أن يكون رقم الهوية 9 أرقام" : "ID number must be 9 digits",
           variant: "destructive",
         });
         return false;
@@ -522,8 +522,8 @@ const Index = () => {
     // Validate phone number
     if (!form.user_phonenumber.trim() || !phoneRegex.test(form.user_phonenumber.trim())) {
       toast({
-        title: t('usersManagement.phoneInvalidTitle'),
-        description: t('usersManagement.phoneInvalidDesc'),
+        title: isRTL ? "رقم هاتف غير صحيح" : "Invalid Phone Number",
+        description: isRTL ? "يرجى إدخال رقم هاتف صحيح (مثال: 0599123456)" : "Please enter a valid phone number (e.g., 0599123456)",
         variant: 'destructive',
       });
       return false;
@@ -534,7 +534,7 @@ const Index = () => {
     if (!form.date_of_birth) {
       toast({
         title: isRTL ? "تاريخ الميلاد مطلوب" : "Date of Birth Required",
-        description: t('usersManagement.enterDateOfBirth'),
+        description: isRTL ? "يرجى إدخال تاريخ الميلاد" : "Please enter date of birth",
         variant: "destructive",
       });
       return false;
@@ -575,7 +575,7 @@ const Index = () => {
     if (!form.gender_user) {
       toast({
         title: isRTL ? "الجنس مطلوب" : "Gender Required",
-        description: t('usersManagement.selectGender'),
+        description: isRTL ? "يرجى اختيار الجنس" : "Please select gender",
         variant: "destructive",
       });
       return false;
@@ -668,7 +668,7 @@ const Index = () => {
       console.error('❌ Error loading all patients:', error);
       toast({
         title: isRTL ? "خطأ في تحميل المرضى" : "Error Loading Patients",
-        description: t('usersManagement.failedToLoadPatientList'),
+        description: isRTL ? "فشل تحميل قائمة المرضى" : "Failed to load patient list",
         variant: "destructive",
       });
 
@@ -713,7 +713,7 @@ const Index = () => {
         if (existingEmail) {
           toast({
             title: isRTL ? "البريد الإلكتروني موجود مسبقاً" : "Email Already Exists",
-            description: t('usersManagement.emailAlreadyInUse'),
+            description: isRTL ? "هذا البريد الإلكتروني مستخدم بالفعل. يرجى استخدام بريد إلكتروني مختلف." : "This email is already in use. Please use a different email.",
             variant: "destructive",
           });
           return;
@@ -722,7 +722,7 @@ const Index = () => {
         if (existingId && !(userRole === 'secretary' && !createPatientForm.id_number.trim())) {
           toast({
             title: isRTL ? "رقم الهوية موجود مسبقاً" : "ID Number Already Exists",
-            description: t('usersManagement.idNumberAlreadyInUse'),
+            description: isRTL ? "رقم الهوية هذا مستخدم بالفعل. يرجى التحقق من الرقم." : "This ID number is already in use. Please check the number.",
             variant: "destructive",
           });
           return;
@@ -822,6 +822,30 @@ const Index = () => {
           }
         } catch (cleanupError) {
           console.error('Failed to cleanup auth user:', cleanupError);
+        }
+
+        // Check if it's a duplicate key error
+        let errorMsg = insertError.message;
+        if (errorMsg && (errorMsg.includes('duplicate key value') || errorMsg.includes('unique constraint'))) {
+          // Check which field caused the duplicate
+          if (errorMsg.includes('phonenumber')) {
+            toast({
+              title: isRTL ? "رقم الهاتف موجود مسبقاً" : "Phone Number Already Exists",
+              description: isRTL
+                ? "يوجد مريض بنفس رقم الهاتف. يرجى استخدام رقم هاتف مختلف."
+                : "A patient with this phone number already exists. Please use a different phone number.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: isRTL ? "معلومات موجودة مسبقاً" : "Information Already Exists",
+              description: isRTL
+                ? "يوجد مستخدم بنفس المعلومات. يرجى استخدام معلومات مختلفة."
+                : "A user with this information already exists. Please use different information.",
+              variant: "destructive",
+            });
+          }
+          return;
         }
 
         throw new Error(`Failed to create patient record: ${insertError.message}`);
@@ -3268,8 +3292,8 @@ const Index = () => {
               </section>
             )}
 
-            {/* Enhanced Paid Patients List - Only visible to doctors (not nurses, admin/secretary since they have it in dashboard) */}
-            {userRole === 'doctor' && (
+            {/* Enhanced Paid Patients List - Hidden from doctors, visible to nurses/admin/secretary */}
+            {(userRole === 'nurse' || userRole === 'secretary' || userRole === 'admin') && (
               <section className="section bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6">
                 <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
@@ -3291,7 +3315,7 @@ const Index = () => {
                   {/* Pending Payments */}
                   <div>
                     <h3 className="text-lg font-semibold mb-4 text-gray-700">
-                      {isRTL ? "المدفوعات المعلقة" : "Pending Payments"}
+                      {isRTL ? "المدفوعات قيد الانتظار" : "Pending Payments"}
                     </h3>
                     <PaidPatientsList
                       showOnlyPending={true}
