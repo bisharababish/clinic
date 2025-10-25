@@ -2,7 +2,7 @@ services:
   - type: web
     name: bethlehem-med-center-backend
     env: node
-    buildCommand: npm ci && npm run build
+    buildCommand: npm install && npm run build
     startCommand: npm start
     plan: starter
     envVars:

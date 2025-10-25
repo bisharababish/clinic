@@ -167,6 +167,7 @@ export function Header() {
     const canViewLabs = isAuthenticated && userPermissions.canViewLabs;
     const canViewXray = isAuthenticated && userPermissions.canViewXray;
     const canViewAdmin = isAuthenticated && userPermissions.canViewAdmin;
+    const canViewPreview = isAuthenticated && userPermissions.canViewPreview;
 
     // Doctor-specific permissions
     const canViewDoctorLabs = isAuthenticated && userPermissions.canViewDoctorLabs;
@@ -355,6 +356,11 @@ export function Header() {
                         {isPatient && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/patient/dashboard" className="font-medium">{t('navbar.myAppointments') || 'My Appointments'}</Link>
+                            </Button>
+                        )}
+                        {canViewPreview && (
+                            <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
+                                <Link to="/preview" className="font-medium">{t('navbar.myRecords') || 'My Medical Records'}</Link>
                             </Button>
                         )}
                         {canViewAdmin && (
@@ -607,6 +613,20 @@ export function Header() {
                                                 className="font-medium"
                                             >
                                                 {t('navbar.myAppointments') || 'My Appointments'}
+                                            </Link>
+                                        </Button>
+                                    )}
+                                    {canViewPreview && (
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                            <Link
+                                                to="/preview"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/preview');
+                                                }}
+                                                className="font-medium"
+                                            >
+                                                {t('navbar.myRecords') || 'My Medical Records'}
                                             </Link>
                                         </Button>
                                     )}

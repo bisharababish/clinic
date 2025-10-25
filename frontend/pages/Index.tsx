@@ -3292,8 +3292,8 @@ const Index = () => {
               </section>
             )}
 
-            {/* Enhanced Paid Patients List - Hidden from doctors, visible to nurses/admin/secretary */}
-            {(userRole === 'nurse' || userRole === 'secretary' || userRole === 'admin') && (
+            {/* Enhanced Paid Patients List - Only visible to admin role */}
+            {userRole === 'admin' && (
               <section className="section bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6">
                 <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />

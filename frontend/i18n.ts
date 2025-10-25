@@ -48,13 +48,25 @@ const enTranslations = {
         general: 'General',
         consultation: 'Consultation',
         treatment: 'Treatment',
-        followUp: 'Follow Up',
-        medium: 'Medium',
+        goBack: 'Go Back',
+        notes: 'Notes',
+        image: 'Image',
+
+        // Status translations
+        pending: 'Pending',
+        paid: 'Paid',
+        completed: 'Completed',
+        failed: 'Failed',
+        refunded: 'Refunded',
+
+        // Priority translations
         low: 'Low',
+        medium: 'Medium',
         high: 'High',
         urgent: 'Urgent',
-        completed: 'Completed',
-        cancelled: 'Cancelled',
+
+        // Note type translations
+        followUp: 'Follow-up',
         clinicalNoteAdded: 'Clinical note added successfully!',
         clinicalNoteUpdated: 'Clinical note updated successfully!',
         price: 'Price',
@@ -78,6 +90,9 @@ const enTranslations = {
         dontHaveAccount: 'Don\'t have an account?',
         invalidCredentials: "Invalid email or password",
         loginFailed: "Login Failed",
+        loginRequired: "Please log in to view your medical records.",
+        login: "Login",
+        accessDenied: "Access Denied",
 
         alreadyHaveAccount: 'Already have an account?',
         createAccount: 'Create Account',
@@ -197,6 +212,7 @@ const enTranslations = {
         doctorXRay: 'X-Ray Images',
         patients: 'Patients',
         myAppointments: 'My Appointments',
+        myRecords: 'My Medical Records',
     },
     doctorPages: {
         // Lab Results Page
@@ -273,6 +289,56 @@ const enTranslations = {
         normal: 'Normal',
         abnormal: 'Abnormal',
         dateOfBirth: 'Date of Birth',
+    },
+
+    preview: {
+        pageTitle: 'My Medical Records - Bethlehem Medical Center',
+        pageDescription: 'View your medical appointments, notes, lab results, and X-ray images',
+        pageKeywords: 'medical records, patient portal, appointments, lab results, X-ray images',
+        title: 'My Medical Records',
+        subtitle: 'View your appointments, medical notes, lab results, and X-ray images',
+        patientInfo: 'Patient Information',
+        accessDenied: 'This page is only accessible to patients and administrators.',
+
+        // Tab labels
+        appointments: 'Appointments',
+        notes: 'Medical Notes',
+        labs: 'Lab Results',
+        xrays: 'X-Ray Images',
+
+        // Appointments tab
+        noAppointmentsFound: 'No appointments found',
+        paymentStatus: 'Payment Status',
+        clinic: 'Clinic',
+        specialty: 'Specialty',
+        date: 'Date',
+        time: 'Time',
+        price: 'Price',
+        created: 'Created',
+
+        // Notes tab
+        noMedicalNotesFound: 'No medical notes found',
+        noteType: 'Note Type',
+        priority: 'Priority',
+        status: 'Status',
+        diagnosis: 'Diagnosis',
+        treatmentPlan: 'Treatment Plan',
+        medications: 'Medications',
+        followUpDate: 'Follow-up Date',
+        downloadReport: 'Download Report',
+
+        // Labs tab
+        noLabResultsFound: 'No lab results found',
+        testType: 'Test Type',
+        bloodType: 'Blood Type',
+        testResults: 'Test Results',
+        doctorNotes: 'Doctor Notes',
+
+        // X-rays tab
+        noXrayImagesFound: 'No X-ray images found',
+        requestingDoctor: 'Requesting Doctor',
+        clinicalIndication: 'Clinical Indication',
+        imageNotAvailable: 'Image Not Available',
     },
 
     payment: {
@@ -1967,13 +2033,25 @@ const arTranslations = {
         general: 'عام',
         consultation: 'استشارة',
         treatment: 'علاج',
-        followUp: 'متابعة',
-        medium: 'متوسط',
+        goBack: 'العودة',
+        notes: 'الملاحظات',
+        image: 'الصورة',
+
+        // Status translations
+        pending: 'قيد الانتظار',
+        paid: 'مدفوع',
+        completed: 'مكتمل',
+        failed: 'فشل',
+        refunded: 'مسترد',
+
+        // Priority translations
         low: 'منخفض',
+        medium: 'متوسط',
         high: 'عالي',
         urgent: 'عاجل',
-        completed: 'مكتمل',
-        cancelled: 'ملغي',
+
+        // Note type translations
+        followUp: 'متابعة',
         clinicalNoteAdded: 'تم إضافة الملاحظة السريرية بنجاح!',
         clinicalNoteUpdated: 'تم تحديث الملاحظة السريرية بنجاح!',
         price: 'السعر',
@@ -2462,8 +2540,10 @@ const arTranslations = {
         alreadyHaveAccount: 'هل لديك حساب بالفعل؟',
         createAccount: 'إنشاء حساب',
         invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-
         loginFailed: "فشل تسجيل الدخول",
+        loginRequired: "يرجى تسجيل الدخول لعرض سجلاتك الطبية.",
+        login: "تسجيل الدخول",
+        accessDenied: "تم رفض الوصول",
         registerAsPatient: 'سجل للوصول إلى خدماتنا',
         resetPasswordTitle: 'نسيت كلمة المرور',
         resetPasswordDesc: 'أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور',
@@ -2584,6 +2664,7 @@ const arTranslations = {
         doctorXRay: 'صور الأشعة',
         patients: 'المرضى',
         myAppointments: 'مواعيدي',
+        myRecords: 'سجلاتي الطبية',
     },
     doctorPages: {
         // Lab Results Page
@@ -2660,6 +2741,56 @@ const arTranslations = {
         normal: 'طبيعي',
         abnormal: 'غير طبيعي',
         dateOfBirth: 'تاريخ الميلاد',
+    },
+
+    preview: {
+        pageTitle: 'سجلاتي الطبية - مركز بيت لحم الطبي',
+        pageDescription: 'عرض مواعيدك الطبية، الملاحظات، نتائج المختبر، وصور الأشعة',
+        pageKeywords: 'السجلات الطبية، بوابة المريض، المواعيد، نتائج المختبر، صور الأشعة',
+        title: 'سجلاتي الطبية',
+        subtitle: 'عرض مواعيدك، الملاحظات الطبية، نتائج المختبر، وصور الأشعة',
+        patientInfo: 'معلومات المريض',
+        accessDenied: 'هذه الصفحة متاحة للمرضى والمسؤولين فقط.',
+
+        // Tab labels
+        appointments: 'المواعيد',
+        notes: 'الملاحظات الطبية',
+        labs: 'نتائج المختبر',
+        xrays: 'صور الأشعة',
+
+        // Appointments tab
+        noAppointmentsFound: 'لا توجد مواعيد مسجلة',
+        paymentStatus: 'حالة الدفع',
+        clinic: 'العيادة',
+        specialty: 'التخصص',
+        date: 'التاريخ',
+        time: 'الوقت',
+        price: 'السعر',
+        created: 'تاريخ الإنشاء',
+
+        // Notes tab
+        noMedicalNotesFound: 'لا توجد ملاحظات طبية',
+        noteType: 'نوع الملاحظة',
+        priority: 'الأولوية',
+        status: 'الحالة',
+        diagnosis: 'التشخيص',
+        treatmentPlan: 'خطة العلاج',
+        medications: 'الأدوية',
+        followUpDate: 'تاريخ المتابعة',
+        downloadReport: 'تحميل التقرير',
+
+        // Labs tab
+        noLabResultsFound: 'لا توجد نتائج مختبر',
+        testType: 'نوع الفحص',
+        bloodType: 'فصيلة الدم',
+        testResults: 'نتائج الفحص',
+        doctorNotes: 'ملاحظات الطبيب',
+
+        // X-rays tab
+        noXrayImagesFound: 'لا توجد صور أشعة',
+        requestingDoctor: 'الطبيب المطلوب',
+        clinicalIndication: 'المؤشرات السريرية',
+        imageNotAvailable: 'الصورة غير متاحة',
     },
     footer: {
         rights: 'جميع الحقوق محفوظة',

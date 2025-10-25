@@ -35,6 +35,7 @@ const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
 const DoctorPatientsPage = lazy(() => import("./pages/DoctorPatientPage"));
 const PatientDashboardPage = lazy(() => import("./pages/PatientDashboard"));
+const UserPreviewPage = lazy(() => import("./pages/UserPreviewPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -203,6 +204,16 @@ function App() {
                     element={
                       <MainLayout>
                         <PatientDashboardPage />
+                      </MainLayout>
+                    }
+                  />
+
+                  {/* User Preview Mode - Medical Records */}
+                  <Route
+                    path="/preview"
+                    element={
+                      <MainLayout>
+                        <UserPreviewPage />
                       </MainLayout>
                     }
                   />

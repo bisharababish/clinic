@@ -21,6 +21,7 @@ export interface UserPermissions {
   canRequestUserDeletion: boolean;
   canApproveUserDeletion: boolean;
   canViewPatients: boolean; // Add this line
+  canViewPreview: boolean; // NEW: Patient preview mode permission
 
 }
 
@@ -46,6 +47,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canRequestUserDeletion: true,
     canApproveUserDeletion: true,
     canViewPatients: true, // Add this
+    canViewPreview: true, // Admin can view preview mode
 
   },
   secretary: {
@@ -69,6 +71,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canRequestUserDeletion: true,
     canApproveUserDeletion: false,
     canViewPatients: false, // Add this
+    canViewPreview: false, // Secretary cannot view preview mode
 
   },
   doctor: {
@@ -92,6 +95,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
     canViewPatients: true, // Add this
+    canViewPreview: false, // Doctor cannot view preview mode
 
   },
   lab: {
@@ -115,6 +119,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
     canViewPatients: false, // Add this
+    canViewPreview: false, // Lab cannot view preview mode
 
   },
   "x ray": {
@@ -138,6 +143,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
     canViewPatients: false, // Add this
+    canViewPreview: false, // X-ray cannot view preview mode
 
   },
   nurse: {
@@ -161,6 +167,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
     canViewPatients: false, // Add this
+    canViewPreview: false, // Nurse cannot view preview mode
 
   },
   patient: {
@@ -184,6 +191,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
     canViewPatients: false, // Add this
+    canViewPreview: true, // Patient can view preview mode
 
   }
 };

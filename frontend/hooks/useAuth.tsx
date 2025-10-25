@@ -63,6 +63,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isInitialized, setIsInitialized] = useState(false);
 
+    // Check for cached user on initialization
+    useEffect(() => {
+        const cachedUser = localStorage.getItem('clinic_user_profile');
+        if (cachedUser) {
+            try {
+                const userData = JSON.parse(cachedUser);
+                setUser(userData);
+                console.log("[useAuth] Using cached user:", userData.email);
+            } catch (error) {
+                console.error("[useAuth] Error parsing cached user:", error);
+                localStorage.removeItem('clinic_user_profile');
+            }
+        }
+    }, []);
+
     // Function to safely update user state and cache
     const updateUserState = (userData: User | null) => {
         if (userData) {
@@ -170,10 +185,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
             try {
                 isCurrentlyInitializing = true;
-                console.log("[useAuth] Starting SIMPLE auth initialization");
+                console.log("[useAuth] Starting auth initialization");
 
-                // Simple timeout - force complete after 2 seconds
-                forceTimeoutId = setTimeout(forceLoadingComplete, 2000) as unknown as number;
+                // Check for cached user first
+                const cachedUser = localStorage.getItem('clinic_user_profile');
+                if (cachedUser) {
+                    try {
+                        const userData = JSON.parse(cachedUser);
+                        console.log("[useAuth] Found cached user, using it immediately");
+                        if (mounted) {
+                            setUser(userData);
+                            setIsLoading(false);
+                            setIsInitialized(true);
+                            isCurrentlyInitializing = false;
+                            return;
+                        }
+                    } catch (error) {
+                        console.error("[useAuth] Error parsing cached user:", error);
+                        localStorage.removeItem('clinic_user_profile');
+                    }
+                }
+
+                // Simple timeout - force complete after 3 seconds
+                forceTimeoutId = setTimeout(forceLoadingComplete, 3000) as unknown as number;
 
                 // Simple session check without race conditions
                 const { data, error } = await supabase.auth.getSession();
