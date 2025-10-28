@@ -70,6 +70,7 @@ const AdminDashboardContent = () => {
     const canViewDeletionRequests = userRole === 'admin';
 
     const [activeTab, setActiveTab] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     // Define which tabs each role can see
@@ -174,14 +175,30 @@ const AdminDashboardContent = () => {
                     return;
                 }
 
-                // Set default tab immediately for faster UI response
+                // Determine initial tab from URL or fallback to default
                 if (!activeTab) {
-                    const defaultTab = getDefaultTab();
-                    setActiveTab(defaultTab);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const urlTab = urlParams.get('tab') || '';
 
-                    // If Overview is the default tab, ensure data is loaded
-                    if (defaultTab === 'overview') {
-                        console.log('🔄 Overview is default tab, ensuring data is loaded...');
+                    const urlTabHasPermission = {
+                        'overview': canViewOverviewTab,
+                        'users': canViewUsersTab,
+                        'clinics': canViewClinicsTab,
+                        'doctors': canViewDoctorsTab,
+                        'appointments': canViewAppointmentsTab,
+                        'payments': canViewPaymentTab,
+                        'paid-patients': canViewPaymentTab,
+                        'patient-health': canViewPatientHealthTab,
+                        'calendar': canViewCalendarTab,
+                        'appointment-logs': canViewAppointmentLogsTab,
+                        'deletion-requests': canViewDeletionRequests
+                    }[urlTab as string];
+
+                    const initialTab = urlTab && urlTabHasPermission ? urlTab : getDefaultTab();
+                    setActiveTab(initialTab);
+
+                    if (initialTab === 'overview') {
+                        console.log('🔄 Initial tab is overview, ensuring data is loaded...');
                         refreshAll();
                     }
                 }
@@ -418,22 +435,22 @@ const AdminDashboardContent = () => {
                     <TabsList className={`hidden md:flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         {canViewOverviewTab && (
                             <TabsTrigger value="overview" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {t('admin.overview') || 'Overview'}
+                                {(t('admin.overview') || 'Overview')}
                             </TabsTrigger>
                         )}
                         {canViewUsersTab && (
                             <TabsTrigger value="users" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {t('admin.users') || 'Users'}
+                                {(t('admin.users') || 'Users') + (users?.length ? ` (${users.length})` : '')}
                             </TabsTrigger>
                         )}
                         {canViewClinicsTab && (
                             <TabsTrigger value="clinics" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {t('admin.clinics') || 'Clinics'}
+                                {(t('admin.clinics') || 'Clinics') + (clinics?.length ? ` (${clinics.length})` : '')}
                             </TabsTrigger>
                         )}
                         {canViewDoctorsTab && (
                             <TabsTrigger value="doctors" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {t('admin.doctors') || 'Doctors'}
+                                {(t('admin.doctors') || 'Doctors') + (doctors?.length ? ` (${doctors.length})` : '')}
                             </TabsTrigger>
                         )}
                         {canViewPatientHealthTab && (
@@ -443,7 +460,7 @@ const AdminDashboardContent = () => {
                         )}
                         {canViewAppointmentsTab && (
                             <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
-                                {i18n.language === 'ar' ? 'المواعيد' : 'Appointments'}
+                                {(i18n.language === 'ar' ? 'المواعيد' : 'Appointments') + (appointments?.length ? ` (${appointments.length})` : '')}
                             </TabsTrigger>
                         )}
                         {canViewPaymentTab && (
