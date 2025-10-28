@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "postinstall": "npm --prefix backend install && npm --prefix backend run build",
-    "start": "npm --prefix backend start",
+    "start": "npm --prefix backend run prod",
     "dev": "vite",
     "build": "vite build && rimraf dist/_redirects dist/_routes.json",
     "build:dev": "vite build --mode development",
