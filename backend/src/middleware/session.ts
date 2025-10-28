@@ -39,19 +39,7 @@ export const validateSession = async (req: Request, res: Response, next: NextFun
             return;
         }
 
-        // Check if session is expired
-        const sessionExpiry = user.aud === 'authenticated' ?
-            new Date(user.created_at).getTime() + (20 * 60 * 1000) : // 20 minutes
-            Date.now();
-
-        if (Date.now() > sessionExpiry) {
-            logAuth('session_expired', user.id, false);
-            res.status(401).json({
-                error: 'Unauthorized',
-                message: 'Session expired'
-            });
-            return;
-        }
+        // User is authenticated; rely on Supabase token validity
 
         req.user = user;
         logAuth('session_validated', user.id, true);
