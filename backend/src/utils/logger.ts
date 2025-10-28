@@ -1,4 +1,5 @@
 import winston from 'winston';
+import fs from 'fs';
 
 // Create logger instance
 const logger = winston.createLogger({
@@ -20,15 +21,22 @@ const logger = winston.createLogger({
     ]
 });
 
-// Add file transport in production
-if (process.env.NODE_ENV === 'production') {
-    logger.add(new winston.transports.File({
-        filename: 'logs/error.log',
-        level: 'error'
-    }));
-    logger.add(new winston.transports.File({
-        filename: 'logs/combined.log'
-    }));
+// Add file transport in production when not running on Render
+// Render has an ephemeral FS and services often run without a writable 'logs' directory
+const isRender = !!process.env.RENDER;
+if (process.env.NODE_ENV === 'production' && !isRender) {
+    try {
+        fs.mkdirSync('logs', { recursive: true });
+        logger.add(new winston.transports.File({
+            filename: 'logs/error.log',
+            level: 'error'
+        }));
+        logger.add(new winston.transports.File({
+            filename: 'logs/combined.log'
+        }));
+    } catch {
+        // If we cannot create logs dir, skip file transports
+    }
 }
 
 // Security-aware logging functions
