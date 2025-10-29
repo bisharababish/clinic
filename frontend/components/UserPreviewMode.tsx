@@ -355,11 +355,11 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
     return (
         <div className="space-y-6">
             {/* Tab Navigation */}
-            <div className="flex flex-wrap gap-2 border-b">
+            <div className="flex gap-2 border-b overflow-x-auto py-1 -mx-1 px-1">
                 <Button
                     variant={selectedTab === 'appointments' ? 'default' : 'ghost'}
                     onClick={() => setSelectedTab('appointments')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 shrink-0"
                 >
                     <Calendar className="h-4 w-4" />
                     {t('preview.appointments')}
@@ -370,7 +370,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                 <Button
                     variant={selectedTab === 'notes' ? 'default' : 'ghost'}
                     onClick={() => setSelectedTab('notes')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 shrink-0"
                 >
                     <FileText className="h-4 w-4" />
                     {t('preview.notes')}
@@ -381,7 +381,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                 <Button
                     variant={selectedTab === 'labs' ? 'default' : 'ghost'}
                     onClick={() => setSelectedTab('labs')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 shrink-0"
                 >
                     <TestTube className="h-4 w-4" />
                     {t('preview.labs')}
@@ -392,7 +392,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                 <Button
                     variant={selectedTab === 'xrays' ? 'default' : 'ghost'}
                     onClick={() => setSelectedTab('xrays')}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 shrink-0"
                 >
                     <ImageIcon className="h-4 w-4" />
                     {t('preview.xrays')}
@@ -416,10 +416,10 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                         appointments.map((appointment) => (
                             <Card key={appointment.id}>
                                 <CardHeader>
-                                    <CardTitle className="flex items-center justify-between">
-                                        <span className="flex items-center gap-2">
+                                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                        <span className="flex items-center gap-2 min-w-0">
                                             <Calendar className="h-5 w-5" />
-                                            {appointment.doctor_name}
+                                            <span className="truncate">{appointment.doctor_name}</span>
                                         </span>
                                         <Badge className={getStatusColor(appointment.payment_status)}>
                                             {t(`common.${appointment.payment_status}`)}
@@ -473,12 +473,12 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                         clinicalNotes.map((note) => (
                             <Card key={note.id}>
                                 <CardHeader>
-                                    <CardTitle className="flex items-center justify-between">
-                                        <span className="flex items-center gap-2">
+                                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                        <span className="flex items-center gap-2 min-w-0">
                                             <FileText className="h-5 w-5" />
-                                            {note.doctor_name}
+                                            <span className="truncate">{note.doctor_name}</span>
                                         </span>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 flex-wrap">
                                             <Badge className={getPriorityColor(note.priority)}>
                                                 {t(`common.${note.priority}`)}
                                             </Badge>
@@ -562,10 +562,10 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                         labResults.map((result) => (
                             <Card key={result.id}>
                                 <CardHeader>
-                                    <CardTitle className="flex items-center justify-between">
-                                        <span className="flex items-center gap-2">
+                                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                        <span className="flex items-center gap-2 min-w-0">
                                             <TestTube className="h-5 w-5" />
-                                            {result.test_type}
+                                            <span className="truncate">{result.test_type}</span>
                                         </span>
                                         <Badge variant="outline">
                                             {new Date(result.test_date).toLocaleDateString()}
@@ -652,7 +652,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                             </AlertDescription>
                         </Alert>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {xrayImages.map((image) => (
                                 <Card key={image.id}>
                                     <CardHeader>

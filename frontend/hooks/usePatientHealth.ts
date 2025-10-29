@@ -191,9 +191,11 @@ export const usePatientHealth = () => {
 
             console.log('✅ Health data saved successfully:', savedData);
 
+            // Locale-aware toast (English/Arabic)
+            const isArabic = (typeof window !== 'undefined' && (localStorage.getItem('i18nextLng') || '').startsWith('ar'));
             toast({
-                title: "Success",
-                description: "Health information saved successfully",
+                title: isArabic ? 'نجاح' : 'Success',
+                description: isArabic ? 'تم حفظ المعلومات الصحية بنجاح' : 'Health information saved successfully',
                 style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
             });
 
@@ -208,12 +210,15 @@ export const usePatientHealth = () => {
                 errorMessage = String(error.message);
             }
 
-            toast({
-                title: "Error",
-                description: `Failed to save health information: ${errorMessage}`,
-                variant: "destructive",
-                style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
-            });
+            {
+                const isArabic = (typeof window !== 'undefined' && (localStorage.getItem('i18nextLng') || '').startsWith('ar'));
+                toast({
+                    title: isArabic ? 'خطأ' : 'Error',
+                    description: isArabic ? `فشل حفظ المعلومات الصحية: ${errorMessage}` : `Failed to save health information: ${errorMessage}`,
+                    variant: "destructive",
+                    style: { backgroundColor: '#dc2626', color: '#fff' }, // Red bg, white text
+                });
+            }
             return false;
         } finally {
             setIsSaving(false);
