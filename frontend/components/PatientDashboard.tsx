@@ -112,6 +112,19 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                 return;
             }
 
+            // Load patient's Arabic name for RTL display
+            const { data: userInfo } = await supabase
+                .from('userinfo')
+                .select('arabic_username_a, arabic_username_b, arabic_username_c, arabic_username_d')
+                .eq('user_email', patientEmail)
+                .single();
+
+            const arabicFullName = userInfo
+                ? [userInfo.arabic_username_a, userInfo.arabic_username_b, userInfo.arabic_username_c, userInfo.arabic_username_d]
+                    .filter(Boolean)
+                    .join(' ')
+                : '';
+
             // For now, focus on payment_bookings table only since it has all the necessary fields
             // and is where new appointments are created
             const appointmentsData: AppointmentData[] = []; // Skip appointments table for now to avoid complexity
@@ -150,7 +163,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
 
             const normalizedPaymentBookings = (paymentBookingsData || []).map(pb => ({
                 id: pb.id,
-                patient_name: pb.patient_name || 'Unknown Patient',
+                patient_name: (isRTL && arabicFullName) ? arabicFullName : (pb.patient_name || 'Unknown Patient'),
                 patient_email: pb.patient_email,
                 patient_phone: pb.patient_phone || '',
                 doctor_name: pb.doctor_name || 'Unknown Doctor',
@@ -553,7 +566,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                 key={appointment.id}
                                 className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                             >
-                                <div className="flex items-start justify-between">
+                                <div className="flex items-start justify-between gap-3 flex-col sm:flex-row">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">
                                             {getStatusIcon(appointment.payment_status)}
@@ -571,11 +584,11 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-muted-foreground">
                                             <div className="flex items-center gap-1">
                                                 <Calendar className="h-3 w-3" />
-                                                {appointment.appointment_day} at {appointment.appointment_time}
+                                                {appointment.appointment_day} {t('common.at')} {appointment.appointment_time}
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <User className="h-3 w-3" />
-                                                Dr. {appointment.doctor_name}
+                                                {isRTL ? '' : 'Dr. '} {appointment.doctor_name}
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <MapPin className="h-3 w-3" />
@@ -590,7 +603,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-col gap-2">
+                                    <div className="flex flex-col gap-2 w-full sm:w-auto">
                                         <Dialog open={showRescheduleDialog && selectedAppointment?.id === appointment.id} onOpenChange={setShowRescheduleDialog}>
                                             <DialogTrigger asChild>
                                                 <Button
@@ -606,7 +619,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                     {isRTL ? 'تغيير الموعد' : 'Reschedule'}
                                                 </Button>
                                             </DialogTrigger>
-                                            <DialogContent className="max-w-md">
+                                            <DialogContent className="w-[92vw] sm:w-auto max-w-[92vw] sm:max-w-lg p-4 sm:p-6 max-h-[80vh] overflow-y-auto rounded-md sm:rounded-lg">
                                                 <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
                                                     <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
                                                         {isRTL ? 'تغيير الموعد' : 'Reschedule Appointment'}
@@ -647,7 +660,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                                                     setSelectedTimeSlot('');
                                                                                 }}
                                                                                 disabled={!hasSlots}
-                                                                                className="text-xs"
+                                                                                className="text-sm min-h-9"
                                                                             >
                                                                                 {day.label}
                                                                             </Button>
@@ -659,7 +672,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                             {selectedDay && (
                                                                 <div className="space-y-2">
                                                                     <Label>{isRTL ? 'اختر الوقت' : 'Select Time'}</Label>
-                                                                    <div className="grid grid-cols-2 gap-2">
+                                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                                                         {getAvailableTimeSlots().length === 0 ? (
                                                                             <div className="col-span-2 text-center py-3 text-yellow-600 bg-yellow-50 rounded-md">
                                                                                 {isRTL ? 'لا توجد أوقات متاحة لهذا اليوم' : 'No available times for this day'}
@@ -672,7 +685,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                                                     variant={selectedTimeSlot === slot ? 'default' : 'outline'}
                                                                                     size="sm"
                                                                                     onClick={() => setSelectedTimeSlot(slot)}
-                                                                                    className="text-xs"
+                                                                                    className="text-sm min-h-9"
                                                                                 >
                                                                                     {slot}
                                                                                 </Button>
@@ -694,9 +707,10 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                         />
                                                     </div>
 
-                                                    <div className="flex gap-2 justify-end">
+                                                    <div className="flex gap-2 justify-end flex-col sm:flex-row">
                                                         <Button
                                                             variant="outline"
+                                                            className="w-full sm:w-auto"
                                                             onClick={() => {
                                                                 setShowRescheduleDialog(false);
                                                                 setSelectedAppointment(null);
@@ -713,6 +727,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                         <Button
                                                             onClick={handleRescheduleAppointment}
                                                             disabled={!selectedDay || !selectedTimeSlot || isProcessing}
+                                                            className="w-full sm:w-auto"
                                                         >
                                                             {isProcessing ? (
                                                                 <>
@@ -750,7 +765,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
 
             {/* Cancel Confirmation Dialog */}
             <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-                <AlertDialogContent>
+                <AlertDialogContent className="w-[92vw] sm:w-auto max-w-[92vw] sm:max-w-lg p-4 sm:p-6 rounded-md sm:rounded-lg">
                     <AlertDialogHeader className={isRTL ? 'text-right' : 'text-left'}>
                         <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>
                             {isRTL ? 'تأكيد إلغاء الموعد' : 'Confirm Cancel Appointment'}
@@ -762,18 +777,18 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                     {selectedAppointment && (
                         <div className={`py-4 ${isRTL ? 'text-right' : 'text-left'}`}>
                             <div className="space-y-2">
-                                <p><strong>{isRTL ? 'الموعد' : 'Appointment'}:</strong> {selectedAppointment.appointment_day} at {selectedAppointment.appointment_time}</p>
-                                <p><strong>{isRTL ? 'الطبيب' : 'Doctor'}:</strong> Dr. {selectedAppointment.doctor_name}</p>
+                                <p><strong>{isRTL ? 'الموعد' : 'Appointment'}:</strong> {selectedAppointment.appointment_day} {t('common.at')} {selectedAppointment.appointment_time}</p>
+                                <p><strong>{isRTL ? 'الطبيب' : 'Doctor'}:</strong> {isRTL ? '' : 'Dr. '}{selectedAppointment.doctor_name}</p>
                                 <p><strong>{isRTL ? 'العيادة' : 'Clinic'}:</strong> {selectedAppointment.clinic_name}</p>
                                 <p><strong>{isRTL ? 'المبلغ' : 'Amount'}:</strong> ₪{selectedAppointment.price}</p>
                             </div>
                         </div>
                     )}
-                    <AlertDialogFooter className="gap-4">
-                        <AlertDialogCancel className="mr-4">{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2 sm:gap-4 flex-col-reverse sm:flex-row">
+                        <AlertDialogCancel className="mr-0 sm:mr-4 w-full sm:w-auto">{isRTL ? 'إلغاء' : 'Cancel'}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleCancelAppointment}
-                            className="bg-red-600 hover:bg-red-700 ml-4"
+                            className="bg-red-600 hover:bg-red-700 ml-0 sm:ml-4 w-full sm:w-auto"
                             disabled={isProcessing}
                         >
                             {isProcessing ? (

@@ -181,11 +181,11 @@ const UserPreviewMode: React.FC<UserPreviewModeProps> = ({ userEmail }) => {
                 console.error('Error fetching lab results:', labError);
             }
 
-            // Load X-ray images
+            // Load X-ray images (filter by patient_id; xray_images has no patient_email)
             const { data: xrayData, error: xrayError } = await supabase
                 .from('xray_images')
                 .select('*')
-                .eq('patient_email', userEmail)
+                .eq('patient_id', userId)
                 .order('created_at', { ascending: false });
 
             if (xrayError) {
@@ -361,9 +361,8 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                     <Button
                         variant={selectedTab === 'appointments' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('appointments')}
-                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${
-                            selectedTab === 'appointments' ? 'shadow-sm' : ''
-                        }`}
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${selectedTab === 'appointments' ? 'shadow-sm' : ''
+                            }`}
                         size="sm"
                     >
                         <Calendar className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
@@ -377,9 +376,8 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                     <Button
                         variant={selectedTab === 'notes' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('notes')}
-                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${
-                            selectedTab === 'notes' ? 'shadow-sm' : ''
-                        }`}
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${selectedTab === 'notes' ? 'shadow-sm' : ''
+                            }`}
                         size="sm"
                     >
                         <FileText className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
@@ -393,9 +391,8 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                     <Button
                         variant={selectedTab === 'labs' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('labs')}
-                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${
-                            selectedTab === 'labs' ? 'shadow-sm' : ''
-                        }`}
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${selectedTab === 'labs' ? 'shadow-sm' : ''
+                            }`}
                         size="sm"
                     >
                         <TestTube className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
@@ -409,9 +406,8 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                     <Button
                         variant={selectedTab === 'xrays' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('xrays')}
-                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${
-                            selectedTab === 'xrays' ? 'shadow-sm' : ''
-                        }`}
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${selectedTab === 'xrays' ? 'shadow-sm' : ''
+                            }`}
                         size="sm"
                     >
                         <ImageIcon className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
