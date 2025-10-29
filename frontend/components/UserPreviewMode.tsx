@@ -268,6 +268,7 @@ const UserPreviewMode: React.FC<UserPreviewModeProps> = ({ userEmail }) => {
         }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleDownloadReport = (type: 'lab' | 'note', data: any) => {
         let content = '';
         let filename = '';
@@ -328,13 +329,13 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
     if (isLoading) {
         return (
-            <div className="space-y-6">
-                <div className="flex space-x-4">
+            <div className="space-y-4 px-2 sm:px-0">
+                <div className="flex gap-2 overflow-x-auto pb-2">
                     {[...Array(4)].map((_, i) => (
-                        <Skeleton key={i} className="h-10 w-32" />
+                        <Skeleton key={i} className="h-10 min-w-[100px] flex-shrink-0" />
                     ))}
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
                         <Skeleton key={i} className="h-32 w-full" />
                     ))}
@@ -345,110 +346,116 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
     if (error) {
         return (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="mx-2 sm:mx-0">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="text-sm">{error}</AlertDescription>
             </Alert>
         );
     }
 
     return (
-        <div className="space-y-6">
-            {/* Tab Navigation */}
-            <div className="flex gap-2 border-b overflow-x-auto py-1 -mx-1 px-1">
-                <Button
-                    variant={selectedTab === 'appointments' ? 'default' : 'ghost'}
-                    onClick={() => setSelectedTab('appointments')}
-                    className="flex items-center gap-2 shrink-0"
-                >
-                    <Calendar className="h-4 w-4" />
-                    {t('preview.appointments')}
-                    <Badge variant="secondary" className="ml-2">
-                        {appointments.length}
-                    </Badge>
-                </Button>
-                <Button
-                    variant={selectedTab === 'notes' ? 'default' : 'ghost'}
-                    onClick={() => setSelectedTab('notes')}
-                    className="flex items-center gap-2 shrink-0"
-                >
-                    <FileText className="h-4 w-4" />
-                    {t('preview.notes')}
-                    <Badge variant="secondary" className="ml-2">
-                        {clinicalNotes.length}
-                    </Badge>
-                </Button>
-                <Button
-                    variant={selectedTab === 'labs' ? 'default' : 'ghost'}
-                    onClick={() => setSelectedTab('labs')}
-                    className="flex items-center gap-2 shrink-0"
-                >
-                    <TestTube className="h-4 w-4" />
-                    {t('preview.labs')}
-                    <Badge variant="secondary" className="ml-2">
-                        {labResults.length}
-                    </Badge>
-                </Button>
-                <Button
-                    variant={selectedTab === 'xrays' ? 'default' : 'ghost'}
-                    onClick={() => setSelectedTab('xrays')}
-                    className="flex items-center gap-2 shrink-0"
-                >
-                    <ImageIcon className="h-4 w-4" />
-                    {t('preview.xrays')}
-                    <Badge variant="secondary" className="ml-2">
-                        {xrayImages.length}
-                    </Badge>
-                </Button>
+        <div className="space-y-4 sm:space-y-6 pb-4">
+            {/* Tab Navigation - Mobile Optimized */}
+            <div className="border-b overflow-x-auto">
+                <div className="flex gap-1 sm:gap-2 min-w-max px-2 sm:px-0">
+                    <Button
+                        variant={selectedTab === 'appointments' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedTab('appointments')}
+                        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap"
+                        size="sm"
+                    >
+                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="hidden xs:inline">{t('preview.appointments')}</span>
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
+                            {appointments.length}
+                        </Badge>
+                    </Button>
+                    <Button
+                        variant={selectedTab === 'notes' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedTab('notes')}
+                        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap"
+                        size="sm"
+                    >
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="hidden xs:inline">{t('preview.notes')}</span>
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
+                            {clinicalNotes.length}
+                        </Badge>
+                    </Button>
+                    <Button
+                        variant={selectedTab === 'labs' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedTab('labs')}
+                        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap"
+                        size="sm"
+                    >
+                        <TestTube className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="hidden xs:inline">{t('preview.labs')}</span>
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
+                            {labResults.length}
+                        </Badge>
+                    </Button>
+                    <Button
+                        variant={selectedTab === 'xrays' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedTab('xrays')}
+                        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap"
+                        size="sm"
+                    >
+                        <ImageIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span className="hidden xs:inline">{t('preview.xrays')}</span>
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
+                            {xrayImages.length}
+                        </Badge>
+                    </Button>
+                </div>
             </div>
 
             {/* Content based on selected tab */}
             {selectedTab === 'appointments' && (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
                     {appointments.length === 0 ? (
                         <Alert>
                             <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
+                            <AlertDescription className="text-sm">
                                 {t('preview.noAppointmentsFound')}
                             </AlertDescription>
                         </Alert>
                     ) : (
                         appointments.map((appointment) => (
-                            <Card key={appointment.id}>
-                                <CardHeader>
+                            <Card key={appointment.id} className="overflow-hidden">
+                                <CardHeader className="pb-3 sm:pb-4">
                                     <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                        <span className="flex items-center gap-2 min-w-0">
-                                            <Calendar className="h-5 w-5" />
+                                        <span className="flex items-center gap-2 text-base sm:text-lg">
+                                            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                                             <span className="truncate">{appointment.doctor_name}</span>
                                         </span>
-                                        <Badge className={getStatusColor(appointment.payment_status)}>
+                                        <Badge className={`${getStatusColor(appointment.payment_status)} text-xs self-start sm:self-auto whitespace-nowrap`}>
                                             {t(`common.${appointment.payment_status}`)}
                                         </Badge>
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <CardContent className="pt-0">
+                                    <div className="space-y-3">
                                         <div className="space-y-2">
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="h-4 w-4 text-muted-foreground" />
-                                                <span className="text-sm">{appointment.clinic_name}</span>
+                                            <div className="flex items-start gap-2">
+                                                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                                <span className="text-sm break-words">{appointment.clinic_name}</span>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Stethoscope className="h-4 w-4 text-muted-foreground" />
-                                                <span className="text-sm">{appointment.specialty}</span>
+                                            <div className="flex items-start gap-2">
+                                                <Stethoscope className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                                <span className="text-sm break-words">{appointment.specialty}</span>
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                                <span className="text-sm">
-                                                    {appointment.appointment_day} at {appointment.appointment_time}
+                                            <div className="flex items-start gap-2">
+                                                <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                                <span className="text-sm break-words">
+                                                    {appointment.appointment_day} {t('common.at')} {appointment.appointment_time}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <div className="text-sm text-muted-foreground">
+                                        <div className="pt-2 border-t space-y-1">
+                                            <div className="text-xs sm:text-sm text-muted-foreground">
                                                 {t('preview.created')}: {new Date(appointment.created_at).toLocaleDateString()}
                                             </div>
-                                            <div className="text-sm font-medium">
+                                            <div className="text-sm sm:text-base font-medium">
                                                 {t('preview.price')}: ₪{appointment.price}
                                             </div>
                                         </div>
@@ -461,43 +468,43 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
             )}
 
             {selectedTab === 'notes' && (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
                     {clinicalNotes.length === 0 ? (
                         <Alert>
                             <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
+                            <AlertDescription className="text-sm">
                                 {t('preview.noMedicalNotesFound')}
                             </AlertDescription>
                         </Alert>
                     ) : (
                         clinicalNotes.map((note) => (
-                            <Card key={note.id}>
-                                <CardHeader>
-                                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                        <span className="flex items-center gap-2 min-w-0">
-                                            <FileText className="h-5 w-5" />
+                            <Card key={note.id} className="overflow-hidden">
+                                <CardHeader className="pb-3 sm:pb-4">
+                                    <CardTitle className="flex flex-col gap-2">
+                                        <span className="flex items-center gap-2 text-base sm:text-lg">
+                                            <FileText className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                                             <span className="truncate">{note.doctor_name}</span>
                                         </span>
-                                        <div className="flex gap-2 flex-wrap">
-                                            <Badge className={getPriorityColor(note.priority)}>
+                                        <div className="flex flex-wrap gap-2">
+                                            <Badge className={`${getPriorityColor(note.priority)} text-xs`}>
                                                 {t(`common.${note.priority}`)}
                                             </Badge>
-                                            <Badge className={getStatusColor(note.status)}>
+                                            <Badge className={`${getStatusColor(note.status)} text-xs`}>
                                                 {t(`common.${note.status}`)}
                                             </Badge>
                                         </div>
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <CardContent className="pt-0">
+                                    <div className="space-y-3 sm:space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             <div>
-                                                <h4 className="font-medium mb-2">{t('preview.noteType')}</h4>
-                                                <p className="text-sm text-muted-foreground capitalize">{t(`common.${note.note_type}`)}</p>
+                                                <h4 className="font-medium mb-1 text-sm">{t('preview.noteType')}</h4>
+                                                <p className="text-xs sm:text-sm text-muted-foreground capitalize">{t(`common.${note.note_type}`)}</p>
                                             </div>
                                             <div>
-                                                <h4 className="font-medium mb-2">{t('preview.date')}</h4>
-                                                <p className="text-sm text-muted-foreground">
+                                                <h4 className="font-medium mb-1 text-sm">{t('preview.date')}</h4>
+                                                <p className="text-xs sm:text-sm text-muted-foreground">
                                                     {new Date(note.created_at).toLocaleDateString()}
                                                 </p>
                                             </div>
@@ -505,8 +512,8 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
                                         {note.notes && (
                                             <div>
-                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.notes')}</h4>
-                                                <p className={`text-sm bg-muted p-3 rounded ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{t('common.notes')}</h4>
+                                                <p className={`text-xs sm:text-sm bg-muted p-2 sm:p-3 rounded break-words ${isRTL ? 'text-right' : 'text-left'}`}>
                                                     {note.notes}
                                                 </p>
                                             </div>
@@ -514,8 +521,8 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
                                         {note.diagnosis && (
                                             <div>
-                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.diagnosis')}</h4>
-                                                <p className={`text-sm bg-blue-50 p-3 rounded ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.diagnosis')}</h4>
+                                                <p className={`text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded break-words ${isRTL ? 'text-right' : 'text-left'}`}>
                                                     {note.diagnosis}
                                                 </p>
                                             </div>
@@ -523,22 +530,22 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
                                         {note.treatment_plan && (
                                             <div>
-                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.treatmentPlan')}</h4>
-                                                <p className={`text-sm bg-green-50 p-3 rounded ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.treatmentPlan')}</h4>
+                                                <p className={`text-xs sm:text-sm bg-green-50 p-2 sm:p-3 rounded break-words ${isRTL ? 'text-right' : 'text-left'}`}>
                                                     {note.treatment_plan}
                                                 </p>
                                             </div>
                                         )}
 
-                                        <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
+                                        <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} pt-2`}>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => handleDownloadReport('note', note)}
-                                                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                                                className={`flex items-center gap-2 text-xs ${isRTL ? 'flex-row-reverse' : ''}`}
                                             >
-                                                <Download className="h-4 w-4" />
-                                                {t('preview.downloadReport')}
+                                                <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                                                <span className="whitespace-nowrap">{t('preview.downloadReport')}</span>
                                             </Button>
                                         </div>
                                     </div>
@@ -550,54 +557,55 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
             )}
 
             {selectedTab === 'labs' && (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
                     {labResults.length === 0 ? (
                         <Alert>
                             <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
+                            <AlertDescription className="text-sm">
                                 {t('preview.noLabResultsFound')}
                             </AlertDescription>
                         </Alert>
                     ) : (
                         labResults.map((result) => (
-                            <Card key={result.id}>
-                                <CardHeader>
+                            <Card key={result.id} className="overflow-hidden">
+                                <CardHeader className="pb-3 sm:pb-4">
                                     <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                        <span className="flex items-center gap-2 min-w-0">
-                                            <TestTube className="h-5 w-5" />
+                                        <span className="flex items-center gap-2 text-base sm:text-lg">
+                                            <TestTube className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                                             <span className="truncate">{result.test_type}</span>
                                         </span>
-                                        <Badge variant="outline">
+                                        <Badge variant="outline" className="text-xs self-start sm:self-auto whitespace-nowrap">
                                             {new Date(result.test_date).toLocaleDateString()}
                                         </Badge>
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <CardContent className="pt-0">
+                                    <div className="space-y-3 sm:space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             <div>
-                                                <h4 className="font-medium mb-2">{t('preview.testType')}</h4>
-                                                <p className="text-sm text-muted-foreground">{result.test_type}</p>
+                                                <h4 className="font-medium mb-1 text-sm">{t('preview.testType')}</h4>
+                                                <p className="text-xs sm:text-sm text-muted-foreground break-words">{result.test_type}</p>
                                             </div>
                                             <div>
-                                                <h4 className="font-medium mb-2">{t('preview.bloodType')}</h4>
-                                                <p className="text-sm text-muted-foreground">{result.blood_type || 'N/A'}</p>
+                                                <h4 className="font-medium mb-1 text-sm">{t('preview.bloodType')}</h4>
+                                                <p className="text-xs sm:text-sm text-muted-foreground">{result.blood_type || 'N/A'}</p>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.testResults')}</h4>
+                                            <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.testResults')}</h4>
                                             <div
-                                                className={`text-sm bg-muted p-3 rounded ${isRTL ? 'text-right rtl-content' : 'text-left ltr-content'}`}
+                                                className={`text-xs sm:text-sm bg-muted p-2 sm:p-3 rounded overflow-auto ${isRTL ? 'text-right rtl-content' : 'text-left ltr-content'}`}
                                                 style={isRTL ? {
                                                     direction: 'rtl',
                                                     textAlign: 'right',
                                                     unicodeBidi: 'bidi-override',
                                                     writingMode: 'horizontal-tb',
-                                                    textDirection: 'rtl'
+                                                    wordBreak: 'break-word'
                                                 } : {
                                                     direction: 'ltr',
-                                                    textAlign: 'left'
+                                                    textAlign: 'left',
+                                                    wordBreak: 'break-word'
                                                 }}
                                                 dangerouslySetInnerHTML={{ __html: result.test_results }}
                                             />
@@ -605,33 +613,34 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
                                         {result.doctor_notes && (
                                             <div>
-                                                <h4 className={`font-medium mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.doctorNotes')}</h4>
+                                                <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.doctorNotes')}</h4>
                                                 <div
-                                                    className={`text-sm bg-blue-50 p-3 rounded ${isRTL ? 'text-right rtl-content' : 'text-left ltr-content'}`}
+                                                    className={`text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded overflow-auto ${isRTL ? 'text-right rtl-content' : 'text-left ltr-content'}`}
                                                     style={isRTL ? {
                                                         direction: 'rtl',
                                                         textAlign: 'right',
                                                         unicodeBidi: 'bidi-override',
                                                         writingMode: 'horizontal-tb',
-                                                        textDirection: 'rtl'
+                                                        wordBreak: 'break-word'
                                                     } : {
                                                         direction: 'ltr',
-                                                        textAlign: 'left'
+                                                        textAlign: 'left',
+                                                        wordBreak: 'break-word'
                                                     }}
                                                     dangerouslySetInnerHTML={{ __html: result.doctor_notes }}
                                                 />
                                             </div>
                                         )}
 
-                                        <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
+                                        <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} pt-2`}>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => handleDownloadReport('lab', result)}
-                                                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                                                className={`flex items-center gap-2 text-xs ${isRTL ? 'flex-row-reverse' : ''}`}
                                             >
-                                                <Download className="h-4 w-4" />
-                                                {t('preview.downloadReport')}
+                                                <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                                                <span className="whitespace-nowrap">{t('preview.downloadReport')}</span>
                                             </Button>
                                         </div>
                                     </div>
@@ -643,31 +652,32 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
             )}
 
             {selectedTab === 'xrays' && (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
                     {xrayImages.length === 0 ? (
                         <Alert>
                             <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
+                            <AlertDescription className="text-sm">
                                 {t('preview.noXrayImagesFound')}
                             </AlertDescription>
                         </Alert>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                             {xrayImages.map((image) => (
-                                <Card key={image.id}>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <ImageIcon className="h-5 w-5" />
-                                            {formatBodyParts(image.body_part)}
+                                <Card key={image.id} className="overflow-hidden">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="flex items-center gap-2 text-base">
+                                            <ImageIcon className="h-4 w-4 flex-shrink-0" />
+                                            <span className="truncate text-sm sm:text-base">{formatBodyParts(image.body_part)}</span>
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4">
+                                    <CardContent className="pt-0">
+                                        <div className="space-y-3 sm:space-y-4">
                                             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                                                 <img
                                                     src={getImageUrl(image.image_url)}
                                                     alt={`X-ray of ${formatBodyParts(image.body_part)}`}
-                                                    className="w-full h-full object-contain"
+                                                    className="w-full h-full object-contain cursor-pointer"
+                                                    onClick={() => window.open(getImageUrl(image.image_url), '_blank')}
                                                     onError={(e) => {
                                                         const target = e.target as HTMLImageElement;
                                                         target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
@@ -677,19 +687,19 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
                                             <div className="space-y-2">
                                                 <div>
-                                                    <h4 className="font-medium text-sm">{t('preview.requestingDoctor')}</h4>
-                                                    <p className="text-sm text-muted-foreground">{image.requesting_doctor || 'N/A'}</p>
+                                                    <h4 className="font-medium text-xs sm:text-sm">{t('preview.requestingDoctor')}</h4>
+                                                    <p className="text-xs sm:text-sm text-muted-foreground truncate">{image.requesting_doctor || 'N/A'}</p>
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-medium text-sm">{t('preview.date')}</h4>
-                                                    <p className="text-sm text-muted-foreground">
+                                                    <h4 className="font-medium text-xs sm:text-sm">{t('preview.date')}</h4>
+                                                    <p className="text-xs sm:text-sm text-muted-foreground">
                                                         {new Date(image.created_at).toLocaleDateString()}
                                                     </p>
                                                 </div>
                                                 {image.indication && (
                                                     <div>
-                                                        <h4 className="font-medium text-sm">{t('preview.clinicalIndication')}</h4>
-                                                        <p className="text-sm text-muted-foreground">{image.indication}</p>
+                                                        <h4 className="font-medium text-xs sm:text-sm">{t('preview.clinicalIndication')}</h4>
+                                                        <p className="text-xs sm:text-sm text-muted-foreground break-words">{image.indication}</p>
                                                     </div>
                                                 )}
                                             </div>
