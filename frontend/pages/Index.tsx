@@ -2567,16 +2567,19 @@ const Index = () => {
 
             {/* Patient Information Section */}
             <section className="section bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-800">
-                  {selectedPatient ?
-                    `${isRTL ? "معلومات المريض:" : "Patient Information:"} ${selectedPatient.english_username_a} ${selectedPatient.english_username_d}` :
+              <div className={`mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-2`}>
+                <h2 className={`text-xl font-bold text-gray-800 w-full leading-snug ${isRTL ? 'text-right' : 'text-left'} sm:truncate`}>
+                  {selectedPatient ? (
+                    isRTL
+                      ? `معلومات المريض: ${selectedPatient.arabic_username_a || selectedPatient.english_username_a} ${selectedPatient.arabic_username_d || selectedPatient.english_username_d}`
+                      : `Patient Information: ${selectedPatient.english_username_a} ${selectedPatient.english_username_d}`
+                  ) : (
                     t("home.patientInformation")
-                  }
+                  )}
                 </h2>
                 {selectedPatient && (
-                  <div className="text-sm text-gray-600">
-                    {isRTL ? "ID:" : "ID:"} {selectedPatient.userid}
+                  <div className={`text-sm text-gray-600 whitespace-nowrap self-start sm:self-auto ${isRTL ? 'mr-0 sm:mr-2' : 'ml-0 sm:ml-2'}`}>
+                    {isRTL ? "المعرف:" : "ID:"} {selectedPatient.userid}
                   </div>
                 )}
               </div>
