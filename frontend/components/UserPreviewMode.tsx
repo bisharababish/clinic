@@ -355,56 +355,72 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
     return (
         <div className="space-y-4 sm:space-y-6 pb-4">
-            {/* Tab Navigation - Mobile Optimized */}
+            {/* Tab Navigation - Mobile & Desktop Optimized */}
             <div className="border-b overflow-x-auto">
-                <div className="flex gap-1 sm:gap-2 min-w-max px-2 sm:px-0">
+                <div className="grid grid-cols-4 gap-1 px-2 sm:flex sm:gap-2 sm:px-0 pb-1">
                     <Button
                         variant={selectedTab === 'appointments' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('appointments')}
-                        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap"
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${
+                            selectedTab === 'appointments' ? 'shadow-sm' : ''
+                        }`}
                         size="sm"
                     >
-                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                        <span className="hidden xs:inline">{t('preview.appointments')}</span>
-                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
-                            {appointments.length}
-                        </Badge>
+                        <Calendar className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1">
+                            <span className="text-[9px] leading-tight sm:text-sm font-medium text-center">{t('preview.appointments')}</span>
+                            <Badge variant="secondary" className="text-[9px] sm:text-xs px-1 py-0 h-4 sm:h-auto">
+                                {appointments.length}
+                            </Badge>
+                        </div>
                     </Button>
                     <Button
                         variant={selectedTab === 'notes' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('notes')}
-                        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap"
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${
+                            selectedTab === 'notes' ? 'shadow-sm' : ''
+                        }`}
                         size="sm"
                     >
-                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                        <span className="hidden xs:inline">{t('preview.notes')}</span>
-                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
-                            {clinicalNotes.length}
-                        </Badge>
+                        <FileText className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1">
+                            <span className="text-[9px] leading-tight sm:text-sm font-medium text-center">{t('preview.notes')}</span>
+                            <Badge variant="secondary" className="text-[9px] sm:text-xs px-1 py-0 h-4 sm:h-auto">
+                                {clinicalNotes.length}
+                            </Badge>
+                        </div>
                     </Button>
                     <Button
                         variant={selectedTab === 'labs' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('labs')}
-                        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap"
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${
+                            selectedTab === 'labs' ? 'shadow-sm' : ''
+                        }`}
                         size="sm"
                     >
-                        <TestTube className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                        <span className="hidden xs:inline">{t('preview.labs')}</span>
-                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
-                            {labResults.length}
-                        </Badge>
+                        <TestTube className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1">
+                            <span className="text-[9px] leading-tight sm:text-sm font-medium text-center">{t('preview.labs')}</span>
+                            <Badge variant="secondary" className="text-[9px] sm:text-xs px-1 py-0 h-4 sm:h-auto">
+                                {labResults.length}
+                            </Badge>
+                        </div>
                     </Button>
                     <Button
                         variant={selectedTab === 'xrays' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('xrays')}
-                        className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap"
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${
+                            selectedTab === 'xrays' ? 'shadow-sm' : ''
+                        }`}
                         size="sm"
                     >
-                        <ImageIcon className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                        <span className="hidden xs:inline">{t('preview.xrays')}</span>
-                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
-                            {xrayImages.length}
-                        </Badge>
+                        <ImageIcon className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1">
+                            <span className="text-[9px] leading-tight sm:text-sm font-medium text-center">{t('preview.xrays')}</span>
+                            <Badge variant="secondary" className="text-[9px] sm:text-xs px-1 py-0 h-4 sm:h-auto">
+                                {xrayImages.length}
+                            </Badge>
+                        </div>
                     </Button>
                 </div>
             </div>
