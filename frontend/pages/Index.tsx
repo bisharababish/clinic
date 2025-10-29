@@ -55,7 +55,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../components/contexts/LanguageContext";
 import { Skeleton } from "../components/ui/skeleton";
 import { isValidPalestinianID } from '../lib/PalID_temp';
-import PaidPatientsList from "../components/PaidPatientsList";
+// Paid patients widgets intentionally hidden on home page for all roles
 
 
 // Enhanced patient info interface for search results
@@ -1736,7 +1736,7 @@ const Index = () => {
       <div className={`index-flex-container ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
 
         {/* Main Content */}
-        <div className="main-content px-2 sm:px-4">
+        <div className="main-content px-2 sm:px-4 overflow-x-hidden">
           <div className="main-content-inner space-y-4 sm:space-y-6">
             {/* Header Section */}
             <div className="mb-6">
@@ -1757,16 +1757,16 @@ const Index = () => {
             {canSearchPatients() && (
               <section className="search-section bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6">
                 {/* Compact Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 min-w-0">
+                  <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 truncate">
                     <Search className="h-5 w-5" />
                     {isRTL ? "إدارة المرضى" : "Patient Management"}
                   </h2>
-                  <div className="flex items-center gap-2">
-                    <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg border border-blue-200">
-                      <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg border border-blue-200 whitespace-nowrap flex-shrink-0 min-w-[110px]">
+                      <div className="flex items-center justify-center gap-2">
                         <Users className="h-4 w-4" />
-                        <span className="font-semibold text-sm">
+                        <span className="font-semibold text-sm whitespace-nowrap">
                           {isLoadingPatients ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           ) : (
@@ -3292,39 +3292,7 @@ const Index = () => {
               </section>
             )}
 
-            {/* Enhanced Paid Patients List - Only visible to admin role */}
-            {userRole === 'admin' && (
-              <section className="section bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6">
-                <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  {isRTL ? "المرضى المدفوعين" : "Paid Patients"}
-                </h2>
-
-                <div className="space-y-6">
-                  {/* All Paid Patients */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4 text-gray-700">
-                      {isRTL ? "جميع المدفوعات" : "All Payments"}
-                    </h3>
-                    <PaidPatientsList
-                      showOnlyPaid={true}
-                      compact={false}
-                    />
-                  </div>
-
-                  {/* Pending Payments */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4 text-gray-700">
-                      {isRTL ? "المدفوعات قيد الانتظار" : "Pending Payments"}
-                    </h3>
-                    <PaidPatientsList
-                      showOnlyPending={true}
-                      compact={false}
-                    />
-                  </div>
-                </div>
-              </section>
-            )}
+            {/* Paid/Pending patients widgets are hidden for all roles on the home page */}
           </div>
         </div >
       </div >
