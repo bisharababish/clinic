@@ -65,8 +65,8 @@ const Auth: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col relative">
       <>
-        {/* Language Switcher - RTL Safe Positioning */}
-        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-6 z-50">
+        {/* Language Switcher - Desktop/Tablet (kept top-right) */}
+        <div className="hidden sm:block absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-6 z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -81,6 +81,24 @@ const Auth: React.FC = () => {
               className="bg-white/95 backdrop-blur-md border-gray-200/60 hover:bg-white hover:border-gray-300 hover:shadow-lg transition-all duration-300 font-semibold shadow-md w-12 h-8 sm:w-14 sm:h-10 md:w-auto md:h-auto rounded-md flex items-center justify-center text-xs sm:text-sm font-bold px-2 sm:px-3"
             />
           </motion.div>
+        </div>
+
+        {/* Language Switcher - Mobile (placed above the card, centered) */}
+        <div className="sm:hidden sticky top-0 z-40 w-full px-4 pt-3">
+          <div className="flex justify-end">
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <LanguageSwitcher
+                showText={true}
+                size="sm"
+                variant="outline"
+                className="bg-white/95 backdrop-blur-md border-gray-200/60 hover:bg-white hover:border-gray-300 shadow-sm rounded-md px-3 h-9"
+              />
+            </motion.div>
+          </div>
         </div>
 
         <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">

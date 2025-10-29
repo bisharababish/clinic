@@ -56,6 +56,7 @@ const enTranslations = {
         pending: 'Pending',
         paid: 'Paid',
         completed: 'Completed',
+        cancelled: 'Cancelled',
         failed: 'Failed',
         refunded: 'Refunded',
 
@@ -2041,6 +2042,7 @@ const arTranslations = {
         pending: 'قيد الانتظار',
         paid: 'مدفوع',
         completed: 'مكتمل',
+        cancelled: 'ملغى',
         failed: 'فشل',
         refunded: 'مسترد',
 
