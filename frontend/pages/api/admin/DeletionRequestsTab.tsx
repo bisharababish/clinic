@@ -328,7 +328,7 @@ const DeletionRequestsTab: React.FC = () => {
                     <h2 className={`text-xl sm:text-2xl font-bold ${isRTL ? 'text-right' : ''}`}>
                         {isRTL ? 'طلبات الحذف' : 'Deletion Requests'}
                     </h2>
-                    <p className="text-gray-600 mt-1 text-sm sm:text-base">
+                    <p className={`text-gray-600 mt-1 text-sm sm:text-base ${isRTL ? 'text-right' : ''}`}>
                         {isRTL ? 'مراجعة وإدارة طلبات حذف المستخدمين' : 'Review and manage user deletion requests'}
                     </p>
                 </div>

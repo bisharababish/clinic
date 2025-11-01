@@ -321,32 +321,31 @@ const AdminDashboardContent = () => {
 
     // Main render
     return (
-        <div className="max-w-7xl mx-auto py-8 px-4">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-3xl font-bold">{getDashboardTitle()}</h1>
-                    {getDataAge() && (
-                        <p className="text-sm text-gray-500 mt-1">
-                            {i18n.language === 'ar' ? 'آخر تحديث' : 'Last updated'}: {getDataAge()}
+        <div className={`w-full ${isRTL ? 'rtl' : 'ltr'} mx-auto py-4 md:py-8 px-2 md:px-4 max-w-7xl`} dir={isRTL ? 'rtl' : 'ltr'}>            <div className="flex justify-between items-center mb-6">
+            <div>
+                <h1 className="text-3xl font-bold">{getDashboardTitle()}</h1>
+                {getDataAge() && (
+                    <p className="text-sm text-gray-500 mt-1">
+                        {i18n.language === 'ar' ? 'آخر تحديث' : 'Last updated'}: {getDataAge()}
+                    </p>
+                )}
+                {/* Show loading indicator when data is still loading */}
+                {dataLoading && (
+                    <div className="flex items-center mt-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                        <p className="text-sm text-blue-600">
+                            {i18n.language === 'ar' ? 'جاري تحميل البيانات...' : 'Loading data...'}
                         </p>
-                    )}
-                    {/* Show loading indicator when data is still loading */}
-                    {dataLoading && (
-                        <div className="flex items-center mt-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                            <p className="text-sm text-blue-600">
-                                {i18n.language === 'ar' ? 'جاري تحميل البيانات...' : 'Loading data...'}
-                            </p>
-                        </div>
-                    )}
-                </div>
-
-                {needsRefresh && (
-                    <Button onClick={extendSession} variant="outline" size="sm">
-                        🔄 {t('admin.refreshData') || 'Refresh Data'}
-                    </Button>
+                    </div>
                 )}
             </div>
+
+            {needsRefresh && (
+                <Button onClick={extendSession} variant="outline" size="sm">
+                    🔄 {t('admin.refreshData') || 'Refresh Data'}
+                </Button>
+            )}
+        </div>
             {!hasAccessibleTabs ? (
                 <div className="text-center py-12">
                     <h2 className="text-xl font-semibold text-gray-600 mb-4">
@@ -593,11 +592,11 @@ const AdminDashboardContent = () => {
 
                     {/* PAID PATIENTS TAB */}
                     {canViewPaymentTab && (
-                        <TabsContent value="paid-patients" className="pt-6">
-                            <div className="space-y-6">
+                        <TabsContent value="paid-patients" className={`pt-6 ${isRTL ? 'rtl' : 'ltr'}`} style={{ overflowX: 'hidden', width: '100%', maxWidth: '100%' }}>
+                            <div className="space-y-6" style={{ overflowX: 'hidden', width: '100%', maxWidth: '100%' }}>
                                 {/* All Paid Patients */}
                                 <div>
-                                    <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                                    <h2 className={`text-xl font-semibold mb-4 text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
                                         {i18n.language === 'ar' ? "جميع المدفوعات" : "All Payments"}
                                     </h2>
                                     <Suspense fallback={<Skeleton className="h-64 w-full" />}>
@@ -610,7 +609,7 @@ const AdminDashboardContent = () => {
 
                                 {/* Pending Payments */}
                                 <div>
-                                    <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                                    <h2 className={`text-xl font-semibold mb-4 text-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
                                         {i18n.language === 'ar' ? "المدفوعات قيد الانتظار" : "Pending Payments"}
                                     </h2>
                                     <Suspense fallback={<Skeleton className="h-64 w-full" />}>

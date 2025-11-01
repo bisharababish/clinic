@@ -429,7 +429,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className={`flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between ${i18n.language === 'ar' ? 'sm:flex-row-reverse sm:text-right' : ''}`}>
                 {i18n.language === 'ar' ? (
                     <>
                         <div className="flex gap-2">
@@ -451,7 +451,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div>
+                        <div className="w-full">
                             <h2 className="text-2xl font-bold text-right">{t('admin.doctorCalendar') || 'Doctor Calendar'}</h2>
                             <p className="text-gray-600 mt-1 text-right">
                                 {t('admin.manageAppointmentSchedules') || 'Manage appointment schedules for all doctors'}
@@ -687,7 +687,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                         <tr>
                                             {i18n.language === 'ar' ? (
                                                 <>
-                                                    <th className="border p-2 bg-gray-50" style={{ minWidth: '90px' }}>{t('admin.day') || 'اليوم'}</th>
+                                                    <th className="border p-2 bg-gray-50 text-right" style={{ minWidth: '90px' }}>اليوم</th>
                                                     {displayTimeSlots.map(slot => (
                                                         <th key={slot} className="border p-2 bg-gray-50">{formatTimeArabic(slot)}</th>
                                                     ))}

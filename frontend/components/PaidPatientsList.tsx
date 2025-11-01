@@ -15,6 +15,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '../components/ui/alert-dialog';
+import '../pages/styles/paidpatients.css';
 import { useToast } from '../hooks/use-toast';
 import {
     User,
@@ -316,13 +317,12 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
 
     if (isLoading) {
         return (
-            <Card dir={isRTL ? 'rtl' : 'ltr'}>
-                <CardHeader>
-                    <CardTitle className={`flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        <User className="h-5 w-5" />
-                        {getTitle()}
-                    </CardTitle>
-                </CardHeader>
+            <Card dir={isRTL ? 'rtl' : 'ltr'} className={`paid-patients-container ${isRTL ? 'rtl' : 'ltr'}`}>                <CardHeader>
+                <CardTitle className={`flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <User className="h-5 w-5" />
+                    {getTitle()}
+                </CardTitle>
+            </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -335,40 +335,41 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
 
     return (
         <>
-            <Card dir={isRTL ? 'rtl' : 'ltr'}>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className={`flex items-center gap-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                            <User className="h-5 w-5" />
-                            {getTitle()} ({filteredPatients.length})
-                        </CardTitle>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={loadPaidPatients}
-                            disabled={isLoading}
-                        >
-                            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                            {isRTL ? 'تحديث' : 'Refresh'}
-                        </Button>
-                    </div>
+            <Card dir={isRTL ? 'rtl' : 'ltr'} className="w-full overflow-hidden">
+                <CardHeader className="p-4 sm:p-6">
+                <div className="space-y-3">
+    <CardTitle className={`flex items-center gap-2 text-base sm:text-lg ${isRTL ? 'text-right justify-end flex-row-reverse' : 'text-left'}`}>
+        <User className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+        <span className="truncate">{getTitle()} ({filteredPatients.length})</span>
+    </CardTitle>
+    <Button
+        variant="outline"
+        size="sm"
+        onClick={loadPaidPatients}
+        disabled={isLoading}
+        className="w-full sm:w-auto"
+    >
+        <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
+        {isRTL ? 'تحديث' : 'Refresh'}
+    </Button>
+</div>
 
                     {/* Search and Filter */}
-                    <div className="flex gap-4 mt-4">
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+                        <div className="flex-1 relative paid-patients-search-container w-full">
+                            <Search className={`absolute ${isRTL ? 'right-2' : 'left-2'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10`} />
                             <Input
                                 placeholder={isRTL ? 'البحث برقم المريض...' : 'Search by Patient ID...'}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-8"
+                                className={`${isRTL ? 'pr-8' : 'pl-8'} w-full`}
                                 dir={isRTL ? 'rtl' : 'ltr'}
                             />
                         </div>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-3 py-2 border rounded-md"
+                            className="px-3 py-2 border rounded-md w-full sm:w-auto min-w-[140px]"
                             dir={isRTL ? 'rtl' : 'ltr'}
                         >
                             <option value="all">{isRTL ? 'جميع الحالات' : 'All Statuses'}</option>
@@ -379,7 +380,7 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                     </div>
                 </CardHeader>
 
-                <CardContent>
+                <CardContent className="p-4 sm:p-6">
                     {filteredPatients.length === 0 ? (
                         <Alert>
                             <AlertDescription>
@@ -387,21 +388,21 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                             </AlertDescription>
                         </Alert>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-3 sm:space-y-4">
                             {filteredPatients.map((patient) => (
                                 <div
                                     key={`${patient.source}-${patient.id}`}
-                                    className={`p-4 border rounded-lg hover:bg-muted/50 transition-colors ${(patient.payment_status === 'paid' || patient.payment_status === 'completed') ? 'border-green-200 bg-green-50' :
+                                    className={`p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors ${(patient.payment_status === 'paid' || patient.payment_status === 'completed') ? 'border-green-200 bg-green-50' :
                                         patient.payment_status === 'pending' ? 'border-yellow-200 bg-yellow-50' :
                                             'border-red-200 bg-red-50'
                                         }`}
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
+                                        <div className="flex-1 w-full min-w-0">
+                                            <div className={`flex flex-wrap items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
                                                 {getStatusIcon(patient.payment_status)}
-                                                <h3 className="font-semibold text-lg">{patient.patient_name}</h3>
-                                                <Badge variant={getStatusBadgeVariant(patient.payment_status)}>
+                                                <h3 className={`font-semibold text-base sm:text-lg truncate ${isRTL ? 'text-right' : 'text-left'}`}>{patient.patient_name}</h3>
+                                                <Badge variant={getStatusBadgeVariant(patient.payment_status)} className="flex-shrink-0">
                                                     {isRTL ?
                                                         (patient.payment_status === 'paid' ? 'مدفوع' :
                                                             patient.payment_status === 'pending' ? 'قيد الانتظار' :
@@ -409,45 +410,45 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                                                         patient.payment_status
                                                     }
                                                 </Badge>
-                                                <Badge variant="outline" className="text-xs">
+                                                <Badge variant="outline" className="text-xs flex-shrink-0">
                                                     {patient.source === 'payment_bookings' ? 'Patient Booking' : 'Admin Created'}
                                                 </Badge>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-muted-foreground">
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar className="h-3 w-3" />
-                                                    {patient.appointment_day} at {patient.appointment_time}
+                                            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-muted-foreground mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                                                    <span className="truncate">{patient.appointment_day} at {patient.appointment_time}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <User className="h-3 w-3" />
-                                                    Dr. {patient.doctor_name}
+                                                <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                    <User className="h-3 w-3 flex-shrink-0" />
+                                                    <span className="truncate">Dr. {patient.doctor_name}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <DollarSign className="h-3 w-3" />
-                                                    ₪{patient.amount}
+                                                <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                    <DollarSign className="h-3 w-3 flex-shrink-0" />
+                                                    <span>₪{patient.amount}</span>
                                                 </div>
                                             </div>
 
-                                            <div className="mt-2 text-xs text-muted-foreground">
-                                                <div>🆔 {isRTL ? 'رقم المريض' : 'Patient ID'}: {patient.unique_patient_id}</div>
-                                                <div>📧 {patient.patient_email}</div>
+                                            <div className={`mt-2 text-xs text-muted-foreground space-y-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                <div className="truncate">🆔 {isRTL ? 'رقم المريض' : 'Patient ID'}: {patient.unique_patient_id}</div>
+                                                <div className="truncate">📧 {patient.patient_email}</div>
                                                 <div>📞 {patient.patient_phone}</div>
-                                                <div>🏥 {patient.clinic_name} - {patient.specialty}</div>
+                                                <div className="truncate">🏥 {patient.clinic_name} - {patient.specialty}</div>
                                                 <div>📋 {isRTL ? 'تأكيد' : 'Confirmation'}: {patient.confirmation_number}</div>
                                             </div>
                                         </div>
 
                                         {!compact && (
-                                            <div className="text-right">
-                                                <div className="text-lg font-bold text-green-600">
+                                            <div className={`w-full sm:w-auto ${isRTL ? 'text-left sm:text-right' : 'text-right'} flex-shrink-0`}>
+                                                <div className="text-base sm:text-lg font-bold text-green-600 mb-1">
                                                     ₪{patient.amount}
                                                 </div>
-                                                <div className="text-xs text-muted-foreground">
+                                                <div className="text-xs text-muted-foreground mb-3 sm:mb-2">
                                                     {patient.payment_method}
                                                 </div>
 
-                                                <div className="mt-2 flex flex-col gap-2">
+                                                <div className="flex flex-col gap-2 w-full sm:w-auto">
                                                     {patient.payment_status === 'pending' && (
                                                         <MarkPaymentPaid
                                                             appointmentId={patient.id}
@@ -468,9 +469,9 @@ const PaidPatientsList: React.FC<PaidPatientsListProps> = ({
                                                             setPatientToDelete(patient);
                                                             setShowDeleteDialog(true);
                                                         }}
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto"
                                                     >
-                                                        <Trash2 className="h-4 w-4 mr-1" />
+                                                        <Trash2 className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                         {isRTL ? 'حذف' : 'Delete'}
                                                     </Button>
                                                 </div>
