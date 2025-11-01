@@ -4,6 +4,7 @@ export interface UserPermissions {
   canViewClinics: boolean;
   canViewLabs: boolean;
   canViewXray: boolean;
+  canViewUltrasound: boolean;
   canViewAdmin: boolean;
   canViewAppointments: boolean;
   canViewOverview: boolean;
@@ -17,6 +18,7 @@ export interface UserPermissions {
   // ✅ NEW: Doctor-specific permissions
   canViewDoctorLabs: boolean;
   canViewDoctorXray: boolean;
+  canViewDoctorUltrasound: boolean;
   canViewCalendar: boolean;
   canRequestUserDeletion: boolean;
   canApproveUserDeletion: boolean;
@@ -31,6 +33,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: true,
     canViewLabs: true,
     canViewXray: true,
+    canViewUltrasound: true,
     canViewAdmin: true,
     canViewAppointments: true,
     canViewOverview: true,
@@ -43,6 +46,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewReports: true,
     canViewDoctorLabs: true,
     canViewDoctorXray: true,
+    canViewDoctorUltrasound: true,
     canViewCalendar: true,
     canRequestUserDeletion: true,
     canApproveUserDeletion: true,
@@ -55,6 +59,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: true,
     canViewLabs: false,
     canViewXray: false,
+    canViewUltrasound: false,
     canViewAdmin: true,
     canViewAppointments: true,
     canViewOverview: false,
@@ -67,6 +72,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewReports: false,
     canViewDoctorLabs: false,
     canViewDoctorXray: false,
+    canViewDoctorUltrasound: false,
     canViewCalendar: true,
     canRequestUserDeletion: true,
     canApproveUserDeletion: false,
@@ -79,6 +85,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: false,
     canViewLabs: false,
     canViewXray: false,
+    canViewUltrasound: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -91,6 +98,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewReports: false,
     canViewDoctorLabs: true,
     canViewDoctorXray: true,
+    canViewDoctorUltrasound: true,
     canViewCalendar: true,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
@@ -103,6 +111,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: false,
     canViewLabs: true,
     canViewXray: false,
+    canViewUltrasound: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -115,6 +124,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewReports: false,
     canViewDoctorLabs: false,
     canViewDoctorXray: false,
+    canViewDoctorUltrasound: false,
     canViewCalendar: false,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
@@ -127,6 +137,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: false,
     canViewLabs: false,
     canViewXray: true,
+    canViewUltrasound: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -139,6 +150,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewReports: false,
     canViewDoctorLabs: false,
     canViewDoctorXray: false,
+    canViewDoctorUltrasound: false,
     canViewCalendar: false,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
@@ -151,6 +163,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: false,
     canViewLabs: false,
     canViewXray: false,
+    canViewUltrasound: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -163,6 +176,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewReports: false,
     canViewDoctorLabs: false,
     canViewDoctorXray: false,
+    canViewDoctorUltrasound: false,
     canViewCalendar: false,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
@@ -175,6 +189,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewClinics: true,
     canViewLabs: false,
     canViewXray: false,
+    canViewUltrasound: false,
     canViewAdmin: false,
     canViewAppointments: false,
     canViewOverview: false,
@@ -187,6 +202,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewReports: false,
     canViewDoctorLabs: false,
     canViewDoctorXray: false,
+    canViewDoctorUltrasound: false,
     canViewCalendar: false,
     canRequestUserDeletion: false,
     canApproveUserDeletion: false,
@@ -223,10 +239,12 @@ export const getAccessibleRoutes = (role: string): string[] => {
   if (permissions.canViewClinics) routes.push('/clinics');
   if (permissions.canViewLabs) routes.push('/labs');
   if (permissions.canViewXray) routes.push('/xray');
+  if (permissions.canViewUltrasound) routes.push('/ultrasound');
   if (permissions.canViewAdmin) routes.push('/admin');
 
   if (permissions.canViewDoctorLabs) routes.push('/doctor/labs');
   if (permissions.canViewDoctorXray) routes.push('/doctor/xray');
+  if (permissions.canViewDoctorUltrasound) routes.push('/doctor/ultrasound');
   if (permissions.canViewPatients) routes.push('/doctor/patients');
   return routes;
 };

@@ -207,10 +207,12 @@ const enTranslations = {
         aboutUs: 'About Us',
         labs: 'Labs',
         xray: 'X-Ray',
+        ultrasound: 'Ultrasound',
         adminDashboard: 'Admin Dashboard',
         secretaryDashboard: 'Secretary Dashboard',
         doctorLabs: 'Lab Results',
         doctorXRay: 'X-Ray Images',
+        doctorUltrasound: 'Ultrasound Images',
         patients: 'Patients',
         myAppointments: 'My Appointments',
         myRecords: 'My Medical Records',
@@ -265,6 +267,16 @@ const enTranslations = {
             leg: 'Leg',
             foot: 'Foot'
         },
+
+        // Ultrasound Page
+        ultrasoundImages: 'Ultrasound Images',
+        ultrasoundImagesDesc: 'View and analyze patient Ultrasound images',
+        searchPatientsUltrasound: 'Search patients or body parts...',
+        loadingUltrasoundImages: 'Loading Ultrasound images...',
+        noUltrasoundImagesFound: 'No Ultrasound images found matching your criteria.',
+        noUltrasoundImagesUploaded: 'No Ultrasound images have been uploaded yet.',
+        confirmDeleteTitleUltrasound: 'Delete Ultrasound Image?',
+        confirmDeleteDescUltrasound: 'Are you sure you want to delete this Ultrasound image? This action cannot be undone.',
         testResults: 'Test Results',
         doctorsNotes: 'Doctor\'s Notes',
         labTechnician: 'Lab Technician',
@@ -1030,6 +1042,169 @@ const enTranslations = {
         "selectPatientOption": "Choose a patient..."
     },
 
+    "ultrasound": {
+        // Page titles and descriptions
+        "pageTitle": "Ultrasound Image Upload System",
+        "pageDescription": "Securely upload and manage medical Ultrasound images",
+        "title": "Ultrasound Upload System",
+        "subtitle": "Upload and manage Ultrasound images",
+        "uploadUltrasoundImage": "Upload Ultrasound Image",
+        selectFromDropdown: "Or select from dropdown:",
+
+        // SEO
+        "seo": {
+            "title": "Ultrasound Imaging Services - Bethlehem Medical Center",
+            "description": "Advanced Ultrasound imaging services at Bethlehem Medical Center. Digital Ultrasound imaging, radiology services, and medical imaging for accurate diagnosis.",
+            "keywords": "Ultrasound imaging, radiology services, medical imaging, digital Ultrasound, Bethlehem Medical Center, diagnostic imaging"
+        },
+
+        // Patient Information
+        "patientInfo": {
+            "title": "Patient Information",
+            "searchPatient": "Search Patient",
+            "searchPlaceholder": "Search by name, email, or ID number...",
+            "noPatientsFound": "No patients found",
+            "patientSelected": "Patient Selected",
+            "name": "Name",
+            "email": "Email",
+            "id": "ID",
+            "dob": "DOB",
+            "gender": "Gender",
+            "dateOfBirth": "Date of Birth",
+            "manualName": "Patient Name (Manual Entry)",
+            "namePlaceholder": "Enter patient full name",
+            "manualDob": "Date of Birth (Manual Entry)"
+        },
+
+        // Doctor Information
+        "doctorInfo": {
+            "title": "Requesting Doctor",
+            "searchPlaceholder": "Search by doctor name, specialty, or email...",
+            "noDoctorsFound": "No doctors found",
+            "doctorSelected": "Doctor Selected",
+            "drPrefix": "Dr.",
+            "name": "Name",
+            "specialty": "Specialty",
+            "clinic": "Clinic",
+            "email": "Email",
+            "phone": "Phone"
+        },
+
+        // Clinical Indication
+        "clinicalIndication": {
+            "title": "Clinical Indication",
+            "placeholder": "Enter clinical indication and symptoms"
+        },
+
+        // Body Part Selection
+        "bodyPartSelection": {
+            "title": "Body Part Selection",
+            "manualSelection": "Manual Selection",
+            "placeholder": "Choose specific body part..."
+        },
+
+        // File Upload
+        "fileUpload": {
+            "title": "Ultrasound Image Upload",
+            "fileSelected": "File Selected",
+            "removeFile": "Remove File",
+            "dragDropText": "Drag and drop your Ultrasound image",
+            "clickToBrowse": "or click to browse",
+            "supportedFormats": "Supported formats: JPEG, PNG (Max 10MB)"
+        },
+
+        // Actions
+        "actions": {
+            "saveRecord": "Save Ultrasound Record",
+            "resetForm": "Reset Form"
+        },
+
+        // Common
+        "selected": "Selected",
+
+        // Body parts - ultrasound specific
+        "bodyParts": {
+            "neck": "Neck",
+            "head": "Head",
+            "abdomen": "Abdomen",
+            "abdomen_kidney": "Abdomen (Kidney)",
+            "abdomen_spleen": "Abdomen (Spleen)",
+            "abdomen_liver": "Abdomen (Liver)",
+            "abdomen_stomach": "Abdomen (Stomach)",
+            "spine": "Spine",
+            "scrotum": "Scrotum",
+            "hip": "Hip (Infant)",
+            
+            // For backwards compatibility and DoctorUltrasoundPage dropdown
+            "chest": "Chest",
+            "knee": "Knee",
+            "hand": "Hand",
+            "foot": "Foot",
+            "shoulder": "Shoulder",
+            "elbow": "Elbow",
+            "wrist": "Wrist",
+            "ankle": "Ankle"
+        },
+
+        // Errors
+        "errors": {
+            "searchError": "Search Error",
+            "doctorSearchFailed": "Failed to search for doctors. Please try again.",
+            "patientSearchFailed": "Failed to search for patients. Please try again.",
+            "missingData": "Missing Data",
+            "selectBodyPartAndFile": "Please select at least one body part and upload a file.",
+            "saveFailed": "Save Failed",
+            "tryAgain": "Failed to save Ultrasound record. Please try again."
+        },
+
+        // Doctor Ultrasound Page
+        "doctorUltrasoundPage": {
+            "title": "Ultrasound Images",
+            "subtitle": "View and manage patient Ultrasound images",
+            "searchPlaceholder": "Search by patient name, ID, or body part...",
+            "filterByDate": "Filter by Date",
+            "filterByBodyPart": "Filter by Body Part",
+            "allBodyParts": "All Body Parts",
+            "viewImage": "View",
+            "downloadImage": "Download",
+            "deleteImage": "Delete",
+            "imageNotAvailable": "Image Not Available",
+            "patientInformation": "Patient Information",
+            "examInformation": "Exam Information",
+            "bodyPart": "Body Part",
+            "requestingDoctor": "Requesting Doctor",
+            "clinicalIndication": "Clinical Indication",
+            "status": "Status",
+            "completed": "Completed",
+            "downloadFailed": "Failed to download image. Please try again.",
+            "deleteConfirm": "Are you sure you want to delete this Ultrasound image?",
+            "deleteSuccess": "Ultrasound image deleted successfully",
+            "deleteError": "Failed to delete Ultrasound image"
+        },
+
+        // Validation and error messages
+        "invalidFileType": "Please select a valid image file (JPEG, PNG, TIFF, PDF, or DICOM)",
+        "fileTooLarge": "File size must be less than 50MB",
+        "fillRequiredFields": "Please fill in all required fields and upload an image",
+        "uploadError": "An error occurred while uploading the Ultrasound image. Please try again.",
+
+        // Success messages
+        "success": {
+            "title": "Success",
+            "saved": "Ultrasound record saved successfully!"
+        },
+
+        // Upload progress
+        "uploading": "Uploading...",
+        "uploadingUltrasound": "Uploading Ultrasound image...",
+        "processing": "Processing...",
+
+        // Security notice
+        "securityNotice": "🔒 All uploaded files are encrypted and comply with medical data protection standards",
+        "selectPatient": "Select Patient",
+        "searchPatientPlaceholder": "Search patient by name...",
+        "selectPatientOption": "Choose a patient..."
+    },
 
     admin: {
         // Main Dashboard
@@ -2660,10 +2835,12 @@ const arTranslations = {
         aboutUs: 'من نحن',
         labs: 'المختبرات',
         xray: 'الأشعة',
+        ultrasound: 'الموجات فوق الصوتية',
         adminDashboard: 'لوحة تحكم المسؤول',
         secretaryDashboard: 'لوحة تحكم السكرتير',
         doctorLabs: 'نتائج المختبر',
         doctorXRay: 'صور الأشعة',
+        doctorUltrasound: 'صور الموجات فوق الصوتية',
         patients: 'المرضى',
         myAppointments: 'مواعيدي',
         myRecords: 'سجلاتي الطبية',
@@ -2718,6 +2895,16 @@ const arTranslations = {
             leg: 'الساق',
             foot: 'القدم'
         },
+
+        // Ultrasound Page
+        ultrasoundImages: 'صور الموجات فوق الصوتية',
+        ultrasoundImagesDesc: 'عرض وتحليل صور الموجات فوق الصوتية للمرضى',
+        searchPatientsUltrasound: 'البحث عن المرضى أو أجزاء الجسم...',
+        loadingUltrasoundImages: 'جارٍ تحميل صور الموجات فوق الصوتية...',
+        noUltrasoundImagesFound: 'لم يتم العثور على صور موجات فوق الصوتية تطابق المعايير.',
+        noUltrasoundImagesUploaded: 'لم يتم رفع أي صور موجات فوق الصوتية بعد.',
+        confirmDeleteTitleUltrasound: 'حذف صورة الموجات فوق الصوتية؟',
+        confirmDeleteDescUltrasound: 'هل أنت متأكد من حذف صورة الموجات فوق الصوتية هذه؟ لا يمكن التراجع عن هذا الإجراء.',
         testResults: 'نتائج الفحص',
         doctorsNotes: 'ملاحظات الطبيب',
         labTechnician: 'فني المختبر',
@@ -3828,6 +4015,171 @@ const arTranslations = {
         searchPatientPlaceholder: "ابحث عن المريض بالاسم...",
         selectPatientOption: "اختر مريضًا..."
     },
+
+    ultrasound: {
+        // Page titles and descriptions
+        pageTitle: 'نظام رفع صور الموجات فوق الصوتية',
+        pageDescription: 'رفع وإدارة صور الموجات فوق الصوتية الطبية بأمان',
+        title: 'نظام رفع صور الموجات فوق الصوتية',
+        subtitle: 'رفع وإدارة صور الموجات فوق الصوتية',
+        uploadUltrasoundImage: 'رفع صورة الموجات فوق الصوتية',
+        selectFromDropdown: "أو اختر من القائمة : ",
+
+        // SEO
+        seo: {
+            title: 'خدمات التصوير بالموجات فوق الصوتية - مركز بيت لحم الطبي',
+            description: 'خدمات التصوير بالموجات فوق الصوتية المتقدمة في مركز بيت لحم الطبي. التصوير بالموجات فوق الصوتية، خدمات الأشعة، والتصوير الطبي للتشخيص الدقيق.',
+            keywords: 'التصوير بالموجات فوق الصوتية، خدمات الأشعة، التصوير الطبي، الموجات فوق الصوتية، مركز بيت لحم الطبي، التصوير التشخيصي'
+        },
+
+        // Patient Information
+        patientInfo: {
+            title: 'معلومات المريض',
+            searchPatient: 'البحث عن المريض',
+            searchPlaceholder: 'البحث بالاسم أو البريد...',
+            noPatientsFound: 'لم يتم العثور على مرضى',
+            patientSelected: 'تم اختيار المريض',
+            name: 'الاسم',
+            email: 'البريد الإلكتروني',
+            id: 'رقم الهوية',
+            dob: 'تاريخ الميلاد',
+            gender: 'الجنس',
+            dateOfBirth: 'تاريخ الميلاد',
+            manualName: 'اسم المريض (إدخال يدوي)',
+            namePlaceholder: 'أدخل الاسم الكامل للمريض',
+            manualDob: 'تاريخ الميلاد (إدخال يدوي)'
+        },
+
+        // Doctor Information
+        doctorInfo: {
+            title: 'الطبيب الطالب',
+            searchPlaceholder: 'البحث بالاسم أو التخصص...',
+            noDoctorsFound: 'لم يتم العثور على أطباء',
+            doctorSelected: 'تم اختيار الطبيب',
+            drPrefix: 'د.',
+            name: 'الاسم',
+            specialty: 'التخصص',
+            clinic: 'العيادة',
+            email: 'البريد الإلكتروني',
+            phone: 'الهاتف'
+        },
+
+        // Clinical Indication
+        clinicalIndication: {
+            title: 'المؤشر السريري',
+            placeholder: 'أدخل المؤشر السريري والأعراض'
+        },
+
+        // Body Part Selection
+        bodyPartSelection: {
+            title: 'اختيار جزء الجسم',
+            manualSelection: 'الاختيار اليدوي',
+            placeholder: 'اختر جزء الجسم المحدد...'
+        },
+
+        // File Upload
+        fileUpload: {
+            title: 'رفع صورة الموجات فوق الصوتية',
+            fileSelected: 'تم اختيار الملف',
+            removeFile: 'إزالة الملف',
+            dragDropText: 'اسحب وأفلت صورة الموجات فوق الصوتية',
+            clickToBrowse: 'أو انقر للتصفح',
+            supportedFormats: 'الصيغ المدعومة: JPEG، PNG (حد أقصى 10 ميجابايت)'
+        },
+
+        // Actions
+        actions: {
+            saveRecord: 'حفظ سجل الموجات فوق الصوتية',
+            resetForm: 'إعادة تعيين النموذج'
+        },
+
+        // Common
+        selected: 'المحدد',
+
+        // Body parts - same as xray
+        bodyParts: {
+            neck: 'الرقبة',
+            head: 'الرأس',
+            abdomen: 'البطن',
+            abdomen_kidney: 'البطن (الكلى)',
+            abdomen_spleen: 'البطن (الطحال)',
+            abdomen_liver: 'البطن (الكبد)',
+            abdomen_stomach: 'البطن (المعدة)',
+            spine: 'العمود الفقري',
+            scrotum: 'كيس الصفن',
+            hip: 'الورك (رضيع)',
+            
+            // For backwards compatibility and DoctorUltrasoundPage dropdown
+            chest: 'الصدر',
+            knee: 'الركبة',
+            hand: 'اليد',
+            foot: 'القدم',
+            shoulder: 'الكتف',
+            elbow: 'المرفق',
+            wrist: 'الرسغ',
+            ankle: 'الكاحل'
+        },
+
+        // Errors
+        errors: {
+            searchError: 'خطأ في البحث',
+            doctorSearchFailed: 'فشل في البحث عن الأطباء. يرجى المحاولة مرة أخرى.',
+            patientSearchFailed: 'فشل في البحث عن المرضى. يرجى المحاولة مرة أخرى.',
+            missingData: 'بيانات مفقودة',
+            selectBodyPartAndFile: 'يرجى اختيار جزء واحد على الأقل من الجسم ورفع ملف.',
+            saveFailed: 'فشل الحفظ',
+            tryAgain: 'فشل في حفظ سجل الموجات فوق الصوتية. يرجى المحاولة مرة أخرى.'
+        },
+
+        // Doctor Ultrasound Page
+        doctorUltrasoundPage: {
+            title: 'صور الموجات فوق الصوتية',
+            subtitle: 'عرض وإدارة صور الموجات فوق الصوتية للمرضى',
+            searchPlaceholder: 'البحث بالاسم، رقم الهوية، أو جزء الجسم...',
+            filterByDate: 'تصفية حسب التاريخ',
+            filterByBodyPart: 'تصفية حسب جزء الجسم',
+            allBodyParts: 'جميع أجزاء الجسم',
+            viewImage: 'عرض',
+            downloadImage: 'تحميل',
+            deleteImage: 'حذف',
+            imageNotAvailable: 'الصورة غير متاحة',
+            patientInformation: 'معلومات المريض',
+            examInformation: 'معلومات الفحص',
+            bodyPart: 'جزء الجسم',
+            requestingDoctor: 'الطبيب الطالب',
+            clinicalIndication: 'السبب السريري',
+            status: 'الحالة',
+            completed: 'مكتمل',
+            downloadFailed: 'فشل في تحميل الصورة. يرجى المحاولة مرة أخرى.',
+            deleteConfirm: 'هل أنت متأكد من حذف صورة الموجات فوق الصوتية هذه؟',
+            deleteSuccess: 'تم حذف صورة الموجات فوق الصوتية بنجاح',
+            deleteError: 'فشل في حذف صورة الموجات فوق الصوتية'
+        },
+
+        // Validation and error messages
+        invalidFileType: 'يرجى اختيار ملف صورة صحيح (JPEG، PNG، TIFF، PDF، أو DICOM)',
+        fileTooLarge: 'يجب أن يكون حجم الملف أقل من 50 ميجابايت',
+        fillRequiredFields: 'يرجى تعبئة جميع الحقول المطلوبة ورفع صورة',
+        uploadError: 'حدث خطأ أثناء رفع صورة الموجات فوق الصوتية. يرجى المحاولة مرة أخرى.',
+
+        // Success messages
+        success: {
+            title: 'نجح',
+            saved: 'تم حفظ سجل الموجات فوق الصوتية بنجاح!'
+        },
+
+        // Upload progress
+        uploading: 'جارٍ الرفع...',
+        uploadingUltrasound: 'جاري رفع صورة الموجات فوق الصوتية...',
+        processing: 'جارٍ المعالجة',
+
+        // Security notice
+        securityNotice: '🔒 جميع الملفات المرفوعة مشفرة ومتوافقة مع معايير حماية البيانات الطبية',
+        selectPatient: "اختر المريض",
+        searchPatientPlaceholder: "ابحث عن المريض بالاسم...",
+        selectPatientOption: "اختر مريضًا..."
+    },
+
     appointmentsManagement: {
         // Main titles and descriptions
         title: 'إدارة المواعيد',

@@ -28,11 +28,13 @@ const Payment = lazy(() => import("./pages/Payment"));
 const Confirmation = lazy(() => import("./pages/Confirmation"));
 const Labs = lazy(() => import("./pages/Labs"));
 const XRay = lazy(() => import("./pages/XRay"));
+const Ultrasound = lazy(() => import("./pages/Ultrasound"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 // const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 import AdminDashboard from "./pages/AdminDashboard";
 const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
+const DoctorUltrasoundPage = lazy(() => import("./pages/DoctorUltrasoundPage"));
 const DoctorPatientsPage = lazy(() => import("./pages/DoctorPatientPage"));
 const PatientDashboardPage = lazy(() => import("./pages/PatientDashboard"));
 const UserPreviewPage = lazy(() => import("./pages/UserPreviewPage"));
@@ -168,6 +170,16 @@ function App() {
                     }
                   />
 
+                  {/* Ultrasound */}
+                  <Route
+                    path="/ultrasound"
+                    element={
+                      <HeaderOnlyLayout>
+                        <Ultrasound />
+                      </HeaderOnlyLayout>
+                    }
+                  />
+
                   {/* Doctor Labs */}
                   <Route
                     path="/doctor/labs"
@@ -184,6 +196,16 @@ function App() {
                     element={
                       <HeaderOnlyLayout>
                         <DoctorXRayPage />
+                      </HeaderOnlyLayout>
+                    }
+                  />
+
+                  {/* Doctor Ultrasound */}
+                  <Route
+                    path="/doctor/ultrasound"
+                    element={
+                      <HeaderOnlyLayout>
+                        <DoctorUltrasoundPage />
                       </HeaderOnlyLayout>
                     }
                   />

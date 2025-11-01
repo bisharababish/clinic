@@ -166,12 +166,14 @@ export function Header() {
     const canViewClinics = isAuthenticated && userPermissions.canViewClinics;
     const canViewLabs = isAuthenticated && userPermissions.canViewLabs;
     const canViewXray = isAuthenticated && userPermissions.canViewXray;
+    const canViewUltrasound = isAuthenticated && userPermissions.canViewUltrasound;
     const canViewAdmin = isAuthenticated && userPermissions.canViewAdmin;
     const canViewPreview = isAuthenticated && userPermissions.canViewPreview;
 
     // Doctor-specific permissions
     const canViewDoctorLabs = isAuthenticated && userPermissions.canViewDoctorLabs;
     const canViewDoctorXray = isAuthenticated && userPermissions.canViewDoctorXray;
+    const canViewDoctorUltrasound = isAuthenticated && userPermissions.canViewDoctorUltrasound;
     const canViewPatients = isAuthenticated && userPermissions.canViewPatients;
 
     // Define role checks for styling
@@ -346,6 +348,16 @@ export function Header() {
                         {canViewDoctorXray && (
                             <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
                                 <Link to="/doctor/xray" className="font-medium">{t('navbar.doctorXRay') || 'X-Ray Images'}</Link>
+                            </Button>
+                        )}
+                        {canViewUltrasound && !isDoctor && (
+                            <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
+                                <Link to="/ultrasound" className="font-medium">{t('navbar.ultrasound') || 'Ultrasound'}</Link>
+                            </Button>
+                        )}
+                        {canViewDoctorUltrasound && (
+                            <Button variant="ghost" size="sm" asChild className="hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200">
+                                <Link to="/doctor/ultrasound" className="font-medium">{t('navbar.doctorUltrasound') || 'Ultrasound Images'}</Link>
                             </Button>
                         )}
                         {canViewPatients && (
@@ -585,6 +597,34 @@ export function Header() {
                                                 className="font-medium"
                                             >
                                                 {t('navbar.doctorXRay') || 'X-Ray Images'}
+                                            </Link>
+                                        </Button>
+                                    )}
+                                    {canViewUltrasound && !isDoctor && (
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                            <Link
+                                                to="/ultrasound"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/ultrasound');
+                                                }}
+                                                className="font-medium"
+                                            >
+                                                {t('navbar.ultrasound') || 'Ultrasound'}
+                                            </Link>
+                                        </Button>
+                                    )}
+                                    {canViewDoctorUltrasound && (
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                            <Link
+                                                to="/doctor/ultrasound"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMobileNavigation('/doctor/ultrasound');
+                                                }}
+                                                className="font-medium"
+                                            >
+                                                {t('navbar.doctorUltrasound') || 'Ultrasound Images'}
                                             </Link>
                                         </Button>
                                     )}
