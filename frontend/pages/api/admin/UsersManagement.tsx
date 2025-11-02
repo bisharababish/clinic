@@ -37,26 +37,26 @@ const getBackendUrl = (): string => {
     if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
         return 'https://api.bethlehemmedcenter.com';
     }
-    
+
     // Check hostname to determine environment
     if (typeof window !== 'undefined') {
         const hostname = window.location.hostname.toLowerCase();
         console.log('🌐 Detected hostname:', hostname);
-        
+
         // Use localhost only if actually running on localhost
         if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
             return 'http://localhost:5000';
         }
-        
+
         // For production domain or any other domain, use production API
         if (hostname.includes('bethlehemmedcenter.com')) {
             return 'https://api.bethlehemmedcenter.com';
         }
-        
+
         // Default to production URL for safety
         return 'https://api.bethlehemmedcenter.com';
     }
-    
+
     // Default to production URL for safety
     return 'https://api.bethlehemmedcenter.com';
 };
@@ -345,7 +345,7 @@ const UsersManagement = () => {
             user_phonenumber: "",
             date_of_birth: "",
             gender_user: "",
-            user_roles: "Patient",
+            user_roles: "Patient" as UserRole,
             user_password: "",
         });
         setIdValidationStatus('unchecked');
@@ -516,9 +516,9 @@ const UsersManagement = () => {
                 }
 
                 const backendUrl = getBackendUrl();
-                
+
                 // Get CSRF token
-                const csrfToken = sessionStorage.getItem('csrf_token') || 
+                const csrfToken = sessionStorage.getItem('csrf_token') ||
                     Math.random().toString(36).substring(2, 15);
                 sessionStorage.setItem('csrf_token', csrfToken);
 
@@ -790,7 +790,7 @@ const UsersManagement = () => {
 
                 if (userError) {
                     console.error("Error creating user profile:", userError);
-                    let errorMsg = userError.message;
+                    const errorMsg = userError.message;
 
                     // Check if it's a duplicate key error and provide specific messages
                     if (errorMsg && (errorMsg.includes('duplicate key value') || errorMsg.includes('unique constraint'))) {
@@ -901,7 +901,7 @@ const UsersManagement = () => {
                         console.log("✅ Password updated successfully in auth");
                     } catch (error) {
                         console.error("❌ Error updating password:", error);
-                        
+
                         // Provide more helpful error messages
                         let errorMessage = "Failed to update password";
                         if (error instanceof Error) {
@@ -922,7 +922,7 @@ const UsersManagement = () => {
                         } else {
                             errorMessage = String(error);
                         }
-                        
+
                         toast({
                             title: t('common.error'),
                             description: errorMessage,
