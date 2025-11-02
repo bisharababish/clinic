@@ -27,6 +27,7 @@ export function RoleBasedRouteGuard({ children }: RoleBasedRouteGuardProps) {
             '/clinics': permissions.canViewClinics,
             '/labs': permissions.canViewLabs,
             '/xray': permissions.canViewXray,
+            '/ultrasound': permissions.canViewUltrasound,
             '/admin': permissions.canViewAdmin,
         };
 
@@ -40,8 +41,8 @@ export function RoleBasedRouteGuard({ children }: RoleBasedRouteGuardProps) {
             navigate(defaultRoute, { replace: true });
         }
 
-        // Special handling for lab and x-ray users accessing home page
-        if ((userRole === 'lab' || userRole === 'xray' || userRole === 'x ray') &&
+        // Special handling for lab, x-ray, and ultrasound users accessing home page
+        if ((userRole === 'lab' || userRole === 'xray' || userRole === 'x ray' || userRole === 'ultrasound') &&
             (currentPath === '/' || currentPath === '/home')) {
             const defaultRoute = getDefaultRouteForRole(userRole);
             console.log(`Redirecting ${userRole} from home to ${defaultRoute}`);
@@ -66,6 +67,7 @@ export function useCanAccessRoute(path: string): boolean {
         '/clinics': permissions.canViewClinics,
         '/labs': permissions.canViewLabs,
         '/xray': permissions.canViewXray,
+        '/ultrasound': permissions.canViewUltrasound,
         '/admin': permissions.canViewAdmin,
     };
 

@@ -16,8 +16,8 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Checkbox } from "../components/ui/checkbox";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from 'react-i18next';
@@ -306,10 +306,17 @@ const Ultrasound = () => {
     }
   }, [showSearchResults, showDoctorSearchResults]);
 
-  // Body parts list for dropdown
-
-  const handleBodyPartsSelect = (bodyParts: string[]) => {
-    setSelectedBodyParts(bodyParts);
+  // Handle body parts selection with toggle
+  const handleBodyPartToggle = (bodyPart: string) => {
+    setSelectedBodyParts(prev => {
+      if (prev.includes(bodyPart)) {
+        // Remove the body part if it's already selected
+        return prev.filter(part => part !== bodyPart);
+      } else {
+        // Add the body part if it's not selected
+        return [...prev, bodyPart];
+      }
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -351,6 +358,28 @@ const Ultrasound = () => {
       return;
     }
 
+    // Patient is required - either selected from search or manually entered with valid name
+    if (!selectedPatient && (!patientName || !patientName.trim())) {
+      toast({
+        title: t('ultrasound.errors.missingData') || 'Missing Data',
+        description: t('ultrasound.errors.patientRequired') || 'Please select a patient or enter patient name.',
+        variant: "destructive",
+        className: "bg-red-50 border-red-200 text-red-800",
+      });
+      return;
+    }
+
+    // If no patient selected, we need at least patient name and date of birth
+    if (!selectedPatient && (!dateOfBirth || !dateOfBirth.trim())) {
+      toast({
+        title: t('ultrasound.errors.missingData') || 'Missing Data',
+        description: t('ultrasound.errors.dobRequired') || 'Please enter patient date of birth.',
+        variant: "destructive",
+        className: "bg-red-50 border-red-200 text-red-800",
+      });
+      return;
+    }
+
     try {
       // Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
@@ -370,29 +399,49 @@ const Ultrasound = () => {
         .from('ultrasound-images')
         .getPublicUrl(filePath);
 
-      // Prepare patient data
-      const patientData = selectedPatient ? {
-        patient_id: selectedPatient.userid,
-        patient_name: selectedPatient.english_username_a,
-        date_of_birth: selectedPatient.date_of_birth
-      } : {
-        patient_id: null,
-        patient_name: patientName,
-        date_of_birth: dateOfBirth
-      };
+      // Prepare patient data - patient_id is required, so if no patient selected,
+      // we need to create a temporary patient entry or use a placeholder
+      // For now, we'll require patient selection or use a fallback patient_id
+      let finalPatientId: number;
+      let finalPatientName: string;
+      let finalDateOfBirth: string | null;
+
+      if (selectedPatient) {
+        finalPatientId = selectedPatient.userid;
+        finalPatientName = selectedPatient.english_username_a || '';
+        finalDateOfBirth = selectedPatient.date_of_birth || null;
+      } else {
+        // For manual entry without patient selection, we need to create a patient
+        // or use a system patient ID. For now, we'll throw an error asking to select patient.
+        // Alternatively, we could create a temporary patient record.
+        toast({
+          title: t('ultrasound.errors.patientRequired') || 'Patient Required',
+          description: t('ultrasound.errors.selectPatientFromList') || 'Please select a patient from the search results. Manual entry requires patient registration first.',
+          variant: "destructive",
+          className: "bg-red-50 border-red-200 text-red-800",
+        });
+        return;
+      }
 
       // Insert single record with all selected body parts
       const { error: insertError } = await supabase
         .from('ultrasound_images')
         .insert({
-          ...patientData,
+          patient_id: finalPatientId,
+          patient_name: finalPatientName,
+          date_of_birth: finalDateOfBirth,
           body_part: selectedBodyParts, // Store array of body parts
-          indication: clinicalIndication,
-          requesting_doctor: selectedDoctor?.name || requestingDoctor,
+          indication: clinicalIndication || null,
+          requesting_doctor: selectedDoctor?.name || requestingDoctor || null,
           image_url: publicUrl
         });
 
       if (insertError) {
+        console.error('Detailed insert error:', insertError);
+        console.error('Error code:', insertError.code);
+        console.error('Error message:', insertError.message);
+        console.error('Error details:', insertError.details);
+        console.error('Error hint:', insertError.hint);
         throw insertError;
       }
 
@@ -412,12 +461,42 @@ const Ultrasound = () => {
       setFile(null);
       setSelectedPatient(null);
       setSelectedDoctor(null);
+      setPatientSearchTerm("");
+      setDoctorSearchTerm("");
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving Ultrasound record:', error);
+
+      // Show detailed error message to help debug
+      let errorMessage = t('ultrasound.errors.tryAgain') || 'Failed to save Ultrasound record. Please try again.';
+
+      if (error && typeof error === 'object' && 'message' in error) {
+        const err = error as { message?: string; code?: string; details?: string; hint?: string };
+        if (err.message) {
+          errorMessage = err.message;
+        }
+
+        if (err.code) {
+          // Handle specific error codes
+          switch (err.code) {
+            case '42501': // Insufficient privilege
+              errorMessage = 'Permission denied. Please check your role permissions.';
+              break;
+            case 'PGRST301': // RLS policy violation
+              errorMessage = 'Access denied. Your role may not have permission to save ultrasound records.';
+              break;
+            case '23503': // Foreign key violation
+              errorMessage = 'Invalid patient data. Please select a valid patient.';
+              break;
+            default:
+              errorMessage = `Error (${err.code}): ${err.message || 'Please try again.'}`;
+          }
+        }
+      }
+
       toast({
         title: t('ultrasound.errors.saveFailed') || 'Save Failed',
-        description: t('ultrasound.errors.tryAgain') || 'Failed to save Ultrasound record. Please try again.',
+        description: errorMessage,
         variant: "destructive",
         className: "bg-red-50 border-red-200 text-red-800",
       });
@@ -750,32 +829,70 @@ const Ultrasound = () => {
                   <Label className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
                     {t('ultrasound.bodyPartSelection.placeholder')}
                   </Label>
-                  <Select
-                    value={selectedBodyParts.length > 0 ? selectedBodyParts[0] : ""}
-                    onValueChange={(value) => {
-                      if (value) {
-                        handleBodyPartsSelect([value]);
-                      } else {
-                        handleBodyPartsSelect([]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className={`${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                      <SelectValue placeholder={t('ultrasound.bodyPartSelection.placeholder') || 'Choose specific body part...'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="neck">{t('ultrasound.bodyParts.neck') || 'Neck'}</SelectItem>
-                      <SelectItem value="head">{t('ultrasound.bodyParts.head') || 'Head'}</SelectItem>
-                      <SelectItem value="abdomen">{t('ultrasound.bodyParts.abdomen') || 'Abdomen'}</SelectItem>
-                      <SelectItem value="abdomen_kidney">{t('ultrasound.bodyParts.abdomen_kidney') || 'Abdomen (Kidney)'}</SelectItem>
-                      <SelectItem value="abdomen_spleen">{t('ultrasound.bodyParts.abdomen_spleen') || 'Abdomen (Spleen)'}</SelectItem>
-                      <SelectItem value="abdomen_liver">{t('ultrasound.bodyParts.abdomen_liver') || 'Abdomen (Liver)'}</SelectItem>
-                      <SelectItem value="abdomen_stomach">{t('ultrasound.bodyParts.abdomen_stomach') || 'Abdomen (Stomach)'}</SelectItem>
-                      <SelectItem value="spine">{t('ultrasound.bodyParts.spine') || 'Spine'}</SelectItem>
-                      <SelectItem value="scrotum">{t('ultrasound.bodyParts.scrotum') || 'Scrotum'}</SelectItem>
-                      <SelectItem value="hip">{t('ultrasound.bodyParts.hip') || 'Hip (Infant)'}</SelectItem>
-                    </SelectContent>
-                  </Select>
+
+                  {/* Selected body parts count */}
+                  {selectedBodyParts.length > 0 && (
+                    <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      <span className="text-sm font-semibold text-green-800">
+                        {selectedBodyParts.length} {t('ultrasound.selected') || 'Selected'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Checkbox grid for body parts */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
+                    {[
+                      { value: 'neck', label: t('ultrasound.bodyParts.neck') || 'Neck' },
+                      { value: 'head', label: t('ultrasound.bodyParts.head') || 'Head' },
+                      { value: 'abdomen', label: t('ultrasound.bodyParts.abdomen') || 'Abdomen' },
+                      { value: 'abdomen_kidney', label: t('ultrasound.bodyParts.abdomen_kidney') || 'Abdomen (Kidney)' },
+                      { value: 'abdomen_spleen', label: t('ultrasound.bodyParts.abdomen_spleen') || 'Abdomen (Spleen)' },
+                      { value: 'abdomen_liver', label: t('ultrasound.bodyParts.abdomen_liver') || 'Abdomen (Liver)' },
+                      { value: 'abdomen_stomach', label: t('ultrasound.bodyParts.abdomen_stomach') || 'Abdomen (Stomach)' },
+                      { value: 'spine', label: t('ultrasound.bodyParts.spine') || 'Spine' },
+                      { value: 'scrotum', label: t('ultrasound.bodyParts.scrotum') || 'Scrotum' },
+                      { value: 'hip', label: t('ultrasound.bodyParts.hip') || 'Hip (Infant)' },
+                    ].map((bodyPart) => (
+                      <div
+                        key={bodyPart.value}
+                        className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all cursor-pointer hover:bg-slate-50 ${selectedBodyParts.includes(bodyPart.value)
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200'
+                          } ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}
+                        onClick={() => handleBodyPartToggle(bodyPart.value)}
+                      >
+                        <Checkbox
+                          id={bodyPart.value}
+                          checked={selectedBodyParts.includes(bodyPart.value)}
+                          onCheckedChange={() => handleBodyPartToggle(bodyPart.value)}
+                        />
+                        <label
+                          htmlFor={bodyPart.value}
+                          className={`text-sm font-medium text-slate-700 cursor-pointer flex-1 ${isRTL ? 'text-right' : 'text-left'}`}
+                          dir={isRTL ? 'rtl' : 'ltr'}
+                        >
+                          {bodyPart.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Clear all button */}
+                  {selectedBodyParts.length > 0 && (
+                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedBodyParts([])}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                        {t('ultrasound.actions.clearAll') || 'Clear All'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -861,7 +978,7 @@ const Ultrasound = () => {
             <Button
               size="lg"
               className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
-              disabled={!(selectedPatient || patientName) || selectedBodyParts.length === 0 || !file || !selectedDoctor}
+              disabled={!selectedPatient || selectedBodyParts.length === 0 || !file || !selectedDoctor}
               onClick={handleSubmit}
             >
               <CheckCircle className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />

@@ -227,7 +227,10 @@ export function Header() {
                 return t('roles.lab') || 'Laboratory';
             case 'x ray':
             case 'xray':
+            case 'x-ray':
                 return t('roles.xray') || 'X-Ray';
+            case 'ultrasound':
+                return t('roles.ultrasound') || 'Ultrasound';
             case 'patient':
                 return t('roles.patient') || 'Patient';
             default:
@@ -262,7 +265,10 @@ export function Header() {
                 return "bg-gradient-to-r from-amber-50 to-amber-100 text-amber-800 border-amber-200 hover:from-amber-100 hover:to-amber-200";
             case "x ray":
             case "xray":
+            case "x-ray":
                 return "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border-indigo-200 hover:from-indigo-100 hover:to-indigo-200";
+            case "ultrasound":
+                return "bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-800 border-cyan-200 hover:from-cyan-100 hover:to-cyan-200";
             case "patient":
                 return "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border-emerald-200 hover:from-emerald-100 hover:to-emerald-200";
             default:

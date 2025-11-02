@@ -375,7 +375,10 @@ const UsersManagement = () => {
                 return "Admin";
             case "x ray":
             case "xray":
+            case "x-ray":
                 return "X Ray";
+            case "ultrasound":
+                return "Ultrasound";
             default:
                 // Fallback to first letter capitalized
                 return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
@@ -1432,6 +1435,9 @@ const UsersManagement = () => {
                                             </SelectItem>
                                             <SelectItem value="X Ray" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
                                                 {t('roles.xray')}
+                                            </SelectItem>
+                                            <SelectItem value="Ultrasound" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.ultrasound')}
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>

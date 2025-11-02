@@ -1116,7 +1116,8 @@ const enTranslations = {
         // Actions
         "actions": {
             "saveRecord": "Save Ultrasound Record",
-            "resetForm": "Reset Form"
+            "resetForm": "Reset Form",
+            "clearAll": "Clear All"
         },
 
         // Common
@@ -1177,8 +1178,9 @@ const enTranslations = {
             "status": "Status",
             "completed": "Completed",
             "downloadFailed": "Failed to download image. Please try again.",
-            "deleteConfirm": "Are you sure you want to delete this Ultrasound image?",
-            "deleteSuccess": "Ultrasound image deleted successfully",
+            "deleteConfirmTitle": "Delete Ultrasound Image?",
+            "deleteConfirm": "Are you sure you want to delete this Ultrasound image? This action cannot be undone.",
+            "deleteSuccess": "The ultrasound image was deleted successfully.",
             "deleteError": "Failed to delete Ultrasound image"
         },
 
@@ -1253,6 +1255,7 @@ const enTranslations = {
         administrators: 'Administrators',
         labTechnicians: 'Lab Technicians',
         xrayTechnicians: 'X-Ray Technicians',
+        ultrasoundTechnicians: 'Ultrasound Technicians',
 
         // Overview Tab - Performance Summary
         performanceSummary: 'Performance Summary',
@@ -1858,6 +1861,7 @@ const enTranslations = {
         nurse: 'Nurse',
         lab: 'Laboratory',
         xray: 'X-Ray Technician',
+        ultrasound: 'Ultrasound Technician',
         patient: 'Patient'
     },
     aboutUs: {
@@ -3038,6 +3042,7 @@ const arTranslations = {
         administrators: 'المديرون',
         labTechnicians: 'فنيو المختبر',
         xrayTechnicians: 'فنيو الأشعة',
+        ultrasoundTechnicians: 'فنيو الموجات فوق الصوتية',
 
         // Overview Tab - Performance Summary
         performanceSummary: 'ملخص الأداء',
@@ -3614,6 +3619,7 @@ const arTranslations = {
         nurse: 'ممرض',
         lab: 'مختبر',
         xray: 'فني أشعة',
+        ultrasound: 'فني موجات فوق صوتية',
         patient: 'مريض'
     },
     aboutUs: {
@@ -4090,7 +4096,8 @@ const arTranslations = {
         // Actions
         actions: {
             saveRecord: 'حفظ سجل الموجات فوق الصوتية',
-            resetForm: 'إعادة تعيين النموذج'
+            resetForm: 'إعادة تعيين النموذج',
+            clearAll: 'مسح الكل'
         },
 
         // Common
@@ -4151,8 +4158,9 @@ const arTranslations = {
             status: 'الحالة',
             completed: 'مكتمل',
             downloadFailed: 'فشل في تحميل الصورة. يرجى المحاولة مرة أخرى.',
-            deleteConfirm: 'هل أنت متأكد من حذف صورة الموجات فوق الصوتية هذه؟',
-            deleteSuccess: 'تم حذف صورة الموجات فوق الصوتية بنجاح',
+            deleteConfirmTitle: 'حذف صورة الموجات فوق الصوتية؟',
+            deleteConfirm: 'هل أنت متأكد من حذف صورة الموجات فوق الصوتية هذه؟ لا يمكن التراجع عن هذا الإجراء.',
+            deleteSuccess: 'تم حذف صورة الموجات فوق الصوتية بنجاح.',
             deleteError: 'فشل في حذف صورة الموجات فوق الصوتية'
         },
 

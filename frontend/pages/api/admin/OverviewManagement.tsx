@@ -164,7 +164,8 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
             { key: 'nurse', name: t('admin.nurses'), color: '#ec4899' }, // Pink (matches current nurses card)
             { key: 'admin', name: t('admin.administrators'), color: '#ef4444' }, // Red (matches current admin card)
             { key: 'lab', name: t('admin.labTechnicians'), color: '#eab308' }, // Yellow (matches current lab card)
-            { key: 'x ray', name: t('admin.xrayTechnicians'), color: '#14b8a6' } // Teal (matches current x-ray card)
+            { key: 'x ray', name: t('admin.xrayTechnicians'), color: '#14b8a6' }, // Teal (matches current x-ray card)
+            { key: 'ultrasound', name: t('admin.ultrasoundTechnicians'), color: '#f59e0b' } // Amber (ultrasound card)
         ];
 
         // If users array is empty or still loading, return empty data
@@ -529,6 +530,23 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                                 <span className="ml-1 text-xs">
                                                     ({users.length > 0 ?
                                                         Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length / users.length) * 100) : 0}%)
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>,
+
+                                    // Ultrasound Technicians
+                                    <div key="ultrasound" className={`flex items-center p-3 rounded-lg border bg-amber-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center mx-3">
+                                            <Activity className="h-5 w-5 text-amber-600" />
+                                        </div>
+                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                                            <p className="font-medium text-amber-800">{t('admin.ultrasoundTechnicians')}</p>
+                                            <p className="text-sm text-amber-600">
+                                                {users.filter(u => u.user_roles?.toLowerCase() === 'ultrasound').length} {t('admin.users')}
+                                                <span className="ml-1 text-xs">
+                                                    ({users.length > 0 ?
+                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'ultrasound').length / users.length) * 100) : 0}%)
                                                 </span>
                                             </p>
                                         </div>

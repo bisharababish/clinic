@@ -31,7 +31,11 @@ const UserRoleBadge = ({ role }: UserRoleBadgeProps) => {
       case "lab":
         return "bg-indigo-100 text-indigo-800 border-indigo-200";
       case "x ray":
+      case "xray":
+      case "x-ray":
         return "bg-orange-100 text-orange-800 border-orange-200";
+      case "ultrasound":
+        return "bg-amber-100 text-amber-800 border-amber-200";
       case "patient":
       default:
         return "bg-green-100 text-green-800 border-green-200";
@@ -50,7 +54,10 @@ const UserRoleBadge = ({ role }: UserRoleBadgeProps) => {
       'nurse': 'ممرض',
       'lab': 'مختبر',
       'admin': 'مدير',
-      'x ray': 'أشعة'
+      'x ray': 'أشعة',
+      'xray': 'أشعة',
+      'x-ray': 'أشعة',
+      'ultrasound': 'موجات فوق صوتية'
     };
 
     return arabicRoles[roleType.toLowerCase()] || roleType.charAt(0).toUpperCase() + roleType.slice(1);

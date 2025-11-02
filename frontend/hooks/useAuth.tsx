@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabaseClient as supabase } from '../lib/supabase';
 import { SessionManager } from '../lib/sessionManager';
 
-export type UserRole = 'admin' | 'doctor' | 'secretary' | 'patient' | 'x ray' | 'xray' | 'x-ray' | 'lab' | 'nurse';
+export type UserRole = 'admin' | 'doctor' | 'secretary' | 'patient' | 'x ray' | 'xray' | 'x-ray' | 'lab' | 'nurse' | 'ultrasound';
 
 interface User {
     id: string;
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         // Handle other roles
-        const validRoles: UserRole[] = ['admin', 'doctor', 'secretary', 'patient', 'x ray', 'lab', 'nurse'];
+        const validRoles: UserRole[] = ['admin', 'doctor', 'secretary', 'patient', 'x ray', 'lab', 'nurse', 'ultrasound'];
         return validRoles.includes(normalizedRole as UserRole) ? normalizedRole as UserRole : 'patient';
     };
 

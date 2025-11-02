@@ -444,33 +444,148 @@ const DoctorUltrasoundPage: React.FC = () => {
     };
 
     // 2. Add delete handler function
+    // Helper function to extract file path from full URL
+    // Storage.remove() needs the path relative to the bucket (includes bucket prefix)
+    const extractFilePathFromUrl = (url: string): string | null => {
+        if (!url) return null;
+        
+        try {
+            // URL format: https://[project].supabase.co/storage/v1/object/public/ultrasound-images/filename.jpg
+            // We need to extract: ultrasound-images/filename.jpg (full path with bucket)
+            
+            let filePath: string | null = null;
+            
+            // Pattern 1: Standard Supabase public URL
+            // Extract everything after /object/public/ up to query string or end
+            const pattern1 = url.match(/\/storage\/v1\/object\/public\/(ultrasound-images\/.+?)(?:\?|$)/);
+            if (pattern1 && pattern1[1]) {
+                filePath = pattern1[1];
+            }
+            
+            // Pattern 2: Alternative URL format
+            if (!filePath) {
+                const pattern2 = url.match(/\/object\/public\/(ultrasound-images\/.+?)(?:\?|$)/);
+                if (pattern2 && pattern2[1]) {
+                    filePath = pattern2[1];
+                }
+            }
+            
+            // Pattern 3: If URL already contains just the path
+            if (!filePath && url.includes('ultrasound-images/')) {
+                const match = url.match(/(ultrasound-images\/[^/?\s]+)/);
+                if (match && match[1]) {
+                    filePath = match[1];
+                }
+            }
+            
+            // Pattern 4: Direct path format
+            if (!filePath && url.startsWith('ultrasound-images/')) {
+                filePath = url.split('?')[0]; // Remove query params if any
+            }
+            
+            // Clean up: remove any trailing slashes or query params
+            if (filePath) {
+                filePath = filePath.split('?')[0].split('#')[0].trim();
+            }
+            
+            // Log for debugging
+            console.log('🔍 Original URL:', url);
+            console.log('📁 Extracted file path:', filePath);
+            
+            return filePath;
+        } catch (error) {
+            console.error('Error extracting file path:', error);
+            return null;
+        }
+    };
+
     const handleDeleteImage = async (image: UltrasoundImage): Promise<void> => {
         setDeletingId(image.id);
-        setError(null); // ADD THIS LINE
+        setError(null);
 
         try {
-            // Delete from database
+            // First, extract the file path from the URL before deleting from database
+            let filePathToDelete: string | null = null;
+            if (image.image_url) {
+                filePathToDelete = extractFilePathFromUrl(image.image_url);
+            }
+
+            // Delete from database first
             const { error: dbError } = await supabase
                 .from('ultrasound_images')
                 .delete()
                 .eq('id', image.id);
-            if (dbError) throw dbError;
+            
+            if (dbError) {
+                throw dbError;
+            }
 
-            // Optionally, delete from storage
-            if (image.image_url) {
-                const { error: storageError } = await supabase.storage
-                    .from('ultrasound-images')
-                    .remove([image.image_url]);
-                if (storageError) console.warn('Storage delete error:', storageError);
+            // Delete from storage bucket if we have a valid file path
+            let storageDeleted = false;
+            if (filePathToDelete) {
+                try {
+                    console.log('🗑️ Attempting to delete file from storage bucket "ultrasound-images"');
+                    console.log('📁 File path to delete:', filePathToDelete);
+                    
+                    // Try with the full path first (ultrasound-images/filename.jpg)
+                    let { error: storageError, data } = await supabase.storage
+                        .from('ultrasound-images')
+                        .remove([filePathToDelete]);
+                    
+                    // If that fails, try with just the filename (without bucket prefix)
+                    if (storageError && filePathToDelete.includes('/')) {
+                        const justFilename = filePathToDelete.split('/').pop();
+                        if (justFilename) {
+                            console.log('🔄 Retrying with just filename:', justFilename);
+                            const retryResult = await supabase.storage
+                                .from('ultrasound-images')
+                                .remove([justFilename]);
+                            storageError = retryResult.error;
+                            data = retryResult.data;
+                        }
+                    }
+                    
+                    if (storageError) {
+                        console.error('❌ Storage delete error:', storageError);
+                        console.error('❌ Error code:', storageError.error);
+                        console.error('❌ Error message:', storageError.message);
+                        // Don't throw - database is already deleted, just log the error
+                        toast({
+                            title: t('ultrasound.doctorUltrasoundPage.deleteSuccess') || 'Ultrasound Image Deleted',
+                            description: `Database deleted, but storage error: ${storageError.message}. Check console for details.`,
+                            variant: 'default',
+                            style: { backgroundColor: '#16a34a', color: '#fff' },
+                        });
+                    } else {
+                        console.log('✅ Storage delete successful!', data);
+                        storageDeleted = true;
+                    }
+                } catch (storageErr) {
+                    console.error('❌ Storage delete exception:', storageErr);
+                    // Database deletion succeeded, show success but mention storage issue
+                    toast({
+                        title: t('ultrasound.doctorUltrasoundPage.deleteSuccess') || 'Ultrasound Image Deleted',
+                        description: `Database deleted, but storage exception: ${storageErr instanceof Error ? storageErr.message : 'Unknown error'}`,
+                        variant: 'default',
+                        style: { backgroundColor: '#16a34a', color: '#fff' },
+                    });
+                }
+            } else {
+                console.warn('⚠️ No file path extracted from URL:', image.image_url);
             }
 
             // Remove from UI
             setUltrasoundImages(prev => prev.filter(x => x.id !== image.id));
-            toast({
-                title: t('doctorPages.deleteSuccess') || 'Image deleted',
-                description: t('doctorPages.deleteSuccessDesc') || 'The Ultrasound image was deleted successfully.',
-                variant: 'default',
-            });
+            
+            // Show success toast if storage was deleted or if no file path was found
+            if (storageDeleted || !filePathToDelete) {
+                toast({
+                    title: t('ultrasound.doctorUltrasoundPage.deleteSuccess') || 'The ultrasound image was deleted successfully.',
+                    description: '',
+                    variant: 'default',
+                    style: { backgroundColor: '#16a34a', color: '#fff' },
+                });
+            }
         } catch (err) {
             toast({
                 title: t('doctorPages.deleteFailed') || 'Failed to delete image.',
@@ -679,7 +794,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                                     {image.indication && (
                                         <div className="mb-4">
                                             <p className="text-sm text-gray-600">
-                                                <span className="font-medium">{t('ultrasound.clinicalIndication') || 'Clinical Indication'}:</span> {image.indication}
+                                                <span className="font-medium">{t('ultrasound.clinicalIndication.title') || t('ultrasound.doctorUltrasoundPage.clinicalIndication') || 'Clinical Indication'}:</span> {image.indication}
                                             </p>
                                         </div>
                                     )}
@@ -713,9 +828,9 @@ const DoctorUltrasoundPage: React.FC = () => {
                                             </AlertDialogTrigger>
                                                 <AlertDialogContent className={`${isRTL ? 'text-right' : 'text-left'} ${isRTL ? '[&>button]:left-4 [&>button]:right-auto' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
                                                     <AlertDialogHeader className={isRTL ? 'text-right' : 'text-left'}>
-                                                        <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>{t('doctorPages.confirmDeleteTitle') || 'Delete Ultrasound Image?'}</AlertDialogTitle>
+                                                        <AlertDialogTitle className={isRTL ? 'text-right' : 'text-left'}>{t('ultrasound.doctorUltrasoundPage.deleteConfirmTitle') || 'Delete Ultrasound Image?'}</AlertDialogTitle>
                                                         <AlertDialogDescription className={isRTL ? 'text-right' : 'text-left'}>
-                                                            {t('doctorPages.confirmDeleteDesc') || 'Are you sure you want to delete this Ultrasound image? This action cannot be undone.'}
+                                                            {t('ultrasound.doctorUltrasoundPage.deleteConfirm') || 'Are you sure you want to delete this Ultrasound image? This action cannot be undone.'}
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter className={`gap-4 ${isRTL ? 'flex-row-reverse justify-start' : 'justify-end'}`}>
@@ -867,7 +982,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                                     {selectedImage.indication && (
                                         <div>
                                             <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">
-                                                {t('ultrasound.clinicalIndication') || 'Clinical Indication'}
+                                                {t('ultrasound.clinicalIndication.title') || t('ultrasound.doctorUltrasoundPage.clinicalIndication') || 'Clinical Indication'}
                                             </h3>
                                             <p className="text-xs sm:text-sm text-gray-700 bg-white p-2 sm:p-3 rounded border">
                                                 {selectedImage.indication}

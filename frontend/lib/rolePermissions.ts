@@ -158,6 +158,32 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canViewPreview: false, // X-ray cannot view preview mode
 
   },
+  ultrasound: {
+    canViewHome: false,
+    canViewClinics: false,
+    canViewLabs: false,
+    canViewXray: false,
+    canViewUltrasound: true,
+    canViewAdmin: false,
+    canViewAppointments: false,
+    canViewOverview: false,
+    canViewUsers: false,
+    canViewDoctors: false,
+    canCreateAppointments: false,
+    canManageUsers: false,
+    canManageClinics: false,
+    canManageDoctors: false,
+    canViewReports: false,
+    canViewDoctorLabs: false,
+    canViewDoctorXray: false,
+    canViewDoctorUltrasound: false,
+    canViewCalendar: false,
+    canRequestUserDeletion: false,
+    canApproveUserDeletion: false,
+    canViewPatients: false,
+    canViewPreview: false, // Ultrasound cannot view preview mode
+
+  },
   nurse: {
     canViewHome: true,
     canViewClinics: false,
@@ -260,6 +286,8 @@ export const getDefaultRouteForRole = (role: string): string => {
     case 'xray':
     case 'x-ray':
       return '/xray';
+    case 'ultrasound':
+      return '/ultrasound';
     case 'admin':
       return '/admin';
     case 'secretary':
