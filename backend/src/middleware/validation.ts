@@ -6,6 +6,11 @@ const deleteUserSchema = z.object({
     authUserId: z.string().uuid('Invalid user ID format')
 });
 
+const updatePasswordSchema = z.object({
+    userEmail: z.string().email('Invalid email format'),
+    newPassword: z.string().min(6, 'Password must be at least 6 characters')
+});
+
 const healthCheckSchema = z.object({
     // No validation needed for health check
 });
@@ -34,6 +39,7 @@ const validateRequest = (schema: z.ZodSchema) => {
 
 // Specific validation middlewares
 export const validateDeleteUser = validateRequest(deleteUserSchema);
+export const validateUpdatePassword = validateRequest(updatePasswordSchema);
 export const validateHealthCheck = validateRequest(healthCheckSchema);
 
 // Input sanitization middleware

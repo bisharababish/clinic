@@ -18,7 +18,7 @@ import rateLimit from 'express-rate-limit';
 import * as dotenv from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { logAuth, logError, logInfo, logSecurity } from './src/utils/logger.js';
-import { validateDeleteUser, sanitizeInput } from './src/middleware/validation.js';
+import { validateDeleteUser, validateUpdatePassword, sanitizeInput } from './src/middleware/validation.js';
 import { healthCheck, simpleHealthCheck } from './src/middleware/healthCheck.js';
 import { validateSession, csrfProtection, sessionTimeout } from './src/middleware/session.js';
 
@@ -145,6 +145,82 @@ const authenticateAdmin = async (req: Request, res: Response, next: NextFunction
         });
     }
 };
+
+// Update password endpoint
+app.post('/api/admin/update-password', authenticateAdmin, validateUpdatePassword, csrfProtection, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userEmail, newPassword } = req.body as { userEmail?: string; newPassword?: string };
+
+        if (!userEmail || !newPassword) {
+            res.status(400).json({
+                error: 'User email and new password are required',
+                success: false
+            });
+            return;
+        }
+
+        // Log password update attempt
+        logAuth('update_password', userEmail, true);
+
+        // First, find the user by email
+        const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+
+        if (listError) {
+            logSecurity('Failed to list users for password update', { error: listError.message });
+            res.status(400).json({
+                error: 'Failed to list users',
+                detail: listError.message,
+                success: false
+            });
+            return;
+        }
+
+        const usersList: Array<{ email?: string; id: string }> = existingUsers?.users ?? [];
+        const targetUser = usersList.find(u => u.email && u.email === userEmail);
+
+        if (!targetUser) {
+            logSecurity('User not found for password update', { email: userEmail });
+            res.status(404).json({
+                error: 'User not found',
+                detail: 'No user found with the provided email',
+                success: false
+            });
+            return;
+        }
+
+        // Update password using Admin API
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+            targetUser.id,
+            { password: newPassword }
+        );
+
+        if (updateError) {
+            logSecurity('Password update failed', { error: updateError.message, email: userEmail });
+            res.status(400).json({
+                error: 'Failed to update password',
+                detail: updateError.message,
+                success: false
+            });
+            return;
+        }
+
+        // Password updated successfully
+        logAuth('update_password', userEmail, true);
+
+        res.status(200).json({
+            success: true,
+            message: 'Password updated successfully',
+            userEmail
+        });
+
+    } catch (error) {
+        logError(error instanceof Error ? error : new Error('Unknown error'), 'update_password');
+        res.status(500).json({
+            error: 'Internal server error',
+            message: 'An unexpected error occurred'
+        });
+    }
+});
 
 // Delete auth user endpoint
 app.post('/api/admin/delete-user', authenticateAdmin, validateDeleteUser, csrfProtection, async (req: Request, res: Response): Promise<void> => {
