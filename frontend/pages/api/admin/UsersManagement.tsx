@@ -517,9 +517,15 @@ const UsersManagement = () => {
 
                 const backendUrl = getBackendUrl();
 
-                // Get CSRF token
-                const csrfToken = sessionStorage.getItem('csrf_token') ||
-                    Math.random().toString(36).substring(2, 15);
+                // Get CSRF token (must be at least 32 characters as required by backend)
+                const generateCSRFToken = (): string => {
+                    return Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                        .map(b => b.toString(36))
+                        .join('')
+                        .substring(0, 32);
+                };
+                
+                const csrfToken = sessionStorage.getItem('csrf_token') || generateCSRFToken();
                 sessionStorage.setItem('csrf_token', csrfToken);
 
                 const authDeleteResponse = await fetch(

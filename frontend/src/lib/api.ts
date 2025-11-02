@@ -57,8 +57,15 @@ export async function apiCall<T>(
 
         // Add CSRF token for non-GET requests
         if (options.method && options.method !== 'GET') {
-            const csrfToken = sessionStorage.getItem('csrf_token') ||
-                Math.random().toString(36).substring(2, 15);
+            // Generate a token that's at least 32 characters long (as required by backend)
+            const generateCSRFToken = (): string => {
+                return Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                    .map(b => b.toString(36))
+                    .join('')
+                    .substring(0, 32);
+            };
+
+            const csrfToken = sessionStorage.getItem('csrf_token') || generateCSRFToken();
             headers['X-CSRF-Token'] = csrfToken;
             sessionStorage.setItem('csrf_token', csrfToken);
         }

@@ -18,7 +18,7 @@ const getBackendUrl = (): string => {
   if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
     return 'https://api.bethlehemmedcenter.com';
   }
-  
+
   // Check hostname to determine environment
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
@@ -29,7 +29,7 @@ const getBackendUrl = (): string => {
     // For any other hostname (including production domain), use production API
     return 'https://api.bethlehemmedcenter.com';
   }
-  
+
   // Default to production URL for safety
   return 'https://api.bethlehemmedcenter.com';
 };
@@ -44,7 +44,7 @@ export const useDeleteUser = () => {
 
     try {
       const backendUrl = getBackendUrl();
-      
+
       const response = await fetch(`${backendUrl}/api/admin/delete-user`, {
         method: 'POST',
         headers: {

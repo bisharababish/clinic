@@ -41,7 +41,7 @@ class PalestinianPaymentService {
 
         // Default to production URL for safety
         this.baseUrl = 'https://api.bethlehemmedcenter.com';
-        
+
         // Allow override via environment variable
         const envUrl = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL;
         if (envUrl) {
