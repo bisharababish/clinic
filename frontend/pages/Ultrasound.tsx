@@ -382,13 +382,13 @@ const Ultrasound = () => {
 
     try {
       // Upload file to Supabase Storage
+      // Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `ultrasound-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('ultrasound-images')
-        .upload(filePath, file);
+        .upload(fileName, file);
 
       if (uploadError) {
         throw uploadError;
@@ -397,8 +397,7 @@ const Ultrasound = () => {
       // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('ultrasound-images')
-        .getPublicUrl(filePath);
-
+        .getPublicUrl(fileName);
       // Prepare patient data - patient_id is required, so if no patient selected,
       // we need to create a temporary patient entry or use a placeholder
       // For now, we'll require patient selection or use a fallback patient_id
@@ -433,7 +432,7 @@ const Ultrasound = () => {
           body_part: selectedBodyParts, // Store array of body parts
           indication: clinicalIndication || null,
           requesting_doctor: selectedDoctor?.name || requestingDoctor || null,
-          image_url: publicUrl
+          image_url: fileName  // ← Change this from publicUrl to fileName
         });
 
       if (insertError) {

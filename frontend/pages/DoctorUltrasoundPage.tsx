@@ -443,58 +443,31 @@ const DoctorUltrasoundPage: React.FC = () => {
         await fetchUltrasoundImages();
     };
 
-    // 2. Add delete handler function
-    // Helper function to extract file path from full URL
-    // Storage.remove() needs the path relative to the bucket (includes bucket prefix)
     const extractFilePathFromUrl = (url: string): string | null => {
         if (!url) return null;
-        
+
         try {
-            // URL format: https://[project].supabase.co/storage/v1/object/public/ultrasound-images/filename.jpg
-            // We need to extract: ultrasound-images/filename.jpg (full path with bucket)
-            
-            let filePath: string | null = null;
-            
-            // Pattern 1: Standard Supabase public URL
-            // Extract everything after /object/public/ up to query string or end
-            const pattern1 = url.match(/\/storage\/v1\/object\/public\/(ultrasound-images\/.+?)(?:\?|$)/);
-            if (pattern1 && pattern1[1]) {
-                filePath = pattern1[1];
-            }
-            
-            // Pattern 2: Alternative URL format
-            if (!filePath) {
-                const pattern2 = url.match(/\/object\/public\/(ultrasound-images\/.+?)(?:\?|$)/);
-                if (pattern2 && pattern2[1]) {
-                    filePath = pattern2[1];
-                }
-            }
-            
-            // Pattern 3: If URL already contains just the path
-            if (!filePath && url.includes('ultrasound-images/')) {
-                const match = url.match(/(ultrasound-images\/[^/?\s]+)/);
-                if (match && match[1]) {
-                    filePath = match[1];
-                }
-            }
-            
-            // Pattern 4: Direct path format
-            if (!filePath && url.startsWith('ultrasound-images/')) {
-                filePath = url.split('?')[0]; // Remove query params if any
-            }
-            
-            // Clean up: remove any trailing slashes or query params
-            if (filePath) {
-                filePath = filePath.split('?')[0].split('#')[0].trim();
-            }
-            
-            // Log for debugging
             console.log('🔍 Original URL:', url);
-            console.log('📁 Extracted file path:', filePath);
-            
-            return filePath;
+
+            // Extract just the filename from the URL
+            // Extract just the filename from the URL
+            const parts = url.split('/');
+            const filename = parts[parts.length - 1];
+
+            // Remove query params if any
+            let cleanFilename = filename.split('?')[0];
+
+            // Check if the URL has double bucket prefix (ultrasound-images/ultrasound-images/)
+            // If so, we need to include the bucket prefix in the path
+            if (url.includes('/ultrasound-images/ultrasound-images/')) {
+                cleanFilename = 'ultrasound-images/' + cleanFilename;
+            }
+
+            console.log('📁 Extracted filename:', cleanFilename);
+            return cleanFilename;
+
         } catch (error) {
-            console.error('Error extracting file path:', error);
+            console.error('Error extracting filename:', error);
             return null;
         }
     };
@@ -505,9 +478,15 @@ const DoctorUltrasoundPage: React.FC = () => {
 
         try {
             // First, extract the file path from the URL before deleting from database
+            // First, extract the file path from the URL before deleting from database
             let filePathToDelete: string | null = null;
-            if (image.image_url) {
-                filePathToDelete = extractFilePathFromUrl(image.image_url);
+            if (image.imageUrl) {
+                filePathToDelete = extractFilePathFromUrl(image.imageUrl);
+                console.log('🔍 Extracted from imageUrl:', filePathToDelete);
+            } else if (image.image_url) {
+                // Fallback: use image_url directly if it's just a filename
+                filePathToDelete = image.image_url;
+                console.log('📁 Using image_url directly:', filePathToDelete);
             }
 
             // Delete from database first
@@ -515,7 +494,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                 .from('ultrasound_images')
                 .delete()
                 .eq('id', image.id);
-            
+
             if (dbError) {
                 throw dbError;
             }
@@ -524,45 +503,34 @@ const DoctorUltrasoundPage: React.FC = () => {
             let storageDeleted = false;
             if (filePathToDelete) {
                 try {
-                    console.log('🗑️ Attempting to delete file from storage bucket "ultrasound-images"');
-                    console.log('📁 File path to delete:', filePathToDelete);
-                    
-                    // Try with the full path first (ultrasound-images/filename.jpg)
-                    let { error: storageError, data } = await supabase.storage
-                        .from('ultrasound-images')
-                        .remove([filePathToDelete]);
-                    
-                    // If that fails, try with just the filename (without bucket prefix)
-                    if (storageError && filePathToDelete.includes('/')) {
-                        const justFilename = filePathToDelete.split('/').pop();
-                        if (justFilename) {
-                            console.log('🔄 Retrying with just filename:', justFilename);
-                            const retryResult = await supabase.storage
-                                .from('ultrasound-images')
-                                .remove([justFilename]);
-                            storageError = retryResult.error;
-                            data = retryResult.data;
-                        }
+                    // Remove the 'ultrasound-images/' prefix if present
+                    let cleanPath = filePathToDelete;
+                    if (filePathToDelete.startsWith('ultrasound-images/')) {
+                        cleanPath = filePathToDelete.replace('ultrasound-images/', '');
                     }
-                    
+
+                    console.log('🗑️ Deleting from bucket: ultrasound-images');
+                    console.log('📁 Original path:', filePathToDelete);
+                    console.log('📁 Clean path:', cleanPath);
+
+                    const { error: storageError, data } = await supabase.storage
+                        .from('ultrasound-images')
+                        .remove([cleanPath]);
+
                     if (storageError) {
-                        console.error('❌ Storage delete error:', storageError);
-                        console.error('❌ Error code:', storageError.error);
-                        console.error('❌ Error message:', storageError.message);
-                        // Don't throw - database is already deleted, just log the error
+                        console.error('❌ Storage error:', storageError.message);
                         toast({
                             title: t('ultrasound.doctorUltrasoundPage.deleteSuccess') || 'Ultrasound Image Deleted',
-                            description: `Database deleted, but storage error: ${storageError.message}. Check console for details.`,
+                            description: `Database deleted, but storage error: ${storageError.message}`,
                             variant: 'default',
                             style: { backgroundColor: '#16a34a', color: '#fff' },
                         });
                     } else {
-                        console.log('✅ Storage delete successful!', data);
+                        console.log('✅ Storage deleted successfully!', data);
                         storageDeleted = true;
                     }
                 } catch (storageErr) {
-                    console.error('❌ Storage delete exception:', storageErr);
-                    // Database deletion succeeded, show success but mention storage issue
+                    console.error('❌ Storage exception:', storageErr);
                     toast({
                         title: t('ultrasound.doctorUltrasoundPage.deleteSuccess') || 'Ultrasound Image Deleted',
                         description: `Database deleted, but storage exception: ${storageErr instanceof Error ? storageErr.message : 'Unknown error'}`,
@@ -576,7 +544,7 @@ const DoctorUltrasoundPage: React.FC = () => {
 
             // Remove from UI
             setUltrasoundImages(prev => prev.filter(x => x.id !== image.id));
-            
+
             // Show success toast if storage was deleted or if no file path was found
             if (storageDeleted || !filePathToDelete) {
                 toast({

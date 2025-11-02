@@ -20,7 +20,6 @@ import UserRoleBadge from '../../../components/auth/UserRoleBadge';
 import { useTranslation } from 'react-i18next';
 import "../../styles/usersmanagement.css"
 import { Skeleton } from "../../../components/ui/skeleton";
-import { createClient } from '@supabase/supabase-js';
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useAdminState } from "../../../hooks/useAdminState";
 import DeletionRequestModal from '../../../components/DeletionRequestModal';
@@ -840,69 +839,49 @@ const UsersManagement = () => {
 
                 if (userFormData.user_password) {
                     try {
-                        // Check if service role key is available
-                        const serviceRoleKey = (import.meta as { env?: { VITE_SUPABASE_SERVICE_ROLE_KEY?: string } }).env?.VITE_SUPABASE_SERVICE_ROLE_KEY;
-                        const supabaseUrl = (import.meta as { env?: { VITE_SUPABASE_URL?: string } }).env?.VITE_SUPABASE_URL;
+                        console.log('🔐 Calling backend to update password...');
 
-                        if (!serviceRoleKey) {
-                            throw new Error('Service role key not found in environment variables');
+                        // Get current session for authentication
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (!session?.access_token) {
+                            throw new Error('No authentication session found');
                         }
 
-                        if (!supabaseUrl) {
-                            throw new Error('Supabase URL not found in environment variables');
-                        }
+                        const backendUrl = (import.meta as { env?: { VITE_BACKEND_URL?: string } }).env?.VITE_BACKEND_URL || 'http://localhost:5000';
+                        
+                        // Get CSRF token
+                        const csrfToken = sessionStorage.getItem('csrf_token') || 
+                            Math.random().toString(36).substring(2, 15);
+                        sessionStorage.setItem('csrf_token', csrfToken);
 
-                        console.log('Creating service client for password update...');
-
-                        const serviceClient = createClient(
-                            supabaseUrl,
-                            serviceRoleKey,
+                        const passwordUpdateResponse = await fetch(
+                            `${backendUrl}/api/admin/update-password`,
                             {
-                                auth: {
-                                    autoRefreshToken: false,
-                                    persistSession: false
-                                }
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${session.access_token}`,
+                                    'X-CSRF-Token': csrfToken
+                                },
+                                body: JSON.stringify({
+                                    userEmail: userFormData.user_email,
+                                    newPassword: userFormData.user_password
+                                })
                             }
                         );
 
-                        const { data: existingUsers, error: listError } = await serviceClient.auth.admin.listUsers();
+                        const passwordUpdateData = await passwordUpdateResponse.json();
 
-                        if (listError) {
-                            throw new Error(`Failed to list users: ${listError.message}`);
-                        }
-                        // Explicitly type users as Array<{ email?: string; id: string }>
-                        const usersList: Array<{ email?: string; id: string }> = existingUsers?.users ?? [];
-                        let targetUser = usersList.find(u => u.email && u.email === userFormData.user_email);
-                        /*&& u.email*/
-                        if (!targetUser) {
-                            console.log("User not found in auth, creating auth user...");
-                            const { data: newAuthUser, error: createError } = await serviceClient.auth.admin.createUser({
-                                email: userFormData.user_email,
-                                password: userFormData.user_password,
-                                email_confirm: true
-                            });
-
-                            if (createError) {
-                                throw createError;
-                            }
-                            targetUser = newAuthUser.user;
-                        } else {
-                            const { error: updateError } = await serviceClient.auth.admin.updateUserById(
-                                targetUser.id,
-                                { password: userFormData.user_password }
-                            );
-
-                            if (updateError) {
-                                throw updateError;
-                            }
+                        if (!passwordUpdateResponse.ok) {
+                            throw new Error(passwordUpdateData.error || passwordUpdateData.detail || 'Failed to update password');
                         }
 
-                        console.log("Password updated successfully in auth");
+                        console.log("✅ Password updated successfully in auth");
                     } catch (error) {
-                        console.error("Error updating password:", error);
+                        console.error("❌ Error updating password:", error);
                         toast({
                             title: t('common.error'),
-                            description: "Failed to update password: " + error.message,
+                            description: "Failed to update password: " + (error instanceof Error ? error.message : String(error)),
                             variant: "destructive",
                         });
                         return;

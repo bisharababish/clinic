@@ -82,6 +82,13 @@ export async function deleteUser(authUserId: string): Promise<{ success: boolean
     });
 }
 
+export async function updatePassword(userEmail: string, newPassword: string): Promise<{ success: boolean; message: string; userEmail: string }> {
+    return apiCall('/api/admin/update-password', {
+        method: 'POST',
+        body: JSON.stringify({ userEmail, newPassword }),
+    });
+}
+
 export async function checkHealth(): Promise<{ status: string; timestamp: string }> {
     return apiCall('/health');
 }
