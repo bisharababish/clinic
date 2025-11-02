@@ -12,19 +12,19 @@ const getApiBaseUrl = (): string => {
     if (typeof window !== 'undefined') {
         const hostname = window.location.hostname.toLowerCase();
         console.log('🌐 API Base URL - Detected hostname:', hostname);
-        
+
         // Use localhost only if actually running on localhost
         if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
             console.log('📍 Using localhost backend:', 'http://localhost:5000');
             return 'http://localhost:5000';
         }
-        
+
         // For production domain, use production API
         if (hostname.includes('bethlehemmedcenter.com')) {
             console.log('📍 Using production backend:', 'https://api.bethlehemmedcenter.com');
             return 'https://api.bethlehemmedcenter.com';
         }
-        
+
         // Default to production API for any other domain
         console.log('📍 Using production backend (default):', 'https://api.bethlehemmedcenter.com');
         return 'https://api.bethlehemmedcenter.com';
@@ -45,14 +45,14 @@ export async function apiCall<T>(
         // Get current session for authentication
         const { data: { session } } = await supabase.auth.getSession();
 
-        const headers: HeadersInit = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-            ...options.headers,
+            ...(options.headers as Record<string, string>),
         };
 
         // Add authentication header if session exists
         if (session?.access_token) {
-            headers.Authorization = `Bearer ${session.access_token}`;
+            headers['Authorization'] = `Bearer ${session.access_token}`;
         }
 
         // Add CSRF token for non-GET requests
@@ -65,7 +65,7 @@ export async function apiCall<T>(
 
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
-            headers,
+            headers: headers as HeadersInit,
             credentials: 'include',
         });
 
