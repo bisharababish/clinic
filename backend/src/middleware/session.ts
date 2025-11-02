@@ -40,11 +40,21 @@ const validateCSRFToken = (userId: string, token: string): boolean => {
         return false;
     }
 
-    // Compare tokens using timing-safe comparison
-    return crypto.timingSafeEqual(
-        Buffer.from(stored.token),
-        Buffer.from(token)
-    );
+    // Check token lengths match before comparison
+    if (stored.token.length !== token.length) {
+        return false;
+    }
+
+    try {
+        // Compare tokens using timing-safe comparison
+        return crypto.timingSafeEqual(
+            Buffer.from(stored.token),
+            Buffer.from(token)
+        );
+    } catch (error) {
+        console.error('CSRF token comparison error:', error);
+        return false;
+    }
 };
 
 // Session validation middleware
@@ -62,10 +72,20 @@ export const validateSession = async (req: Request, res: Response, next: NextFun
 
         const token = authHeader.substring(7);
 
+        // Validate environment variables
+        if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+            console.error('❌ Missing Supabase environment variables');
+            res.status(500).json({
+                error: 'Internal server error',
+                message: 'Server configuration error'
+            });
+            return;
+        }
+
         // Create a client to verify the session
         const supabase = createClient(
-            process.env.SUPABASE_URL as string,
-            process.env.SUPABASE_ANON_KEY as string
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY
         );
 
         const { data: { user }, error } = await supabase.auth.getUser(token);
@@ -89,6 +109,7 @@ export const validateSession = async (req: Request, res: Response, next: NextFun
         next();
 
     } catch (error) {
+        console.error('❌ Session validation error:', error);
         logSecurity('Session validation error', {
             error: error instanceof Error ? error.message : 'Unknown error',
             ip: req.ip

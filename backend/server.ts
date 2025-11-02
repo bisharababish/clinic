@@ -1,5 +1,4 @@
 // backend/server.ts
-import { validateSession, csrfProtection, sessionTimeout, generateCSRFToken } from './src/middleware/session.js';
 
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 
@@ -11,8 +10,6 @@ declare global {
         }
     }
 }
-// import './src/lib/sentry.js'; // Temporarily disabled due to integration issue
-// import * as Sentry from '@sentry/node';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -21,17 +18,12 @@ import { createClient } from '@supabase/supabase-js';
 import { logAuth, logError, logInfo, logSecurity } from './src/utils/logger.js';
 import { validateDeleteUser, validateUpdatePassword, sanitizeInput } from './src/middleware/validation.js';
 import { healthCheck, simpleHealthCheck } from './src/middleware/healthCheck.js';
+import { validateSession, csrfProtection, sessionTimeout, generateCSRFToken } from './src/middleware/session.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-
-// Sentry request handler must be the first middleware
-// app.use(Sentry.requestHandler()); // Temporarily disabled
-
-// Sentry tracing handler
-// app.use(Sentry.tracingHandler()); // Temporarily disabled
 
 // Security middleware
 app.use(helmet({
@@ -48,8 +40,8 @@ app.use(helmet({
 
 // Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -57,7 +49,7 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-// CORS middleware - optimized for Render deployment
+// CORS middleware - Enhanced
 app.use(cors({
     origin: function (origin, callback) {
         const allowedOrigins = [
@@ -65,12 +57,11 @@ app.use(cors({
             'https://www.bethlehemmedcenter.com',
             'https://bethlehem-medical-center-frontend.onrender.com',
         ];
-        
-        // Allow requests with no origin (like mobile apps or Postman)
+
         if (!origin) {
             return callback(null, true);
         }
-        
+
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
@@ -82,14 +73,14 @@ app.use(cors({
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
-        'Content-Type', 
-        'Authorization', 
+        'Content-Type',
+        'Authorization',
         'X-CSRF-Token',
         'X-Requested-With',
         'Accept'
     ],
     exposedHeaders: ['X-Session-Timeout'],
-    maxAge: 86400, // 24 hours
+    maxAge: 86400,
 }));
 
 // Body parsing middleware
@@ -113,11 +104,21 @@ const supabaseAdmin = createClient(
         }
     }
 );
+
+// Health check endpoints
+app.get('/health', healthCheck);
+app.get('/health/simple', simpleHealthCheck);
+
+// CSRF Token endpoint - Enhanced with logging
 app.get('/api/csrf-token', validateSession, (req: Request, res: Response): void => {
     try {
+        console.log('🔐 CSRF token request received');
+
         const userId = req.user?.id;
+        console.log('👤 User ID from request:', userId ? 'Present' : 'Missing');
 
         if (!userId) {
+            console.error('❌ No user ID in request object');
             res.status(401).json({
                 error: 'Unauthorized',
                 message: 'User authentication required'
@@ -125,25 +126,38 @@ app.get('/api/csrf-token', validateSession, (req: Request, res: Response): void 
             return;
         }
 
+        console.log('🔑 Generating CSRF token for user:', userId);
         const csrfToken = generateCSRFToken(userId);
+        console.log('✅ CSRF token generated, length:', csrfToken.length);
 
         res.status(200).json({
             csrfToken,
-            expiresIn: 20 * 60 * 1000 // 20 minutes in milliseconds
+            expiresIn: 20 * 60 * 1000
         });
 
         logAuth('csrf_token_generated', userId, true);
+        console.log('✅ CSRF token sent to client');
+
     } catch (error) {
-        logError(error instanceof Error ? error : new Error('CSRF token generation failed'), 'csrf_token_generation');
+        console.error('❌ CSRF token generation error:', error);
+        console.error('Error details:', {
+            name: error instanceof Error ? error.name : 'Unknown',
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+        });
+
+        logError(
+            error instanceof Error ? error : new Error('CSRF token generation failed'),
+            'csrf_token_generation'
+        );
+
         res.status(500).json({
             error: 'Internal server error',
-            message: 'Failed to generate CSRF token'
+            message: 'Failed to generate CSRF token',
+            details: error instanceof Error ? error.message : 'Unknown error'
         });
     }
 });
-// Health check endpoints
-app.get('/health', healthCheck);
-app.get('/health/simple', simpleHealthCheck);
 
 // Authentication middleware
 const authenticateAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -159,7 +173,6 @@ const authenticateAdmin = async (req: Request, res: Response, next: NextFunction
 
         const token = authHeader.substring(7);
 
-        // Verify token with Supabase
         const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
 
         if (error || !user) {
@@ -170,7 +183,6 @@ const authenticateAdmin = async (req: Request, res: Response, next: NextFunction
             return;
         }
 
-        // Check if user is admin
         const { data: userData, error: userError } = await supabaseAdmin
             .from('userinfo')
             .select('user_roles')
@@ -209,10 +221,8 @@ app.post('/api/admin/update-password', authenticateAdmin, validateUpdatePassword
             return;
         }
 
-        // Log password update attempt
         logAuth('update_password', userEmail, true);
 
-        // First, find the user by email
         const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
 
         if (listError) {
@@ -238,7 +248,6 @@ app.post('/api/admin/update-password', authenticateAdmin, validateUpdatePassword
             return;
         }
 
-        // Update password using Admin API
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
             targetUser.id,
             { password: newPassword }
@@ -254,7 +263,6 @@ app.post('/api/admin/update-password', authenticateAdmin, validateUpdatePassword
             return;
         }
 
-        // Password updated successfully
         logAuth('update_password', userEmail, true);
 
         res.status(200).json({
@@ -285,10 +293,8 @@ app.post('/api/admin/delete-user', authenticateAdmin, validateDeleteUser, csrfPr
             return;
         }
 
-        // Log user deletion attempt
         logAuth('delete_user', authUserId, true);
 
-        // Delete from auth.users using Admin API
         const { error } = await supabaseAdmin.auth.admin.deleteUser(authUserId);
 
         if (error) {
@@ -301,7 +307,6 @@ app.post('/api/admin/delete-user', authenticateAdmin, validateDeleteUser, csrfPr
             return;
         }
 
-        // Auth user deleted successfully
         logAuth('delete_user', authUserId, true);
 
         res.status(200).json({
@@ -318,17 +323,6 @@ app.post('/api/admin/delete-user', authenticateAdmin, validateDeleteUser, csrfPr
         });
     }
 });
-
-// Sentry error handler (must be before other error handlers)
-// app.use(Sentry.errorHandler({
-//     shouldHandleError(error: any) {
-//         // Don't report 4xx errors (client errors)
-//         if (error.status && error.status >= 400 && error.status < 500) {
-//             return false;
-//         }
-//         return true;
-//     },
-// }));
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {

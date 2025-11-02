@@ -12,8 +12,8 @@ const getApiBaseUrl = (): string => {
         console.log('🌐 API Base URL - Detected hostname:', hostname);
 
         if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
-            console.log('📍 Using localhost backend:', 'http://localhost:5000');
-            return 'http://localhost:5000';
+            console.log('📍 Using localhost backend:', 'http://localhost:10000');
+            return 'http://localhost:10000';
         }
 
         if (hostname.includes('bethlehemmedcenter.com')) {
@@ -37,31 +37,60 @@ let csrfTokenCache: { token: string; expires: number } | null = null;
 async function getCSRFToken(): Promise<string> {
     // Check if we have a valid cached token
     if (csrfTokenCache && csrfTokenCache.expires > Date.now()) {
+        console.log('✅ Using cached CSRF token');
         return csrfTokenCache.token;
     }
 
     try {
+        console.log('🔄 Fetching new CSRF token...');
+
         // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+            console.error('❌ Session error:', sessionError);
+            throw new Error(`Session error: ${sessionError.message}`);
+        }
 
         if (!session?.access_token) {
-            throw new Error('No active session');
+            console.error('❌ No active session found');
+            throw new Error('No active session - please log in');
         }
+
+        console.log('✅ Session found, requesting CSRF token from:', `${API_BASE_URL}/api/csrf-token`);
 
         // Fetch new CSRF token from backend
         const response = await fetch(`${API_BASE_URL}/api/csrf-token`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
             },
             credentials: 'include',
         });
 
+        console.log('📡 CSRF token response status:', response.status);
+
         if (!response.ok) {
-            throw new Error(`Failed to fetch CSRF token: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ CSRF token fetch failed:', {
+                status: response.status,
+                statusText: response.statusText,
+                body: errorText
+            });
+            throw new Error(`Failed to fetch CSRF token: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log('✅ CSRF token received:', {
+            tokenLength: data.csrfToken?.length,
+            expiresIn: data.expiresIn
+        });
+
+        if (!data.csrfToken || data.csrfToken.length !== 64) {
+            console.error('❌ Invalid CSRF token format:', data);
+            throw new Error('Invalid CSRF token format received from server');
+        }
 
         // Cache the token with 5 minutes buffer before expiry
         csrfTokenCache = {
@@ -69,11 +98,18 @@ async function getCSRFToken(): Promise<string> {
             expires: Date.now() + data.expiresIn - (5 * 60 * 1000)
         };
 
-        console.log('✅ CSRF token fetched and cached');
+        console.log('✅ CSRF token cached successfully');
         return data.csrfToken;
 
     } catch (error) {
         console.error('❌ Failed to fetch CSRF token:', error);
+
+        // Clear cache on error
+        csrfTokenCache = null;
+
+        if (error instanceof Error) {
+            throw error;
+        }
         throw new Error('Failed to obtain CSRF token');
     }
 }
@@ -84,6 +120,8 @@ export async function apiCall<T>(
     options: RequestInit = {}
 ): Promise<T> {
     try {
+        console.log(`🚀 API Call to: ${endpoint}`, { method: options.method || 'GET' });
+
         // Get current session for authentication
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -95,12 +133,17 @@ export async function apiCall<T>(
         // Add authentication header if session exists
         if (session?.access_token) {
             headers['Authorization'] = `Bearer ${session.access_token}`;
+            console.log('✅ Authorization header added');
+        } else {
+            console.warn('⚠️ No session token available');
         }
 
         // Add CSRF token for non-GET requests
         if (options.method && options.method !== 'GET') {
+            console.log('🔐 Obtaining CSRF token for protected request...');
             const csrfToken = await getCSRFToken();
             headers['X-CSRF-Token'] = csrfToken;
+            console.log('✅ CSRF token added to headers');
         }
 
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -108,6 +151,8 @@ export async function apiCall<T>(
             headers: headers as HeadersInit,
             credentials: 'include',
         });
+
+        console.log(`📡 Response status: ${response.status} ${response.statusText}`);
 
         // Handle non-JSON responses
         const contentType = response.headers.get('content-type');
@@ -130,12 +175,14 @@ export async function apiCall<T>(
                 return apiCall<T>(endpoint, options);
             }
 
+            console.error('❌ API call failed:', data);
             throw new Error(data.message || data.error || `HTTP ${response.status}`);
         }
 
+        console.log('✅ API call successful');
         return data;
     } catch (error) {
-        console.error('API call failed:', error);
+        console.error('❌ API call failed:', error);
         throw error;
     }
 }
