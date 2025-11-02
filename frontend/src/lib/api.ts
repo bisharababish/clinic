@@ -1,5 +1,5 @@
 // API configuration for production deployment
-import { supabase } from './supabase';
+import { supabase } from '../../lib/supabase';
 
 // Determine API base URL based on environment
 const getApiBaseUrl = (): string => {
