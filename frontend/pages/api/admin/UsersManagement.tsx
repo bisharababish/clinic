@@ -29,6 +29,28 @@ import { hasPermission } from '../../../lib/rolePermissions';
 import { isValidPalestinianID } from '../../../lib/PalID_temp';
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
+// Helper function to get backend URL (same logic as api.ts)
+const getBackendUrl = (): string => {
+    // Check if we're in production mode
+    if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
+        return 'https://api.bethlehemmedcenter.com';
+    }
+    
+    // Check hostname to determine environment
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        // Use localhost only if actually running on localhost
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+            return 'http://localhost:5000';
+        }
+        // For any other hostname (including production domain), use production API
+        return 'https://api.bethlehemmedcenter.com';
+    }
+    
+    // Default to production URL for safety
+    return 'https://api.bethlehemmedcenter.com';
+};
+
 interface UserInfo {
     userid: number;
     user_email: string;
@@ -471,13 +493,33 @@ const UsersManagement = () => {
                 console.log('🔍 User data:', userToDelete);
                 console.log('🔍 Auth user ID:', authUserId);
 
-                const backendUrl = (import.meta as { env?: { VITE_BACKEND_URL?: string } }).env?.VITE_BACKEND_URL || 'http://localhost:5000';
+                // Get current session for authentication
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) {
+                    console.warn('⚠️ No authentication session found for delete request');
+                    toast({
+                        title: t('common.error'),
+                        description: 'Authentication required for user deletion',
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                const backendUrl = getBackendUrl();
+                
+                // Get CSRF token
+                const csrfToken = sessionStorage.getItem('csrf_token') || 
+                    Math.random().toString(36).substring(2, 15);
+                sessionStorage.setItem('csrf_token', csrfToken);
+
                 const authDeleteResponse = await fetch(
                     `${backendUrl}/api/admin/delete-user`,
                     {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`,
+                            'X-CSRF-Token': csrfToken
                         },
                         body: JSON.stringify({
                             authUserId: authUserId // This is the UUID from auth.users
@@ -847,7 +889,7 @@ const UsersManagement = () => {
                             throw new Error('No authentication session found');
                         }
 
-                        const backendUrl = (import.meta as { env?: { VITE_BACKEND_URL?: string } }).env?.VITE_BACKEND_URL || 'http://localhost:5000';
+                        const backendUrl = getBackendUrl();
                         
                         // Get CSRF token
                         const csrfToken = sessionStorage.getItem('csrf_token') || 

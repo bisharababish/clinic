@@ -12,6 +12,28 @@ interface DeleteResponse {
   tablesDeleted?: boolean;
 }
 
+// Helper function to get backend URL
+const getBackendUrl = (): string => {
+  // Check if we're in production mode
+  if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
+    return 'https://api.bethlehemmedcenter.com';
+  }
+  
+  // Check hostname to determine environment
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Use localhost only if actually running on localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+      return 'http://localhost:5000';
+    }
+    // For any other hostname (including production domain), use production API
+    return 'https://api.bethlehemmedcenter.com';
+  }
+  
+  // Default to production URL for safety
+  return 'https://api.bethlehemmedcenter.com';
+};
+
 export const useDeleteUser = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +43,7 @@ export const useDeleteUser = () => {
     setError(null);
 
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+      const backendUrl = getBackendUrl();
       
       const response = await fetch(`${backendUrl}/api/admin/delete-user`, {
         method: 'POST',
