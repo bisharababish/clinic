@@ -3,17 +3,34 @@ import { supabase } from './supabase';
 
 // Determine API base URL based on environment
 const getApiBaseUrl = (): string => {
-    if (import.meta.env.VITE_NODE_ENV === 'production') {
+    // Check if we're in production mode
+    if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
         return 'https://api.bethlehemmedcenter.com';
     }
 
-    // Development fallback
+    // Check hostname to determine environment
     if (typeof window !== 'undefined') {
-        return window.location.hostname === 'localhost'
-            ? 'http://localhost:5000'
-            : 'https://api.bethlehemmedcenter.com';
+        const hostname = window.location.hostname.toLowerCase();
+        console.log('🌐 API Base URL - Detected hostname:', hostname);
+        
+        // Use localhost only if actually running on localhost
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
+            console.log('📍 Using localhost backend:', 'http://localhost:5000');
+            return 'http://localhost:5000';
+        }
+        
+        // For production domain, use production API
+        if (hostname.includes('bethlehemmedcenter.com')) {
+            console.log('📍 Using production backend:', 'https://api.bethlehemmedcenter.com');
+            return 'https://api.bethlehemmedcenter.com';
+        }
+        
+        // Default to production API for any other domain
+        console.log('📍 Using production backend (default):', 'https://api.bethlehemmedcenter.com');
+        return 'https://api.bethlehemmedcenter.com';
     }
 
+    // Default to production URL for safety
     return 'https://api.bethlehemmedcenter.com';
 };
 

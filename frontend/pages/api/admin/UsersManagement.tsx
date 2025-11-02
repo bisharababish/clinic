@@ -28,8 +28,10 @@ import { hasPermission } from '../../../lib/rolePermissions';
 // Add these imports to your existing imports
 import { isValidPalestinianID } from '../../../lib/PalID_temp';
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { updatePassword } from '../../../src/lib/api';
 
-// Helper function to get backend URL (same logic as api.ts)
+// Note: getBackendUrl is kept for delete-user endpoint only
+// Password updates now use the updatePassword function from api.ts which handles URL detection
 const getBackendUrl = (): string => {
     // Check if we're in production mode
     if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
@@ -38,12 +40,20 @@ const getBackendUrl = (): string => {
     
     // Check hostname to determine environment
     if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
+        const hostname = window.location.hostname.toLowerCase();
+        console.log('🌐 Detected hostname:', hostname);
+        
         // Use localhost only if actually running on localhost
-        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
             return 'http://localhost:5000';
         }
-        // For any other hostname (including production domain), use production API
+        
+        // For production domain or any other domain, use production API
+        if (hostname.includes('bethlehemmedcenter.com')) {
+            return 'https://api.bethlehemmedcenter.com';
+        }
+        
+        // Default to production URL for safety
         return 'https://api.bethlehemmedcenter.com';
     }
     
@@ -882,48 +892,40 @@ const UsersManagement = () => {
                 if (userFormData.user_password) {
                     try {
                         console.log('🔐 Calling backend to update password...');
+                        console.log('📧 Email:', userFormData.user_email);
+                        console.log('🔑 Password length:', userFormData.user_password.length);
 
-                        // Get current session for authentication
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (!session?.access_token) {
-                            throw new Error('No authentication session found');
-                        }
-
-                        const backendUrl = getBackendUrl();
-                        
-                        // Get CSRF token
-                        const csrfToken = sessionStorage.getItem('csrf_token') || 
-                            Math.random().toString(36).substring(2, 15);
-                        sessionStorage.setItem('csrf_token', csrfToken);
-
-                        const passwordUpdateResponse = await fetch(
-                            `${backendUrl}/api/admin/update-password`,
-                            {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${session.access_token}`,
-                                    'X-CSRF-Token': csrfToken
-                                },
-                                body: JSON.stringify({
-                                    userEmail: userFormData.user_email,
-                                    newPassword: userFormData.user_password
-                                })
-                            }
-                        );
-
-                        const passwordUpdateData = await passwordUpdateResponse.json();
-
-                        if (!passwordUpdateResponse.ok) {
-                            throw new Error(passwordUpdateData.error || passwordUpdateData.detail || 'Failed to update password');
-                        }
+                        // Use the updatePassword function from api.ts which handles all the details
+                        await updatePassword(userFormData.user_email, userFormData.user_password);
 
                         console.log("✅ Password updated successfully in auth");
                     } catch (error) {
                         console.error("❌ Error updating password:", error);
+                        
+                        // Provide more helpful error messages
+                        let errorMessage = "Failed to update password";
+                        if (error instanceof Error) {
+                            const errMsg = error.message.toLowerCase();
+                            if (errMsg.includes('fetch') || errMsg.includes('network')) {
+                                errorMessage = 'Network error: Could not connect to server. Please check your internet connection.';
+                            } else if (errMsg.includes('cors')) {
+                                errorMessage = 'CORS error: Server configuration issue.';
+                            } else if (errMsg.includes('401') || errMsg.includes('unauthorized')) {
+                                errorMessage = 'Authentication failed. Please log in again.';
+                            } else if (errMsg.includes('403') || errMsg.includes('forbidden')) {
+                                errorMessage = 'Access denied. You may not have permission to update passwords.';
+                            } else if (errMsg.includes('404') || errMsg.includes('not found')) {
+                                errorMessage = 'User not found. Please check the email address.';
+                            } else {
+                                errorMessage = error.message;
+                            }
+                        } else {
+                            errorMessage = String(error);
+                        }
+                        
                         toast({
                             title: t('common.error'),
-                            description: "Failed to update password: " + (error instanceof Error ? error.message : String(error)),
+                            description: errorMessage,
                             variant: "destructive",
                         });
                         return;

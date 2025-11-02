@@ -22,8 +22,31 @@ class PalestinianPaymentService {
     private baseUrl: string;
 
     constructor() {
-        // Use your actual domain
-        this.baseUrl = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL || 'https://bethlehemmedcenter.com/api';
+        // Determine API base URL based on environment
+        // Check if we're in production mode
+        if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
+            this.baseUrl = 'https://api.bethlehemmedcenter.com';
+            return;
+        }
+
+        // Check hostname to determine environment
+        if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            // Use localhost only if actually running on localhost
+            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+                this.baseUrl = 'http://localhost:5000';
+                return;
+            }
+        }
+
+        // Default to production URL for safety
+        this.baseUrl = 'https://api.bethlehemmedcenter.com';
+        
+        // Allow override via environment variable
+        const envUrl = (import.meta as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL;
+        if (envUrl) {
+            this.baseUrl = envUrl;
+        }
     }
 
     // Credit card functionality removed for cash-only mode
