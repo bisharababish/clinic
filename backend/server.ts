@@ -59,14 +59,37 @@ app.use(limiter);
 
 // CORS middleware - optimized for Render deployment
 app.use(cors({
-    origin: [
-        process.env.FRONTEND_URL || 'https://bethlehemmedcenter.com',
-        'https://www.bethlehemmedcenter.com',
-        'https://bethlehem-medical-center-frontend.onrender.com', // Render URL as fallback
-        ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000', 'http://localhost:5173'] : [])
-    ],
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            'https://bethlehemmedcenter.com',
+            'https://www.bethlehemmedcenter.com',
+            'https://bethlehem-medical-center-frontend.onrender.com',
+        ];
+        
+        // Allow requests with no origin (like mobile apps or Postman)
+        if (!origin) {
+            return callback(null, true);
+        }
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.warn('⚠️ CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'X-CSRF-Token',
+        'X-Requested-With',
+        'Accept'
+    ],
+    exposedHeaders: ['X-Session-Timeout'],
+    maxAge: 86400, // 24 hours
 }));
 
 // Body parsing middleware
