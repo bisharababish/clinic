@@ -3,40 +3,82 @@ import { supabase } from '../../lib/supabase';
 
 // Determine API base URL based on environment
 const getApiBaseUrl = (): string => {
-    // Check if we're in production mode
     if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
         return 'https://api.bethlehemmedcenter.com';
     }
 
-    // Check hostname to determine environment
     if (typeof window !== 'undefined') {
         const hostname = window.location.hostname.toLowerCase();
         console.log('🌐 API Base URL - Detected hostname:', hostname);
 
-        // Use localhost only if actually running on localhost
         if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
             console.log('📍 Using localhost backend:', 'http://localhost:5000');
             return 'http://localhost:5000';
         }
 
-        // For production domain, use production API
         if (hostname.includes('bethlehemmedcenter.com')) {
             console.log('📍 Using production backend:', 'https://api.bethlehemmedcenter.com');
             return 'https://api.bethlehemmedcenter.com';
         }
 
-        // Default to production API for any other domain
         console.log('📍 Using production backend (default):', 'https://api.bethlehemmedcenter.com');
         return 'https://api.bethlehemmedcenter.com';
     }
 
-    // Default to production URL for safety
     return 'https://api.bethlehemmedcenter.com';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
 
-// Enhanced API call function with proper error handling
+// CSRF token cache
+let csrfTokenCache: { token: string; expires: number } | null = null;
+
+// Get valid CSRF token (fetch new if expired or missing)
+async function getCSRFToken(): Promise<string> {
+    // Check if we have a valid cached token
+    if (csrfTokenCache && csrfTokenCache.expires > Date.now()) {
+        return csrfTokenCache.token;
+    }
+
+    try {
+        // Get current session
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+            throw new Error('No active session');
+        }
+
+        // Fetch new CSRF token from backend
+        const response = await fetch(`${API_BASE_URL}/api/csrf-token`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+            },
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch CSRF token: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Cache the token with 5 minutes buffer before expiry
+        csrfTokenCache = {
+            token: data.csrfToken,
+            expires: Date.now() + data.expiresIn - (5 * 60 * 1000)
+        };
+
+        console.log('✅ CSRF token fetched and cached');
+        return data.csrfToken;
+
+    } catch (error) {
+        console.error('❌ Failed to fetch CSRF token:', error);
+        throw new Error('Failed to obtain CSRF token');
+    }
+}
+
+// Enhanced API call function with proper error handling and CSRF
 export async function apiCall<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -57,17 +99,8 @@ export async function apiCall<T>(
 
         // Add CSRF token for non-GET requests
         if (options.method && options.method !== 'GET') {
-            // Generate a token that's at least 32 characters long (as required by backend)
-            const generateCSRFToken = (): string => {
-                return Array.from(crypto.getRandomValues(new Uint8Array(32)))
-                    .map(b => b.toString(36))
-                    .join('')
-                    .substring(0, 32);
-            };
-
-            const csrfToken = sessionStorage.getItem('csrf_token') || generateCSRFToken();
+            const csrfToken = await getCSRFToken();
             headers['X-CSRF-Token'] = csrfToken;
-            sessionStorage.setItem('csrf_token', csrfToken);
         }
 
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -88,6 +121,15 @@ export async function apiCall<T>(
         const data = await response.json();
 
         if (!response.ok) {
+            // If CSRF token is invalid, clear cache and retry once
+            if (response.status === 403 && data.message?.includes('CSRF')) {
+                console.log('🔄 CSRF token invalid, clearing cache and retrying...');
+                csrfTokenCache = null;
+
+                // Retry the request once
+                return apiCall<T>(endpoint, options);
+            }
+
             throw new Error(data.message || data.error || `HTTP ${response.status}`);
         }
 
@@ -98,7 +140,7 @@ export async function apiCall<T>(
     }
 }
 
-// Specific API functions for your application
+// Specific API functions
 export async function deleteUser(authUserId: string): Promise<{ success: boolean; message: string }> {
     return apiCall('/api/admin/delete-user', {
         method: 'POST',
@@ -130,11 +172,8 @@ export class RateLimiter {
 
     canMakeRequest(): boolean {
         const now = Date.now();
-
-        // Remove old requests outside the window
         this.requests = this.requests.filter(time => now - time < this.windowMs);
 
-        // Check if we can make a new request
         if (this.requests.length >= this.maxRequests) {
             return false;
         }
@@ -145,12 +184,10 @@ export class RateLimiter {
 
     getTimeUntilReset(): number {
         if (this.requests.length === 0) return 0;
-
         const oldestRequest = Math.min(...this.requests);
         const resetTime = oldestRequest + this.windowMs;
         return Math.max(0, resetTime - Date.now());
     }
 }
 
-// Global rate limiter instance
 export const apiRateLimiter = new RateLimiter();

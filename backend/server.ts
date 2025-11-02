@@ -1,4 +1,5 @@
 // backend/server.ts
+import { validateSession, csrfProtection, sessionTimeout, generateCSRFToken } from './src/middleware/session.js';
 
 import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 
@@ -20,7 +21,6 @@ import { createClient } from '@supabase/supabase-js';
 import { logAuth, logError, logInfo, logSecurity } from './src/utils/logger.js';
 import { validateDeleteUser, validateUpdatePassword, sanitizeInput } from './src/middleware/validation.js';
 import { healthCheck, simpleHealthCheck } from './src/middleware/healthCheck.js';
-import { validateSession, csrfProtection, sessionTimeout } from './src/middleware/session.js';
 
 dotenv.config();
 
@@ -90,7 +90,34 @@ const supabaseAdmin = createClient(
         }
     }
 );
+app.get('/api/csrf-token', validateSession, (req: Request, res: Response): void => {
+    try {
+        const userId = req.user?.id;
 
+        if (!userId) {
+            res.status(401).json({
+                error: 'Unauthorized',
+                message: 'User authentication required'
+            });
+            return;
+        }
+
+        const csrfToken = generateCSRFToken(userId);
+
+        res.status(200).json({
+            csrfToken,
+            expiresIn: 20 * 60 * 1000 // 20 minutes in milliseconds
+        });
+
+        logAuth('csrf_token_generated', userId, true);
+    } catch (error) {
+        logError(error instanceof Error ? error : new Error('CSRF token generation failed'), 'csrf_token_generation');
+        res.status(500).json({
+            error: 'Internal server error',
+            message: 'Failed to generate CSRF token'
+        });
+    }
+});
 // Health check endpoints
 app.get('/health', healthCheck);
 app.get('/health/simple', simpleHealthCheck);
