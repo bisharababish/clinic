@@ -328,36 +328,34 @@ const DoctorLabsPage: React.FC = () => {
 
     const confirmDelete = async () => {
         if (!resultToDelete) return;
-
+    
         try {
             setLoading(true);
             setError(null);
-
-            // Delete attachments first if they exist
-            if (resultToDelete.attachments && resultToDelete.attachments.length > 0) {
-                for (const attachment of resultToDelete.attachments) {
-                    await FileUploadService.deleteFile(attachment.id, attachment.file_path);
-                }
-            }
-
-            // Delete the lab result from database
+    
+            // STEP 1: Delete ALL attachments FIRST (storage + database)
+            console.log('Deleting attachments for lab result:', resultToDelete.id);
+            await FileUploadService.deleteLabResultAttachments(resultToDelete.id);
+    
+            // STEP 2: Delete the lab result from database
+            console.log('Deleting lab result from database...');
             const { error: deleteError } = await supabase
                 .from('lab_results')
                 .delete()
                 .eq('id', resultToDelete.id);
-
+    
             if (deleteError) {
                 throw deleteError;
             }
-
-            // Remove from local state
+    
+            // Update UI - remove from local state
             setLabResults(prev => prev.filter(r => r.id !== resultToDelete.id));
-
+    
             // Close modal if this result was being viewed
             if (selectedTest?.id === resultToDelete.id) {
                 setSelectedTest(null);
             }
-
+    
             // Show success toast
             toast({
                 title: isRTL ? 'تم الحذف بنجاح' : 'Deleted Successfully',
@@ -366,10 +364,10 @@ const DoctorLabsPage: React.FC = () => {
                     : `Lab result for ${resultToDelete.patient_name} has been deleted`,
                 style: { backgroundColor: '#16a34a', color: '#fff' },
             });
-
+    
         } catch (error) {
             console.error('Error deleting lab result:', error);
-
+    
             // Show error toast
             toast({
                 title: isRTL ? 'فشل الحذف' : 'Delete Failed',

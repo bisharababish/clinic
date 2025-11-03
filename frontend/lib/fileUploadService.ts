@@ -41,6 +41,25 @@ export class FileUploadService {
     }
 
     /**
+     * Generate patient-specific folder path
+     * Format: patient_[patient_id]
+     */
+    private static async getPatientFolder(labResultId: number): Promise<string> {
+        // Get patient ID from lab result
+        const { data: labResult, error } = await supabase
+            .from('lab_results')
+            .select('patient_id')
+            .eq('id', labResultId)
+            .single();
+
+        if (error || !labResult) {
+            throw new Error('Failed to fetch lab result details');
+        }
+
+        return `patient_${labResult.patient_id}`;
+    }
+
+    /**
      * Upload a single file to Supabase storage
      */
     static async uploadFile(
@@ -55,10 +74,16 @@ export class FileUploadService {
         }
 
         try {
-            // Generate unique file path
+            // Get patient-specific folder
+            const patientFolder = await this.getPatientFolder(labResultId);
+
+            // Generate unique file path within patient folder
             const timestamp = Date.now();
-            const fileExtension = file.name.split('.').pop();
-            const fileName = `${labResultId}/${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const fileName = `${timestamp}_${sanitizedName}`;
+
+            // Full path: patient_folder/filename
+            const filePath = `${patientFolder}/${fileName}`;
 
             // Start upload
             onProgress?.({
@@ -69,7 +94,7 @@ export class FileUploadService {
 
             const { data, error } = await supabase.storage
                 .from(this.BUCKET_NAME)
-                .upload(fileName, file, {
+                .upload(filePath, file, {
                     cacheControl: '3600',
                     upsert: false
                 });
@@ -87,7 +112,7 @@ export class FileUploadService {
 
             return {
                 file_name: file.name,
-                file_path: data.path,
+                file_path: data.path, // This will be "patient_123/timestamp_filename.ext"
                 file_size: file.size,
                 mime_type: file.type
             };
@@ -175,7 +200,7 @@ export class FileUploadService {
         const fileRecords = uploadedFiles.map(file => ({
             lab_result_id: labResultId,
             file_name: file.file_name,
-            file_path: file.file_path,
+            file_path: file.file_path, // Full path with patient folder
             file_size: file.file_size,
             mime_type: file.mime_type,
             uploaded_by: uploadedBy
@@ -212,38 +237,102 @@ export class FileUploadService {
     }
 
     /**
-     * Delete a file from storage and database
+     * FIXED: Delete a file - STORAGE FIRST, then DATABASE
      */
     static async deleteFile(attachmentId: number, filePath: string): Promise<void> {
-        // Delete from storage
-        const { error: storageError } = await supabase.storage
-            .from(this.BUCKET_NAME)
-            .remove([filePath]);
+        try {
+            console.log('Starting deletion process for:', { attachmentId, filePath });
 
-        if (storageError) {
-            console.warn('Failed to delete file from storage:', storageError);
-        }
+            // STEP 1: Delete from STORAGE FIRST (this is the critical fix!)
+            console.log('Step 1: Deleting from storage bucket...');
+            const { error: storageError } = await supabase.storage
+                .from(this.BUCKET_NAME)
+                .remove([filePath]); // filePath includes folder: "patient_123/file.jpg"
 
-        // Delete from database (this will cascade delete the attachment record)
-        const { error: dbError } = await supabase
-            .from('lab_attachments')
-            .delete()
-            .eq('id', attachmentId);
+            if (storageError) {
+                console.error('Storage deletion error:', storageError);
+                throw new Error(`Failed to delete file from storage: ${storageError.message}`);
+            }
+            console.log('✓ Storage deletion successful');
 
-        if (dbError) {
-            throw new Error(`Failed to delete file metadata: ${dbError.message}`);
+            // STEP 2: Delete from DATABASE SECOND
+            console.log('Step 2: Deleting from database...');
+            const { error: dbError } = await supabase
+                .from('lab_attachments')
+                .delete()
+                .eq('id', attachmentId);
+
+            if (dbError) {
+                console.error('Database deletion error:', dbError);
+                throw new Error(`Failed to delete attachment record: ${dbError.message}`);
+            }
+            console.log('✓ Database deletion successful');
+
+            console.log('Deletion completed successfully');
+        } catch (error) {
+            console.error('Error in deleteFile:', error);
+            throw error;
         }
     }
 
     /**
-     /**
-      * Get attachments for a lab result
-      */
-     static async getLabAttachments(labResultId: number): Promise<Record<string, unknown>[]> {
-         const { data, error } = await supabase
-             .from('lab_attachments')
-             .select('*')
-             .eq('lab_result_id', labResultId)
+     * NEW: Delete all attachments for a lab result (used when deleting entire lab result)
+     */
+    static async deleteLabResultAttachments(labResultId: number): Promise<void> {
+        try {
+            // Get all attachments for this lab result
+            const attachments = await this.getLabAttachments(labResultId);
+
+            if (attachments.length === 0) {
+                console.log('No attachments to delete');
+                return;
+            }
+
+            console.log(`Deleting ${attachments.length} attachments for lab result ${labResultId}`);
+
+            // Collect all file paths for batch deletion from storage
+            const filePaths = attachments.map(att => att.file_path as string);
+
+            // STEP 1: Delete all files from STORAGE in batch
+            console.log('Step 1: Deleting files from storage...');
+            const { error: storageError } = await supabase.storage
+                .from(this.BUCKET_NAME)
+                .remove(filePaths);
+
+            if (storageError) {
+                console.error('Storage deletion error:', storageError);
+                throw new Error(`Failed to delete files from storage: ${storageError.message}`);
+            }
+            console.log('✓ All files deleted from storage');
+
+            // STEP 2: Delete all attachment records from DATABASE
+            console.log('Step 2: Deleting attachment records from database...');
+            const { error: dbError } = await supabase
+                .from('lab_attachments')
+                .delete()
+                .eq('lab_result_id', labResultId);
+
+            if (dbError) {
+                console.error('Database deletion error:', dbError);
+                throw new Error(`Failed to delete attachment records: ${dbError.message}`);
+            }
+            console.log('✓ All attachment records deleted from database');
+
+            console.log('All attachments deleted successfully');
+        } catch (error) {
+            console.error('Error deleting lab result attachments:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get attachments for a lab result
+     */
+    static async getLabAttachments(labResultId: number): Promise<Record<string, unknown>[]> {
+        const { data, error } = await supabase
+            .from('lab_attachments')
+            .select('*')
+            .eq('lab_result_id', labResultId)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -252,4 +341,4 @@ export class FileUploadService {
 
         return data || [];
     }
-} 
+}

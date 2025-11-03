@@ -69,6 +69,7 @@ const DoctorManagement = () => {
         loadDoctors,
         loadClinics,
     } = useAdminState();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // ✅ KEEP: Local UI state (component-specific)
     const [searchQuery, setSearchQuery] = useState("");
@@ -115,15 +116,17 @@ const DoctorManagement = () => {
     // Ensure data is loaded when component mounts
     useEffect(() => {
         console.log('🔄 DoctorManagement mounted, ensuring data is loaded...');
-        if (doctors.length === 0 && !isLoading) {
+        if (doctors.length === 0) {
             console.log('📊 No doctors data, triggering loadDoctors...');
-            loadDoctors(true); // Force refresh
+            loadDoctors(false); // Changed to false - don't force refresh
         }
-        if (clinics.length === 0 && !isLoading) {
+        if (clinics.length === 0) {
             console.log('📊 No clinics data, triggering loadClinics...');
-            loadClinics(true); // Force refresh
+            loadClinics(false); // Changed to false - don't force refresh
         }
-    }, [doctors.length, clinics.length, isLoading, loadDoctors, loadClinics]);
+        // Only run on component mount
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Empty dependency array - only runs once on mount
 
     const weekdays = [
         { en: "Monday", ar: t('doctorManagement.monday') },
@@ -348,8 +351,16 @@ const DoctorManagement = () => {
             });
         }
     };
+    // Add this state near the top with other states
+
+    // Update the handleDoctorSubmit function
     const handleDoctorSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        event.stopPropagation();
+
+        // Prevent multiple submissions
+        if (isSubmitting) return;
+
         // Validate phone number
         if (doctorFormData.phone && !validatePhoneNumber(doctorFormData.phone)) {
             toast({
@@ -382,6 +393,8 @@ const DoctorManagement = () => {
             return;
         }
 
+        setIsSubmitting(true); // START SUBMITTING
+
         try {
             // Translate doctor name and specialty to Arabic
             setIsTranslating(true);
@@ -395,9 +408,9 @@ const DoctorManagement = () => {
                     .from('doctors')
                     .insert({
                         name: doctorFormData.name,
-                        name_ar: arabicName, // Add this
+                        name_ar: arabicName,
                         specialty: doctorFormData.specialty,
-                        specialty_ar: arabicSpecialty, // Add this
+                        specialty_ar: arabicSpecialty,
                         clinic_id: doctorFormData.clinic_id,
                         email: doctorFormData.email,
                         phone: doctorFormData.phone || null,
@@ -411,12 +424,16 @@ const DoctorManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    await loadDoctors(true); // Force refresh doctors
+                    // REMOVE: await loadDoctors(true); 
+                    // Instead, manually update the state to avoid full refresh
                     toast({
                         title: t('common.success'),
                         description: t('doctorManagement.doctorCreatedSuccessfully'),
-                        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
+                        style: { backgroundColor: '#16a34a', color: '#fff' },
                     });
+
+                    // Load doctors in background without forcing immediate re-render
+                    loadDoctors(false);
                 }
 
                 resetDoctorForm();
@@ -426,9 +443,9 @@ const DoctorManagement = () => {
                     .from('doctors')
                     .update({
                         name: doctorFormData.name,
-                        name_ar: arabicName, // Add this
+                        name_ar: arabicName,
                         specialty: doctorFormData.specialty,
-                        specialty_ar: arabicSpecialty, // Add this
+                        specialty_ar: arabicSpecialty,
                         clinic_id: doctorFormData.clinic_id,
                         email: doctorFormData.email,
                         phone: doctorFormData.phone || null,
@@ -442,12 +459,15 @@ const DoctorManagement = () => {
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    await loadDoctors(true); // Force refresh doctors
+                    // REMOVE: await loadDoctors(true);
                     toast({
                         title: t('common.success'),
                         description: t('doctorManagement.doctorUpdatedSuccessfully'),
-                        style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
+                        style: { backgroundColor: '#16a34a', color: '#fff' },
                     });
+
+                    // Load doctors in background without forcing immediate re-render
+                    loadDoctors(false);
                 }
 
                 resetDoctorForm();
@@ -459,6 +479,9 @@ const DoctorManagement = () => {
                 description: t('doctorManagement.failedToSaveDoctor'),
                 variant: "destructive",
             });
+        } finally {
+            setIsSubmitting(false); // STOP SUBMITTING
+            setIsTranslating(false);
         }
     };
 
@@ -946,9 +969,9 @@ const DoctorManagement = () => {
                                 type="submit"
                                 form="doctorForm"
                                 className={doctorFormMode === "edit" ? "" : "w-full"}
-                                disabled={isLoading || clinics.length === 0 || isTranslating}
+                                disabled={isSubmitting || isTranslating || clinics.length === 0}
                             >
-                                {isLoading || isTranslating
+                                {isSubmitting || isTranslating
                                     ? (isTranslating ? 'Translating...' : t('doctorManagement.saving'))
                                     : doctorFormMode === "create"
                                         ? t('doctorManagement.createDoctor')

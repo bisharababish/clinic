@@ -219,6 +219,7 @@ const DoctorUltrasoundPage: React.FC = () => {
             }
 
             // Otherwise, construct the public URL
+            // imagePath will be like "patient_123/filename.jpg"
             const { data } = supabase.storage
                 .from('ultrasound-images')
                 .getPublicUrl(imagePath);
@@ -477,92 +478,81 @@ const DoctorUltrasoundPage: React.FC = () => {
         setError(null);
 
         try {
-            // First, extract the file path from the URL before deleting from database
-            // First, extract the file path from the URL before deleting from database
+            console.log('🔍 Image object:', image);
+            console.log('🔍 image.image_url:', image.image_url);
+            console.log('🔍 image.imageUrl:', image.imageUrl);
+
+            // Extract file path
             let filePathToDelete: string | null = null;
-            if (image.imageUrl) {
-                filePathToDelete = extractFilePathFromUrl(image.imageUrl);
-                console.log('🔍 Extracted from imageUrl:', filePathToDelete);
-            } else if (image.image_url) {
-                // Fallback: use image_url directly if it's just a filename
+
+            // Try to get from image_url first (database field)
+            if (image.image_url) {
                 filePathToDelete = image.image_url;
-                console.log('📁 Using image_url directly:', filePathToDelete);
+                console.log('✅ Using image.image_url:', filePathToDelete);
+            }
+            // Fallback: Extract from imageUrl (public URL)
+            else if (image.imageUrl) {
+                const match = image.imageUrl.match(/\/ultrasound-images\/(.+?)(?:\?|$)/);
+                if (match && match[1]) {
+                    filePathToDelete = decodeURIComponent(match[1]);
+                    console.log('✅ Extracted from imageUrl:', filePathToDelete);
+                }
             }
 
-            // Delete from database first
+            if (!filePathToDelete) {
+                console.error('❌ No file path found!');
+                throw new Error('Could not determine file path. Image might be orphaned.');
+            }
+
+            console.log('🗑️ Attempting to delete:', filePathToDelete);
+
+            // Delete from storage FIRST
+            const { error: storageError, data: storageData } = await supabase.storage
+                .from('ultrasound-images')
+                .remove([filePathToDelete]);
+
+            if (storageError) {
+                console.error('❌ Storage error:', storageError);
+                console.error('❌ Error details:', JSON.stringify(storageError, null, 2));
+                throw new Error(`Storage deletion failed: ${storageError.message}`);
+            }
+
+            console.log('✅ Storage deleted:', storageData);
+
+            // Delete from database
             const { error: dbError } = await supabase
                 .from('ultrasound_images')
                 .delete()
                 .eq('id', image.id);
 
             if (dbError) {
-                throw dbError;
+                console.error('❌ Database error:', dbError);
+                throw new Error(`Database deletion failed: ${dbError.message}`);
             }
 
-            // Delete from storage bucket if we have a valid file path
-            let storageDeleted = false;
-            if (filePathToDelete) {
-                try {
-                    // Remove the 'ultrasound-images/' prefix if present
-                    let cleanPath = filePathToDelete;
-                    if (filePathToDelete.startsWith('ultrasound-images/')) {
-                        cleanPath = filePathToDelete.replace('ultrasound-images/', '');
-                    }
+            console.log('✅ Database record deleted');
 
-                    console.log('🗑️ Deleting from bucket: ultrasound-images');
-                    console.log('📁 Original path:', filePathToDelete);
-                    console.log('📁 Clean path:', cleanPath);
-
-                    const { error: storageError, data } = await supabase.storage
-                        .from('ultrasound-images')
-                        .remove([cleanPath]);
-
-                    if (storageError) {
-                        console.error('❌ Storage error:', storageError.message);
-                        toast({
-                            title: t('ultrasound.doctorUltrasoundPage.deleteSuccess') || 'Ultrasound Image Deleted',
-                            description: `Database deleted, but storage error: ${storageError.message}`,
-                            variant: 'default',
-                            style: { backgroundColor: '#16a34a', color: '#fff' },
-                        });
-                    } else {
-                        console.log('✅ Storage deleted successfully!', data);
-                        storageDeleted = true;
-                    }
-                } catch (storageErr) {
-                    console.error('❌ Storage exception:', storageErr);
-                    toast({
-                        title: t('ultrasound.doctorUltrasoundPage.deleteSuccess') || 'Ultrasound Image Deleted',
-                        description: `Database deleted, but storage exception: ${storageErr instanceof Error ? storageErr.message : 'Unknown error'}`,
-                        variant: 'default',
-                        style: { backgroundColor: '#16a34a', color: '#fff' },
-                    });
-                }
-            } else {
-                console.warn('⚠️ No file path extracted from URL:', image.image_url);
-            }
-
-            // Remove from UI
+            // Update UI
             setUltrasoundImages(prev => prev.filter(x => x.id !== image.id));
 
-            // Show success toast if storage was deleted or if no file path was found
-            if (storageDeleted || !filePathToDelete) {
-                toast({
-                    title: t('ultrasound.doctorUltrasoundPage.deleteSuccess') || 'The ultrasound image was deleted successfully.',
-                    description: '',
-                    variant: 'default',
-                    style: { backgroundColor: '#16a34a', color: '#fff' },
-                });
-            }
-        } catch (err) {
             toast({
-                title: t('doctorPages.deleteFailed') || 'Failed to delete image.',
-                description: err instanceof Error ? err.message : undefined,
+                title: 'Ultrasound Image Deleted',
+                description: 'The ultrasound image and file were deleted successfully.',
+                variant: 'default',
+                style: { backgroundColor: '#16a34a', color: '#fff' },
+            });
+
+        } catch (err) {
+            console.error('❌ Full error:', err);
+
+            toast({
+                title: 'Failed to delete image',
+                description: err instanceof Error ? err.message : 'An unknown error occurred',
                 variant: 'destructive',
             });
-            console.error('Delete error:', err);
         } finally {
             setDeletingId(null);
+            setConfirmDeleteImage(null);
         }
     };
 

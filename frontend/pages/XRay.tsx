@@ -351,59 +351,71 @@ const XRay = () => {
       });
       return;
     }
-
+  
     try {
-      // Upload file to Supabase Storage
+      // Get patient ID for folder structure
+      const patientId = selectedPatient ? selectedPatient.userid : null;
+      
+      if (!patientId) {
+        toast({
+          title: t('xray.errors.missingData') || 'Missing Data',
+          description: 'Please select a patient from the search.',
+          variant: "destructive",
+          className: "bg-red-50 border-red-200 text-red-800",
+        });
+        return;
+      }
+  
+      // Create patient-specific folder path
+      const patientFolder = `patient_${patientId}`;
+      
+      // Generate unique filename
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `xray-images/${fileName}`;
-
+      const timestamp = Date.now();
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileName = `${timestamp}_${sanitizedName}`;
+      
+      // Full path: patient_folder/filename
+      const filePath = `${patientFolder}/${fileName}`;
+  
+      // Upload file to Supabase Storage with patient folder structure
       const { error: uploadError } = await supabase.storage
         .from('xray-images')
         .upload(filePath, file);
-
+  
       if (uploadError) {
         throw uploadError;
       }
-
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('xray-images')
-        .getPublicUrl(filePath);
-
+  
       // Prepare patient data
-      const patientData = selectedPatient ? {
+      const patientData = {
         patient_id: selectedPatient.userid,
         patient_name: selectedPatient.english_username_a,
         date_of_birth: selectedPatient.date_of_birth
-      } : {
-        patient_id: null,
-        patient_name: patientName,
-        date_of_birth: dateOfBirth
       };
-
+  
       // Insert single record with all selected body parts
       const { error: insertError } = await supabase
         .from('xray_images')
         .insert({
           ...patientData,
-          body_part: selectedBodyParts, // Store array of body parts
+          body_part: selectedBodyParts,
           indication: clinicalIndication,
           requesting_doctor: selectedDoctor?.name || requestingDoctor,
-          image_url: publicUrl
+          image_url: filePath // Store the path with folder, not public URL
         });
-
+  
       if (insertError) {
         throw insertError;
       }
-
+  
       toast({
         title: t('xray.success.title') || 'Success',
         description: t('xray.success.saved') || `X-ray record saved successfully for ${selectedBodyParts.length} body part(s).`,
         variant: "default",
         className: "bg-green-50 border-green-200 text-green-800",
       });
-
+  
       // Reset form
       setSelectedBodyParts([]);
       setPatientName("");
@@ -413,7 +425,7 @@ const XRay = () => {
       setFile(null);
       setSelectedPatient(null);
       setSelectedDoctor(null);
-
+  
     } catch (error) {
       console.error('Error saving X-ray record:', error);
       toast({
@@ -424,7 +436,6 @@ const XRay = () => {
       });
     }
   };
-
   return (
     <>
       <SEOHead

@@ -381,15 +381,17 @@ const Ultrasound = () => {
     }
 
     try {
-      // Upload file to Supabase Storage
-      // Upload file to Supabase Storage
+      // Upload file to Supabase Storage with patient-specific folder
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-
+      
+      // ✅ NEW: Store in patient-specific folder
+      const filePath = `patient_${selectedPatient.userid}/${fileName}`;
+  
       const { error: uploadError } = await supabase.storage
         .from('ultrasound-images')
-        .upload(fileName, file);
-
+        .upload(filePath, file); // Use filePath instead of fileName
+  
       if (uploadError) {
         throw uploadError;
       }
@@ -422,27 +424,22 @@ const Ultrasound = () => {
         return;
       }
 
-      // Insert single record with all selected body parts
+      // Insert record with the full path
       const { error: insertError } = await supabase
-        .from('ultrasound_images')
-        .insert({
-          patient_id: finalPatientId,
-          patient_name: finalPatientName,
-          date_of_birth: finalDateOfBirth,
-          body_part: selectedBodyParts, // Store array of body parts
-          indication: clinicalIndication || null,
-          requesting_doctor: selectedDoctor?.name || requestingDoctor || null,
-          image_url: fileName  // ← Change this from publicUrl to fileName
-        });
+      .from('ultrasound_images')
+      .insert({
+        patient_id: selectedPatient.userid,
+        patient_name: selectedPatient.english_username_a,
+        date_of_birth: selectedPatient.date_of_birth,
+        body_part: selectedBodyParts,
+        indication: clinicalIndication || null,
+        requesting_doctor: selectedDoctor?.name || requestingDoctor || null,
+        image_url: filePath  // ✅ Store the full path including patient folder
+      });
 
-      if (insertError) {
-        console.error('Detailed insert error:', insertError);
-        console.error('Error code:', insertError.code);
-        console.error('Error message:', insertError.message);
-        console.error('Error details:', insertError.details);
-        console.error('Error hint:', insertError.hint);
-        throw insertError;
-      }
+    if (insertError) {
+      throw insertError;
+    }
 
       toast({
         title: t('ultrasound.success.title') || 'Success',

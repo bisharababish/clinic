@@ -308,30 +308,30 @@ const DoctorXRayPage: React.FC = () => {
             return '';
         }
     };
-
+    // Fetch X-ray images from database
     // Fetch X-ray images from database
     const fetchXrayImages = async () => {
-        if (isFetchingRef.current) return; // Prevent concurrent fetches
+        if (isFetchingRef.current) return;
 
         isFetchingRef.current = true;
         try {
             setLoading(true);
-            setError(null); // Reset error state
+            setError(null);
             console.log('Fetching X-ray images...');
 
             const { data: xrayData, error: xrayError } = await supabase
                 .from('xray_images')
                 .select(`
-                id,
-                patient_id,
-                patient_name,
-                date_of_birth,
-                body_part,
-                indication,
-                requesting_doctor,
-                image_url,
-                created_at
-            `)
+          id,
+          patient_id,
+          patient_name,
+          date_of_birth,
+          body_part,
+          indication,
+          requesting_doctor,
+          image_url,
+          created_at
+        `)
                 .order('created_at', { ascending: false });
 
             if (xrayError) {
@@ -343,11 +343,13 @@ const DoctorXRayPage: React.FC = () => {
 
             if (xrayData && xrayData.length > 0) {
                 const transformedData: XRayImage[] = xrayData.map(item => {
+                    // Get public URL for display
                     const imageUrl = getImageUrl(item.image_url);
 
                     return {
                         ...item,
-                        imageUrl,
+                        imageUrl, // For display (public URL)
+                        // Keep original image_url for deletion (path with folder)
                         patientName: item.patient_name,
                         patientId: item.patient_id.toString(),
                         xrayDate: item.created_at,
@@ -359,6 +361,8 @@ const DoctorXRayPage: React.FC = () => {
                 });
 
                 console.log('Transformed X-ray data:', transformedData);
+                console.log('Sample image_url (path):', transformedData[0]?.image_url);
+                console.log('Sample imageUrl (public):', transformedData[0]?.imageUrl);
                 setXrayImages(transformedData);
             } else {
                 setXrayImages([]);
@@ -369,7 +373,7 @@ const DoctorXRayPage: React.FC = () => {
             setError(err instanceof Error ? err.message : 'Failed to load X-ray images');
         } finally {
             setLoading(false);
-            isFetchingRef.current = false; // Reset the flag
+            isFetchingRef.current = false;
         }
     };
 
@@ -525,43 +529,62 @@ const DoctorXRayPage: React.FC = () => {
     // 2. Add delete handler function
     const handleDeleteImage = async (image: XRayImage): Promise<void> => {
         setDeletingId(image.id);
-        setError(null); // ADD THIS LINE
+        setError(null);
 
         try {
-            // Delete from database
+            console.log('Starting deletion process for X-ray image:', image.id);
+
+            // STEP 1: Delete from STORAGE FIRST (critical fix!)
+            console.log('Step 1: Deleting from storage bucket...');
+            const { error: storageError } = await supabase.storage
+                .from('xray-images')
+                .remove([image.image_url]); // image_url contains full path with folder
+
+            if (storageError) {
+                console.error('Storage deletion error:', storageError);
+                console.warn('Storage deletion failed, continuing with database deletion');
+            } else {
+                console.log('✓ Storage deletion successful');
+            }
+
+            // STEP 2: Delete from DATABASE SECOND
+            console.log('Step 2: Deleting from database...');
             const { error: dbError } = await supabase
                 .from('xray_images')
                 .delete()
                 .eq('id', image.id);
-            if (dbError) throw dbError;
 
-            // Optionally, delete from storage
-            if (image.image_url) {
-                const { error: storageError } = await supabase.storage
-                    .from('xray-images')
-                    .remove([image.image_url]);
-                if (storageError) console.warn('Storage delete error:', storageError);
+            if (dbError) {
+                console.error('Database deletion error:', dbError);
+                throw dbError;
+            }
+            console.log('✓ Database deletion successful');
+
+            // STEP 3: Remove from UI state
+            setXrayImages(prev => prev.filter(x => x.id !== image.id));
+
+            // Close modal if viewing this image
+            if (selectedImage?.id === image.id) {
+                setSelectedImage(null);
             }
 
-            // Remove from UI
-            setXrayImages(prev => prev.filter(x => x.id !== image.id));
             toast({
                 title: t('doctorPages.deleteSuccess') || 'Image deleted',
                 description: t('doctorPages.deleteSuccessDesc') || 'The X-ray image was deleted successfully.',
                 variant: 'default',
             });
+
         } catch (err) {
+            console.error('Delete error:', err);
             toast({
                 title: t('doctorPages.deleteFailed') || 'Failed to delete image.',
                 description: err instanceof Error ? err.message : undefined,
                 variant: 'destructive',
             });
-            console.error('Delete error:', err);
         } finally {
             setDeletingId(null);
         }
     };
-
     // Show auth skeleton while checking user
     if (!user && initializing) {
         return <AuthSkeletonLoading />;
