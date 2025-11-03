@@ -131,7 +131,7 @@ const ClinicManagement = () => {
     const [showDeleteDoctorDialog, setShowDeleteDoctorDialog] = useState(false);
     const [doctorToDelete, setDoctorToDelete] = useState<string | null>(null);
 
-    // Ensure data is loaded when component mounts
+    // Ensure data is loaded when component mounts - ONLY ONCE
     useEffect(() => {
         console.log('🔄 ClinicManagement mounted, ensuring data is loaded...');
         if (clinics.length === 0 && !isLoading) {
@@ -142,7 +142,8 @@ const ClinicManagement = () => {
             console.log('📊 No categories data, triggering loadCategories...');
             loadCategories(true); // Force refresh
         }
-    }, [clinics.length, categories.length, isLoading, loadClinics, loadCategories]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Empty dependency array - run only once on mount
 
     // Handle search filtering
     useEffect(() => {
