@@ -34,6 +34,8 @@ interface AudiometryImage {
     patientId?: string;
     audiometryDate?: string;
     status?: string;
+    arabic_name?: string; // Arabic name for display
+    english_name?: string; // Full English name for display
 }
 
 // Skeleton Loading Component for DoctorAudiometryPage
@@ -170,7 +172,7 @@ const DoctorAudiometryPage: React.FC = () => {
     const isFetchingRef = useRef(false);
 
     // Helper function to get image URL from Supabase storage
-    const getImageUrl = (imagePath: string): string => {
+    const getImageUrl = async (imagePath: string): Promise<string> => {
         if (!imagePath) return '';
 
         try {
@@ -180,15 +182,25 @@ const DoctorAudiometryPage: React.FC = () => {
             }
 
             // Otherwise, construct the public URL
-            const { data } = supabase.storage
+            const { data } = await supabase.storage
                 .from('audiometry-images')
-                .getPublicUrl(imagePath);
+                .createSignedUrl(imagePath, 3600); // 1 hour expiration
 
-            return data.publicUrl;
+            return data.signedUrl;
         } catch (error) {
             console.error('Error getting image URL:', error);
             return '';
         }
+    };
+
+    // Helper function to get display name (Arabic if RTL, English otherwise)
+    const getDisplayName = (image: AudiometryImage | null): string => {
+        if (!image) return '';
+        if (isRTL && image.arabic_name) {
+            return image.arabic_name;
+        }
+        // Use full English name if available, otherwise fall back to stored patient_name
+        return image.english_name || image.patient_name || '';
     };
 
     // Fetch Audiometry images from database
@@ -223,18 +235,64 @@ const DoctorAudiometryPage: React.FC = () => {
             console.log('Raw Audiometry data:', audiometryData);
 
             if (audiometryData && audiometryData.length > 0) {
-                const transformedData: AudiometryImage[] = audiometryData.map(item => {
-                    const imageUrl = getImageUrl(item.image_url);
+                // Get unique patient IDs
+                const uniquePatientIds = [...new Set(audiometryData.map(item => item.patient_id))];
+
+                // Fetch Arabic and English names for all patients
+                const { data: patientNamesData, error: patientNamesError } = await supabase
+                    .from('userinfo')
+                    .select('userid, arabic_username_a, arabic_username_b, arabic_username_c, arabic_username_d, english_username_a, english_username_b, english_username_c, english_username_d')
+                    .in('userid', uniquePatientIds);
+
+                if (patientNamesError) {
+                    console.warn('Error fetching patient names:', patientNamesError);
+                }
+
+                // Create maps of patient_id to names
+                const arabicNamesMap = new Map<number, string>();
+                const englishNamesMap = new Map<number, string>();
+                if (patientNamesData) {
+                    patientNamesData.forEach(patient => {
+                        // Arabic name parts
+                        const arabicNameParts = [
+                            patient.arabic_username_a,
+                            patient.arabic_username_b,
+                            patient.arabic_username_c,
+                            patient.arabic_username_d
+                        ].filter(part => part && part.trim());
+                        if (arabicNameParts.length > 0) {
+                            arabicNamesMap.set(patient.userid, arabicNameParts.join(' ').trim());
+                        }
+
+                        // English name parts
+                        const englishNameParts = [
+                            patient.english_username_a,
+                            patient.english_username_b,
+                            patient.english_username_c,
+                            patient.english_username_d
+                        ].filter(part => part && part.trim());
+                        if (englishNameParts.length > 0) {
+                            englishNamesMap.set(patient.userid, englishNameParts.join(' ').trim());
+                        }
+                    });
+                }
+
+                const transformedData: AudiometryImage[] = await Promise.all(audiometryData.map(async item => {
+                    const imageUrl = await getImageUrl(item.image_url);
+                    const arabicName = arabicNamesMap.get(item.patient_id) || '';
+                    const englishName = englishNamesMap.get(item.patient_id) || item.patient_name || '';
 
                     return {
                         ...item,
                         imageUrl,
-                        patientName: item.patient_name,
+                        patientName: englishName,
+                        arabic_name: arabicName,
+                        english_name: englishName,
                         patientId: item.patient_id.toString(),
                         audiometryDate: item.created_at,
                         status: 'Completed'
                     };
-                });
+                }));
 
                 console.log('Transformed Audiometry data:', transformedData);
                 setAudiometryImages(transformedData);
@@ -301,7 +359,10 @@ const DoctorAudiometryPage: React.FC = () => {
     // Filter images based on search and filters
     const filteredImages: AudiometryImage[] = audiometryImages.filter(image => {
         const matchesSearch =
+            (getDisplayName(image) || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (image.english_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (image.patient_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (image.arabic_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
             (image.patient_id || '').toString().includes(searchTerm) ||
             (image.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -340,7 +401,7 @@ const DoctorAudiometryPage: React.FC = () => {
             link.href = blobUrl;
 
             const fileExtension = image.imageUrl.split('.').pop()?.toLowerCase() || 'jpg';
-            const fileName = `audiometry_${image.patient_name.replace(/\s+/g, '_')}_${new Date(image.created_at).toLocaleDateString().replace(/\//g, '-')}.${fileExtension}`;
+            const fileName = `audiometry_${getDisplayName(image).replace(/\s+/g, '_')}_${new Date(image.created_at).toLocaleDateString().replace(/\//g, '-')}.${fileExtension}`;
 
             link.download = fileName;
             link.style.display = 'none';
@@ -571,11 +632,12 @@ const DoctorAudiometryPage: React.FC = () => {
                                 <div className="aspect-square bg-gray-900 relative">
                                     <img
                                         src={image.imageUrl}
-                                        alt={`Audiometry for ${image.patient_name}`}
+                                        alt={`Audiometry for ${getDisplayName(image)}`}
                                         className="w-full h-full object-contain"
                                         onError={(e) => {
                                             const target = e.target as HTMLImageElement;
-                                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+                                            const errorText = t('doctorPages.imageNotAvailable') || 'Image Not Available';
+                                            target.src = `data:image/svg+xml;base64,${btoa(`<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#2a2a2a"/><text x="50%" y="50%" text-anchor="middle" fill="#aaa" font-size="16px" dy=".3em">${errorText}</text></svg>`)}`;
                                         }}
                                     />
                                     <div className="absolute top-2 right-2">
@@ -589,7 +651,7 @@ const DoctorAudiometryPage: React.FC = () => {
                                 <div className="p-4">
                                     <div className="flex items-start justify-between mb-2">
                                         <div>
-                                            <h3 className="font-medium text-gray-900">{image.patient_name}</h3>
+                                            <h3 className="font-medium text-gray-900">{getDisplayName(image)}</h3>
                                             <p className="text-sm text-gray-500">{t('usersManagement.id') || 'ID'}: {image.patient_id}</p>
                                         </div>
                                     </div>
@@ -695,7 +757,7 @@ const DoctorAudiometryPage: React.FC = () => {
                         <div className="p-3 sm:p-4 border-b flex items-center justify-between flex-shrink-0">
                             <div className="min-w-0 flex-1">
                                 <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate">
-                                    Audiometry - {selectedImage.patient_name}
+                                    Audiometry - {getDisplayName(selectedImage)}
                                 </h2>
                                 <p className="text-xs sm:text-sm text-gray-500 truncate">
                                     {t('common.date') || 'Date'}: {new Date(selectedImage.created_at).toLocaleDateString()} | {t('usersManagement.id') || 'ID'}: {selectedImage.patient_id}
@@ -750,7 +812,8 @@ const DoctorAudiometryPage: React.FC = () => {
                                         }}
                                         onError={(e) => {
                                             const target = e.target as HTMLImageElement;
-                                            target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMmEyYTJhIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWEiIGZvbnQtc2l6ZT0iMTZweCIgZHk9Ii4zZW0iPkltYWdlIE5vdCBBdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPg==';
+                                            const errorText = t('doctorPages.imageNotAvailable') || 'Image Not Available';
+                                            target.src = `data:image/svg+xml;base64,${btoa(`<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#2a2a2a"/><text x="50%" y="50%" text-anchor="middle" fill="#aaa" font-size="16px" dy=".3em">${errorText}</text></svg>`)}`;
                                         }}
                                     />
                                 </div>
@@ -764,7 +827,7 @@ const DoctorAudiometryPage: React.FC = () => {
                                             {t('doctorPages.patientInformation') || 'Patient Information'}
                                         </h3>
                                         <div className="space-y-1 text-xs sm:text-sm">
-                                            <p><span className="font-medium">{t('common.name') || 'Name'}:</span> {selectedImage.patient_name}</p>
+                                            <p><span className="font-medium">{t('common.name') || 'Name'}:</span> {getDisplayName(selectedImage)}</p>
                                             <p><span className="font-medium">{t('usersManagement.id') || 'ID'}:</span> {selectedImage.patient_id}</p>
                                             <p><span className="font-medium">{t('audiometry.patientInfo.dateOfBirth') || 'Date of Birth'}:</span> {selectedImage.date_of_birth || 'N/A'}</p>
                                         </div>

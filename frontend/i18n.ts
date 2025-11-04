@@ -223,6 +223,7 @@ const enTranslations = {
         // Lab Results Page
         downloadFailed: "Failed to download image. Please try again.",
         noImageUrl: "No image URL available",
+        imageNotAvailable: 'Image Not Available',
         labResults: 'Laboratory Results',
         labResultsDesc: 'View and manage patient lab test results',
         viewLabResults: 'View Lab Results',
@@ -248,6 +249,7 @@ const enTranslations = {
         zoomOut: 'Zoom Out',
         rotate: 'Rotate',
         examInformation: 'Exam Information',
+        requestingDoctor: 'Requesting Doctor',
         noXrayImagesFound: 'No X-ray images found matching your criteria.',
         noXrayImagesUploaded: 'No X-ray images have been uploaded yet.',
         tryAdjustingSearch: 'Try adjusting your search or filter criteria.',
@@ -2963,6 +2965,7 @@ const arTranslations = {
         // Lab Results Page
         downloadFailed: "فشل في تحميل الصورة. يرجى المحاولة مرة أخرى.",
         noImageUrl: "لا يوجد رابط للصورة",
+        imageNotAvailable: 'الصورة غير متوفرة',
         labResults: 'نتائج المختبر',
         labResultsDesc: 'عرض وإدارة نتائج فحوصات المرضى المخبرية',
         viewLabResults: 'عرض نتائج المختبر',
@@ -2988,6 +2991,7 @@ const arTranslations = {
         zoomOut: 'تصغير',
         rotate: 'دوران',
         examInformation: 'معلومات الفحص',
+        requestingDoctor: 'الطبيب الطالب',
         noXrayImagesFound: 'لم يتم العثور على صور أشعة تطابق المعايير.',
         noXrayImagesUploaded: 'لم يتم رفع أي صور أشعة بعد.',
         tryAdjustingSearch: 'حاول تعديل معايير البحث أو التصفية.',
