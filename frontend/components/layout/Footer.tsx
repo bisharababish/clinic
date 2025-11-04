@@ -4,20 +4,7 @@ import { Mail, MapPin, Phone, Clock, Users, Building, Heart, Award, Shield } fro
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
 import { TermsOfUseModal, PrivacyPolicyModal, useLegalModals } from "../modals/LegalModals";
-import { Facebook, Instagram, MessageCircle, createLucideIcon } from "lucide-react";
-
-
-const XIcon = createLucideIcon("X", [
-  [
-    "path",
-    {
-      key: "x-icon-path", // ADD THIS LINE
-      d: "M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z",
-      stroke: "none",
-      fill: "currentColor",
-    },
-  ],
-]);
+import { Facebook, Instagram } from "lucide-react";
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const { t } = useTranslation();
@@ -208,24 +195,6 @@ const Footer: React.FC = () => {
                       className="group/social p-2 rounded-xl bg-white/60 hover:bg-pink-50 border border-primary/20 hover:border-pink-400 transition-all duration-300 shadow-sm hover:shadow-pink-200 transform hover:scale-110"
                     >
                       <Instagram className="w-5 h-5 text-primary/80 group-hover/social:text-pink-600 transition-colors" />
-                    </a>
-                    <a
-                      href="https://x.com/yourclinicpage"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="X (formerly Twitter)"
-                      className="group/social p-2 rounded-xl bg-white/60 hover:bg-gray-50 border border-primary/20 hover:border-gray-400 transition-all duration-300 shadow-sm hover:shadow-gray-200 transform hover:scale-110"
-                    >
-                      <XIcon className="w-5 h-5 text-primary/80 group-hover/social:text-gray-800 transition-colors" />
-                    </a>
-                    <a
-                      href="https://wa.me/97222744444"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="WhatsApp"
-                      className="group/social p-2 rounded-xl bg-white/60 hover:bg-green-50 border border-primary/20 hover:border-green-400 transition-all duration-300 shadow-sm hover:shadow-green-200 transform hover:scale-110"
-                    >
-                      <MessageCircle className="w-5 h-5 text-primary/80 group-hover/social:text-green-600 transition-colors" />
                     </a>
                   </div>
                 </div>

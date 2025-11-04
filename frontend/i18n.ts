@@ -3742,6 +3742,7 @@ const arTranslations = {
         lab: 'مختبر',
         xray: 'فني أشعة',
         ultrasound: 'فني موجات فوق صوتية',
+        audiometry: 'فني قياس السمع',
         patient: 'مريض'
     },
     aboutUs: {

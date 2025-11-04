@@ -185,6 +185,8 @@ export function Header() {
     const isNurse = effectiveRole === "nurse";
     const isLab = effectiveRole === "lab";
     const isXRay = effectiveRole === "x ray" || effectiveRole === "xray";
+    const isUltrasound = effectiveRole === "ultrasound" || effectiveRole === "ultrasound technician";
+    const isAudiometry = effectiveRole === "audiometry" || effectiveRole === "audiometry technician";
     const isPatient = effectiveRole === "patient";
     const canChangePassword = isAuthenticated && isPatient;
 
@@ -234,7 +236,8 @@ export function Header() {
             case 'ultrasound':
                 return t('roles.ultrasound') || 'Ultrasound';
             case 'audiometry':
-                return t('roles.audiometry') || 'Audiometry';
+            case 'audiometry technician':
+                return t('roles.audiometry') || 'Audiometry Technician';
             case 'patient':
                 return t('roles.patient') || 'Patient';
             default:
@@ -274,6 +277,7 @@ export function Header() {
             case "ultrasound":
                 return "bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-800 border-cyan-200 hover:from-cyan-100 hover:to-cyan-200";
             case "audiometry":
+            case "audiometry technician":
                 return "bg-gradient-to-r from-violet-50 to-violet-100 text-violet-800 border-violet-200 hover:from-violet-100 hover:to-violet-200";
             case "patient":
                 return "bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-800 border-emerald-200 hover:from-emerald-100 hover:to-emerald-200";
@@ -331,7 +335,7 @@ export function Header() {
                     </div>
 
                     {/* Center-Left: Navigation */}
-                    <nav className={`hidden lg:flex items-center ${isAdmin ? 'gap-0.5 flex-shrink min-w-0' : 'gap-1'} ${isAdmin ? 'ml-2' : 'ml-4'} flex-1 ${isAdmin ? 'overflow-x-auto' : ''} ${isAdmin ? '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' : ''}`}>
+                    <nav className={`hidden lg:flex items-center ${isAdmin ? 'gap-0.5 flex-shrink min-w-0' : 'gap-1'} ${isAdmin ? 'ml-2' : 'ml-4'} flex-1 ${isAudiometry || isUltrasound || isXRay || isLab || isNurse || isSecretary || isDoctor || isPatient ? 'justify-center' : ''} ${isAdmin ? 'overflow-x-auto' : ''} ${isAdmin ? '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' : ''}`}>
                         {canViewHome && (
                             <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
                                 <Link to="/home" className="font-medium">{t('navbar.home') || 'Home'}</Link>
