@@ -6,7 +6,7 @@ import {
   AlertCircle,
   User,
   Calendar,
-
+  Stethoscope,
   Activity,
   X,
   Search,
@@ -61,15 +61,15 @@ interface Doctor {
 }
 
 // Main Ultrasound Component
-const Audiometry = () => {
+const Ultrasound = () => {
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
-  const [notes, setNotes] = useState("");
+  const [selectedBodyParts, setSelectedBodyParts] = useState<string[]>([]);
   const [patientName, setPatientName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [requestingDoctor, setRequestingDoctor] = useState("");
-
+  const [clinicalIndication, setClinicalIndication] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -154,8 +154,8 @@ const Audiometry = () => {
     } catch (error) {
       console.error('Error searching doctors:', error);
       toast({
-        title: t('audiometry.errors.searchError') || 'Search Error',
-        description: t('audiometry.errors.doctorSearchFailed') || 'Failed to search doctors. Please try again.',
+        title: t('ultrasound.errors.searchError') || 'Search Error',
+        description: t('ultrasound.errors.doctorSearchFailed') || 'Failed to search doctors. Please try again.',
         variant: "destructive",
         className: "bg-red-50 border-red-200 text-red-800",
       });
@@ -194,8 +194,8 @@ const Audiometry = () => {
     } catch (error) {
       console.error('Error searching patients:', error);
       toast({
-        title: t('audiometry.errors.searchError') || 'Search Error',
-        description: t('audiometry.errors.patientSearchFailed') || 'Failed to search patients. Please try again.',
+        title: t('ultrasound.errors.searchError') || 'Search Error',
+        description: t('ultrasound.errors.patientSearchFailed') || 'Failed to search patients. Please try again.',
         variant: "destructive",
         className: "bg-red-50 border-red-200 text-red-800",
       });
@@ -306,7 +306,18 @@ const Audiometry = () => {
     }
   }, [showSearchResults, showDoctorSearchResults]);
 
-
+  // Handle body parts selection with toggle
+  const handleBodyPartToggle = (bodyPart: string) => {
+    setSelectedBodyParts(prev => {
+      if (prev.includes(bodyPart)) {
+        // Remove the body part if it's already selected
+        return prev.filter(part => part !== bodyPart);
+      } else {
+        // Add the body part if it's not selected
+        return [...prev, bodyPart];
+      }
+    });
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -337,10 +348,10 @@ const Audiometry = () => {
   };
 
   const handleSubmit = async () => {
-    if (!file) {
+    if (!file || selectedBodyParts.length === 0) {
       toast({
-        title: t('audiometry.errors.missingData') || 'Missing Data',
-        description: t('audiometry.errors.selectFile') || 'Please upload a file.',
+        title: t('ultrasound.errors.missingData') || 'Missing Data',
+        description: t('ultrasound.errors.selectBodyPartAndFile') || 'Please select at least one body part and upload a file.',
         variant: "destructive",
         className: "bg-red-50 border-red-200 text-red-800",
       });
@@ -350,8 +361,8 @@ const Audiometry = () => {
     // Patient is required - either selected from search or manually entered with valid name
     if (!selectedPatient && (!patientName || !patientName.trim())) {
       toast({
-        title: t('audiometry.errors.missingData') || 'Missing Data',
-        description: t('audiometry.errors.patientRequired') || 'Please select a patient or enter patient name.',
+        title: t('ultrasound.errors.missingData') || 'Missing Data',
+        description: t('ultrasound.errors.patientRequired') || 'Please select a patient or enter patient name.',
         variant: "destructive",
         className: "bg-red-50 border-red-200 text-red-800",
       });
@@ -361,8 +372,8 @@ const Audiometry = () => {
     // If no patient selected, we need at least patient name and date of birth
     if (!selectedPatient && (!dateOfBirth || !dateOfBirth.trim())) {
       toast({
-        title: t('audiometry.errors.missingData') || 'Missing Data',
-        description: t('audiometry.errors.dobRequired') || 'Please enter patient date of birth.',
+        title: t('ultrasound.errors.missingData') || 'Missing Data',
+        description: t('ultrasound.errors.dobRequired') || 'Please enter patient date of birth.',
         variant: "destructive",
         className: "bg-red-50 border-red-200 text-red-800",
       });
@@ -373,21 +384,21 @@ const Audiometry = () => {
       // Upload file to Supabase Storage with patient-specific folder
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-
+      
       // ✅ NEW: Store in patient-specific folder
       const filePath = `patient_${selectedPatient.userid}/${fileName}`;
-
+  
       const { error: uploadError } = await supabase.storage
-        .from('audiometry-images')
+        .from('ultrasound-images')
         .upload(filePath, file); // Use filePath instead of fileName
-
+  
       if (uploadError) {
         throw uploadError;
       }
 
       // Get the public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('audiometry-images')
+        .from('ultrasound-images')
         .getPublicUrl(fileName);
       // Prepare patient data - patient_id is required, so if no patient selected,
       // we need to create a temporary patient entry or use a placeholder
@@ -405,8 +416,8 @@ const Audiometry = () => {
         // or use a system patient ID. For now, we'll throw an error asking to select patient.
         // Alternatively, we could create a temporary patient record.
         toast({
-          title: t('audiometry.errors.patientRequired') || 'Patient Required',
-          description: t('audiometry.errors.selectPatientFromList') || 'Please select a patient from the search results. Manual entry requires patient registration first.',
+          title: t('ultrasound.errors.patientRequired') || 'Patient Required',
+          description: t('ultrasound.errors.selectPatientFromList') || 'Please select a patient from the search results. Manual entry requires patient registration first.',
           variant: "destructive",
           className: "bg-red-50 border-red-200 text-red-800",
         });
@@ -415,32 +426,34 @@ const Audiometry = () => {
 
       // Insert record with the full path
       const { error: insertError } = await supabase
-        .from('audiometry_images')
-        .insert({
-          patient_id: selectedPatient.userid,
-          patient_name: selectedPatient.english_username_a,
-          date_of_birth: selectedPatient.date_of_birth,
-          notes: notes || null,
-          requesting_doctor: selectedDoctor?.name || requestingDoctor || null,
-          image_url: filePath  // ✅ Store the full path including patient folder
-        });
+      .from('ultrasound_images')
+      .insert({
+        patient_id: selectedPatient.userid,
+        patient_name: selectedPatient.english_username_a,
+        date_of_birth: selectedPatient.date_of_birth,
+        body_part: selectedBodyParts,
+        indication: clinicalIndication || null,
+        requesting_doctor: selectedDoctor?.name || requestingDoctor || null,
+        image_url: filePath  // ✅ Store the full path including patient folder
+      });
 
-      if (insertError) {
-        throw insertError;
-      }
+    if (insertError) {
+      throw insertError;
+    }
 
       toast({
-        title: t('audiometry.success.title') || 'Success',
-        description: t('audiometry.success.saved') || 'Audiometry record saved successfully.',
+        title: t('ultrasound.success.title') || 'Success',
+        description: t('ultrasound.success.saved') || `Ultrasound record saved successfully for ${selectedBodyParts.length} body part(s).`,
         variant: "default",
         className: "bg-green-50 border-green-200 text-green-800",
       });
 
       // Reset form
-      setNotes("");
+      setSelectedBodyParts([]);
       setPatientName("");
       setDateOfBirth("");
       setRequestingDoctor("");
+      setClinicalIndication("");
       setFile(null);
       setSelectedPatient(null);
       setSelectedDoctor(null);
@@ -451,7 +464,7 @@ const Audiometry = () => {
       console.error('Error saving Ultrasound record:', error);
 
       // Show detailed error message to help debug
-      let errorMessage = t('audiometry.errors.tryAgain') || 'Failed to save Ultrasound record. Please try again.';
+      let errorMessage = t('ultrasound.errors.tryAgain') || 'Failed to save Ultrasound record. Please try again.';
 
       if (error && typeof error === 'object' && 'message' in error) {
         const err = error as { message?: string; code?: string; details?: string; hint?: string };
@@ -478,7 +491,7 @@ const Audiometry = () => {
       }
 
       toast({
-        title: t('audiometry.errors.saveFailed') || 'Save Failed',
+        title: t('ultrasound.errors.saveFailed') || 'Save Failed',
         description: errorMessage,
         variant: "destructive",
         className: "bg-red-50 border-red-200 text-red-800",
@@ -489,10 +502,10 @@ const Audiometry = () => {
   return (
     <>
       <SEOHead
-        title={t('audiometry.seo.title')}
-        description={t('audiometry.seo.description')}
-        keywords={t('audiometry.seo.keywords')}
-        url="https://bethlehemmedcenter.com/audiometry"
+        title={t('ultrasound.seo.title')}
+        description={t('ultrasound.seo.description')}
+        keywords={t('ultrasound.seo.keywords')}
+        url="https://bethlehemmedcenter.com/ultrasound"
       />
       <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2 md:p-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-2">
@@ -504,10 +517,10 @@ const Audiometry = () => {
               </div>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4 text-center px-2 break-words leading-loose whitespace-normal py-2">
-              {t('audiometry.title')}
+              {t('ultrasound.title')}
             </h1>
             <p className="text-slate-600 text-base md:text-lg w-full text-center mx-auto px-2 break-words">
-              {t('audiometry.subtitle')}
+              {t('ultrasound.subtitle')}
             </p>
           </div>
 
@@ -517,14 +530,14 @@ const Audiometry = () => {
               <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <User className="w-6 h-6" />
-                  {t('audiometry.patientInfo.title')}
+                  {t('ultrasound.patientInfo.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
                 {/* Patient Search */}
                 <div className="space-y-2 patient-search-container">
                   <Label htmlFor="patientSearch" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('audiometry.patientInfo.searchPatient')}
+                    {t('ultrasound.patientInfo.searchPatient')}
                   </Label>
                   <div className="relative">
                     <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
@@ -532,7 +545,7 @@ const Audiometry = () => {
                       id="patientSearch"
                       value={patientSearchTerm}
                       onChange={(e) => handleSearchChange(e.target.value)}
-                      placeholder={t('audiometry.patientInfo.searchPlaceholder')}
+                      placeholder={t('ultrasound.patientInfo.searchPlaceholder')}
                       className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
@@ -568,13 +581,13 @@ const Audiometry = () => {
                               </p>
                               <p className="text-sm text-slate-600">{patient.user_email}</p>
                               {patient.id_number && (
-                                <p className="text-xs text-slate-500">{t('audiometry.patientInfo.id')}: {patient.id_number}</p>
+                                <p className="text-xs text-slate-500">{t('ultrasound.patientInfo.id')}: {patient.id_number}</p>
                               )}
                             </div>
                             <div className={isRTL ? 'text-left' : 'text-right'}>
                               {patient.date_of_birth && (
                                 <p className="text-sm text-slate-600">
-                                  {t('audiometry.patientInfo.dob')}: {new Date(patient.date_of_birth).toLocaleDateString()}
+                                  {t('ultrasound.patientInfo.dob')}: {new Date(patient.date_of_birth).toLocaleDateString()}
                                 </p>
                               )}
                               {patient.gender_user && (
@@ -590,7 +603,7 @@ const Audiometry = () => {
                   {/* No Results Message */}
                   {showSearchResults && searchResults.length === 0 && patientSearchTerm.trim() && !isSearching && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
-                      <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('audiometry.patientInfo.noPatientsFound')}</p>
+                      <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('ultrasound.patientInfo.noPatientsFound')}</p>
                     </div>
                   )}
                 </div>
@@ -600,34 +613,34 @@ const Audiometry = () => {
                   <div className="p-3 md:p-4 bg-green-50 border border-green-200 rounded-lg">
                     <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
                       <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <span className="font-semibold text-green-800 text-sm md:text-base">{t('audiometry.patientInfo.patientSelected')}</span>
+                      <span className="font-semibold text-green-800 text-sm md:text-base">{t('ultrasound.patientInfo.patientSelected')}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
                       <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.patientInfo.name')}: </span>
+                        <span className="font-medium text-slate-700">{t('ultrasound.patientInfo.name')}: </span>
                         <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>
                           {selectedPatient.english_username_a} {selectedPatient.english_username_d || ''}
                         </span>
                       </div>
                       <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.patientInfo.email')}: </span>
+                        <span className="font-medium text-slate-700">{t('ultrasound.patientInfo.email')}: </span>
                         <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'} block sm:inline`}>{selectedPatient.user_email}</span>
                       </div>
                       {selectedPatient.id_number && (
                         <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                          <span className="font-medium text-slate-700">{t('audiometry.patientInfo.id')}: </span>
+                          <span className="font-medium text-slate-700">{t('ultrasound.patientInfo.id')}: </span>
                           <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedPatient.id_number}</span>
                         </div>
                       )}
                       {selectedPatient.gender_user && (
                         <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                          <span className="font-medium text-slate-700">{t('audiometry.patientInfo.gender')}: </span>
+                          <span className="font-medium text-slate-700">{t('ultrasound.patientInfo.gender')}: </span>
                           <span className={`text-slate-600 capitalize ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedPatient.gender_user}</span>
                         </div>
                       )}
                       {selectedPatient.date_of_birth && (
                         <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                          <span className="font-medium text-slate-700">{t('audiometry.patientInfo.dateOfBirth')}: </span>
+                          <span className="font-medium text-slate-700">{t('ultrasound.patientInfo.dateOfBirth')}: </span>
                           <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>
                             {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
                           </span>
@@ -642,13 +655,13 @@ const Audiometry = () => {
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="patientName" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {t('audiometry.patientInfo.manualName')}
+                        {t('ultrasound.patientInfo.manualName')}
                       </Label>
                       <Input
                         id="patientName"
                         value={patientName}
                         onChange={(e) => setPatientName(e.target.value)}
-                        placeholder={t('audiometry.patientInfo.namePlaceholder')}
+                        placeholder={t('ultrasound.patientInfo.namePlaceholder')}
                         className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
@@ -656,7 +669,7 @@ const Audiometry = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="dateOfBirth" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {t('audiometry.patientInfo.manualDob')}
+                        {t('ultrasound.patientInfo.manualDob')}
                       </Label>
                       <div className="relative">
                         <Calendar className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
@@ -683,7 +696,7 @@ const Audiometry = () => {
                 {/* Doctor Search */}
                 <div className="space-y-2 doctor-search-container">
                   <Label htmlFor="doctorSearch" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('audiometry.doctorInfo.title')}
+                    {t('ultrasound.doctorInfo.title')}
                   </Label>
                   <div className="relative">
                     <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
@@ -691,7 +704,7 @@ const Audiometry = () => {
                       id="doctorSearch"
                       value={doctorSearchTerm}
                       onChange={(e) => handleDoctorSearchChange(e.target.value)}
-                      placeholder={t('audiometry.doctorInfo.searchPlaceholder')}
+                      placeholder={t('ultrasound.doctorInfo.searchPlaceholder')}
                       className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
@@ -723,7 +736,7 @@ const Audiometry = () => {
                           <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
                             <div className={isRTL ? 'text-right' : 'text-left'}>
                               <p className="font-medium text-slate-900">
-                                {t('audiometry.doctorInfo.drPrefix')} {doctor.name}
+                                {t('ultrasound.doctorInfo.drPrefix')} {doctor.name}
                               </p>
                               <p className="text-sm text-slate-600">{doctor.specialty}</p>
                               <p className="text-xs text-slate-500">{doctor.clinic_name}</p>
@@ -743,7 +756,7 @@ const Audiometry = () => {
                   {/* No Doctor Results Message */}
                   {showDoctorSearchResults && doctorSearchResults.length === 0 && doctorSearchTerm.trim() && !isSearchingDoctors && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
-                      <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('audiometry.doctorInfo.noDoctorsFound')}</p>
+                      <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('ultrasound.doctorInfo.noDoctorsFound')}</p>
                     </div>
                   )}
                 </div>
@@ -753,28 +766,28 @@ const Audiometry = () => {
                   <div className="p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
                       <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                      <span className="font-semibold text-blue-800 text-sm md:text-base">{t('audiometry.doctorInfo.doctorSelected')}</span>
+                      <span className="font-semibold text-blue-800 text-sm md:text-base">{t('ultrasound.doctorInfo.doctorSelected')}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
                       <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.name')}: </span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{t('audiometry.doctorInfo.drPrefix')} {selectedDoctor.name}</span>
+                        <span className="font-medium text-slate-700">{t('ultrasound.doctorInfo.name')}: </span>
+                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{t('ultrasound.doctorInfo.drPrefix')} {selectedDoctor.name}</span>
                       </div>
                       <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.specialty')}: </span>
+                        <span className="font-medium text-slate-700">{t('ultrasound.doctorInfo.specialty')}: </span>
                         <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.specialty}</span>
                       </div>
                       <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.clinic')}: </span>
+                        <span className="font-medium text-slate-700">{t('ultrasound.doctorInfo.clinic')}: </span>
                         <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.clinic_name}</span>
                       </div>
                       <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.email')}: </span>
+                        <span className="font-medium text-slate-700">{t('ultrasound.doctorInfo.email')}: </span>
                         <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'} block sm:inline`}>{selectedDoctor.email}</span>
                       </div>
                       {selectedDoctor.phone && (
                         <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                          <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.phone')}: </span>
+                          <span className="font-medium text-slate-700">{t('ultrasound.doctorInfo.phone')}: </span>
                           <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.phone}</span>
                         </div>
                       )}
@@ -783,18 +796,99 @@ const Audiometry = () => {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="notes" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('audiometry.notes.title')}
+                  <Label htmlFor="clinicalIndication" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {t('ultrasound.clinicalIndication.title')}
                   </Label>
                   <Textarea
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder={t('audiometry.notes.placeholder')}
+                    id="clinicalIndication"
+                    value={clinicalIndication}
+                    onChange={(e) => setClinicalIndication(e.target.value)}
+                    placeholder={t('ultrasound.clinicalIndication.placeholder')}
                     rows={4}
                     className={`border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none ${isRTL ? 'text-right' : 'text-left'}`}
                     dir={isRTL ? 'rtl' : 'ltr'}
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Anatomical Selection Card */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
+                  <Stethoscope className="w-6 h-6" />
+                  {t('ultrasound.bodyPartSelection.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <Label className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    {t('ultrasound.bodyPartSelection.placeholder')}
+                  </Label>
+
+                  {/* Selected body parts count */}
+                  {selectedBodyParts.length > 0 && (
+                    <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      <span className="text-sm font-semibold text-green-800">
+                        {selectedBodyParts.length} {t('ultrasound.selected') || 'Selected'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Checkbox grid for body parts */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto pr-2">
+                    {[
+                      { value: 'neck', label: t('ultrasound.bodyParts.neck') || 'Neck' },
+                      { value: 'head', label: t('ultrasound.bodyParts.head') || 'Head' },
+                      { value: 'abdomen', label: t('ultrasound.bodyParts.abdomen') || 'Abdomen' },
+                      { value: 'abdomen_kidney', label: t('ultrasound.bodyParts.abdomen_kidney') || 'Abdomen (Kidney)' },
+                      { value: 'abdomen_spleen', label: t('ultrasound.bodyParts.abdomen_spleen') || 'Abdomen (Spleen)' },
+                      { value: 'abdomen_liver', label: t('ultrasound.bodyParts.abdomen_liver') || 'Abdomen (Liver)' },
+                      { value: 'abdomen_stomach', label: t('ultrasound.bodyParts.abdomen_stomach') || 'Abdomen (Stomach)' },
+                      { value: 'spine', label: t('ultrasound.bodyParts.spine') || 'Spine' },
+                      { value: 'scrotum', label: t('ultrasound.bodyParts.scrotum') || 'Scrotum' },
+                      { value: 'hip', label: t('ultrasound.bodyParts.hip') || 'Hip (Infant)' },
+                    ].map((bodyPart) => (
+                      <div
+                        key={bodyPart.value}
+                        className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all cursor-pointer hover:bg-slate-50 ${selectedBodyParts.includes(bodyPart.value)
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-slate-200'
+                          } ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}
+                        onClick={() => handleBodyPartToggle(bodyPart.value)}
+                      >
+                        <Checkbox
+                          id={bodyPart.value}
+                          checked={selectedBodyParts.includes(bodyPart.value)}
+                          onCheckedChange={() => handleBodyPartToggle(bodyPart.value)}
+                        />
+                        <label
+                          htmlFor={bodyPart.value}
+                          className={`text-sm font-medium text-slate-700 cursor-pointer flex-1 ${isRTL ? 'text-right' : 'text-left'}`}
+                          dir={isRTL ? 'rtl' : 'ltr'}
+                        >
+                          {bodyPart.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Clear all button */}
+                  {selectedBodyParts.length > 0 && (
+                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedBodyParts([])}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                        {t('ultrasound.actions.clearAll') || 'Clear All'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -804,7 +898,7 @@ const Audiometry = () => {
               <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <Upload className="w-6 h-6" />
-                  {t('audiometry.fileUpload.title')}
+                  {t('ultrasound.fileUpload.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -834,7 +928,7 @@ const Audiometry = () => {
                         <CheckCircle className="w-16 h-16 text-green-500" />
                       </div>
                       <div className={isRTL ? 'text-right' : 'text-center'}>
-                        <p className="text-lg font-semibold text-green-700">{t('audiometry.fileUpload.fileSelected')}</p>
+                        <p className="text-lg font-semibold text-green-700">{t('ultrasound.fileUpload.fileSelected')}</p>
                         <p className="text-slate-600 mt-1 break-all">{file.name}</p>
                         <p className="text-sm text-slate-500 mt-1">
                           {(file.size / (1024 * 1024)).toFixed(2)} MB
@@ -850,7 +944,7 @@ const Audiometry = () => {
                           className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
                         >
                           <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                          {t('audiometry.fileUpload.removeFile')}
+                          {t('ultrasound.fileUpload.removeFile')}
                         </Button>
                       </div>
                     </div>
@@ -861,12 +955,12 @@ const Audiometry = () => {
                       </div>
                       <div className="text-center">
                         <p className="text-lg font-semibold text-slate-700">
-                          {t('audiometry.fileUpload.dragDropText')}
+                          {t('ultrasound.fileUpload.dragDropText')}
                         </p>
-                        <p className="text-slate-500 mt-1">{t('audiometry.fileUpload.clickToBrowse')}</p>
+                        <p className="text-slate-500 mt-1">{t('ultrasound.fileUpload.clickToBrowse')}</p>
                       </div>
                       <div className="text-sm text-slate-500 text-center">
-                        {t('audiometry.fileUpload.supportedFormats')}
+                        {t('ultrasound.fileUpload.supportedFormats')}
                       </div>
                     </div>
                   )}
@@ -880,11 +974,11 @@ const Audiometry = () => {
             <Button
               size="lg"
               className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
-              disabled={!selectedPatient || !file || !selectedDoctor}
+              disabled={!selectedPatient || selectedBodyParts.length === 0 || !file || !selectedDoctor}
               onClick={handleSubmit}
             >
               <CheckCircle className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('audiometry.actions.saveRecord')}
+              {t('ultrasound.actions.saveRecord')}
             </Button>
 
             <Button
@@ -892,16 +986,17 @@ const Audiometry = () => {
               size="lg"
               className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
               onClick={() => {
-                setNotes("");
                 setPatientName("");
                 setDateOfBirth("");
                 setRequestingDoctor("");
+                setClinicalIndication("");
+                setSelectedBodyParts([]);
                 setFile(null);
                 clearPatientSelection();
                 clearDoctorSelection();
               }}
             >
-              {t('audiometry.actions.resetForm')}
+              {t('ultrasound.actions.resetForm')}
             </Button>
           </div>
         </div>
@@ -910,5 +1005,5 @@ const Audiometry = () => {
   );
 };
 
-export default Audiometry;
+export default Ultrasound;
 
