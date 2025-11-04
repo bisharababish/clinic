@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         // Handle other roles
-        const validRoles: UserRole[] = ['admin', 'doctor', 'secretary', 'patient', 'x ray', 'lab', 'nurse', 'ultrasound'];
+        const validRoles: UserRole[] = ['admin', 'doctor', 'secretary', 'patient', 'x ray', 'lab', 'nurse', 'ultrasound', 'audiometry'];
         return validRoles.includes(normalizedRole as UserRole) ? normalizedRole as UserRole : 'patient';
     };
 

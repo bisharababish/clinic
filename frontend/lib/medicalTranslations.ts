@@ -4,15 +4,15 @@
 export const medicalTranslations: Record<string, { en: string; ar: string }> = {
     // Common medical specialties
     pediatrics: { en: "Pediatrics", ar: "طب الأطفال" },
-    cardiology: { en: "Cardiology", ar: "أمراض القلب" },
+    cardiology: { en: "Cardiology", ar: "طب القلب" },
     dermatology: { en: "Dermatology", ar: "الأمراض الجلدية" },
     neurology: { en: "Neurology", ar: "طب الأعصاب" },
-    orthopedics: { en: "Orthopedics", ar: "جراحة العظام" },
+    orthopedics: { en: "Orthopedics", ar: "طب العظام" },
     psychiatry: { en: "Psychiatry", ar: "الطب النفسي" },
-    gynecology: { en: "Gynecology", ar: "أمراض النساء" },
+    gynecology: { en: "Gynecology", ar: "طب النساء و الولادة" },
     urology: { en: "Urology", ar: "المسالك البولية" },
     ophthalmology: { en: "Ophthalmology", ar: "طب العيون" },
-    dentistry: { en: "Dentistry", ar: "طب الأسنان" },
+    dentistry: { en: "Dentistry", ar: "طب الانف والاذن والحنجرة" },
     radiology: { en: "Radiology", ar: "الأشعة" },
     anesthesiology: { en: "Anesthesiology", ar: "التخدير" },
     surgery: { en: "Surgery", ar: "الجراحة" },
@@ -37,8 +37,8 @@ export const medicalTranslations: Record<string, { en: string; ar: string }> = {
     hospital: { en: "Hospital", ar: "مستشفى" },
     medical: { en: "Medical Center", ar: "المركز الطبي" },
     specialized: { en: "Specialized", ar: "متخصص" },
-    general: { en: "General", ar: "عام" },
-    private: { en: "Private", ar: "خاص" },
+    general: { en: "General", ar: "طب عام" },
+    private: { en: "Private", ar: " خاص" },
     public: { en: "Public", ar: "عام" },
 };
 

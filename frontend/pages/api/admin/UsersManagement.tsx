@@ -410,6 +410,8 @@ const UsersManagement = () => {
                 return "X Ray";
             case "ultrasound":
                 return "Ultrasound";
+            case "audiometry":
+                return "Audiometry";
             default:
                 // Fallback to first letter capitalized
                 return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
@@ -524,7 +526,7 @@ const UsersManagement = () => {
                         .join('')
                         .substring(0, 32);
                 };
-                
+
                 const csrfToken = sessionStorage.getItem('csrf_token') || generateCSRFToken();
                 sessionStorage.setItem('csrf_token', csrfToken);
 
@@ -1467,6 +1469,9 @@ const UsersManagement = () => {
                                             </SelectItem>
                                             <SelectItem value="Ultrasound" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
                                                 {t('roles.ultrasound')}
+                                            </SelectItem>
+                                            <SelectItem value="Audiometry" className={isRTL ? 'text-right justify-start pr-8' : 'text-left'} style={isRTL ? { textAlign: 'right', direction: 'rtl' } : {}}>
+                                                {t('roles.audiometry')}
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>

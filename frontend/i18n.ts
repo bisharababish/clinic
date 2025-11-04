@@ -208,11 +208,13 @@ const enTranslations = {
         labs: 'Labs',
         xray: 'X-Ray',
         ultrasound: 'Ultrasound',
+        audiometry: 'Audiometry',
         adminDashboard: 'Admin Dashboard',
         secretaryDashboard: 'Secretary Dashboard',
         doctorLabs: 'Lab Results',
         doctorXRay: 'X-Ray Images',
         doctorUltrasound: 'Ultrasound Images',
+        doctorAudiometry: 'Audiometry Images',
         patients: 'Patients',
         myAppointments: 'My Appointments',
         myRecords: 'My Medical Records',
@@ -277,6 +279,14 @@ const enTranslations = {
         noUltrasoundImagesUploaded: 'No Ultrasound images have been uploaded yet.',
         confirmDeleteTitleUltrasound: 'Delete Ultrasound Image?',
         confirmDeleteDescUltrasound: 'Are you sure you want to delete this Ultrasound image? This action cannot be undone.',
+        audiometryImages: 'Audiometry Images',
+        audiometryImagesDesc: 'View and analyze patient Audiometry images',
+        searchPatientsAudiometry: 'Search patients or notes...',
+        loadingAudiometryImages: 'Loading Audiometry images...',
+        noAudiometryImagesFound: 'No Audiometry images found matching your criteria.',
+        noAudiometryImagesUploaded: 'No Audiometry images have been uploaded yet.',
+        deleteConfirmTitleAudiometry: 'Delete Audiometry Image?',
+        deleteConfirmAudiometry: 'Are you sure you want to delete this Audiometry image? This action cannot be undone.',
         testResults: 'Test Results',
         doctorsNotes: 'Doctor\'s Notes',
         labTechnician: 'Lab Technician',
@@ -1135,7 +1145,7 @@ const enTranslations = {
             "spine": "Spine",
             "scrotum": "Scrotum",
             "hip": "Hip (Infant)",
-            
+
             // For backwards compatibility and DoctorUltrasoundPage dropdown
             "chest": "Chest",
             "knee": "Knee",
@@ -1178,9 +1188,8 @@ const enTranslations = {
             "status": "Status",
             "completed": "Completed",
             "downloadFailed": "Failed to download image. Please try again.",
-            "deleteConfirmTitle": "Delete Ultrasound Image?",
-            "deleteConfirm": "Are you sure you want to delete this Ultrasound image? This action cannot be undone.",
-            "deleteSuccess": "The ultrasound image was deleted successfully.",
+            "deleteConfirm": "Are you sure you want to delete this Ultrasound image?",
+            "deleteSuccess": "Ultrasound image deleted successfully",
             "deleteError": "Failed to delete Ultrasound image"
         },
 
@@ -1206,6 +1215,104 @@ const enTranslations = {
         "selectPatient": "Select Patient",
         "searchPatientPlaceholder": "Search patient by name...",
         "selectPatientOption": "Choose a patient..."
+    },
+
+    audiometry: {
+        // Page titles and descriptions
+        "pageTitle": "Audiometry Test Upload System",
+        "pageDescription": "Securely upload and manage audiometry test results",
+        "title": "Audiometry",
+        "subtitle": "Submit audiometry test results with notes and images",
+        "uploadAudiometryImage": "Upload Audiometry Image",
+
+        // SEO
+        "seo": {
+            "title": "Audiometry Services - Bethlehem Medical Center",
+            "description": "Submit audiometry test results",
+            "keywords": "audiometry, hearing test"
+        },
+
+        // Patient Information
+        "patientInfo": {
+            "title": "Patient Information",
+            "searchPatient": "Search Patient",
+            "searchPlaceholder": "Search by name, email, or ID number...",
+            "noPatientsFound": "No patients found",
+            "patientSelected": "Patient Selected",
+            "name": "Name",
+            "email": "Email",
+            "id": "ID",
+            "dob": "DOB",
+            "gender": "Gender",
+            "dateOfBirth": "Date of Birth",
+            "manualName": "Patient Name (Manual Entry)",
+            "namePlaceholder": "Enter patient full name",
+            "manualDob": "Date of Birth (Manual Entry)"
+        },
+
+        // Doctor Information
+        "doctorInfo": {
+            "title": "Requesting Doctor",
+            "searchPlaceholder": "Search by doctor name, specialty, or email...",
+            "noDoctorsFound": "No doctors found",
+            "doctorSelected": "Doctor Selected",
+            "drPrefix": "Dr.",
+            "name": "Name",
+            "specialty": "Specialty",
+            "clinic": "Clinic",
+            "email": "Email",
+            "phone": "Phone"
+        },
+
+        // Notes
+        "notes": {
+            "title": "Notes",
+            "placeholder": "Enter audiometry test notes and findings..."
+        },
+
+        // File Upload
+        "fileUpload": {
+            "title": "Audiometry Image Upload",
+            "fileSelected": "File Selected",
+            "removeFile": "Remove File",
+            "dragDropText": "Drag and drop your audiometry image",
+            "clickToBrowse": "or click to browse",
+            "supportedFormats": "Supported formats: JPEG, PNG (Max 10MB)"
+        },
+
+        // Actions
+        "actions": {
+            "saveRecord": "Save Record",
+            "resetForm": "Reset Form"
+        },
+
+        // Errors
+        "errors": {
+            "searchError": "Search Error",
+            "doctorSearchFailed": "Failed to search doctors. Please try again.",
+            "patientSearchFailed": "Failed to search patients. Please try again.",
+            "missingData": "Missing Data",
+            "selectFile": "Please upload an image file.",
+            "patientRequired": "Please select a patient or enter patient name.",
+            "dobRequired": "Please enter patient date of birth.",
+            "selectPatientFromList": "Please select a patient from the search results. Manual entry requires patient registration first.",
+            "saveFailed": "Save Failed",
+            "tryAgain": "Failed to save Audiometry record. Please try again."
+        },
+
+        // Success messages
+        "success": {
+            "title": "Success",
+            "saved": "Audiometry record saved successfully."
+        },
+
+        // Upload progress
+        "uploading": "Uploading...",
+        "uploadingAudiometry": "Uploading audiometry image...",
+        "processing": "Processing...",
+
+        // Security notice
+        "securityNotice": "🔒 All uploaded files are encrypted and comply with medical data protection standards"
     },
 
     admin: {
@@ -1862,6 +1969,7 @@ const enTranslations = {
         lab: 'Laboratory',
         xray: 'X-Ray Technician',
         ultrasound: 'Ultrasound Technician',
+        audiometry: 'Audiometry Technician',
         patient: 'Patient'
     },
     aboutUs: {
@@ -2840,11 +2948,13 @@ const arTranslations = {
         labs: 'المختبرات',
         xray: 'الأشعة',
         ultrasound: 'الموجات فوق الصوتية',
+        audiometry: 'قياس السمع',
         adminDashboard: 'لوحة تحكم المسؤول',
         secretaryDashboard: 'لوحة تحكم السكرتير',
         doctorLabs: 'نتائج المختبر',
         doctorXRay: 'صور الأشعة',
         doctorUltrasound: 'صور الموجات فوق الصوتية',
+        doctorAudiometry: 'صور قياس السمع',
         patients: 'المرضى',
         myAppointments: 'مواعيدي',
         myRecords: 'سجلاتي الطبية',
@@ -2909,7 +3019,15 @@ const arTranslations = {
         noUltrasoundImagesUploaded: 'لم يتم رفع أي صور موجات فوق الصوتية بعد.',
         confirmDeleteTitleUltrasound: 'حذف صورة الموجات فوق الصوتية؟',
         confirmDeleteDescUltrasound: 'هل أنت متأكد من حذف صورة الموجات فوق الصوتية هذه؟ لا يمكن التراجع عن هذا الإجراء.',
-        testResults: 'نتائج الفحص',
+        audiometryImages: 'صور قياس السمع',
+        audiometryImagesDesc: 'عرض وتحليل صور قياس السمع للمرضى',
+        searchPatientsAudiometry: 'البحث عن المرضى أو الملاحظات...',
+        loadingAudiometryImages: 'جارٍ تحميل صور قياس السمع...',
+        noAudiometryImagesFound: 'لم يتم العثور على صور قياس السمع التي تطابق معايير البحث الخاصة بك.',
+        noAudiometryImagesUploaded: 'لم يتم رفع أي صور قياس السمع بعد.',
+        deleteConfirmTitleAudiometry: 'حذف صورة قياس السمع؟',
+        deleteConfirmAudiometry: 'هل أنت متأكد من حذف صورة قياس السمع هذه؟ لا يمكن التراجع عن هذا الإجراء.',
+        testResults: 'نتائج الفحوصات',
         doctorsNotes: 'ملاحظات الطبيب',
         labTechnician: 'فني المختبر',
         searchPatientsTests: 'ابحث عن مريض...',
@@ -3969,7 +4087,7 @@ const arTranslations = {
             patientSearchFailed: 'فشل في البحث عن المرضى. يرجى المحاولة مرة أخرى.',
             missingData: 'بيانات مفقودة',
             selectBodyPartAndFile: 'يرجى اختيار جزء واحد على الأقل من الجسم ورفع ملف.',
-            saveFailed: 'فشل في الحفظ',
+            saveFailed: 'فشل الحفظ',
             tryAgain: 'فشل في حفظ سجل الأشعة. يرجى المحاولة مرة أخرى.'
         },
 
@@ -4115,7 +4233,7 @@ const arTranslations = {
             spine: 'العمود الفقري',
             scrotum: 'كيس الصفن',
             hip: 'الورك (رضيع)',
-            
+
             // For backwards compatibility and DoctorUltrasoundPage dropdown
             chest: 'الصدر',
             knee: 'الركبة',
@@ -4158,9 +4276,8 @@ const arTranslations = {
             status: 'الحالة',
             completed: 'مكتمل',
             downloadFailed: 'فشل في تحميل الصورة. يرجى المحاولة مرة أخرى.',
-            deleteConfirmTitle: 'حذف صورة الموجات فوق الصوتية؟',
-            deleteConfirm: 'هل أنت متأكد من حذف صورة الموجات فوق الصوتية هذه؟ لا يمكن التراجع عن هذا الإجراء.',
-            deleteSuccess: 'تم حذف صورة الموجات فوق الصوتية بنجاح.',
+            deleteConfirm: 'هل أنت متأكد من حذف صورة الموجات فوق الصوتية هذه؟',
+            deleteSuccess: 'تم حذف صورة الموجات فوق الصوتية بنجاح',
             deleteError: 'فشل في حذف صورة الموجات فوق الصوتية'
         },
 
@@ -4186,6 +4303,104 @@ const arTranslations = {
         selectPatient: "اختر المريض",
         searchPatientPlaceholder: "ابحث عن المريض بالاسم...",
         selectPatientOption: "اختر مريضًا..."
+    },
+
+    audiometry: {
+        // Page titles and descriptions
+        pageTitle: 'نظام رفع نتائج قياس السمع',
+        pageDescription: 'رفع وإدارة نتائج اختبارات قياس السمع بأمان',
+        title: 'قياس السمع',
+        subtitle: 'إرسال نتائج اختبار قياس السمع مع الملاحظات والصور',
+        uploadAudiometryImage: 'رفع صورة قياس السمع',
+
+        // SEO
+        seo: {
+            title: 'خدمات قياس السمع - مركز بيت لحم الطبي',
+            description: 'إرسال نتائج اختبار قياس السمع',
+            keywords: 'قياس السمع، اختبار السمع'
+        },
+
+        // Patient Information
+        patientInfo: {
+            title: 'معلومات المريض',
+            searchPatient: 'البحث عن المريض',
+            searchPlaceholder: 'البحث بالاسم أو البريد الإلكتروني أو رقم الهوية...',
+            noPatientsFound: 'لم يتم العثور على مرضى',
+            patientSelected: 'تم اختيار المريض',
+            name: 'الاسم',
+            email: 'البريد الإلكتروني',
+            id: 'رقم الهوية',
+            dob: 'تاريخ الميلاد',
+            gender: 'الجنس',
+            dateOfBirth: 'تاريخ الميلاد',
+            manualName: 'اسم المريض (إدخال يدوي)',
+            namePlaceholder: 'أدخل الاسم الكامل للمريض',
+            manualDob: 'تاريخ الميلاد (إدخال يدوي)'
+        },
+
+        // Doctor Information
+        doctorInfo: {
+            title: 'الطبيب الطالب',
+            searchPlaceholder: 'البحث بالاسم أو التخصص أو البريد الإلكتروني...',
+            noDoctorsFound: 'لم يتم العثور على أطباء',
+            doctorSelected: 'تم اختيار الطبيب',
+            drPrefix: 'د.',
+            name: 'الاسم',
+            specialty: 'التخصص',
+            clinic: 'العيادة',
+            email: 'البريد الإلكتروني',
+            phone: 'الهاتف'
+        },
+
+        // Notes
+        notes: {
+            title: 'ملاحظات',
+            placeholder: 'أدخل ملاحظات ونتائج اختبار قياس السمع...'
+        },
+
+        // File Upload
+        fileUpload: {
+            title: 'رفع صورة قياس السمع',
+            fileSelected: 'تم اختيار الملف',
+            removeFile: 'إزالة الملف',
+            dragDropText: 'اسحب وأفلت صورة قياس السمع',
+            clickToBrowse: 'أو انقر للتصفح',
+            supportedFormats: 'الصيغ المدعومة: JPEG، PNG (بحد أقصى 10 ميجابايت)'
+        },
+
+        // Actions
+        actions: {
+            saveRecord: 'حفظ السجل',
+            resetForm: 'إعادة تعيين النموذج'
+        },
+
+        // Errors
+        errors: {
+            searchError: 'خطأ في البحث',
+            doctorSearchFailed: 'فشل البحث عن الأطباء. يرجى المحاولة مرة أخرى.',
+            patientSearchFailed: 'فشل البحث عن المرضى. يرجى المحاولة مرة أخرى.',
+            missingData: 'بيانات مفقودة',
+            selectFile: 'يرجى رفع ملف صورة.',
+            patientRequired: 'يرجى اختيار مريض أو إدخال اسم المريض.',
+            dobRequired: 'يرجى إدخال تاريخ ميلاد المريض.',
+            selectPatientFromList: 'يرجى اختيار مريض من نتائج البحث. الإدخال اليدوي يتطلب تسجيل المريض أولاً.',
+            saveFailed: 'فشل الحفظ',
+            tryAgain: 'فشل حفظ سجل قياس السمع. يرجى المحاولة مرة أخرى.'
+        },
+
+        // Success messages
+        success: {
+            title: 'نجح',
+            saved: 'تم حفظ سجل قياس السمع بنجاح.'
+        },
+
+        // Upload progress
+        uploading: 'جارٍ الرفع...',
+        uploadingAudiometry: 'جارٍ رفع صورة قياس السمع...',
+        processing: 'جارٍ المعالجة...',
+
+        // Security notice
+        securityNotice: '🔒 جميع الملفات المرفوعة مشفرة ومتوافقة مع معايير حماية البيانات الطبية'
     },
 
     appointmentsManagement: {

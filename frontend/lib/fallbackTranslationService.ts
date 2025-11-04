@@ -25,7 +25,7 @@ const medicalTerms: Record<string, string> = {
     'neurology': 'طب الأعصاب',
     'orthopedics': 'جراحة العظام',
     'psychiatry': 'الطب النفسي',
-    'gynecology': 'أمراض النساء',
+    'gynecology': 'طب النساء',
     'urology': 'المسالك البولية',
     'ophthalmology': 'طب العيون',
     'radiology': 'الأشعة',

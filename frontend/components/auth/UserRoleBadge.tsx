@@ -36,6 +36,8 @@ const UserRoleBadge = ({ role }: UserRoleBadgeProps) => {
         return "bg-orange-100 text-orange-800 border-orange-200";
       case "ultrasound":
         return "bg-amber-100 text-amber-800 border-amber-200";
+      case "audiometry":
+        return "bg-violet-100 text-violet-800 border-violet-200";
       case "patient":
       default:
         return "bg-green-100 text-green-800 border-green-200";
@@ -57,7 +59,8 @@ const UserRoleBadge = ({ role }: UserRoleBadgeProps) => {
       'x ray': 'أشعة',
       'xray': 'أشعة',
       'x-ray': 'أشعة',
-      'ultrasound': 'موجات فوق صوتية'
+      'ultrasound': 'موجات فوق صوتية',
+      'audiometry': 'قياس السمع'
     };
 
     return arabicRoles[roleType.toLowerCase()] || roleType.charAt(0).toUpperCase() + roleType.slice(1);

@@ -29,12 +29,14 @@ const Confirmation = lazy(() => import("./pages/Confirmation"));
 const Labs = lazy(() => import("./pages/Labs"));
 const XRay = lazy(() => import("./pages/XRay"));
 const Ultrasound = lazy(() => import("./pages/Ultrasound"));
+const Audiometry = lazy(() => import("./pages/Audiometry"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 // const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 import AdminDashboard from "./pages/AdminDashboard";
 const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
 const DoctorUltrasoundPage = lazy(() => import("./pages/DoctorUltrasoundPage"));
+const DoctorAudiometryPage = lazy(() => import("./pages/DoctorAudiometryPage"));
 const DoctorPatientsPage = lazy(() => import("./pages/DoctorPatientPage"));
 const PatientDashboardPage = lazy(() => import("./pages/PatientDashboard"));
 const UserPreviewPage = lazy(() => import("./pages/UserPreviewPage"));
@@ -180,6 +182,16 @@ function App() {
                     }
                   />
 
+                  {/* Audiometry */}
+                  <Route
+                    path="/audiometry"
+                    element={
+                      <HeaderOnlyLayout>
+                        <Audiometry />
+                      </HeaderOnlyLayout>
+                    }
+                  />
+
                   {/* Doctor Labs */}
                   <Route
                     path="/doctor/labs"
@@ -206,6 +218,16 @@ function App() {
                     element={
                       <HeaderOnlyLayout>
                         <DoctorUltrasoundPage />
+                      </HeaderOnlyLayout>
+                    }
+                  />
+
+                  {/* Doctor Audiometry */}
+                  <Route
+                    path="/doctor/audiometry"
+                    element={
+                      <HeaderOnlyLayout>
+                        <DoctorAudiometryPage />
                       </HeaderOnlyLayout>
                     }
                   />
