@@ -28,7 +28,7 @@ import { hasPermission } from '../../../lib/rolePermissions';
 // Add these imports to your existing imports
 import { isValidPalestinianID } from '../../../lib/PalID_temp';
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
-import { updatePassword } from '../../../src/lib/api';
+import { updatePassword, confirmEmail } from '../../../src/lib/api';
 
 // Note: getBackendUrl is kept for delete-user endpoint only
 // Password updates now use the updatePassword function from api.ts which handles URL detection
@@ -743,6 +743,25 @@ const UsersManagement = () => {
                 });
                 return;
             }
+
+            // Validate required fields for user creation
+            if (!userFormData.date_of_birth || !userFormData.date_of_birth.trim()) {
+                toast({
+                    title: t('common.error'),
+                    description: isRTL ? "تاريخ الميلاد مطلوب" : "Date of birth is required",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            if (!userFormData.gender_user || !userFormData.gender_user.trim()) {
+                toast({
+                    title: t('common.error'),
+                    description: isRTL ? "الجنس مطلوب" : "Gender is required",
+                    variant: "destructive",
+                });
+                return;
+            }
         }
 
         if (userFormMode === "create") {
@@ -773,6 +792,22 @@ const UsersManagement = () => {
                 }
 
                 const timestamp = new Date().toISOString();
+                
+                // Ensure date_of_birth and gender_user are not empty (validation should prevent this, but double-check)
+                const dateOfBirth = userFormData.date_of_birth?.trim() || null;
+                const genderUser = userFormData.gender_user?.trim() || null;
+                
+                if (!dateOfBirth || !genderUser) {
+                    toast({
+                        title: t('common.error'),
+                        description: isRTL 
+                            ? "تاريخ الميلاد والجنس مطلوبان" 
+                            : "Date of birth and gender are required",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+                
                 const { data: userData, error: userError } = await supabase
                     .from("userinfo")
                     .insert({
@@ -787,8 +822,8 @@ const UsersManagement = () => {
                         user_email: userFormData.user_email,
                         id_number: userFormData.id_number || null,
                         user_phonenumber: userFormData.user_phonenumber || null,
-                        date_of_birth: userFormData.date_of_birth || null,
-                        gender_user: userFormData.gender_user || null,
+                        date_of_birth: dateOfBirth,
+                        gender_user: genderUser,
                         user_roles: capitalizedRole,
                         user_password: userFormData.user_password,
                         created_at: timestamp,
@@ -846,18 +881,31 @@ const UsersManagement = () => {
 
                 console.log("User created successfully:", userData);
 
+                // Auto-confirm email for admin-created users
+                try {
+                    console.log("🔐 Confirming email for admin-created user:", userFormData.user_email);
+                    await confirmEmail(userFormData.user_email);
+                    console.log("✅ Email confirmed successfully");
+                } catch (confirmError) {
+                    console.error("⚠️ Failed to confirm email (non-critical):", confirmError);
+                    // Don't fail the entire operation if email confirmation fails
+                    // The user can still verify their email manually if needed
+                }
+
                 // ✅ Let real-time subscription handle the update automatically
 
                 toast({
                     title: t('common.success'),
-                    description: t('usersManagement.userCreatedSuccessfully'),
+                    description: isRTL 
+                        ? "تم إنشاء المستخدم بنجاح. تم تأكيد البريد الإلكتروني تلقائياً."
+                        : "User created successfully. Email has been automatically confirmed.",
                     style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                 });
 
                 logActivity(
                     t('usersManagement.userCreated'),
                     "admin",
-                    `New user ${userFormData.user_email} (${capitalizedRole}) created`,
+                    `New user ${userFormData.user_email} (${capitalizedRole}) created and email confirmed`,
                     "success"
                 );
 
@@ -1398,6 +1446,7 @@ const UsersManagement = () => {
                                             onChange={handleUserInputChange}
                                             max={new Date().toISOString().split('T')[0]}
                                             dir="ltr"
+                                            required={userFormMode === "create"}
                                         />
                                     </div>
 

@@ -202,6 +202,13 @@ export async function updatePassword(userEmail: string, newPassword: string): Pr
     });
 }
 
+export async function confirmEmail(userEmail: string): Promise<{ success: boolean; message: string; userEmail: string }> {
+    return apiCall('/api/admin/confirm-email', {
+        method: 'POST',
+        body: JSON.stringify({ userEmail }),
+    });
+}
+
 export async function checkHealth(): Promise<{ status: string; timestamp: string }> {
     return apiCall('/health');
 }

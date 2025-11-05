@@ -280,6 +280,80 @@ app.post('/api/admin/update-password', authenticateAdmin, validateUpdatePassword
     }
 });
 
+// Confirm email endpoint for admin-created users
+app.post('/api/admin/confirm-email', authenticateAdmin, csrfProtection, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userEmail } = req.body as { userEmail?: string };
+
+        if (!userEmail) {
+            res.status(400).json({
+                error: 'User email is required',
+                success: false
+            });
+            return;
+        }
+
+        logAuth('confirm_email', userEmail, true);
+
+        // Find user by email
+        const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+
+        if (listError) {
+            logSecurity('Failed to list users for email confirmation', { error: listError.message });
+            res.status(400).json({
+                error: 'Failed to list users',
+                detail: listError.message,
+                success: false
+            });
+            return;
+        }
+
+        const usersList: Array<{ email?: string; id: string }> = existingUsers?.users ?? [];
+        const targetUser = usersList.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase());
+
+        if (!targetUser) {
+            logSecurity('User not found for email confirmation', { email: userEmail });
+            res.status(404).json({
+                error: 'User not found',
+                detail: 'No user found with the provided email',
+                success: false
+            });
+            return;
+        }
+
+        // Confirm the user's email
+        const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+            targetUser.id,
+            { email_confirm: true }
+        );
+
+        if (updateError) {
+            logSecurity('Email confirmation failed', { error: updateError.message, email: userEmail });
+            res.status(400).json({
+                error: 'Failed to confirm email',
+                detail: updateError.message,
+                success: false
+            });
+            return;
+        }
+
+        logAuth('confirm_email', userEmail, true);
+
+        res.status(200).json({
+            success: true,
+            message: 'Email confirmed successfully',
+            userEmail
+        });
+
+    } catch (error) {
+        logError(error instanceof Error ? error : new Error('Unknown error'), 'confirm_email');
+        res.status(500).json({
+            error: 'Internal server error',
+            message: 'An unexpected error occurred'
+        });
+    }
+});
+
 // Delete auth user endpoint
 app.post('/api/admin/delete-user', authenticateAdmin, validateDeleteUser, csrfProtection, async (req: Request, res: Response): Promise<void> => {
     try {
