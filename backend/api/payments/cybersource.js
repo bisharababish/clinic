@@ -25,15 +25,32 @@ const crypto = require('crypto');
 class CyberSourceService {
     constructor() {
         // Load credentials from environment variables (NEVER hardcode)
-        this.merchantId = process.env.CYBERSOURCE_MERCHANT_ID;
+        this.merchantId = process.env.CYBERSOURCE_MERCHANT_ID || 'arabcp000865102';
         this.apiKey = process.env.CYBERSOURCE_API_KEY;
         this.secretKey = process.env.CYBERSOURCE_SECRET_KEY;
-        this.endpoint = process.env.CYBERSOURCE_ENDPOINT || 'https://ebc2.cybersource.com/ebc2/';
+        
+        // Set endpoint based on environment
+        const isProduction = process.env.CYBERSOURCE_ENVIRONMENT === 'production';
+        this.endpoint = isProduction 
+            ? (process.env.CYBERSOURCE_ENDPOINT_PRODUCTION || 'https://api.cybersource.com')
+            : (process.env.CYBERSOURCE_ENDPOINT_TEST || 'https://api.test.cybersource.com');
+        
         this.environment = process.env.CYBERSOURCE_ENVIRONMENT || 'test';
         
         // Validate required credentials
         if (!this.merchantId || !this.apiKey || !this.secretKey) {
             console.warn('⚠️  CyberSource credentials not fully configured. Payment processing will fail.');
+            console.warn('⚠️  Missing:', {
+                merchantId: !this.merchantId,
+                apiKey: !this.apiKey,
+                secretKey: !this.secretKey
+            });
+        } else {
+            console.log('✅ CyberSource service initialized:', {
+                merchantId: this.merchantId,
+                environment: this.environment,
+                endpoint: this.endpoint
+            });
         }
     }
 
