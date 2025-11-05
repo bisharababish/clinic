@@ -1365,6 +1365,7 @@ const enTranslations = {
         labTechnicians: 'Lab Technicians',
         xrayTechnicians: 'X-Ray Technicians',
         ultrasoundTechnicians: 'Ultrasound Technicians',
+        audiometryTechnicians: 'Audiometry Technicians',
 
         // Overview Tab - Performance Summary
         performanceSummary: 'Performance Summary',
@@ -3165,6 +3166,7 @@ const arTranslations = {
         labTechnicians: 'فنيو المختبر',
         xrayTechnicians: 'فنيو الأشعة',
         ultrasoundTechnicians: 'فنيو الموجات فوق الصوتية',
+        audiometryTechnicians: 'فنيو قياس السمع',
 
         // Overview Tab - Performance Summary
         performanceSummary: 'ملخص الأداء',
