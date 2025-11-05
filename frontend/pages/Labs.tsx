@@ -1527,6 +1527,18 @@ const Labs = () => {
                                 <span className="font-medium">{isRTL ? 'الطبيب: ' : 'Doctor: '}</span>
                                 {request.doctor_name}
                               </p>
+                              {request.service_name || request.service_name_ar ? (
+                                <p>
+                                  <span className="font-medium">{isRTL ? 'نوع الفحص: ' : 'Service: '}</span>
+                                  {isRTL ? (request.service_name_ar || request.service_name) : (request.service_name || request.service_name_ar)}
+                                </p>
+                              ) : null}
+                              {request.price && (
+                                <p>
+                                  <span className="font-medium">{isRTL ? 'السعر: ' : 'Price: '}</span>
+                                  ₪{request.price} {request.currency || 'ILS'}
+                                </p>
+                              )}
                               {request.notes && (
                                 <p>
                                   <span className="font-medium">{isRTL ? 'ملاحظات: ' : 'Notes: '}</span>
