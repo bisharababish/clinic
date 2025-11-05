@@ -105,6 +105,15 @@ const supabaseAdmin = createClient(
     }
 );
 
+// Root endpoint - simple response for deployment health checks
+app.get('/', (req: Request, res: Response): void => {
+    res.status(200).json({
+        status: 'ok',
+        service: 'bethlehem-medical-center-backend',
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Health check endpoints
 app.get('/health', healthCheck);
 app.get('/health/simple', simpleHealthCheck);
@@ -410,9 +419,10 @@ const errorHandler: ErrorRequestHandler = (err: Error, req: Request, res: Respon
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, (): void => {
+app.listen(PORT, '0.0.0.0', (): void => {
     logInfo(`Server started on port ${PORT}`, {
         environment: process.env.NODE_ENV || 'development',
+        service: 'bethlehem-medical-center',
         timestamp: new Date().toISOString()
     });
 });

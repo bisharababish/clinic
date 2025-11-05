@@ -5,6 +5,7 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm start
     plan: starter
+    healthCheckPath: /health/simple
     envVars:
       - key: NODE_ENV
         value: production
