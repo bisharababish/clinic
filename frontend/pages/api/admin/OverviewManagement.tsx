@@ -153,21 +153,27 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
         '#d0ed57', '#ffc658', '#ff8042', '#ff6361', '#bc5090',
     ];
 
+    // Helper function to get role configuration with colors
+    // Order: Patients, administrators, Secretary, doctors, nurses, lab, ultrasound, audiometry
+    // Each role has a unique text color and unique background color
+    const getRoleConfig = () => {
+        return [
+            { key: 'patient', name: t('admin.patients'), color: '#2563eb', bgColor: '#dbeafe' }, // Blue text, light blue background
+            { key: 'admin', name: t('admin.administrators'), color: '#dc2626', bgColor: '#fee2e2' }, // Red text, light red background
+            { key: 'secretary', name: t('admin.secretaries'), color: '#9333ea', bgColor: '#f3e8ff' }, // Purple text, light purple background
+            { key: 'doctor', name: t('admin.doctors'), color: '#059669', bgColor: '#d1fae5' }, // Green text, light green background
+            { key: 'nurse', name: t('admin.nurses'), color: '#db2777', bgColor: '#fce7f3' }, // Pink text, light pink background
+            { key: 'lab', name: t('admin.labTechnicians'), color: '#ca8a04', bgColor: '#fef9c3' }, // Yellow text, light yellow background
+            { key: 'ultrasound', name: t('admin.ultrasoundTechnicians'), color: '#ea580c', bgColor: '#ffedd5' }, // Orange text, light orange background
+            { key: 'audiometry', name: t('admin.audiometryTechnicians'), color: '#0891b2', bgColor: '#cffafe' } // Cyan text, light cyan background
+        ];
+    };
+
     // Chart data transformations with translations
     // Chart data transformations with translations - Updated to include all roles
     const getRoleChartData = () => {
-        // Define all possible roles with their colors
-        const allRoles = [
-            { key: 'patient', name: t('admin.patients'), color: '#3b82f6' }, // Blue (matches current patients card)
-            { key: 'doctor', name: t('admin.doctors'), color: '#10b981' }, // Green (matches current doctors card)
-            { key: 'secretary', name: t('admin.secretaries'), color: '#8b5cf6' }, // Purple (matches current secretaries card)
-            { key: 'nurse', name: t('admin.nurses'), color: '#ec4899' }, // Pink (matches current nurses card)
-            { key: 'admin', name: t('admin.administrators'), color: '#ef4444' }, // Red (matches current admin card)
-            { key: 'lab', name: t('admin.labTechnicians'), color: '#eab308' }, // Yellow (matches current lab card)
-            { key: 'x ray', name: t('admin.xrayTechnicians'), color: '#14b8a6' }, // Teal (matches current x-ray card)
-            { key: 'ultrasound', name: t('admin.ultrasoundTechnicians'), color: '#f59e0b' }, // Amber (ultrasound card)
-            { key: 'audiometry', name: t('admin.audiometryTechnicians'), color: '#f97316' } // Orange (audiometry card)
-        ];
+        // Get all roles with their colors in the specified order
+        const allRoles = getRoleConfig();
 
         // If users array is empty or still loading, return empty data
         if (!users || users.length === 0) {
@@ -326,83 +332,88 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     <CardContent className="pt-4">
                         <div className="h-[500px]">
                             <ResponsiveContainer width="100%" height="100%">
-                                {chartType === 'pie' ? (
-                                    <PieChart margin={{ top: 30, right: 30, bottom: 30, left: 30 }}>
-                                        <Pie
-                                            data={getRoleChartData()}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
-                                                const RADIAN = Math.PI / 180;
-                                                const radius = outerRadius + 25;
-                                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                {(() => {
+                                    // Get chart data once to ensure consistency
+                                    const chartData = getRoleChartData();
+                                    
+                                    return chartType === 'pie' ? (
+                                        <PieChart margin={{ top: 30, right: 30, bottom: 30, left: 30 }}>
+                                            <Pie
+                                                data={chartData}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+                                                    const RADIAN = Math.PI / 180;
+                                                    const radius = outerRadius + 25;
+                                                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-                                                return (
-                                                    <text
-                                                        x={x}
-                                                        y={y}
-                                                        fill="#374151"
-                                                        textAnchor={x > cx ? 'start' : 'end'}
-                                                        dominantBaseline="central"
-                                                        fontSize="11"
-                                                        fontWeight="500"
-                                                    >
-                                                        {`${(percent * 100).toFixed(0)}%`}
-                                                    </text>
-                                                );
-                                            }}
-                                            outerRadius={110}
-                                            innerRadius={50}
-                                            paddingAngle={5}
-                                            dataKey="count"
-                                            isAnimationActive={true}
-                                        >
-                                            {getRoleChartData().map((entry, index) => (
-                                                <Cell
-                                                    key={`cell-${index}`}
-                                                    fill={entry.fill}
-                                                    stroke="#ffffff"
-                                                    strokeWidth={2}
-                                                />
-                                            ))}
-                                        </Pie>
-                                    </PieChart>
-                                ) : (
-                                    <BarChart data={getRoleChartData()}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis
-                                            dataKey="role"
-                                            tick={{ fontSize: 12 }}
-                                        />
-                                        <YAxis
-                                            label={{
-                                                value: t('admin.numberOfUsers'),
-                                                angle: -90,
-                                                position: 'outside',
-                                                offset: 10,
-                                                style: { textAnchor: 'middle' }
-                                            }}
-                                            tick={{ fontSize: 12 }}
-                                            width={60}
-                                        />
-                                        <Tooltip
-                                            formatter={(value, name) => [value, t('admin.numberOfUsers')]}
-                                            labelFormatter={(label) => label}
-                                        />
-                                        <Bar dataKey="count" isAnimationActive={true}>
-                                            {getRoleChartData().map((entry, index) => (
-                                                <Cell
-                                                    key={`cell-${index}`}
-                                                    fill={entry.fill}
-                                                    stroke="#ffffff"
-                                                    strokeWidth={1}
-                                                />
-                                            ))}
-                                        </Bar>
-                                    </BarChart>
-                                )}
+                                                    return (
+                                                        <text
+                                                            x={x}
+                                                            y={y}
+                                                            fill="#374151"
+                                                            textAnchor={x > cx ? 'start' : 'end'}
+                                                            dominantBaseline="central"
+                                                            fontSize="11"
+                                                            fontWeight="500"
+                                                        >
+                                                            {`${(percent * 100).toFixed(0)}%`}
+                                                        </text>
+                                                    );
+                                                }}
+                                                outerRadius={110}
+                                                innerRadius={50}
+                                                paddingAngle={5}
+                                                dataKey="count"
+                                                isAnimationActive={true}
+                                            >
+                                                {chartData.map((entry, index) => (
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={entry.fill}
+                                                        stroke="#ffffff"
+                                                        strokeWidth={2}
+                                                    />
+                                                ))}
+                                            </Pie>
+                                        </PieChart>
+                                    ) : (
+                                        <BarChart data={chartData}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis
+                                                dataKey="role"
+                                                tick={{ fontSize: 12 }}
+                                            />
+                                            <YAxis
+                                                label={{
+                                                    value: t('admin.numberOfUsers'),
+                                                    angle: -90,
+                                                    position: 'outside',
+                                                    offset: 10,
+                                                    style: { textAnchor: 'middle' }
+                                                }}
+                                                tick={{ fontSize: 12 }}
+                                                width={60}
+                                            />
+                                            <Tooltip
+                                                formatter={(value, name) => [value, t('admin.numberOfUsers')]}
+                                                labelFormatter={(label) => label}
+                                            />
+                                            <Bar dataKey="count" isAnimationActive={true}>
+                                                {chartData.map((entry, index) => (
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={entry.fill}
+                                                        stroke="#ffffff"
+                                                        strokeWidth={1}
+                                                    />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    );
+                                })()}
                             </ResponsiveContainer>
                         </div>
                     </CardContent>
@@ -416,162 +427,51 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     <CardContent className="pt-4">
                         <div className="space-y-3">
                             {(() => {
-                                const roleCards = [
-                                    // Patients
-                                    <div key="patients" className={`flex items-center p-3 rounded-lg border bg-blue-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mx-3">
-                                            <Users className="h-5 w-5 text-blue-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-blue-800">{t('admin.patients')}</p>
-                                            <p className="text-sm text-blue-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'patient').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'patient').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>,
-
-                                    // Doctors
-                                    <div key="doctors" className={`flex items-center p-3 rounded-lg border bg-green-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mx-3">
-                                            <Stethoscope className="h-5 w-5 text-green-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-green-800">{t('admin.doctors')}</p>
-                                            <p className="text-sm text-green-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'doctor').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>,
-
-                                    // Secretaries
-                                    <div key="secretaries" className={`flex items-center p-3 rounded-lg border bg-purple-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mx-3">
-                                            <FileText className="h-5 w-5 text-purple-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-purple-800">{t('admin.secretaries')}</p>
-                                            <p className="text-sm text-purple-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'secretary').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>,
-
-                                    // Nurses
-                                    <div key="nurses" className={`flex items-center p-3 rounded-lg border bg-pink-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-pink-100 flex items-center justify-center mx-3">
-                                            <Activity className="h-5 w-5 text-pink-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-pink-800">{t('admin.nurses')}</p>
-                                            <p className="text-sm text-pink-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'nurse').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>,
-
-                                    // Administrators
-                                    <div key="administrators" className={`flex items-center p-3 rounded-lg border bg-red-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center mx-3">
-                                            <Shield className="h-5 w-5 text-red-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-red-800">{t('admin.administrators')}</p>
-                                            <p className="text-sm text-red-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>,
-
-                                    // Lab Technicians
-                                    <div key="lab" className={`flex items-center p-3 rounded-lg border bg-yellow-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mx-3">
-                                            <Database className="h-5 w-5 text-yellow-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-yellow-800">{t('admin.labTechnicians')}</p>
-                                            <p className="text-sm text-yellow-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'lab').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'lab').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>,
-
-                                    // X-ray Technicians
-                                    <div key="xray" className={`flex items-center p-3 rounded-lg border bg-teal-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center mx-3">
-                                            <Layers className="h-5 w-5 text-teal-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-teal-800">{t('admin.xrayTechnicians')}</p>
-                                            <p className="text-sm text-teal-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'x ray').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>,
-
-                                    // Ultrasound Technicians
-                                    <div key="ultrasound" className={`flex items-center p-3 rounded-lg border bg-amber-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center mx-3">
-                                            <Activity className="h-5 w-5 text-amber-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-amber-800">{t('admin.ultrasoundTechnicians')}</p>
-                                            <p className="text-sm text-amber-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'ultrasound').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'ultrasound').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>,
-
-                                    // Audiometry Technicians
-                                    <div key="audiometry" className={`flex items-center p-3 rounded-lg border bg-orange-50 hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                        <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center mx-3">
-                                            <Activity className="h-5 w-5 text-orange-600" />
-                                        </div>
-                                        <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                            <p className="font-medium text-orange-800">{t('admin.audiometryTechnicians')}</p>
-                                            <p className="text-sm text-orange-600">
-                                                {users.filter(u => u.user_roles?.toLowerCase() === 'audiometry').length} {t('admin.users')}
-                                                <span className="ml-1 text-xs">
-                                                    ({users.length > 0 ?
-                                                        Math.round((users.filter(u => u.user_roles?.toLowerCase() === 'audiometry').length / users.length) * 100) : 0}%)
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
+                                // Get role configuration with colors
+                                const allRoles = getRoleConfig();
+                                
+                                // Map roles to their icon and filter configuration
+                                const roleConfigs = [
+                                    { key: 'patient', icon: Users, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'patient' },
+                                    { key: 'admin', icon: Shield, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator' },
+                                    { key: 'secretary', icon: FileText, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'secretary' },
+                                    { key: 'doctor', icon: Stethoscope, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'doctor' },
+                                    { key: 'nurse', icon: Activity, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'nurse' },
+                                    { key: 'lab', icon: Database, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'lab' },
+                                    { key: 'ultrasound', icon: Activity, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'ultrasound' },
+                                    { key: 'audiometry', icon: Activity, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'audiometry' }
                                 ];
 
-                                // Reverse the array for Arabic (RTL)
+                                const roleCards = roleConfigs.map((config, index) => {
+                                    const roleStyle = allRoles[index];
+                                    const count = users.filter(config.filter).length;
+                                    const percentage = users.length > 0 ? Math.round((count / users.length) * 100) : 0;
+                                    const IconComponent = config.icon;
+
+                                    return (
+                                        <div 
+                                            key={config.key} 
+                                            className={`flex items-center p-3 rounded-lg border hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}
+                                            style={{ backgroundColor: roleStyle.bgColor }}
+                                        >
+                                            <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center mx-3 border-2" style={{ borderColor: roleStyle.color }}>
+                                                <IconComponent className="h-5 w-5" style={{ color: roleStyle.color }} />
+                                            </div>
+                                            <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
+                                                <p className="font-medium" style={{ color: roleStyle.color }}>
+                                                    {roleStyle.name}
+                                                </p>
+                                                <p className="text-sm" style={{ color: roleStyle.color }}>
+                                                    {count} {t('admin.users')}
+                                                    <span className="ml-1 text-xs">
+                                                        ({percentage}%)
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                });
+
                                 return roleCards;
                             })()}
                         </div>
