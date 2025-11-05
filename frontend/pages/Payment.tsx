@@ -1,5 +1,5 @@
 // pages/Payment.tsx - Updated with real payment processing
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "../components/ui/button";
@@ -12,8 +12,10 @@ import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { Skeleton } from "../components/ui/skeleton";
 import { freeAutoTranslateAppointmentData } from "../lib/freeTranslationService";
+import SecureCardInput, { CardData } from "../components/SecureCardInput";
+import { CreditCard, Banknote } from "lucide-react";
 
-type PaymentMethod = "cash";
+type PaymentMethod = "cash" | "visa";
 interface LocationState {
     clinicName: string;
     doctorName: string;
@@ -118,9 +120,12 @@ const Payment = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCreatingAppointment, setIsCreatingAppointment] = useState(false);
     const [agreedToCashTerms, setAgreedToCashTerms] = useState(false);
+    const [cardData, setCardData] = useState<CardData | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [appointmentId, setAppointmentId] = useState<string>("");
     const [confirmationNumber, setConfirmationNumber] = useState<string>("");
+    const isInitializingRef = useRef(false);
+    const hasInitializedRef = useRef(false);
     const [serviceRequestId, setServiceRequestId] = useState<string | null>(null);
     interface ServiceRequestData {
         id: number;
@@ -192,12 +197,20 @@ const Payment = () => {
                 }
                 return;
             }
-            // Prevent multiple simultaneous appointment creations
-            if (isCreatingAppointment) {
-                console.log('🚫 Appointment creation already in progress, skipping...');
+            
+            // Prevent multiple simultaneous appointment creations using ref
+            if (isInitializingRef.current) {
+                console.log('🚫 Appointment creation already in progress (ref check), skipping...');
+                return;
+            }
+            
+            // Prevent re-execution if already initialized
+            if (hasInitializedRef.current) {
+                console.log('🚫 Already initialized, skipping...');
                 return;
             }
 
+            isInitializingRef.current = true;
             setIsCreatingAppointment(true);
 
             // Flag to prevent booking if duplicate is detected
@@ -290,15 +303,19 @@ const Payment = () => {
                 // Check for existing appointments that would violate the unique constraint
                 console.log('🔍 Checking for appointments that would violate unique constraint...');
 
+                // Query for potential duplicates - be very specific to avoid false positives
+                // Only check for exact matches: same patient, clinic, doctor, date, and time
+                // IMPORTANT: Query by email first to avoid patient_id mismatches
                 const { data: existingAppointments, error: checkError } = await supabase
                     .from('payment_bookings')
                     .select('id, clinic_name, doctor_name, appointment_day, appointment_time, payment_status, booking_status, created_at, patient_id, patient_email, deleted')
-                    .eq('patient_id', user.id) // Match exact constraint: patient_id, clinic_name, doctor_name, appointment_day, appointment_time
-                    .eq('clinic_name', clinicName)
-                    .eq('doctor_name', doctorName)
+                    .eq('patient_email', user.email) // Use email instead of patient_id to be more accurate
                     .eq('appointment_day', actualDate)
-                    .eq('appointment_time', appointmentTime)
-                    .eq('deleted', false); // Only get non-deleted appointments
+                    .eq('deleted', false) // Only non-deleted appointments
+                    .neq('booking_status', 'cancelled'); // Exclude cancelled appointments
+
+                // Now filter by clinic and doctor to avoid false positives
+                // Some appointments might have time ranges like "08:00-20:00", so we need to handle that
 
                 console.log('🔍 ALL ACTIVE APPOINTMENTS FOUND (excluding soft-deleted):', {
                     count: existingAppointments?.length || 0,
@@ -318,17 +335,67 @@ const Payment = () => {
                     throw new Error('Failed to check existing appointments');
                 }
 
-                // TEMPORARY FIX: Bypass duplicate check to allow booking
-                const DEBUG_MODE = true; // Set to true to bypass duplicate check temporarily
+                // Normalize values for accurate comparison
+                const normalizeString = (str: string) => (str || '').trim().toLowerCase();
+                const normalizeTime = (time: string) => {
+                    // Handle time ranges (e.g., "08:00-20:00") - extract start time
+                    let normalized = (time || '').trim();
+                    
+                    // If it's a range, get the start time
+                    if (normalized.includes('-')) {
+                        normalized = normalized.split('-')[0].trim();
+                    }
+                    
+                    // Remove seconds if present (e.g., "10:00:00" -> "10:00")
+                    normalized = normalized.replace(/:\d{2}$/, '');
+                    
+                    return normalized;
+                };
 
-                if (DEBUG_MODE) {
-                    console.log('🚨 DEBUG MODE ENABLED - BYPASSING DUPLICATE CHECK');
-                } else {
-                    console.log('🔍 NORMAL MODE - CHECKING FOR DUPLICATES');
-                }
+                const normalizedClinicName = normalizeString(clinicName);
+                const normalizedDoctorName = normalizeString(doctorName);
+                const normalizedTime = normalizeTime(appointmentTime);
 
-                // Since query already filters for exact constraint matches, any results are duplicates
-                const exactDuplicates = DEBUG_MODE ? [] : (existingAppointments || []);
+                // Filter out false positives by doing strict comparison
+                // Only consider it a duplicate if ALL fields match exactly
+                const exactDuplicates = (existingAppointments || []).filter(apt => {
+                    // Check if appointment is actually active (not cancelled, not deleted)
+                    if (apt.deleted === true) return false;
+                    if (apt.booking_status === 'cancelled') return false;
+                    
+                    // Verify it's the same patient (by email)
+                    if (apt.patient_email !== user.email) return false;
+                    
+                    // Strict comparison with normalized values
+                    const aptClinic = normalizeString(apt.clinic_name || '');
+                    const aptDoctor = normalizeString(apt.doctor_name || '');
+                    const aptTime = normalizeTime(apt.appointment_time || '');
+                    
+                    // ALL must match: clinic, doctor, date, and time
+                    const clinicMatch = aptClinic === normalizedClinicName;
+                    const doctorMatch = aptDoctor === normalizedDoctorName;
+                    const dateMatch = apt.appointment_day === actualDate;
+                    const timeMatch = aptTime === normalizedTime;
+                    
+                    // Log for debugging
+                    if (!clinicMatch || !doctorMatch || !dateMatch || !timeMatch) {
+                        console.log('🔍 Appointment filtered out (not exact match):', {
+                            apt,
+                            matches: { clinicMatch, doctorMatch, dateMatch, timeMatch },
+                            normalized: {
+                                aptClinic,
+                                aptDoctor,
+                                aptTime,
+                                expectedClinic: normalizedClinicName,
+                                expectedDoctor: normalizedDoctorName,
+                                expectedTime: normalizedTime
+                            }
+                        });
+                    }
+                    
+                    // Only return true if ALL match
+                    return clinicMatch && doctorMatch && dateMatch && timeMatch;
+                });
 
                 console.log('🔍 CONSTRAINT-BASED DUPLICATE CHECK:', {
                     queryFilters: {
@@ -350,7 +417,6 @@ const Payment = () => {
                 console.log('🔍 DEBUG INFO:', {
                     totalAppointmentsFound: existingAppointments?.length || 0,
                     duplicatesFound: exactDuplicates.length,
-                    debugMode: DEBUG_MODE,
                     appointmentDetails: {
                         clinic: clinicName,
                         doctor: doctorName,
@@ -379,18 +445,11 @@ const Payment = () => {
                     }
                 }
 
+                // Only block if we found exact duplicates
                 if (exactDuplicates.length > 0) {
-                    const existingAppointment = exactDuplicates[0];
-                    console.log('🚫 DUPLICATE FOUND:', {
-                        existing: existingAppointment,
-                        new: { clinicName, doctorName, actualDate, appointmentTime },
-                        isDeleted: existingAppointment.deleted,
-                        comparison: {
-                            timeMatch: existingAppointment.appointment_time === appointmentTime,
-                            dateMatch: existingAppointment.appointment_day === actualDate,
-                            doctorMatch: existingAppointment.doctor_name === doctorName,
-                            clinicMatch: existingAppointment.clinic_name === clinicName
-                        }
+                    console.log('🚫 EXACT DUPLICATE FOUND:', {
+                        duplicates: exactDuplicates,
+                        new: { clinicName, doctorName, actualDate, appointmentTime }
                     });
 
                     toast({
@@ -400,20 +459,12 @@ const Payment = () => {
                             : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
                         variant: "destructive",
                     });
-                    console.log('🚫 DUPLICATE DETECTED - PREVENTING BOOKING AND STOPPING EXECUTION');
-
-                    // Set flag to prevent booking
+                    console.log('🚫 DUPLICATE DETECTED - STOPPING BOOKING PROCESS');
+                    
+                    // Set flag and stop execution immediately
                     duplicateDetected = true;
-
-                    // IMMEDIATELY stop all execution and navigate
-                    console.log('🚫 HARD STOP - NO BOOKING ALLOWED');
-                    navigate("/clinics");
-
-                    // FORCE RETURN - NO FURTHER EXECUTION
+                    setIsCreatingAppointment(false);
                     return;
-
-                    // Throw error to completely stop execution
-                    throw new Error('DUPLICATE_APPOINTMENT_DETECTED');
                 } else {
                     console.log('✅ NO DUPLICATES FOUND - PROCEEDING TO INSERT');
                 }
@@ -437,6 +488,39 @@ const Payment = () => {
                 // Double-check: if duplicate was detected, don't proceed
                 if (duplicateDetected) {
                     console.log('🚫 DUPLICATE FLAG SET - ABORTING BOOKING');
+                    setIsCreatingAppointment(false);
+                    return;
+                }
+
+                // Triple-check: Make one final query right before insert to be absolutely sure
+                // Use email instead of patient_id for more accurate matching
+                const { data: finalCheck, error: finalCheckError } = await supabase
+                    .from('payment_bookings')
+                    .select('id, clinic_name, doctor_name, appointment_time')
+                    .eq('patient_email', user.email)
+                    .eq('clinic_name', clinicName)
+                    .eq('doctor_name', doctorName)
+                    .eq('appointment_day', actualDate)
+                    .eq('appointment_time', appointmentTime)
+                    .eq('deleted', false)
+                    .neq('booking_status', 'cancelled')
+                    .maybeSingle();
+
+                if (finalCheckError && finalCheckError.code !== 'PGRST116') {
+                    console.error('Final check error:', finalCheckError);
+                    throw finalCheckError;
+                }
+
+                if (finalCheck) {
+                    console.log('🚫 FINAL CHECK: Duplicate found right before insert, aborting!');
+                    toast({
+                        title: isRTL ? "موعد مكرر" : "Duplicate Appointment",
+                        description: isRTL
+                            ? `لديك موعد موجود مسبقاً مع ${doctorName} في ${clinicName} في ${actualDate} الساعة ${appointmentTime}. لا يمكن حجز نفس الموعد مرتين.`
+                            : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
+                        variant: "destructive",
+                    });
+                    setIsCreatingAppointment(false);
                     return;
                 }
 
@@ -472,17 +556,17 @@ const Payment = () => {
                     full_data: insertData
                 });
 
-                // First, check if appointment already exists
+                // First, check if appointment already exists (using maybeSingle to avoid errors)
                 const { data: existingAppointment, error: appointmentCheckError } = await supabase
                     .from('payment_bookings')
                     .select('*')
-                    .eq('patient_id', user.id)
+                    .eq('patient_email', user.email) // Use email for more reliable matching
                     .eq('clinic_name', clinicName)
                     .eq('doctor_name', doctorName)
                     .eq('appointment_day', actualDate)
                     .eq('appointment_time', appointmentTime)
                     .eq('deleted', false)
-                    .single();
+                    .maybeSingle(); // Use maybeSingle instead of single to avoid errors
 
                 if (appointmentCheckError && appointmentCheckError.code !== 'PGRST116') {
                     // PGRST116 is "not found" error, which is expected if no appointment exists
@@ -495,47 +579,91 @@ const Payment = () => {
                     // Appointment already exists, use the existing one
                     console.log('✅ Using existing appointment:', existingAppointment);
                     appointment = existingAppointment;
+                    hasInitializedRef.current = true; // Mark as initialized
                 } else {
                     // No existing appointment, create a new one
                     console.log('🆕 Creating new appointment...');
-                    const { data: newAppointment, error: insertError } = await supabase
+                    
+                    // Final safety check: Make absolutely sure no duplicate exists
+                    const { data: lastCheck } = await supabase
                         .from('payment_bookings')
-                        .insert([insertData])
-                        .select('*')
-                        .single();
+                        .select('id')
+                        .eq('patient_email', user.email)
+                        .eq('clinic_name', clinicName)
+                        .eq('doctor_name', doctorName)
+                        .eq('appointment_day', actualDate)
+                        .eq('appointment_time', appointmentTime)
+                        .eq('deleted', false)
+                        .maybeSingle();
+                    
+                    if (lastCheck) {
+                        console.log('⚠️ Last check found existing appointment, using it:', lastCheck);
+                        const { data: foundAppointment } = await supabase
+                            .from('payment_bookings')
+                            .select('*')
+                            .eq('id', lastCheck.id)
+                            .single();
+                        appointment = foundAppointment;
+                        hasInitializedRef.current = true;
+                    } else {
+                        const { data: newAppointment, error: insertError } = await supabase
+                            .from('payment_bookings')
+                            .insert([insertData])
+                            .select('*')
+                            .single();
 
-                    if (insertError) {
-                        console.error('payment_bookings insert error:', {
-                            message: insertError.message,
-                            details: insertError.details,
-                            hint: insertError.hint,
-                            code: insertError.code,
-                        });
-
-                        // Handle duplicate appointment error specifically
-                        if (insertError.code === '23505' || insertError.message?.includes('unique_appointment_booking')) {
-                            console.log('🚫 DATABASE CONSTRAINT VIOLATION - Duplicate detected at database level:', {
-                                error: insertError.message,
+                        if (insertError) {
+                            console.error('payment_bookings insert error:', {
+                                message: insertError.message,
                                 details: insertError.details,
-                                newAppointment: { clinicName, doctorName, actualDate, appointmentTime }
+                                hint: insertError.hint,
+                                code: insertError.code,
                             });
 
-                            toast({
-                                title: isRTL ? "موعد مكرر" : "Duplicate Appointment",
-                                description: isRTL
-                                    ? `لديك موعد موجود مسبقاً مع ${doctorName} في ${clinicName} في ${actualDate} الساعة ${appointmentTime}. لا يمكن حجز نفس الموعد مرتين.`
-                                    : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
-                                variant: "destructive",
-                            });
-                            navigate("/clinics");
-                            return;
+                            // Handle duplicate appointment error specifically
+                            if (insertError.code === '23505' || insertError.code === 'PGRST301' || insertError.message?.includes('unique') || insertError.message?.includes('duplicate')) {
+                                console.log('🚫 DATABASE CONSTRAINT VIOLATION - Duplicate detected at database level:', {
+                                    error: insertError.message,
+                                    details: insertError.details,
+                                    newAppointment: { clinicName, doctorName, actualDate, appointmentTime }
+                                });
+
+                                // Try to find the existing appointment instead
+                                const { data: existingAppt } = await supabase
+                                    .from('payment_bookings')
+                                    .select('*')
+                                    .eq('patient_email', user.email)
+                                    .eq('clinic_name', clinicName)
+                                    .eq('doctor_name', doctorName)
+                                    .eq('appointment_day', actualDate)
+                                    .eq('appointment_time', appointmentTime)
+                                    .eq('deleted', false)
+                                    .maybeSingle();
+
+                                if (existingAppt) {
+                                    console.log('✅ Found existing appointment, using it:', existingAppt);
+                                    appointment = existingAppt;
+                                    hasInitializedRef.current = true;
+                                } else {
+                                    toast({
+                                        title: isRTL ? "موعد مكرر" : "Duplicate Appointment",
+                                        description: isRTL
+                                            ? `لديك موعد موجود مسبقاً مع ${doctorName} في ${clinicName} في ${actualDate} الساعة ${appointmentTime}. لا يمكن حجز نفس الموعد مرتين.`
+                                            : `You already have an existing appointment with ${doctorName} at ${clinicName} on ${actualDate} at ${appointmentTime}. Cannot book the same appointment twice.`,
+                                        variant: "destructive",
+                                    });
+                                    hasInitializedRef.current = true; // Prevent retry
+                                    return;
+                                }
+                            } else {
+                                throw new Error(insertError.message || 'Insert failed');
+                            }
+                        } else {
+                            console.log('✅ Successfully created new appointment:', newAppointment);
+                            appointment = newAppointment;
+                            hasInitializedRef.current = true; // Mark as initialized
                         }
-
-                        throw new Error(insertError.message || 'Insert failed');
                     }
-
-                    console.log('✅ Successfully created new appointment:', newAppointment);
-                    appointment = newAppointment;
                 }
 
                 if (appointment) {
@@ -543,6 +671,7 @@ const Payment = () => {
                     setAppointmentId(appt.id);
                     // Generate confirmation number from appointment ID
                     setConfirmationNumber(`#${appt.id.toString().slice(-8)}`);
+                    hasInitializedRef.current = true; // Mark as initialized
                 }
             } catch (error) {
                 console.error('Error initializing payment:', error);
@@ -559,13 +688,14 @@ const Payment = () => {
                     description: error instanceof Error ? error.message : (isRTL ? "فشل تهيئة الدفع. يرجى المحاولة مرة أخرى." : "Failed to initialize payment. Please try again."),
                     variant: "destructive",
                 });
-            } finally {
-                setIsCreatingAppointment(false);
-            }
-        };
+                } finally {
+                    setIsCreatingAppointment(false);
+                    isInitializingRef.current = false; // Reset ref
+                }
+            };
 
-        initializePayment();
-    }, [clinicName, doctorName, specialty, appointmentDay, appointmentTime, price, navigate, toast, isCreatingAppointment, isRTL, isServiceRequestPayment]);
+            initializePayment();
+        }, [clinicName, doctorName, specialty, appointmentDay, appointmentTime, price, navigate, toast, isRTL, isServiceRequestPayment]);
 
     // Credit card flow removed for cash-only mode
 
@@ -633,7 +763,169 @@ const Payment = () => {
         }
     };
 
-    // Handle service request payment
+    // Handle Visa payment for appointments
+    const handleVisaSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsProcessing(true);
+
+        try {
+            if (!appointmentId || !user || !cardData) {
+                throw new Error('Missing required information');
+            }
+
+            // TODO: Replace with actual backend API endpoint when CyberSource is configured
+            // For now, show message that backend needs to be connected
+            toast({
+                title: isRTL ? "قيد التطوير" : "Under Development",
+                description: isRTL 
+                    ? "تطبيق الدفع بالبطاقة الائتمانية قيد التطوير. يرجى استخدام الدفع النقدي مؤقتاً."
+                    : "Credit card payment is under development. Please use cash payment for now.",
+                variant: "destructive",
+            });
+
+            // When backend is ready, uncomment this:
+            /*
+            const response = await fetch('/api/payments/process-visa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                },
+                body: JSON.stringify({
+                    amount: price.toString(),
+                    currency: 'ILS',
+                    cardData: cardData,
+                    bookingId: appointmentId,
+                    patientId: user.id,
+                    patientEmail: user.email
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Update payment booking
+                await supabase
+                    .from('payment_bookings')
+                    .update({
+                        payment_status: 'paid',
+                        payment_method: 'visa',
+                        gateway_transaction_id: result.transactionId
+                    })
+                    .eq('id', appointmentId);
+
+                toast({
+                    title: isRTL ? "تم الدفع بنجاح" : "Payment Successful",
+                    description: isRTL ? "تم معالجة الدفع بنجاح" : "Payment processed successfully",
+                    style: { backgroundColor: '#16a34a', color: '#fff' },
+                });
+
+                navigate("/confirmation", {
+                    state: {
+                        clinicName,
+                        doctorName,
+                        specialty,
+                        appointmentDay,
+                        appointmentTime,
+                        paymentMethod: 'visa',
+                        status: 'paid',
+                        confirmationNumber: confirmationNumber,
+                        appointmentId: appointmentId,
+                        transactionId: result.transactionId
+                    }
+                });
+            } else {
+                throw new Error(result.errorMessage || 'Payment failed');
+            }
+            */
+
+        } catch (error) {
+            console.error('Visa payment error:', error);
+            toast({
+                title: isRTL ? "خطأ في الدفع" : "Payment Error",
+                description: error instanceof Error ? error.message : (isRTL ? "فشل معالجة الدفع. يرجى المحاولة مرة أخرى." : "Failed to process payment. Please try again."),
+                variant: "destructive",
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Handle Visa payment for service requests
+    const handleVisaServiceRequestPayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsProcessing(true);
+
+        try {
+            if (!serviceRequestId || !user || !serviceRequest || !cardData) {
+                throw new Error('Missing required information');
+            }
+
+            // TODO: Replace with actual backend API endpoint when CyberSource is configured
+            toast({
+                title: isRTL ? "قيد التطوير" : "Under Development",
+                description: isRTL 
+                    ? "تطبيق الدفع بالبطاقة الائتمانية قيد التطوير. يرجى استخدام الدفع النقدي مؤقتاً."
+                    : "Credit card payment is under development. Please use cash payment for now.",
+                variant: "destructive",
+            });
+
+            // When backend is ready, uncomment this:
+            /*
+            const response = await fetch('/api/payments/process-visa', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                },
+                body: JSON.stringify({
+                    amount: (serviceRequest.price || 0).toString(),
+                    currency: serviceRequest.currency || 'ILS',
+                    cardData: cardData,
+                    serviceRequestId: serviceRequestId,
+                    patientId: user.id,
+                    patientEmail: user.email
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Update service request
+                await supabase
+                    .from('service_requests')
+                    .update({
+                        payment_status: 'paid',
+                        payment_method: 'visa',
+                        gateway_transaction_id: result.transactionId
+                    })
+                    .eq('id', serviceRequestId);
+
+                toast({
+                    title: isRTL ? "تم الدفع بنجاح" : "Payment Successful",
+                    description: isRTL ? "تم معالجة الدفع بنجاح" : "Payment processed successfully",
+                    style: { backgroundColor: '#16a34a', color: '#fff' },
+                });
+
+                navigate("/patient-dashboard");
+            } else {
+                throw new Error(result.errorMessage || 'Payment failed');
+            }
+            */
+
+        } catch (error) {
+            console.error('Visa payment error:', error);
+            toast({
+                title: isRTL ? "خطأ في الدفع" : "Payment Error",
+                description: error instanceof Error ? error.message : (isRTL ? "فشل معالجة الدفع. يرجى المحاولة مرة أخرى." : "Failed to process payment. Please try again."),
+                variant: "destructive",
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Handle service request payment (cash)
     const handleServiceRequestPayment = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsProcessing(true);
@@ -856,6 +1148,55 @@ const Payment = () => {
                 </CardContent>
             </Card>
 
+            {/* Payment Method Selection */}
+            <Card dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
+                <CardHeader>
+                    <CardTitle className={isRTL ? 'text-left font-arabic' : 'text-left'}>
+                        {isRTL ? 'طريقة الدفع' : 'Payment Method'}
+                    </CardTitle>
+                    <CardDescription className={isRTL ? 'text-left font-arabic' : 'text-left'}>
+                        {isRTL ? 'اختر طريقة الدفع المفضلة' : 'Choose your preferred payment method'}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setPaymentMethod('cash');
+                                setCardData(null);
+                            }}
+                            className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${
+                                paymentMethod === 'cash'
+                                    ? 'border-blue-600 bg-blue-50 shadow-md'
+                                    : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                        >
+                            <Banknote className={`h-6 w-6 ${paymentMethod === 'cash' ? 'text-blue-600' : 'text-gray-600'}`} />
+                            <span className={`font-medium ${paymentMethod === 'cash' ? 'text-blue-600' : 'text-gray-700'}`}>
+                                {isRTL ? 'نقدي' : 'Cash'}
+                            </span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setPaymentMethod('visa')}
+                            className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${
+                                paymentMethod === 'visa'
+                                    ? 'border-blue-600 bg-blue-50 shadow-md'
+                                    : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                        >
+                            <CreditCard className={`h-6 w-6 ${paymentMethod === 'visa' ? 'text-blue-600' : 'text-gray-600'}`} />
+                            <span className={`font-medium ${paymentMethod === 'visa' ? 'text-blue-600' : 'text-gray-700'}`}>
+                                {isRTL ? 'بطاقة ائتمانية' : 'Credit Card'}
+                            </span>
+                        </button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Payment Form - Cash */}
+            {paymentMethod === 'cash' && (
             <Card dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
                 <CardHeader>
                     <CardTitle className={isRTL ? 'text-left font-arabic' : 'text-left'}>{t('payment.cash')}</CardTitle>
@@ -930,6 +1271,93 @@ const Payment = () => {
                     </div>
                 </CardFooter>
             </Card>
+            )}
+
+            {/* Payment Form - Visa */}
+            {paymentMethod === 'visa' && (
+            <Card dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
+                <CardHeader>
+                    <CardTitle className={isRTL ? 'text-left font-arabic' : 'text-left'}>
+                        {isRTL ? 'الدفع بالبطاقة الائتمانية' : 'Credit Card Payment'}
+                    </CardTitle>
+                    <CardDescription className={isRTL ? 'text-left font-arabic' : 'text-left'}>
+                        {isRTL ? 'أدخل معلومات بطاقتك الائتمانية' : 'Enter your credit card information'}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-6 py-2" dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
+                        <SecureCardInput
+                            onCardDataChange={setCardData}
+                            isRTL={isRTL}
+                            disabled={isProcessing}
+                        />
+                        <form onSubmit={isServiceRequestPayment ? handleVisaServiceRequestPayment : handleVisaSubmit} className="space-y-6">
+                            <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                {!isRTL && (
+                                    <Checkbox
+                                        id="visaTerms"
+                                        checked={agreedToCashTerms}
+                                        onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
+                                    />
+                                )}
+                                <div className="grid gap-1.5 leading-none flex-1">
+                                    <label
+                                        htmlFor="visaTerms"
+                                        className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isRTL ? 'text-right' : 'text-left'}`}
+                                    >
+                                        {isRTL 
+                                            ? 'أوافق على معالجة الدفع والرسوم المرتبطة'
+                                            : 'I agree to process the payment and associated fees'}
+                                    </label>
+                                </div>
+                                {isRTL && (
+                                    <Checkbox
+                                        id="visaTerms"
+                                        checked={agreedToCashTerms}
+                                        onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
+                                    />
+                                )}
+                            </div>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isProcessing || !agreedToCashTerms || !cardData || (!isServiceRequestPayment && !appointmentId) || (isServiceRequestPayment && !serviceRequest)}
+                                style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}
+                            >
+                                {isProcessing 
+                                    ? (isRTL ? 'جاري المعالجة...' : 'Processing...')
+                                    : (isRTL ? `دفع ₪${isServiceRequestPayment ? serviceRequest?.price || price : price}` : `Pay ₪${isServiceRequestPayment ? serviceRequest?.price || price : price}`)
+                                }
+                            </Button>
+                            {!cardData && (
+                                <div className="text-sm text-amber-700">
+                                    {isRTL ? '⚠️ يرجى إدخال معلومات البطاقة' : '⚠️ Please enter card information'}
+                                </div>
+                            )}
+                            {!isServiceRequestPayment && !appointmentId && (
+                                <div className="text-sm text-amber-700">
+                                    {t('payment.loadingPaymentInfo') || 'Preparing your booking...'}
+                                </div>
+                            )}
+                            {isServiceRequestPayment && !serviceRequest && (
+                                <div className="text-sm text-amber-700">
+                                    {isRTL ? 'جاري تحميل تفاصيل الطلب...' : 'Loading service request details...'}
+                                </div>
+                            )}
+                        </form>
+                    </div>
+                </CardContent>
+                <CardFooter className={`justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse font-arabic' : ''}`} dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
+                    <Button variant="outline" onClick={() => navigate("/clinics")}
+                        style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
+                        {t('payment.back')}
+                    </Button>
+                    <div className="text-sm text-gray-500">
+                        {isRTL ? 'جميع المعاملات محمية بتشفير SSL' : 'All transactions are protected by SSL encryption'}
+                    </div>
+                </CardFooter>
+            </Card>
+            )}
         </div>
     );
 };
