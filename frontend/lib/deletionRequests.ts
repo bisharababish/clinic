@@ -317,13 +317,19 @@ export const createNotification = async (
         }
 
         // Create notifications for all target emails
+        // Note: related_id must be a valid UUID string or null
+        // For service_requests which use integer IDs, we'll set it to null
         const notifications = targetEmails.map(email => ({
             user_email: email,
             title,
             message,
             type,
             related_table: relatedTable,
-            related_id: relatedId
+            // Only set related_id if it's a valid UUID format, otherwise set to null
+            // This handles cases where service_requests use integer IDs (not UUIDs)
+            related_id: relatedId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(relatedId)
+                ? relatedId
+                : null
         }));
 
         const { error } = await supabase

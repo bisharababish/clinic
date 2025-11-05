@@ -228,12 +228,18 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             }
 
             const userRole = currentUserData.user_roles?.toLowerCase();
-            // Allow admin and secretary roles to view users
-            if (userRole !== 'admin' && userRole !== 'secretary') {
-                throw new Error(`Access denied: User role '${userRole}' does not have permission to view users`);
+            
+            // Check if user has permission to view users using rolePermissions
+            const { getRolePermissions } = await import('../lib/rolePermissions');
+            const permissions = getRolePermissions(userRole);
+            
+            if (!permissions.canViewUsers) {
+                console.log(`⚠️ User role '${userRole}' does not have permission to view users, skipping user load`);
+                setUsers([]);
+                return;
             }
 
-            console.log('✅ User has admin permissions, proceeding with user load');
+            console.log('✅ User has permission to view users, proceeding with user load');
 
             // Load all necessary fields for user management and editing
             const { data, error } = await supabase
@@ -712,21 +718,32 @@ export const AdminStateProvider: React.FC<{ children: ReactNode }> = ({ children
             try {
                 console.log('📊 Loading initial admin data...');
 
-                // Load users first (most important for Overview tab)
-                await loadUsers(false);
-                console.log('✅ Users loaded - Overview tab can now display');
+                // Check user permissions before loading data
+                const { getRolePermissions } = await import('../lib/rolePermissions');
+                const userRole = user?.role?.toLowerCase() || '';
+                const permissions = getRolePermissions(userRole);
 
-                // Load other data in parallel in background
-                Promise.all([
-                    loadClinics(false),
-                    loadDoctors(false),
-                    loadCategories(false),
-                    loadAppointments(false)
-                ]).then(() => {
-                    console.log('✅ All background data loaded');
-                }).catch(error => {
-                    console.error('❌ Background data failed:', error);
-                });
+                // Only load users if user has permission
+                if (permissions.canViewUsers) {
+                    await loadUsers(false);
+                    console.log('✅ Users loaded - Overview tab can now display');
+                } else {
+                    console.log('⚠️ User does not have permission to view users, skipping user load');
+                }
+
+                // Load other data in parallel in background (only if user has admin access)
+                if (permissions.canViewAdmin) {
+                    Promise.all([
+                        loadClinics(false),
+                        loadDoctors(false),
+                        loadCategories(false),
+                        loadAppointments(false)
+                    ]).then(() => {
+                        console.log('✅ All background data loaded');
+                    }).catch(error => {
+                        console.error('❌ Background data failed:', error);
+                    });
+                }
 
                 console.log('✅ Initial admin data loaded successfully');
             } catch (error) {

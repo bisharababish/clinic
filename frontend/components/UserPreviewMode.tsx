@@ -28,7 +28,9 @@ import {
     XCircle,
     Image as ImageIcon,
     TestTube,
-    FileImage
+    FileImage,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 
@@ -112,6 +114,28 @@ interface XRayImage {
     created_at: string;
 }
 
+interface ServiceRequest {
+    id: number;
+    patient_id: number;
+    patient_email: string;
+    patient_name: string;
+    doctor_id: number;
+    doctor_name: string;
+    service_type: 'xray' | 'ultrasound' | 'lab' | 'audiometry';
+    service_subtype?: string;
+    service_name?: string;
+    service_name_ar?: string;
+    notes?: string;
+    price?: number;
+    currency?: string;
+    payment_status?: 'pending' | 'paid' | 'completed' | 'failed' | 'refunded';
+    status: 'pending' | 'secretary_confirmed' | 'payment_required' | 'in_progress' | 'completed' | 'cancelled';
+    secretary_confirmed_at?: string;
+    completed_at?: string;
+    created_at: string;
+    updated_at: string;
+}
+
 const UserPreviewMode: React.FC<UserPreviewModeProps> = ({ userEmail }) => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
@@ -122,9 +146,12 @@ const UserPreviewMode: React.FC<UserPreviewModeProps> = ({ userEmail }) => {
     const [clinicalNotes, setClinicalNotes] = useState<ClinicalNote[]>([]);
     const [labResults, setLabResults] = useState<LabResult[]>([]);
     const [xrayImages, setXrayImages] = useState<XRayImage[]>([]);
+    const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedTab, setSelectedTab] = useState<'appointments' | 'notes' | 'labs' | 'xrays'>('appointments');
+    const [servicesPage, setServicesPage] = useState(1);
+    const itemsPerPage = 3; // Show 3 items per page
+    const [selectedTab, setSelectedTab] = useState<'appointments' | 'notes' | 'labs' | 'xrays' | 'services'>('appointments');
 
     // Load all user data
     const loadUserData = async () => {
@@ -192,11 +219,57 @@ const UserPreviewMode: React.FC<UserPreviewModeProps> = ({ userEmail }) => {
                 console.error('Error fetching X-ray images:', xrayError);
             }
 
+            // Load service requests (only confirmed/completed ones for medical records)
+            const { data: serviceRequestsData, error: serviceRequestsError } = await supabase
+                .from('service_requests')
+                .select('*')
+                .eq('patient_email', userEmail)
+                .in('status', ['secretary_confirmed', 'payment_required', 'in_progress', 'completed'])
+                .order('created_at', { ascending: false });
+
+            if (serviceRequestsError) {
+                console.error('Error fetching service requests:', serviceRequestsError);
+            }
+            
+            console.log('📋 Medical Records - Service Requests Found:', serviceRequestsData?.length || 0, serviceRequestsData);
+
+            // Load pricing info for service requests with subtypes
+            let enrichedServiceRequests: ServiceRequest[] = serviceRequestsData || [];
+            if (enrichedServiceRequests.length > 0) {
+                // Use Promise.all to load pricing data in parallel
+                const pricingPromises = enrichedServiceRequests.map(async (request) => {
+                    if (request.service_subtype) {
+                        try {
+                            const { data: pricingData, error: pricingError } = await supabase
+                                .from('service_pricing')
+                                .select('service_name, service_name_ar')
+                                .eq('service_type', request.service_type)
+                                .eq('service_subtype', request.service_subtype)
+                                .single();
+
+                            if (!pricingError && pricingData) {
+                                request.service_name = pricingData.service_name;
+                                request.service_name_ar = pricingData.service_name_ar;
+                            }
+                        } catch (error) {
+                            console.error(`Error loading pricing for ${request.service_type}/${request.service_subtype}:`, error);
+                            // Continue even if pricing fails
+                        }
+                    }
+                    return request;
+                });
+
+                enrichedServiceRequests = await Promise.all(pricingPromises);
+            }
+
             // Transform and set data
             setAppointments(appointmentsData || []);
             setClinicalNotes(notesData || []);
             setLabResults(labData || []);
             setXrayImages(xrayData || []);
+            setServiceRequests(enrichedServiceRequests);
+            
+            console.log('📋 Medical Records - Enriched Service Requests:', enrichedServiceRequests.length, enrichedServiceRequests);
 
         } catch (error) {
             console.error('Error loading user data:', error);
@@ -208,7 +281,10 @@ const UserPreviewMode: React.FC<UserPreviewModeProps> = ({ userEmail }) => {
     };
 
     useEffect(() => {
-        loadUserData();
+        if (userEmail) {
+            loadUserData();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userEmail]);
 
     const getStatusColor = (status: string) => {
@@ -357,7 +433,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
         <div className="space-y-4 sm:space-y-6 pb-4">
             {/* Tab Navigation - Mobile & Desktop Optimized */}
             <div className="border-b overflow-x-auto">
-                <div className="grid grid-cols-4 gap-1 px-2 sm:flex sm:gap-2 sm:px-0 pb-1">
+                <div className="grid grid-cols-5 gap-1 px-2 sm:flex sm:gap-2 sm:px-0 pb-1">
                     <Button
                         variant={selectedTab === 'appointments' ? 'default' : 'ghost'}
                         onClick={() => setSelectedTab('appointments')}
@@ -415,6 +491,21 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                             <span className="text-[9px] leading-tight sm:text-sm font-medium text-center">{t('preview.xrays')}</span>
                             <Badge variant="secondary" className="text-[9px] sm:text-xs px-1 py-0 h-4 sm:h-auto">
                                 {xrayImages.length}
+                            </Badge>
+                        </div>
+                    </Button>
+                    <Button
+                        variant={selectedTab === 'services' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedTab('services')}
+                        className={`flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2 px-1 sm:px-4 py-2 sm:py-2.5 h-auto transition-all ${selectedTab === 'services' ? 'shadow-sm' : ''
+                            }`}
+                        size="sm"
+                    >
+                        <Stethoscope className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <div className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1">
+                            <span className="text-[9px] leading-tight sm:text-sm font-medium text-center">{isRTL ? 'الخدمات' : 'Services'}</span>
+                            <Badge variant="secondary" className="text-[9px] sm:text-xs px-1 py-0 h-4 sm:h-auto">
+                                {serviceRequests.length}
                             </Badge>
                         </div>
                     </Button>
@@ -723,6 +814,157 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                     )}
                 </div>
             )}
+
+            {selectedTab === 'services' && (
+                <div className="space-y-3 sm:space-y-4 px-2 sm:px-0">
+                    {serviceRequests.length === 0 ? (
+                        <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription className="text-sm">
+                                {isRTL ? 'لا توجد طلبات خدمة' : 'No service requests found'}
+                            </AlertDescription>
+                        </Alert>
+                    ) : (
+                        <>
+                            {(() => {
+                                // Pagination for service requests
+                                const startIndex = (servicesPage - 1) * itemsPerPage;
+                                const endIndex = startIndex + itemsPerPage;
+                                const paginatedServiceRequests = serviceRequests.slice(startIndex, endIndex);
+                                const totalServicesPages = Math.ceil(serviceRequests.length / itemsPerPage);
+                                
+                                return (
+                                    <>
+                                        {paginatedServiceRequests.map((request) => (
+                            <Card key={request.id} className="overflow-hidden">
+                                <CardHeader className="pb-3 sm:pb-4">
+                                    <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                        <span className="flex items-center gap-2 text-base sm:text-lg">
+                                            <Stethoscope className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                                            <span className="truncate">
+                                                {isRTL ?
+                                                    (request.service_type === 'xray' ? 'أشعة إكس' :
+                                                        request.service_type === 'ultrasound' ? 'موجات فوق صوتية' :
+                                                            request.service_type === 'lab' ? 'مختبر' : 'قياس السمع')
+                                                    : request.service_type.toUpperCase()}
+                                                {request.service_subtype && (
+                                                    <span className="text-sm font-normal text-gray-600 ml-2">
+                                                        {`- ${isRTL ? (request.service_name_ar || request.service_name) : (request.service_name || request.service_name_ar)}`}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </span>
+                                        <Badge className={`${getStatusColor(request.status)} text-xs self-start sm:self-auto whitespace-nowrap`}>
+                                            {isRTL ?
+                                                (request.status === 'payment_required' ? 'دفع مطلوب' :
+                                                    request.status === 'pending' ? 'قيد الانتظار' :
+                                                        request.status === 'secretary_confirmed' ? 'مؤكد' :
+                                                            request.status === 'in_progress' ? 'قيد المعالجة' :
+                                                                request.status === 'completed' ? 'مكتمل' : request.status)
+                                                : request.status.replace('_', ' ').toUpperCase()}
+                                        </Badge>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <div className="space-y-3 sm:space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                                            <div>
+                                                <span className="font-medium text-muted-foreground">{isRTL ? 'الطبيب' : 'Doctor'}: </span>
+                                                <span>{request.doctor_name}</span>
+                                            </div>
+                                            <div>
+                                                <span className="font-medium text-muted-foreground">{isRTL ? 'تاريخ الطلب' : 'Request Date'}: </span>
+                                                <span>{new Date(request.created_at).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US')}</span>
+                                            </div>
+                                            {request.secretary_confirmed_at && (
+                                                <div>
+                                                    <span className="font-medium text-muted-foreground">{isRTL ? 'تاريخ التأكيد' : 'Confirmed Date'}: </span>
+                                                    <span className="text-green-600">{new Date(request.secretary_confirmed_at).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US')}</span>
+                                                </div>
+                                            )}
+                                            {request.completed_at && (
+                                                <div>
+                                                    <span className="font-medium text-muted-foreground">{isRTL ? 'تاريخ الإكمال' : 'Completed Date'}: </span>
+                                                    <span className="text-blue-600">{new Date(request.completed_at).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US')}</span>
+                                                </div>
+                                            )}
+                                            {request.price && request.price > 0 && (
+                                                <div>
+                                                    <span className="font-medium text-muted-foreground">{isRTL ? 'السعر' : 'Price'}: </span>
+                                                    <span className="font-semibold">₪{request.price} {request.currency || 'ILS'}</span>
+                                                </div>
+                                            )}
+                                            <div>
+                                                <span className="font-medium text-muted-foreground">{isRTL ? 'حالة الدفع' : 'Payment Status'}: </span>
+                                                <Badge variant={request.payment_status === 'paid' ? 'default' : 'secondary'} className="ml-2">
+                                                    {isRTL ?
+                                                        (request.payment_status === 'paid' ? 'مدفوع' :
+                                                            request.payment_status === 'pending' ? 'قيد الانتظار' : request.payment_status)
+                                                        : request.payment_status}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                        {request.notes && (
+                                            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                                                <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</h4>
+                                                <p className={`text-xs sm:text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>{request.notes}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                                        ))}
+                                        {totalServicesPages > 1 && (
+                                            <div className={`flex items-center justify-between mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                <div className="text-sm text-gray-500">
+                                                    {isRTL 
+                                                        ? `عرض ${startIndex + 1}-${Math.min(endIndex, serviceRequests.length)} من ${serviceRequests.length}`
+                                                        : `Showing ${startIndex + 1}-${Math.min(endIndex, serviceRequests.length)} of ${serviceRequests.length}`
+                                                    }
+                                                </div>
+                                                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setServicesPage(prev => Math.max(prev - 1, 1))}
+                                                        disabled={servicesPage === 1}
+                                                    >
+                                                        <ChevronLeft className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+                                                        {isRTL ? 'التالي' : 'Previous'}
+                                                    </Button>
+                                                    <div className="flex items-center gap-1">
+                                                        {Array.from({ length: totalServicesPages }, (_, i) => i + 1).map((page) => (
+                                                            <Button
+                                                                key={page}
+                                                                variant={servicesPage === page ? 'default' : 'outline'}
+                                                                size="sm"
+                                                                onClick={() => setServicesPage(page)}
+                                                                className="min-w-[2.5rem]"
+                                                            >
+                                                                {page}
+                                                            </Button>
+                                                        ))}
+                                                    </div>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setServicesPage(prev => Math.min(prev + 1, totalServicesPages))}
+                                                        disabled={servicesPage === totalServicesPages}
+                                                    >
+                                                        {isRTL ? 'السابق' : 'Next'}
+                                                        <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </>
+                    )}
+                </div>
+            )}
+
         </div>
     );
 };

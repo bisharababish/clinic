@@ -24,6 +24,7 @@ const DeletionRequestsTab = lazy(() => import("./api/admin/DeletionRequestsTab")
 const PaymentManagement = lazy(() => import("./api/admin/PaymentManagement"));
 const PaidPatientsList = lazy(() => import("../components/PaidPatientsList"));
 const AppointmentChangeLogs = lazy(() => import("../components/AppointmentChangeLogs"));
+const ServiceRequestsManagement = lazy(() => import("./api/admin/ServiceRequestsManagement"));
 
 // The actual dashboard component that uses the state
 const AdminDashboardContent = () => {
@@ -83,6 +84,7 @@ const AdminDashboardContent = () => {
     const canViewCalendarTab = hasPermission(userRole, 'canViewCalendar');
     const canViewPaymentTab = ['admin', 'secretary'].includes(userRole); // Admin and Secretary can view payments
     const canViewAppointmentLogsTab = ['admin', 'secretary'].includes(userRole); // Admin and Secretary can view appointment change logs
+    const canViewServiceRequestsTab = ['admin', 'secretary'].includes(userRole); // Admin and Secretary can view service requests
 
     // Debug logging for appointment logs tab access
     console.log('🔍 Admin Dashboard Access Debug:', {
@@ -91,7 +93,7 @@ const AdminDashboardContent = () => {
         isAdmin: userRole === 'admin',
         isSecretary: userRole === 'secretary'
     });
-    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab || canViewPaymentTab || canViewAppointmentLogsTab || canViewDeletionRequests;
+    const hasAccessibleTabs = canViewOverviewTab || canViewUsersTab || canViewClinicsTab || canViewDoctorsTab || canViewAppointmentsTab || canViewPatientHealthTab || canViewCalendarTab || canViewPaymentTab || canViewAppointmentLogsTab || canViewServiceRequestsTab || canViewDeletionRequests;
 
     // Get default tab for user role
     const getDefaultTab = useCallback(() => {
@@ -108,6 +110,7 @@ const AdminDashboardContent = () => {
             if (canViewDoctorsTab) return 'doctors';
             if (canViewCalendarTab) return 'calendar';
             if (canViewPaymentTab) return 'payments';
+            if (canViewServiceRequestsTab) return 'service-requests';
             if (canViewDeletionRequests) return 'deletion-requests';
             return 'overview';
         }
@@ -239,6 +242,7 @@ const AdminDashboardContent = () => {
             'patient-health': canViewPatientHealthTab,
             'calendar': canViewCalendarTab,
             'appointment-logs': canViewAppointmentLogsTab,
+            'service-requests': canViewServiceRequestsTab,
             'deletion-requests': canViewDeletionRequests
 
         }[newTab];
@@ -422,6 +426,11 @@ const AdminDashboardContent = () => {
                                     {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
                                 </TabsTrigger>
                             )}
+                            {canViewServiceRequestsTab && (
+                                <TabsTrigger value="service-requests" className="flex-1 text-xs px-2 py-2 truncate">
+                                    {i18n.language === 'ar' ? 'طلبات الخدمات' : 'Service Requests'}
+                                </TabsTrigger>
+                            )}
                             {canViewDeletionRequests && (
                                 <TabsTrigger value="deletion-requests" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
@@ -480,6 +489,11 @@ const AdminDashboardContent = () => {
                         {canViewAppointmentLogsTab && (
                             <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
                                 {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
+                            </TabsTrigger>
+                        )}
+                        {canViewServiceRequestsTab && (
+                            <TabsTrigger value="service-requests" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                                {i18n.language === 'ar' ? 'طلبات الخدمات' : 'Service Requests'}
                             </TabsTrigger>
                         )}
                         {canViewDeletionRequests && (
@@ -628,6 +642,15 @@ const AdminDashboardContent = () => {
                         <TabsContent value="appointment-logs" className="pt-6">
                             <Suspense fallback={<Skeleton className="h-96 w-full" />}>
                                 <AppointmentChangeLogs />
+                            </Suspense>
+                        </TabsContent>
+                    )}
+
+                    {/* SERVICE REQUESTS TAB */}
+                    {canViewServiceRequestsTab && (
+                        <TabsContent value="service-requests" className="pt-6">
+                            <Suspense fallback={<Skeleton className="h-96 w-full" />}>
+                                <ServiceRequestsManagement />
                             </Suspense>
                         </TabsContent>
                     )}

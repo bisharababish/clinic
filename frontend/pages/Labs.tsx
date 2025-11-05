@@ -23,7 +23,9 @@ import {
 } from "../components/ui/select";
 import { Textarea } from "../components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
-import { AlertCircle, CheckCircle, Download, Trash2, File } from "lucide-react";
+import { AlertCircle, CheckCircle, Download, Trash2, File, Clock, RefreshCw, Eye, X } from "lucide-react";
+import { Badge } from "../components/ui/badge";
+import { createNotification } from "../lib/deletionRequests";
 import FileUpload from "../components/ui/file-upload";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -240,6 +242,31 @@ const Labs = () => {
   const [savedLabResultId, setSavedLabResultId] = useState<number | null>(null);
   const [attachments, setAttachments] = useState<LabAttachment[]>([]);
 
+  // Service requests states
+  interface ServiceRequest {
+    id: number;
+    patient_email: string;
+    patient_name: string;
+    doctor_name: string;
+    service_type: string;
+    service_subtype?: string;
+    service_name?: string;
+    service_name_ar?: string;
+    price?: number;
+    currency?: string;
+    payment_status?: string;
+    status: string;
+    notes?: string;
+    secretary_confirmed_at?: string | null;
+    completed_at?: string | null;
+    created_at: string;
+    updated_at: string;
+  }
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [showRequestDetails, setShowRequestDetails] = useState(false);
+
   // --- File upload handlers ---
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(prev => [...prev, ...files]);
@@ -314,6 +341,118 @@ const Labs = () => {
       setError(`Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
+
+  // Load service requests for lab
+  const loadServiceRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      // Get requests that are secretary_confirmed OR payment_required (after secretary confirms, even if not paid yet)
+      const { data, error } = await supabase
+        .from('service_requests')
+        .select('*')
+        .eq('service_type', 'lab')
+        .in('status', ['secretary_confirmed', 'payment_required', 'in_progress', 'completed'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Enrich service requests with pricing information
+      if (data && data.length > 0) {
+        const enrichedRequests = await Promise.all(
+          data.map(async (request) => {
+            let serviceName = '';
+            let serviceNameAr = '';
+            
+            if (request.service_subtype) {
+              const { data: pricingData } = await supabase
+                .from('service_pricing')
+                .select('service_name, service_name_ar')
+                .eq('service_type', 'lab')
+                .eq('service_subtype', request.service_subtype)
+                .single();
+              
+              if (pricingData) {
+                serviceName = pricingData.service_name || '';
+                serviceNameAr = pricingData.service_name_ar || '';
+              }
+            }
+            
+            return {
+              ...request,
+              service_name: serviceName,
+              service_name_ar: serviceNameAr
+            };
+          })
+        );
+        
+        setServiceRequests(enrichedRequests);
+      } else {
+        setServiceRequests([]);
+      }
+    } catch (err: unknown) {
+      console.error('Error loading service requests:', err);
+      setError(isRTL ? 'فشل تحميل الطلبات' : 'Failed to load service requests');
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  // Update request status
+  const updateRequestStatus = async (requestId: number, newStatus: string) => {
+    try {
+      const updateData: { status: string; completed_at?: string } = { status: newStatus };
+
+      if (newStatus === 'completed') {
+        updateData.completed_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('service_requests')
+        .update(updateData)
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      const request = serviceRequests.find(r => r.id === requestId);
+      if (request) {
+        await createNotification(
+          request.patient_email,
+          isRTL ? 'تحديث حالة الطلب' : 'Request Status Updated',
+          isRTL
+            ? `تم تحديث حالة طلب المختبر إلى ${newStatus === 'in_progress' ? 'قيد التنفيذ' : 'مكتمل'}`
+            : `Your lab request status has been updated to ${newStatus === 'in_progress' ? 'in progress' : 'completed'}`,
+          'info',
+          'service_requests',
+          requestId.toString()
+        );
+      }
+
+      await loadServiceRequests();
+    } catch (err: unknown) {
+      console.error('Error updating request status:', err);
+      setError(isRTL ? 'فشل تحديث حالة الطلب' : 'Failed to update request status');
+    }
+  };
+
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; labelAr: string; className: string }> = {
+      pending: { label: 'Pending', labelAr: 'قيد الانتظار', className: 'bg-yellow-100 text-yellow-800' },
+      secretary_confirmed: { label: 'Confirmed', labelAr: 'تم التأكيد', className: 'bg-blue-100 text-blue-800' },
+      payment_required: { label: 'Payment Required', labelAr: 'يتطلب الدفع', className: 'bg-orange-100 text-orange-800' },
+      in_progress: { label: 'In Progress', labelAr: 'قيد التنفيذ', className: 'bg-purple-100 text-purple-800' },
+      completed: { label: 'Completed', labelAr: 'مكتمل', className: 'bg-green-100 text-green-800' },
+      cancelled: { label: 'Cancelled', labelAr: 'ملغي', className: 'bg-red-100 text-red-800' },
+    };
+
+    const statusInfo = statusMap[status] || statusMap.pending;
+    return (
+      <Badge className={statusInfo.className}>
+        {isRTL ? statusInfo.labelAr : statusInfo.label}
+      </Badge>
+    );
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -359,6 +498,7 @@ const Labs = () => {
 
       await createLabResultsTableIfNotExists();
       await fetchPatients();
+      await loadServiceRequests();
     };
 
     initializeComponent();
@@ -367,7 +507,15 @@ const Labs = () => {
       isMounted = false;
       isFetchingRef.current = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Load service requests on mount
+  useEffect(() => {
+    loadServiceRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     return () => {
       isFetchingRef.current = false;
@@ -1325,9 +1473,233 @@ const Labs = () => {
                 </form>
               </CardContent>
             </Card>
+
+            {/* Service Requests Card */}
+            <Card className="mt-6">
+              <CardHeader>
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <Clock className="w-6 h-6" />
+                    {isRTL ? 'طلبات الخدمة' : 'Service Requests'}
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadServiceRequests}
+                    disabled={loadingRequests}
+                  >
+                    <RefreshCw className={`w-4 h-4 ${loadingRequests ? 'animate-spin' : ''} ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {isRTL ? 'تحديث' : 'Refresh'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loadingRequests ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
+                    <span className={`ml-2 ${isRTL ? 'mr-2 ml-0' : ''}`}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</span>
+                  </div>
+                ) : serviceRequests.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <AlertCircle className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                    <p>{isRTL ? 'لا توجد طلبات' : 'No service requests'}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {serviceRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className="flex-1">
+                            <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                              <h3 className="font-semibold text-gray-900">{request.patient_name}</h3>
+                              {getStatusBadge(request.status)}
+                              {request.status === 'pending' && (
+                                <Badge className="bg-gray-100 text-gray-600 text-xs">
+                                  {isRTL ? 'بانتظار تأكيد السكرتارية' : 'Awaiting Secretary Confirmation'}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className={`space-y-1 text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                              <p>
+                                <span className="font-medium">{isRTL ? 'الطبيب: ' : 'Doctor: '}</span>
+                                {request.doctor_name}
+                              </p>
+                              {request.notes && (
+                                <p>
+                                  <span className="font-medium">{isRTL ? 'ملاحظات: ' : 'Notes: '}</span>
+                                  {request.notes}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500">
+                                {isRTL ? 'تاريخ الطلب: ' : 'Requested: '}
+                                {new Date(request.created_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                              </p>
+                              {request.secretary_confirmed_at && (
+                                <p className="text-xs text-green-600">
+                                  {isRTL ? 'تم التأكيد من السكرتارية: ' : 'Confirmed by Secretary: '}
+                                  {new Date(request.secretary_confirmed_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className={`flex flex-col gap-2 ${isRTL ? 'ml-4' : 'ml-4'}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRequest(request);
+                                setShowRequestDetails(true);
+                              }}
+                            >
+                              <Eye className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                              {isRTL ? 'التفاصيل' : 'Details'}
+                            </Button>
+                            {(request.status === 'secretary_confirmed' || request.status === 'payment_required') ? (
+                              <Button
+                                size="sm"
+                                onClick={() => updateRequestStatus(request.id, 'in_progress')}
+                                className="bg-purple-600 hover:bg-purple-700"
+                              >
+                                {isRTL ? 'بدء العمل' : 'Start Work'}
+                              </Button>
+                            ) : request.status === 'in_progress' ? (
+                              <Button
+                                size="sm"
+                                onClick={() => updateRequestStatus(request.id, 'completed')}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {isRTL ? 'إكمال' : 'Complete'}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>
+
+      {/* Request Details Modal */}
+      {showRequestDetails && selectedRequest && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <CardTitle>{isRTL ? 'تفاصيل الطلب' : 'Request Details'}</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowRequestDetails(false);
+                    setSelectedRequest(null);
+                  }}
+                  className="text-white hover:bg-white/20"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'المريض' : 'Patient'}</h3>
+                  <p className="text-gray-700">{selectedRequest.patient_name}</p>
+                  <p className="text-sm text-gray-500">{selectedRequest.patient_email}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'الطبيب' : 'Doctor'}</h3>
+                  <p className="text-gray-700">{selectedRequest.doctor_name}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'نوع الخدمة' : 'Service Type'}</h3>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {isRTL ? 'مختبر' : 'Lab'}
+                  </Badge>
+                </div>
+                {selectedRequest.service_subtype && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'الاختبار المطلوب' : 'Requested Test'}</h3>
+                    <div className="space-y-1">
+                      <p className="text-gray-700 font-medium">
+                        {isRTL 
+                          ? (selectedRequest.service_name_ar || selectedRequest.service_name || selectedRequest.service_subtype)
+                          : (selectedRequest.service_name || selectedRequest.service_name_ar || selectedRequest.service_subtype)
+                        }
+                      </p>
+                      {selectedRequest.service_subtype && (
+                        <p className="text-sm text-gray-500">
+                          {isRTL ? 'رمز الاختبار' : 'Test Code'}: {selectedRequest.service_subtype}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {(selectedRequest.price !== null && selectedRequest.price !== undefined) && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'السعر' : 'Price'}</h3>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-bold text-blue-600">
+                        ₪{selectedRequest.price} {selectedRequest.currency || 'ILS'}
+                      </p>
+                      {selectedRequest.payment_status && (
+                        <Badge 
+                          variant={selectedRequest.payment_status === 'paid' ? 'default' : 'secondary'}
+                          className={selectedRequest.payment_status === 'paid' ? 'bg-green-500' : ''}
+                        >
+                          {isRTL 
+                            ? (selectedRequest.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع')
+                            : (selectedRequest.payment_status === 'paid' ? 'Paid' : 'Unpaid')
+                          }
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'الحالة' : 'Status'}</h3>
+                  {getStatusBadge(selectedRequest.status)}
+                </div>
+                {selectedRequest.notes && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</h3>
+                    <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+                      <p className="text-gray-700 whitespace-pre-wrap">{selectedRequest.notes}</p>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'التواريخ' : 'Timestamps'}</h3>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>{isRTL ? 'تاريخ الطلب: ' : 'Requested: '}{new Date(selectedRequest.created_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}</p>
+                    {selectedRequest.secretary_confirmed_at && (
+                      <p className="text-green-600">
+                        {isRTL ? 'تم التأكيد من قبل السكرتارية: ' : 'Confirmed by Secretary: '}{new Date(selectedRequest.secretary_confirmed_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                      </p>
+                    )}
+                    {selectedRequest.completed_at && (
+                      <p className="text-blue-600">
+                        {isRTL ? 'تم الإكمال: ' : 'Completed: '}{new Date(selectedRequest.completed_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                      </p>
+                    )}
+                    {selectedRequest.updated_at && (
+                      <p className="text-gray-500 text-xs">
+                        {isRTL ? 'آخر تحديث: ' : 'Last Updated: '}{new Date(selectedRequest.updated_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </>
   );
 };

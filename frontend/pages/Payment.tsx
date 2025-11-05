@@ -121,10 +121,77 @@ const Payment = () => {
     const [user, setUser] = useState<User | null>(null);
     const [appointmentId, setAppointmentId] = useState<string>("");
     const [confirmationNumber, setConfirmationNumber] = useState<string>("");
+    const [serviceRequestId, setServiceRequestId] = useState<string | null>(null);
+    interface ServiceRequestData {
+        id: number;
+        patient_email: string;
+        patient_name: string;
+        doctor_name: string;
+        service_type: string;
+        service_subtype?: string;
+        service_name?: string;
+        service_name_ar?: string;
+        price?: number;
+        currency?: string;
+        payment_status?: string;
+        status: string;
+        notes?: string;
+        created_at: string;
+    }
+    const [serviceRequest, setServiceRequest] = useState<ServiceRequestData | null>(null);
+    const [isServiceRequestPayment, setIsServiceRequestPayment] = useState(false);
+
+    // Check for service request payment from URL params
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestId = urlParams.get('service_request_id');
+        const amount = urlParams.get('amount');
+        const serviceType = urlParams.get('service_type');
+
+        if (requestId) {
+            setIsServiceRequestPayment(true);
+            setServiceRequestId(requestId);
+            // Load service request details
+            const loadServiceRequest = async () => {
+                const { data, error } = await supabase
+                    .from('service_requests')
+                    .select('*')
+                    .eq('id', requestId)
+                    .single();
+
+                if (!error && data) {
+                    setServiceRequest(data);
+                    // Load pricing info if needed
+                    if (data.service_subtype && data.service_type) {
+                        const { data: pricingData } = await supabase
+                            .from('service_pricing')
+                            .select('service_name, service_name_ar')
+                            .eq('service_type', data.service_type)
+                            .eq('service_subtype', data.service_subtype)
+                            .single();
+
+                        if (pricingData) {
+                            data.service_name = pricingData.service_name;
+                            data.service_name_ar = pricingData.service_name_ar;
+                        }
+                    }
+                }
+            };
+            loadServiceRequest();
+        }
+    }, []);
 
     useEffect(() => {
         // Get current user and create appointment record
         const initializePayment = async () => {
+            // Skip if this is a service request payment
+            if (isServiceRequestPayment) {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    setUser(session.user);
+                }
+                return;
+            }
             // Prevent multiple simultaneous appointment creations
             if (isCreatingAppointment) {
                 console.log('🚫 Appointment creation already in progress, skipping...');
@@ -498,7 +565,7 @@ const Payment = () => {
         };
 
         initializePayment();
-    }, [clinicName, doctorName, specialty, appointmentDay, appointmentTime, price, navigate, toast, isCreatingAppointment, isRTL]);
+    }, [clinicName, doctorName, specialty, appointmentDay, appointmentTime, price, navigate, toast, isCreatingAppointment, isRTL, isServiceRequestPayment]);
 
     // Credit card flow removed for cash-only mode
 
@@ -566,6 +633,137 @@ const Payment = () => {
         }
     };
 
+    // Handle service request payment
+    const handleServiceRequestPayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsProcessing(true);
+
+        try {
+            if (!serviceRequestId || !user || !serviceRequest) {
+                throw new Error('Missing service request or user information');
+            }
+
+            // Create payment booking record for service request
+            const { data: bookingData, error: bookingError } = await supabase
+                .from('payment_bookings')
+                .insert([{
+                    patient_id: user.id,
+                    patient_email: user.email,
+                    patient_name: serviceRequest.patient_name,
+                    clinic_name: 'Service Request',
+                    doctor_name: serviceRequest.doctor_name,
+                    specialty: serviceRequest.service_type,
+                    appointment_day: new Date().toISOString().split('T')[0],
+                    appointment_time: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                    price: serviceRequest.price,
+                    currency: serviceRequest.currency || 'ILS',
+                    payment_status: 'pending',
+                    booking_status: 'scheduled'
+                }])
+                .select()
+                .single();
+
+            if (bookingError) throw bookingError;
+
+            // Record payment transaction
+            const paymentData: PaymentData = {
+                appointmentId: bookingData.id,
+                patientId: user.id,
+                clinicId: "",
+                doctorId: "",
+                amount: serviceRequest.price || 0,
+                currency: serviceRequest.currency || 'ILS',
+                paymentMethod: 'cash',
+                description: `Service request payment - ${serviceRequest.service_type}${serviceRequest.service_subtype ? ` - ${serviceRequest.service_subtype}` : ''}`,
+                clinicName: 'Service Request',
+                doctorName: serviceRequest.doctor_name,
+                specialty: serviceRequest.service_type,
+                appointmentDay: new Date().toISOString().split('T')[0],
+                appointmentTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
+            };
+
+            const result = await palestinianPaymentService.processCashPayment(paymentData);
+
+            if (result.success) {
+                // Update service request payment status (keep status as payment_required, secretary will confirm)
+                const { error: updateError } = await supabase
+                    .from('service_requests')
+                    .update({
+                        payment_status: 'paid',
+                        payment_booking_id: bookingData.id,
+                        // Keep status as payment_required - secretary needs to confirm payment
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', serviceRequestId);
+
+                if (updateError) {
+                    console.error('Error updating service request:', updateError);
+                    // Don't throw - payment was successful
+                }
+
+                // Notify service provider
+                const { createNotification } = await import('../lib/deletionRequests');
+                const serviceProviderRole =
+                    serviceRequest.service_type === 'xray' ? 'X Ray' :
+                        serviceRequest.service_type === 'ultrasound' ? 'Ultrasound' :
+                            serviceRequest.service_type === 'lab' ? 'Lab' :
+                                serviceRequest.service_type === 'audiometry' ? 'Audiometry' : '';
+
+                if (serviceProviderRole) {
+                    const { data: providers } = await supabase
+                        .from('userinfo')
+                        .select('user_email')
+                        .eq('user_roles', serviceProviderRole);
+
+                    if (providers) {
+                        for (const provider of providers) {
+                            await createNotification(
+                                provider.user_email,
+                                isRTL ? 'تم دفع الطلب - جاهز للمعالجة' : 'Request Paid - Ready to Process',
+                                isRTL
+                                    ? `تم دفع طلب ${serviceRequest.service_type} للمريض ${serviceRequest.patient_name}. يمكنك البدء في المعالجة.`
+                                    : `Service request for ${serviceRequest.service_type} for patient ${serviceRequest.patient_name} has been paid. You can now start processing.`,
+                                'success',
+                                'service_requests',
+                                serviceRequestId
+                            );
+                        }
+                    }
+                }
+
+                // Notify patient
+                await createNotification(
+                    serviceRequest.patient_email,
+                    isRTL ? 'تم دفع الطلب' : 'Payment Received',
+                    isRTL
+                        ? `تم استلام الدفع لطلب ${serviceRequest.service_type} بنجاح`
+                        : `Payment for ${serviceRequest.service_type} request has been received successfully`,
+                    'success',
+                    'service_requests',
+                    serviceRequestId
+                );
+
+                toast({
+                    title: isRTL ? "تم تسجيل الدفع النقدي" : "Cash Payment Registered",
+                    description: isRTL ? "تم دفع طلب الخدمة بنجاح." : "Service request payment has been registered successfully.",
+                    style: { backgroundColor: '#16a34a', color: '#fff' },
+                });
+
+                navigate("/patient/dashboard");
+            }
+
+        } catch (error) {
+            console.error('Service request payment error:', error);
+            toast({
+                title: isRTL ? "خطأ في التسجيل" : "Registration Error",
+                description: error instanceof Error ? error.message : (isRTL ? "فشل تسجيل الدفع النقدي. يرجى المحاولة مرة أخرى." : "Failed to register cash payment. Please try again."),
+                variant: "destructive",
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     if (!user) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -589,37 +787,72 @@ const Payment = () => {
 
             <Card className={`mb-6 ${isRTL ? 'text-left font-arabic' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
                 <CardHeader>
-                    <CardTitle>{t('payment.appointmentSummary')}</CardTitle>
-                    <CardDescription>{t('payment.reviewAppointmentDetails')}</CardDescription>
+                    <CardTitle>{isServiceRequestPayment ? (isRTL ? 'ملخص طلب الخدمة' : 'Service Request Summary') : t('payment.appointmentSummary')}</CardTitle>
+                    <CardDescription>{isServiceRequestPayment ? (isRTL ? 'راجع تفاصيل طلب الخدمة' : 'Review service request details') : t('payment.reviewAppointmentDetails')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <div className={`grid grid-cols-2 gap-2 ${isRTL ? 'text-left font-arabic' : 'text-left'}`}>
-                        <div className="text-sm font-medium">{t('payment.clinic')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>
-                            {translatedAppointment.clinicName}
+                    {isServiceRequestPayment && serviceRequest ? (
+                        <div className={`grid grid-cols-2 gap-2 ${isRTL ? 'text-left font-arabic' : 'text-left'}`}>
+                            <div className="text-sm font-medium">{isRTL ? 'نوع الخدمة' : 'Service Type'}:</div>
+                            <div className={isRTL ? 'text-left font-arabic' : ''}>
+                                {isRTL ?
+                                    (serviceRequest.service_type === 'xray' ? 'أشعة إكس' :
+                                        serviceRequest.service_type === 'ultrasound' ? 'موجات فوق صوتية' :
+                                            serviceRequest.service_type === 'lab' ? 'مختبر' : 'قياس السمع')
+                                    : serviceRequest.service_type.toUpperCase()}
+                                {serviceRequest.service_subtype && (
+                                    <span className="text-sm text-gray-600">
+                                        {` - ${isRTL ? serviceRequest.service_name_ar : serviceRequest.service_name}`}
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="text-sm font-medium">{isRTL ? 'الطبيب' : 'Doctor'}:</div>
+                            <div className={isRTL ? 'text-left font-arabic' : ''}>
+                                {serviceRequest.doctor_name}
+                            </div>
+
+                            {serviceRequest.notes && (
+                                <>
+                                    <div className="text-sm font-medium">{isRTL ? 'ملاحظات' : 'Notes'}:</div>
+                                    <div className={isRTL ? 'text-left font-arabic' : ''}>
+                                        {serviceRequest.notes}
+                                    </div>
+                                </>
+                            )}
+
+                            <div className="text-sm font-medium">{isRTL ? 'المبلغ الإجمالي' : 'Total Amount'}:</div>
+                            <div className={`font-bold ${isRTL ? 'text-left font-arabic' : ''}`}>₪{serviceRequest.price} {serviceRequest.currency || 'ILS'}</div>
                         </div>
+                    ) : (
+                        <div className={`grid grid-cols-2 gap-2 ${isRTL ? 'text-left font-arabic' : 'text-left'}`}>
+                            <div className="text-sm font-medium">{t('payment.clinic')}:</div>
+                            <div className={isRTL ? 'text-left font-arabic' : ''}>
+                                {translatedAppointment.clinicName}
+                            </div>
 
-                        <div className="text-sm font-medium">{t('payment.doctor')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>
-                            {translatedAppointment.doctorName}
+                            <div className="text-sm font-medium">{t('payment.doctor')}:</div>
+                            <div className={isRTL ? 'text-left font-arabic' : ''}>
+                                {translatedAppointment.doctorName}
+                            </div>
+
+                            <div className="text-sm font-medium">{t('payment.specialty')}:</div>
+                            <div className={isRTL ? 'text-left font-arabic' : ''}>
+                                {translatedAppointment.specialty}
+                            </div>
+
+                            <div className="text-sm font-medium">{t('payment.day')}:</div>
+                            <div className={isRTL ? 'text-left font-arabic' : ''}>
+                                {translatedAppointment.appointmentDay}
+                            </div>
+
+                            <div className="text-sm font-medium">{t('payment.time')}:</div>
+                            <div className={isRTL ? 'text-left font-arabic' : ''}>{translatedAppointment.appointmentTime}</div>
+
+                            <div className="text-sm font-medium">{t('payment.totalAmount')}:</div>
+                            <div className={`font-bold ${isRTL ? 'text-left font-arabic' : ''}`}>₪{price}</div>
                         </div>
-
-                        <div className="text-sm font-medium">{t('payment.specialty')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>
-                            {translatedAppointment.specialty}
-                        </div>
-
-                        <div className="text-sm font-medium">{t('payment.day')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>
-                            {translatedAppointment.appointmentDay}
-                        </div>
-
-                        <div className="text-sm font-medium">{t('payment.time')}:</div>
-                        <div className={isRTL ? 'text-left font-arabic' : ''}>{translatedAppointment.appointmentTime}</div>
-
-                        <div className="text-sm font-medium">{t('payment.totalAmount')}:</div>
-                        <div className={`font-bold ${isRTL ? 'text-left font-arabic' : ''}`}>₪{price}</div>
-                    </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -641,7 +874,7 @@ const Payment = () => {
                                 <li>{t('payment.failureToPayMayReschedule')}</li>
                             </ul>
                         </div>
-                        <form onSubmit={handleCashSubmit} className="space-y-6">
+                        <form onSubmit={isServiceRequestPayment ? handleServiceRequestPayment : handleCashSubmit} className="space-y-6">
                             <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                 {!isRTL && (
                                     <Checkbox
@@ -669,14 +902,19 @@ const Payment = () => {
                             <Button
                                 type="submit"
                                 className="w-full"
-                                disabled={isProcessing || !agreedToCashTerms || !appointmentId}
+                                disabled={isProcessing || !agreedToCashTerms || (!isServiceRequestPayment && !appointmentId) || (isServiceRequestPayment && !serviceRequest)}
                                 style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}
                             >
                                 {isProcessing ? t('payment.processing') : t('payment.confirmCashPayment')}
                             </Button>
-                            {!appointmentId && (
+                            {!isServiceRequestPayment && !appointmentId && (
                                 <div className="text-sm text-amber-700">
                                     {t('payment.loadingPaymentInfo') || 'Preparing your booking...'}
+                                </div>
+                            )}
+                            {isServiceRequestPayment && !serviceRequest && (
+                                <div className="text-sm text-amber-700">
+                                    {isRTL ? 'جاري تحميل تفاصيل الطلب...' : 'Loading service request details...'}
                                 </div>
                             )}
                         </form>

@@ -35,7 +35,13 @@ import {
     RefreshCw,
     AlertCircle,
     CheckCircle,
-    XCircle
+    XCircle,
+    DollarSign,
+    Receipt,
+    FileText,
+    Activity,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -55,6 +61,33 @@ interface PatientAppointment {
     created_at: string;
     updated_at: string;
     source?: 'appointments' | 'payment_bookings'; // Track which table it came from
+}
+
+interface PaymentHistoryItem {
+    id: string;
+    patient_id?: string;
+    patient_email: string;
+    patient_name: string;
+    doctor_name: string;
+    clinic_name: string;
+    specialty: string;
+    appointment_day: string;
+    appointment_time?: string;
+    price: number;
+    currency?: string;
+    payment_status: 'pending' | 'paid' | 'completed' | 'failed' | 'refunded';
+    booking_status: string;
+    created_at: string;
+    updated_at: string;
+    source?: 'appointments' | 'payment_bookings' | 'service_request';
+    transactions?: Array<{
+        id: string;
+        payment_booking_id: string;
+        payment_method: string;
+        transaction_status: string;
+        amount: number;
+        created_at: string;
+    }>;
 }
 
 interface PatientDashboardProps {
@@ -100,6 +133,34 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
     const [isProcessing, setIsProcessing] = useState(false);
     const [doctorAvailability, setDoctorAvailability] = useState<AvailabilitySlot[]>([]);
     const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+    const [showPaymentHistory, setShowPaymentHistory] = useState(false);
+    const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
+    const [isLoadingPaymentHistory, setIsLoadingPaymentHistory] = useState(false);
+    interface ServiceRequestData {
+        id: number;
+        patient_email: string;
+        patient_name: string;
+        doctor_name: string;
+        service_type: string;
+        service_subtype?: string;
+        service_name?: string;
+        service_name_ar?: string;
+        price?: number;
+        currency?: string;
+        payment_status?: string;
+        status: string;
+        payment_booking_id?: string;
+        created_at: string;
+        updated_at: string;
+        notes?: string;
+    }
+    const [serviceRequests, setServiceRequests] = useState<ServiceRequestData[]>([]);
+    const [isLoadingServiceRequests, setIsLoadingServiceRequests] = useState(false);
+    
+    // Pagination states
+    const [serviceRequestsPage, setServiceRequestsPage] = useState(1);
+    const [paymentHistoryPage, setPaymentHistoryPage] = useState(1);
+    const itemsPerPage = 3; // Show 3 items per page
 
     // Load patient appointments
     const loadAppointments = useCallback(async () => {
@@ -219,10 +280,249 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
         }
     }, [patientEmail, isRTL, toast]);
 
+    // Load payment history
+    const loadPaymentHistory = async () => {
+        try {
+            setIsLoadingPaymentHistory(true);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            // Fetch payment bookings (including service request payments)
+            const { data: bookings, error: bookingsError } = await supabase
+                .from('payment_bookings')
+                .select('*')
+                .or(`patient_id.eq.${session.user.id},patient_email.eq.${patientEmail}`)
+                .order('created_at', { ascending: false });
+
+            if (bookingsError) {
+                console.error('Error fetching payment bookings:', bookingsError);
+            }
+
+            // Also fetch service requests that require payment or have been paid
+            const { data: serviceRequests, error: serviceRequestsError } = await supabase
+                .from('service_requests')
+                .select('*')
+                .eq('patient_email', patientEmail)
+                .in('status', ['payment_required', 'secretary_confirmed', 'in_progress', 'completed'])
+                .order('created_at', { ascending: false });
+
+            if (serviceRequestsError) {
+                console.error('Error fetching service requests:', serviceRequestsError);
+            }
+            
+            console.log('📊 Payment History - Service Requests Found:', serviceRequests?.length || 0, serviceRequests);
+
+            // Add service request payments to history (show all confirmed services by secretary)
+            // Include: secretary_confirmed, payment_required, in_progress, completed
+            const serviceRequestPayments: PaymentHistoryItem[] = [];
+            if (serviceRequests && serviceRequests.length > 0) {
+                // Load pricing info for service requests
+                const enrichedRequests = await Promise.all(
+                    serviceRequests.map(async (sr) => {
+                        let serviceName = '';
+                        let serviceNameAr = '';
+                        
+                        if (sr.service_subtype && sr.service_type) {
+                            const { data: pricingData } = await supabase
+                                .from('service_pricing')
+                                .select('service_name, service_name_ar')
+                                .eq('service_type', sr.service_type)
+                                .eq('service_subtype', sr.service_subtype)
+                                .single();
+                            
+                            if (pricingData) {
+                                serviceName = pricingData.service_name || '';
+                                serviceNameAr = pricingData.service_name_ar || '';
+                            }
+                        }
+                        
+                        return {
+                            ...sr,
+                            service_name: serviceName,
+                            service_name_ar: serviceNameAr
+                        };
+                    })
+                );
+                
+                enrichedRequests
+                    .filter((sr) => {
+                        // Include all services confirmed by secretary (not just pending)
+                        return ['secretary_confirmed', 'payment_required', 'in_progress', 'completed'].includes(sr.status);
+                    })
+                    .forEach((sr) => {
+                        // Determine payment status for display
+                        // When secretary confirms and requires payment, it means payment is secured/completed
+                        let paymentStatus: 'pending' | 'paid' | 'completed' | 'failed' | 'refunded' = 'pending';
+                        if (sr.payment_status === 'paid') {
+                            paymentStatus = 'paid';
+                        } else if (sr.status === 'completed') {
+                            paymentStatus = 'completed';
+                        } else if (sr.status === 'payment_required') {
+                            // Secretary has secured the money, so show as completed
+                            paymentStatus = 'completed';
+                        } else if (sr.status === 'secretary_confirmed' && (sr.price === 0 || !sr.price)) {
+                            paymentStatus = 'completed'; // Free service
+                        } else if (sr.status === 'secretary_confirmed') {
+                            // Secretary confirmed but payment not yet required/collected, show as pending
+                            paymentStatus = 'pending';
+                        }
+                        
+                        // Build service display name
+                        const serviceTypeName = sr.service_type === 'xray' ? (isRTL ? 'أشعة إكس' : 'X-Ray') :
+                            sr.service_type === 'ultrasound' ? (isRTL ? 'موجات فوق صوتية' : 'Ultrasound') :
+                            sr.service_type === 'lab' ? (isRTL ? 'مختبر' : 'Lab') :
+                            (isRTL ? 'قياس السمع' : 'Audiometry');
+                        
+                        const serviceSubtypeName = sr.service_subtype && (isRTL ? (sr.service_name_ar || sr.service_name) : (sr.service_name || sr.service_name_ar))
+                            ? ` - ${isRTL ? (sr.service_name_ar || sr.service_name) : (sr.service_name || sr.service_name_ar)}`
+                            : '';
+                        
+                        serviceRequestPayments.push({
+                            id: `sr-${sr.id}`,
+                            patient_id: session.user.id,
+                            patient_email: sr.patient_email,
+                            patient_name: sr.patient_name,
+                            clinic_name: `${serviceTypeName}${serviceSubtypeName}`,
+                            doctor_name: sr.doctor_name,
+                            specialty: sr.service_type,
+                            appointment_day: sr.created_at?.split('T')[0] || '',
+                            appointment_time: '',
+                            price: sr.price || 0,
+                            currency: sr.currency || 'ILS',
+                            payment_status: paymentStatus,
+                            booking_status: sr.status,
+                            created_at: sr.created_at,
+                            updated_at: sr.updated_at,
+                            source: 'service_request' as const
+                        });
+                    });
+            }
+
+            // Combine regular bookings with service request payments
+            const allBookings = [...(bookings || []), ...serviceRequestPayments];
+            
+            console.log('📊 Payment History - Total Bookings:', bookings?.length || 0, 'Service Request Payments:', serviceRequestPayments.length, 'Total:', allBookings.length);
+
+            // Sort by created_at descending
+            allBookings.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+            // Fetch payment transactions for all bookings
+            const bookingIds = allBookings.map(b => b.id);
+            interface PaymentTransaction {
+                id: string;
+                payment_booking_id: string;
+                payment_method: string;
+                transaction_status: string;
+                amount: number;
+                created_at: string;
+            }
+            let transactions: PaymentTransaction[] = [];
+            if (bookingIds.length > 0) {
+                // For service requests, we need to check if they have payment_booking_id
+                const serviceRequestIds = serviceRequests?.filter(sr => sr.payment_booking_id).map(sr => sr.payment_booking_id) || [];
+                const regularBookingIds = (bookings || []).map(b => b.id);
+                const allTransactionIds = [...regularBookingIds, ...serviceRequestIds];
+
+                if (allTransactionIds.length > 0) {
+                    const { data: transData, error: transError } = await supabase
+                        .from('payment_transactions')
+                        .select('*')
+                        .in('payment_booking_id', allTransactionIds)
+                        .order('created_at', { ascending: false });
+
+                    if (!transError && transData) {
+                        transactions = transData as PaymentTransaction[];
+                    }
+                }
+            }
+
+            // Combine bookings with transactions
+            const history = allBookings.map(booking => ({
+                ...booking,
+                transactions: transactions.filter(t => {
+                    // For service requests, match by payment_booking_id from the service request
+                    if (booking.source === 'service_request') {
+                        const sr = serviceRequests?.find(s => s.id === parseInt(booking.id.replace('sr-', '')));
+                        return sr?.payment_booking_id && t.payment_booking_id === sr.payment_booking_id;
+                    }
+                    return t.payment_booking_id === booking.id;
+                })
+            }));
+
+            setPaymentHistory(history);
+        } catch (error) {
+            console.error('Error loading payment history:', error);
+            toast({
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL ? 'خطأ في تحميل سجل الدفع' : 'Error loading payment history',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsLoadingPaymentHistory(false);
+        }
+    };
+
+
+    // Load service requests - memoized
+    const loadServiceRequestsMemo = useCallback(async () => {
+        try {
+            setIsLoadingServiceRequests(true);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            // Load service requests
+            const { data, error } = await supabase
+                .from('service_requests')
+                .select('*')
+                .eq('patient_email', patientEmail)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading service requests:', error);
+                return;
+            }
+
+            // Load pricing info for service requests with subtypes using Promise.all for parallel loading
+            let enrichedData = data || [];
+            if (enrichedData.length > 0) {
+                const pricingPromises = enrichedData.map(async (request) => {
+                    if (request.service_subtype && request.service_type) {
+                        try {
+                            const { data: pricingData, error: pricingError } = await supabase
+                                .from('service_pricing')
+                                .select('service_name, service_name_ar')
+                                .eq('service_type', request.service_type)
+                                .eq('service_subtype', request.service_subtype)
+                                .single();
+
+                            if (!pricingError && pricingData) {
+                                request.service_name = pricingData.service_name;
+                                request.service_name_ar = pricingData.service_name_ar;
+                            }
+                        } catch (error) {
+                            console.error(`Error loading pricing for ${request.service_type}/${request.service_subtype}:`, error);
+                            // Continue even if pricing fails
+                        }
+                    }
+                    return request;
+                });
+
+                enrichedData = await Promise.all(pricingPromises);
+            }
+
+            setServiceRequests(enrichedData);
+        } catch (error) {
+            console.error('Error loading service requests:', error);
+        } finally {
+            setIsLoadingServiceRequests(false);
+        }
+    }, [patientEmail]);
+
     // Load appointments on mount
     useEffect(() => {
         loadAppointments();
-    }, [loadAppointments]);
+        loadServiceRequestsMemo();
+    }, [loadAppointments, loadServiceRequestsMemo]);
 
     // Refresh appointments when window regains focus (e.g., returning from payment page)
     useEffect(() => {
@@ -539,19 +839,294 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                         <User className="h-5 w-5" />
                         {isRTL ? 'لوحة المريض' : 'Patient Dashboard'}
                     </CardTitle>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={loadAppointments}
-                        disabled={isLoading}
-                    >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                        {isRTL ? 'تحديث' : 'Refresh'}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                                setShowPaymentHistory(!showPaymentHistory);
+                                if (!showPaymentHistory) {
+                                    await loadPaymentHistory();
+                                }
+                            }}
+                        >
+                            <DollarSign className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                            {isRTL ? 'سجل الدفع' : 'Payment History'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={loadAppointments}
+                            disabled={isLoading}
+                        >
+                            <RefreshCw className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'} ${isLoading ? 'animate-spin' : ''}`} />
+                            {isRTL ? 'تحديث' : 'Refresh'}
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
 
             <CardContent>
+                {/* Payment History Section */}
+                {showPaymentHistory && (
+                    <div className="mb-6 border-b pb-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <Receipt className="h-5 w-5" />
+                            {isRTL ? 'سجل المدفوعات' : 'Payment History'}
+                        </h3>
+                        {isLoadingPaymentHistory ? (
+                            <div className="text-center py-8">
+                                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                                <p>{isRTL ? 'جاري التحميل...' : 'Loading...'}</p>
+                            </div>
+                        ) : paymentHistory.length === 0 ? (
+                            <Alert>
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                    {isRTL ? 'لا توجد مدفوعات مسجلة' : 'No payment history found'}
+                                </AlertDescription>
+                            </Alert>
+                        ) : (
+                            <>
+                                <div className="space-y-4">
+                                    {(() => {
+                                        // Pagination for payment history
+                                        const startIndex = (paymentHistoryPage - 1) * itemsPerPage;
+                                        const endIndex = startIndex + itemsPerPage;
+                                        const paginatedPaymentHistory = paymentHistory.slice(startIndex, endIndex);
+                                        const totalPaymentPages = Math.ceil(paymentHistory.length / itemsPerPage);
+                                        
+                                        return (
+                                            <>
+                                                {paginatedPaymentHistory.map((payment) => (
+                                    <div key={payment.id} className="border rounded-lg p-4">
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div>
+                                                <div className="font-semibold">
+                                                    {payment.source === 'service_request'
+                                                        ? (isRTL
+                                                            ? `${payment.clinic_name} - ${payment.doctor_name}`
+                                                            : `${payment.clinic_name} - ${payment.doctor_name}`)
+                                                        : `${payment.doctor_name} - ${payment.clinic_name}`
+                                                    }
+                                                </div>
+                                                {payment.source === 'service_request' ? (
+                                                    <div className="text-sm text-gray-600">
+                                                        {isRTL ? 'طلب خدمة' : 'Service Request'} - {payment.clinic_name} - {payment.appointment_day}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm text-gray-600">
+                                                        {payment.appointment_day} {payment.appointment_time ? t('common.at') : ''} {payment.appointment_time}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <Badge variant={payment.payment_status === 'paid' ? 'default' : 'secondary'}>
+                                                {isRTL ?
+                                                    (payment.payment_status === 'paid' ? 'مدفوع' : payment.payment_status === 'pending' ? 'قيد الانتظار' : payment.payment_status) :
+                                                    payment.payment_status
+                                                }
+                                            </Badge>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-2">
+                                            <div className="text-lg font-bold">
+                                                ₪{payment.price || 0} {payment.currency || 'ILS'}
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                                {payment.created_at ? new Date(payment.created_at).toLocaleDateString() : ''}
+                                            </div>
+                                        </div>
+                                        {payment.transactions && payment.transactions.length > 0 && (
+                                            <div className="mt-3 pt-3 border-t">
+                                                <div className="text-sm font-medium mb-2">{isRTL ? 'المعاملات' : 'Transactions'}:</div>
+                                                {payment.transactions.map((trans) => (
+                                                    <div key={trans.id} className="text-sm text-gray-600">
+                                                        {trans.payment_method} - {trans.transaction_status} - ₪{trans.amount}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                                ))}
+                                                {totalPaymentPages > 1 && (
+                                                    <div className={`flex items-center justify-between mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                        <div className="text-sm text-gray-500">
+                                                            {isRTL 
+                                                                ? `عرض ${startIndex + 1}-${Math.min(endIndex, paymentHistory.length)} من ${paymentHistory.length}`
+                                                                : `Showing ${startIndex + 1}-${Math.min(endIndex, paymentHistory.length)} of ${paymentHistory.length}`
+                                                            }
+                                                        </div>
+                                                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setPaymentHistoryPage(prev => Math.max(prev - 1, 1))}
+                                                                disabled={paymentHistoryPage === 1}
+                                                            >
+                                                                <ChevronLeft className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+                                                                {isRTL ? 'التالي' : 'Previous'}
+                                                            </Button>
+                                                            <div className="flex items-center gap-1">
+                                                                {Array.from({ length: totalPaymentPages }, (_, i) => i + 1).map((page) => (
+                                                                    <Button
+                                                                        key={page}
+                                                                        variant={paymentHistoryPage === page ? 'default' : 'outline'}
+                                                                        size="sm"
+                                                                        onClick={() => setPaymentHistoryPage(page)}
+                                                                        className="min-w-[2.5rem]"
+                                                                    >
+                                                                        {page}
+                                                                    </Button>
+                                                                ))}
+                                                            </div>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setPaymentHistoryPage(prev => Math.min(prev + 1, totalPaymentPages))}
+                                                                disabled={paymentHistoryPage === totalPaymentPages}
+                                                            >
+                                                                {isRTL ? 'السابق' : 'Next'}
+                                                                <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+
+                {/* Service Requests Section */}
+                {serviceRequests.length > 0 && (
+                    <div className="mb-6 border-b pb-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <Receipt className="h-5 w-5" />
+                            {isRTL ? 'طلبات الخدمات' : 'Service Requests'}
+                        </h3>
+                        <div className="space-y-4">
+                            {(() => {
+                                // Pagination for service requests
+                                const startIndex = (serviceRequestsPage - 1) * itemsPerPage;
+                                const endIndex = startIndex + itemsPerPage;
+                                const paginatedServiceRequests = serviceRequests.slice(startIndex, endIndex);
+                                const totalServiceRequestsPages = Math.ceil(serviceRequests.length / itemsPerPage);
+                                
+                                return (
+                                    <>
+                                        {paginatedServiceRequests.map((request) => (
+                                <div key={request.id} className="border rounded-lg p-4">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <div className="flex-1">
+                                            <div className="font-semibold">
+                                                {isRTL ?
+                                                    (request.service_type === 'xray' ? 'أشعة إكس' :
+                                                        request.service_type === 'ultrasound' ? 'موجات فوق صوتية' :
+                                                            request.service_type === 'lab' ? 'مختبر' : 'قياس السمع')
+                                                    : request.service_type.toUpperCase()}
+                                                {request.service_subtype && (
+                                                    <span className="text-sm font-normal text-gray-600">
+                                                        {` - ${isRTL ? request.service_name_ar : request.service_name}`}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-sm text-gray-600 mt-1">
+                                                {isRTL ? 'الطبيب' : 'Doctor'}: {request.doctor_name}
+                                            </div>
+                                            {request.notes && (
+                                                <div className="text-sm text-gray-600 mt-1">
+                                                    {isRTL ? 'ملاحظات' : 'Notes'}: {request.notes}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <Badge variant={
+                                            request.status === 'payment_required' ? 'default' : // Show as completed since secretary secured payment
+                                                request.status === 'completed' ? 'default' :
+                                                    request.status === 'in_progress' ? 'secondary' :
+                                                        request.status === 'secretary_confirmed' ? 'default' :
+                                                            'outline'
+                                        }>
+                                            {isRTL ?
+                                                (request.status === 'payment_required' ? 'مكتمل' : // Show as completed since payment is secured
+                                                    request.status === 'pending' ? 'قيد الانتظار' :
+                                                        request.status === 'secretary_confirmed' ? 'مكتمل' :
+                                                            request.status === 'in_progress' ? 'قيد المعالجة' :
+                                                                request.status === 'completed' ? 'مكتمل' : request.status)
+                                                : request.status === 'payment_required' ? 'COMPLETED' : // Show as completed since payment is secured
+                                                    request.status === 'secretary_confirmed' ? 'COMPLETED' :
+                                                        request.status === 'pending' ? 'PENDING' :
+                                                            request.status === 'in_progress' ? 'IN PROGRESS' :
+                                                                request.status === 'completed' ? 'COMPLETED' : request.status.replace('_', ' ').toUpperCase()}
+                                        </Badge>
+                                    </div>
+                                    {request.price && request.price > 0 && (
+                                        <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                                            <div>
+                                                <div className="text-sm text-gray-600">{isRTL ? 'السعر' : 'Price'}</div>
+                                                <div className="text-lg font-bold">₪{request.price} {request.currency || 'ILS'}</div>
+                                            </div>
+                                            {/* When payment_required, it means secretary secured payment, so show as paid/completed */}
+                                            {(request.status === 'payment_required' || request.status === 'secretary_confirmed' || request.payment_status === 'paid') && (
+                                                <Badge variant="default" className="bg-green-500">
+                                                    {isRTL ? 'مدفوع' : 'Paid'}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                        ))}
+                                        {totalServiceRequestsPages > 1 && (
+                                            <div className={`flex items-center justify-between mt-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                <div className="text-sm text-gray-500">
+                                                    {isRTL 
+                                                        ? `عرض ${startIndex + 1}-${Math.min(endIndex, serviceRequests.length)} من ${serviceRequests.length}`
+                                                        : `Showing ${startIndex + 1}-${Math.min(endIndex, serviceRequests.length)} of ${serviceRequests.length}`
+                                                    }
+                                                </div>
+                                                <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setServiceRequestsPage(prev => Math.max(prev - 1, 1))}
+                                                        disabled={serviceRequestsPage === 1}
+                                                    >
+                                                        <ChevronLeft className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+                                                        {isRTL ? 'التالي' : 'Previous'}
+                                                    </Button>
+                                                    <div className="flex items-center gap-1">
+                                                        {Array.from({ length: totalServiceRequestsPages }, (_, i) => i + 1).map((page) => (
+                                                            <Button
+                                                                key={page}
+                                                                variant={serviceRequestsPage === page ? 'default' : 'outline'}
+                                                                size="sm"
+                                                                onClick={() => setServiceRequestsPage(page)}
+                                                                className="min-w-[2.5rem]"
+                                                            >
+                                                                {page}
+                                                            </Button>
+                                                        ))}
+                                                    </div>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setServiceRequestsPage(prev => Math.min(prev + 1, totalServiceRequestsPages))}
+                                                        disabled={serviceRequestsPage === totalServiceRequestsPages}
+                                                    >
+                                                        {isRTL ? 'السابق' : 'Next'}
+                                                        <ChevronRight className={`h-4 w-4 ${isRTL ? 'rotate-180' : ''}`} />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    </div>
+                )}
+
                 {appointments.length === 0 ? (
                     <Alert>
                         <AlertCircle className="h-4 w-4" />

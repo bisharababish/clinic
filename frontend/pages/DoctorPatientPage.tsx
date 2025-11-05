@@ -1,10 +1,11 @@
 // DoctorPatientsPage.tsx - Patient Management with Clinical Notes
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Users, Calendar, User, Filter, Plus, Edit, Save, X, FileText, AlertCircle, Clock, Stethoscope, Eye } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Users, Calendar, User, Filter, Plus, Edit, Save, X, FileText, AlertCircle, Clock, Stethoscope, Eye, Send, ScanLine, Activity, FlaskConical, CheckCircle, RefreshCw } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { Skeleton } from "../components/ui/skeleton";
+import { Input } from "../components/ui/input";
 import { useToast } from "../hooks/use-toast";
 import {
     AlertDialog,
@@ -31,6 +32,19 @@ interface Patient {
     medical_history?: string;
     allergies?: string;
     current_medications?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+interface ServicePricing {
+    id: number;
+    service_type: 'xray' | 'ultrasound' | 'lab' | 'audiometry';
+    service_subtype: string | null;
+    service_name: string;
+    service_name_ar: string | null;
+    price: number;
+    currency: string;
+    is_active: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -157,9 +171,52 @@ const DoctorPatientsPage: React.FC = () => {
     const [filterStatus, setFilterStatus] = useState<string>('');
     const [filterPriority, setFilterPriority] = useState<string>('');
     const isFetchingRef = useRef(false);
+    const [showRequestModal, setShowRequestModal] = useState<boolean>(false);
+    const [requestType, setRequestType] = useState<'xray' | 'ultrasound' | 'lab' | 'audiometry' | null>(null);
+    const [requestSubtype, setRequestSubtype] = useState<string>('');
+    const [requestNotes, setRequestNotes] = useState<string>('');
+    const [servicePricing, setServicePricing] = useState<ServicePricing[]>([]);
+    const [isLoadingServicePricing, setIsLoadingServicePricing] = useState(false);
+    const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
+    const [selectedLabCategory, setSelectedLabCategory] = useState<string | null>(null);
+    const [labSearchQuery, setLabSearchQuery] = useState<string>('');
+    
+    // Lab test categories mapping
+    const labCategories = {
+        'hematology_coagulation': {
+            name: 'Hematology & Coagulation',
+            nameAr: 'أمراض الدم والتخثر',
+            subtypes: ['aptt', 'bleeding_time', 'blood_film_staining', 'blood_film_reading', 'blood_group_rh', 'clotting_time', 'cbc', 'esr', 'fibrinogen', 'lupus_anticoagulant', 'le_cells', 'prothrombin_time', 'reticulocyte_count', 'rvvt_test', 'thrombophilia_6_genes']
+        },
+        'serology_virology': {
+            name: 'Serology & Virology',
+            nameAr: 'المناعة والفيروسات',
+            subtypes: ['anca_pr3', 'anca_mpo', 'anti_cardiolipin_igg', 'anti_cardiolipin_igm', 'anti_ccp', 'anti_dna', 'anti_endomysial_antibodies', 'anti_ttg', 'ama', 'asma', 'ana_profile', 'anti_phospholipid_igg', 'anti_phospholipid_igm', 'ana', 'anti_sperm_antibodies', 'asot', 'anti_tpo_antibodies', 'brucella_antibodies', 'crp', 'c3', 'c4', 'chlamydia_trachomatics_iga', 'chlamydia_trachomatics_igg', 'chlamydia_trachomatics_igm', 'cmv_igg', 'cmv_igm', 'ebv_igg', 'ebv_igm', 'hbeag', 'hbsabs', 'hbc_igm', 'hbc_total', 'helicobacter_pylori_igg', 'helicobacter_pylori_igm', 'helicobacter_pylori_ag_stool_qualitative', 'helicobacter_pylori_ag_stool_quantitative', 'hepatitis_a_igm', 'hbsag', 'hepatitis_c_virus', 'hiv', 'immunoglobulin_ige', 'immunoglobulin_igg', 'immunoglobulin_igm', 'immunoglobulin_iga', 'paul_bunnell', 'pregnancy_test', 'proteus_ox19', 'rpr', 'rf_latex_test', 'rose_waler', 'rubella_igg', 'rubella_igm', 'thyroglobulin_abs', 'toxoplasmosis_igg', 'toxoplasmosis_igm', 'vdrl', 'widal_test']
+        },
+        'chemistry': {
+            name: 'Chemistry',
+            nameAr: 'الكيمياء الحيوية',
+            subtypes: ['albumin', 'alkaline_phosphatase', 'alt', 'amylase', 'ast', 'bilirubin_direct', 'bilirubin_total', 'ck_mb', 'calcium_serum', 'calcium_urine', 'chloride', 'cholesterol_total', 'creatinine_serum', 'creatinine_urine', 'cpk', 'fructose_semen', 'ggt', 'glucose', 'hdl_cholesterol', 'hba1c', 'iron_serum', 'iron_binding_capacity_total', 'ldh', 'ldl_cholesterol', 'magnesium', 'phosphorus', 'potassium', 'protein_24hr_urine', 'protein_total_serum', 'sodium', 'triglycerides', 'urea', 'uric_acid', 'electrolyte']
+        },
+        'tumor_marker_drug_level': {
+            name: 'Tumor Marker & Drug Level & Special Tests',
+            nameAr: 'علامات الأورام ومستوى الأدوية والاختبارات الخاصة',
+            subtypes: ['afp', 'vitamin_b12', 'ca_125', 'ca_15_3', 'ca_19_9', 'cea', 'd_dimer', 'depakine', 'epanutine', 'luminal', 'psa', 'tegretol', 'troponin_i', 'vma', 'free_psa']
+        },
+        'hormones': {
+            name: 'Hormones',
+            nameAr: 'الهرمونات',
+            subtypes: ['17_hydroxy_progesterone', 'acth', 'aldosterone', 'androstenedione', 'amh', 'cortisol', 'c_peptide', 'dhea_s', 'e2_estradiol', 'ferritin', 'folic_acid', 'fsh', 'growth_hormone', 'bhcg', 'lh', 'pth', 'progesterone', 'prolactin', 'testosterone', 'testosterone_free', 'thyroglobulin_level', 'tsh', 'ft4', 't4', 'ft3', 't3', 'renin', 'gastrine_17', 'vitamin_d3_d2']
+        },
+        'microbiology_routine': {
+            name: 'Microbiology & Routine',
+            nameAr: 'الأحياء الدقيقة والفحوصات الروتينية',
+            subtypes: ['calprotectin_qualitative', 'calprotectin_quantitative', 'fungal_culture', 'koh', 'gram_stain', 'occult_blood_stool', 'routine_cultures_aerobic', 'routine_cultures_aerobic_anaerobic', 'stool_culture', 'stool_analysis', 'urine_analysis', 'semen_analysis']
+        }
+    };
 
     // Fetch patients from database
-    const fetchPatients = async () => {
+    const fetchPatients = useCallback(async () => {
         if (isFetchingRef.current) return;
 
         try {
@@ -252,7 +309,7 @@ const DoctorPatientsPage: React.FC = () => {
             setLoading(false);
             isFetchingRef.current = false;
         }
-    };
+    }, [isRTL]);
 
     // Fetch clinical notes for a specific patient
     const fetchClinicalNotes = async (patientId: number) => {
@@ -447,14 +504,14 @@ const DoctorPatientsPage: React.FC = () => {
         if (user !== undefined) {
             initializeComponent();
         }
-    }, [user]);
+    }, [user, fetchPatients]);
 
     // Refetch patients when language changes to update names
     useEffect(() => {
         if (user && !initializing) {
             fetchPatients();
         }
-    }, [i18n.language]);
+    }, [i18n.language, user, initializing, fetchPatients]);
 
     // Filter patients
     const filteredPatients = patients.filter(patient => {
@@ -594,13 +651,23 @@ const DoctorPatientsPage: React.FC = () => {
                                     <p><span className="font-medium">{isRTL ? 'تاريخ التسجيل' : 'Registered'}:</span> {new Date(patient.created_at).toLocaleDateString()}</p>
                                 </div>
 
-                                <div className="flex space-x-2">
+                                <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} gap-2`}>
                                     <button
                                         onClick={() => handlePatientSelect(patient)}
                                         className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-1"
                                     >
                                         <Stethoscope className="h-4 w-4" />
                                         {isRTL ? 'الملاحظات السريرية' : 'Clinical Notes'}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedPatient(patient);
+                                            setShowRequestModal(true);
+                                        }}
+                                        className="flex-1 bg-green-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-green-700 flex items-center justify-center gap-1"
+                                    >
+                                        <Send className="h-4 w-4" />
+                                        {isRTL ? 'طلب' : 'Request'}
                                     </button>
                                 </div>
                             </div>
@@ -868,6 +935,626 @@ const DoctorPatientsPage: React.FC = () => {
                                         </div>
                                     ))
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Request Service Modal */}
+            {showRequestModal && selectedPatient && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-bold text-gray-900">
+                                    {isRTL ? `طلب خدمة - ${selectedPatient.name}` : `Request Service - ${selectedPatient.name}`}
+                                </h2>
+                                <button
+                                    onClick={() => {
+                                        setShowRequestModal(false);
+                                        setRequestType(null);
+                                        setRequestNotes('');
+                                        setRequestSubtype('');
+                                        setSelectedPrice(null);
+                                        setServicePricing([]);
+                                        setSelectedLabCategory(null);
+                                        setIsLoadingServicePricing(false);
+                                        setLabSearchQuery('');
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <X className="h-6 w-6" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    {isRTL ? 'نوع الخدمة' : 'Service Type'}
+                                </label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setRequestType('xray');
+                                            setRequestSubtype('');
+                                            setSelectedPrice(null);
+                                            setServicePricing([]);
+                                            setIsLoadingServicePricing(false);
+                                        }}
+                                        className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${requestType === 'xray'
+                                                ? 'border-blue-600 bg-blue-50'
+                                                : 'border-gray-300 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        <ScanLine className="h-6 w-6" />
+                                        <span>{isRTL ? 'أشعة إكس' : 'X-Ray'}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            setRequestType('ultrasound');
+                                            setRequestSubtype('');
+                                            setSelectedPrice(null);
+                                            setIsLoadingServicePricing(true);
+                                            setServicePricing([]);
+                                            // Load ultrasound pricing
+                                            try {
+                                                const { data, error } = await supabase
+                                                    .from('service_pricing')
+                                                    .select('*')
+                                                    .eq('service_type', 'ultrasound')
+                                                    .eq('is_active', true)
+                                                    .order('service_subtype');
+                                                if (error) {
+                                                    console.error('Error loading ultrasound pricing:', error);
+                                                    toast({
+                                                        title: isRTL ? 'خطأ' : 'Error',
+                                                        description: isRTL ? 'فشل تحميل خيارات الموجات فوق الصوتية' : 'Failed to load ultrasound options',
+                                                        variant: 'destructive',
+                                                    });
+                                                } else if (data) {
+                                                    setServicePricing(data);
+                                                }
+                                            } catch (err) {
+                                                console.error('Error loading ultrasound pricing:', err);
+                                                toast({
+                                                    title: isRTL ? 'خطأ' : 'Error',
+                                                    description: isRTL ? 'حدث خطأ أثناء تحميل الخيارات' : 'An error occurred while loading options',
+                                                    variant: 'destructive',
+                                                });
+                                            } finally {
+                                                setIsLoadingServicePricing(false);
+                                            }
+                                        }}
+                                        className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${requestType === 'ultrasound'
+                                                ? 'border-blue-600 bg-blue-50'
+                                                : 'border-gray-300 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        <Activity className="h-6 w-6" />
+                                        <span>{isRTL ? 'موجات فوق صوتية' : 'Ultrasound'}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            setRequestType('lab');
+                                            setRequestSubtype('');
+                                            setSelectedPrice(null);
+                                            setIsLoadingServicePricing(true);
+                                            setServicePricing([]);
+                                            // Reset category selection when switching to lab
+                                            setSelectedLabCategory(null);
+                                            setServicePricing([]);
+                                            setIsLoadingServicePricing(false);
+                                        }}
+                                        className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${requestType === 'lab'
+                                                ? 'border-blue-600 bg-blue-50'
+                                                : 'border-gray-300 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        <FlaskConical className="h-6 w-6" />
+                                        <span>{isRTL ? 'مختبر' : 'Lab'}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            setRequestType('audiometry');
+                                            setRequestSubtype('');
+                                            setSelectedPrice(null);
+                                            setIsLoadingServicePricing(true);
+                                            setServicePricing([]);
+                                            // Load audiometry pricing
+                                            try {
+                                                const { data, error } = await supabase
+                                                    .from('service_pricing')
+                                                    .select('*')
+                                                    .eq('service_type', 'audiometry')
+                                                    .eq('is_active', true)
+                                                    .order('service_subtype');
+                                                if (error) {
+                                                    console.error('Error loading audiometry pricing:', error);
+                                                    toast({
+                                                        title: isRTL ? 'خطأ' : 'Error',
+                                                        description: isRTL ? 'فشل تحميل خيارات قياس السمع' : 'Failed to load audiometry options',
+                                                        variant: 'destructive',
+                                                    });
+                                                } else if (data) {
+                                                    setServicePricing(data);
+                                                }
+                                            } catch (err) {
+                                                console.error('Error loading audiometry pricing:', err);
+                                                toast({
+                                                    title: isRTL ? 'خطأ' : 'Error',
+                                                    description: isRTL ? 'حدث خطأ أثناء تحميل الخيارات' : 'An error occurred while loading options',
+                                                    variant: 'destructive',
+                                                });
+                                            } finally {
+                                                setIsLoadingServicePricing(false);
+                                            }
+                                        }}
+                                        className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${requestType === 'audiometry'
+                                                ? 'border-blue-600 bg-blue-50'
+                                                : 'border-gray-300 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        <Activity className="h-6 w-6" />
+                                        <span>{isRTL ? 'قياس السمع' : 'Audiometry'}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Lab Category Selection */}
+                            {requestType === 'lab' && !selectedLabCategory && (
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        {isRTL ? 'اختر الفئة *' : 'Select Category *'}
+                                        <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {Object.entries(labCategories).map(([key, category]) => (
+                                            <button
+                                                key={key}
+                                                type="button"
+                                                onClick={async () => {
+                                                    setSelectedLabCategory(key);
+                                                    setIsLoadingServicePricing(true);
+                                                    setServicePricing([]);
+                                                    setRequestSubtype('');
+                                                    setSelectedPrice(null);
+                                                    setLabSearchQuery('');
+                                                    // Load tests for this category
+                                                    try {
+                                                        const { data, error } = await supabase
+                                                            .from('service_pricing')
+                                                            .select('*')
+                                                            .eq('service_type', 'lab')
+                                                            .eq('is_active', true)
+                                                            .in('service_subtype', category.subtypes)
+                                                            .order('service_name');
+                                                        if (error) {
+                                                            console.error('Error loading lab pricing:', error);
+                                                            toast({
+                                                                title: isRTL ? 'خطأ' : 'Error',
+                                                                description: isRTL ? 'فشل تحميل خيارات المختبر' : 'Failed to load lab options',
+                                                                variant: 'destructive',
+                                                            });
+                                                        } else if (data) {
+                                                            setServicePricing(data);
+                                                        }
+                                                    } catch (err) {
+                                                        console.error('Error loading lab pricing:', err);
+                                                        toast({
+                                                            title: isRTL ? 'خطأ' : 'Error',
+                                                            description: isRTL ? 'حدث خطأ أثناء تحميل الخيارات' : 'An error occurred while loading options',
+                                                            variant: 'destructive',
+                                                        });
+                                                    } finally {
+                                                        setIsLoadingServicePricing(false);
+                                                    }
+                                                }}
+                                                className="p-4 border-2 rounded-lg text-left transition-all border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                                            >
+                                                <div className="font-medium text-gray-900">
+                                                    {isRTL ? category.nameAr : category.name}
+                                                </div>
+                                                <div className="text-sm text-gray-600 mt-1">
+                                                    {category.subtypes.length} {isRTL ? 'اختبار' : 'tests'}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Service Subtype Selection - REQUIRED for ultrasound, audiometry, and lab */}
+                            {requestType && (
+                                (requestType === 'ultrasound' || requestType === 'audiometry') ? (
+                                    <div className="mb-6">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            {isRTL ? 'اختر نوع الفحص *' : 'Select Service Type *'}
+                                            <span className="text-red-500">*</span>
+                                        </label>
+                                        {isLoadingServicePricing ? (
+                                            <div className="text-center py-4 text-gray-500">
+                                                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                                                <p>{isRTL ? 'جاري تحميل الخيارات...' : 'Loading options...'}</p>
+                                            </div>
+                                        ) : servicePricing.length === 0 ? (
+                                            <div className="text-center py-4 text-amber-600 border border-amber-200 rounded-lg bg-amber-50">
+                                                <AlertCircle className="h-6 w-6 mx-auto mb-2" />
+                                                <p className="font-medium">{isRTL ? 'لا توجد خيارات متاحة' : 'No options available'}</p>
+                                                <p className="text-sm mt-1">{isRTL ? 'يرجى التحقق من إعدادات قاعدة البيانات' : 'Please check database configuration'}</p>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-3">
+                                                {servicePricing.map((pricing) => (
+                                                    <button
+                                                        key={pricing.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setRequestSubtype(pricing.service_subtype);
+                                                            setSelectedPrice(pricing.price);
+                                                        }}
+                                                        className={`p-4 border-2 rounded-lg text-left transition-all ${requestSubtype === pricing.service_subtype
+                                                                ? 'border-blue-600 bg-blue-50 shadow-md'
+                                                                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="flex-1">
+                                                                <div className="font-medium text-gray-900">
+                                                                    {isRTL ? (pricing.service_name_ar || pricing.service_name) : pricing.service_name}
+                                                                </div>
+                                                                <div className="text-sm text-gray-600 mt-1">
+                                                                    {isRTL ? 'السعر' : 'Price'}: <span className="font-bold text-blue-600">₪{pricing.price}</span> {pricing.currency}
+                                                                </div>
+                                                            </div>
+                                                            {requestSubtype === pricing.service_subtype && (
+                                                                <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : requestType === 'lab' && selectedLabCategory ? (
+                                    <div className="mb-6">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                {isRTL ? 'اختر نوع الفحص *' : 'Select Test *'}
+                                                <span className="text-red-500">*</span>
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                            setSelectedLabCategory(null);
+                                            setServicePricing([]);
+                                            setRequestSubtype('');
+                                            setSelectedPrice(null);
+                                            setLabSearchQuery('');
+                                                }}
+                                                className="text-sm text-blue-600 hover:text-blue-800"
+                                            >
+                                                {isRTL ? '← العودة للفئات' : '← Back to Categories'}
+                                            </button>
+                                        </div>
+                                        <div className="mb-2 p-2 bg-gray-50 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-700">
+                                                {isRTL ? 'الفئة:' : 'Category:'} {isRTL ? labCategories[selectedLabCategory as keyof typeof labCategories].nameAr : labCategories[selectedLabCategory as keyof typeof labCategories].name}
+                                            </span>
+                                        </div>
+                                        {/* Search Input for Lab Tests */}
+                                        <div className="mb-4">
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                <Input
+                                                    type="text"
+                                                    placeholder={isRTL ? 'ابحث عن الاختبار...' : 'Search for test...'}
+                                                    value={labSearchQuery}
+                                                    onChange={(e) => setLabSearchQuery(e.target.value)}
+                                                    className={`pl-10 ${isRTL ? 'text-right' : 'text-left'}`}
+                                                />
+                                            </div>
+                                            {labSearchQuery && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setLabSearchQuery('')}
+                                                    className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                                                >
+                                                    {isRTL ? 'مسح البحث' : 'Clear search'}
+                                                </button>
+                                            )}
+                                        </div>
+                                        {isLoadingServicePricing ? (
+                                            <div className="text-center py-4 text-gray-500">
+                                                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+                                                <p>{isRTL ? 'جاري تحميل الخيارات...' : 'Loading options...'}</p>
+                                            </div>
+                                        ) : servicePricing.length === 0 ? (
+                                            <div className="text-center py-4 text-amber-600 border border-amber-200 rounded-lg bg-amber-50">
+                                                <AlertCircle className="h-6 w-6 mx-auto mb-2" />
+                                                <p className="font-medium">{isRTL ? 'لا توجد خيارات متاحة' : 'No options available'}</p>
+                                                <p className="text-sm mt-1">{isRTL ? 'يرجى التحقق من إعدادات قاعدة البيانات' : 'Please check database configuration'}</p>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+                                                {servicePricing
+                                                    .filter((pricing) => {
+                                                        if (!labSearchQuery.trim()) return true;
+                                                        const query = labSearchQuery.toLowerCase().trim();
+                                                        const nameEn = pricing.service_name?.toLowerCase() || '';
+                                                        const nameAr = pricing.service_name_ar?.toLowerCase() || '';
+                                                        const subtype = pricing.service_subtype?.toLowerCase() || '';
+                                                        return nameEn.includes(query) || nameAr.includes(query) || subtype.includes(query);
+                                                    })
+                                                    .map((pricing) => (
+                                                    <button
+                                                        key={pricing.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setRequestSubtype(pricing.service_subtype);
+                                                            setSelectedPrice(pricing.price);
+                                                        }}
+                                                        className={`p-4 border-2 rounded-lg text-left transition-all ${requestSubtype === pricing.service_subtype
+                                                                ? 'border-blue-600 bg-blue-50 shadow-md'
+                                                                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="flex-1">
+                                                                <div className="font-medium text-gray-900">
+                                                                    {isRTL ? (pricing.service_name_ar || pricing.service_name) : pricing.service_name}
+                                                                </div>
+                                                                {pricing.service_subtype && (
+                                                                    <div className="text-xs text-gray-500 mt-1">
+                                                                        {pricing.service_subtype}
+                                                                    </div>
+                                                                )}
+                                                                <div className="text-sm text-gray-600 mt-1">
+                                                                    {isRTL ? 'السعر' : 'Price'}: <span className="font-bold text-blue-600">₪{pricing.price}</span> {pricing.currency}
+                                                                </div>
+                                                            </div>
+                                                            {requestSubtype === pricing.service_subtype && (
+                                                                <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                    ))}
+                                                {labSearchQuery.trim() && servicePricing.filter((pricing) => {
+                                                    const query = labSearchQuery.toLowerCase().trim();
+                                                    const nameEn = pricing.service_name?.toLowerCase() || '';
+                                                    const nameAr = pricing.service_name_ar?.toLowerCase() || '';
+                                                    const subtype = pricing.service_subtype?.toLowerCase() || '';
+                                                    return nameEn.includes(query) || nameAr.includes(query) || subtype.includes(query);
+                                                }).length === 0 && (
+                                                    <div className="text-center py-8 text-gray-500">
+                                                        <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                                        <p className="font-medium">{isRTL ? 'لم يتم العثور على نتائج' : 'No results found'}</p>
+                                                        <p className="text-sm mt-1">{isRTL ? 'جرب البحث بكلمات مختلفة' : 'Try searching with different keywords'}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : null
+                            )}
+                            {selectedPrice && requestSubtype && (
+                                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-sm font-medium text-gray-700">{isRTL ? 'تم اختيار' : 'Selected'}</div>
+                                            <div className="text-lg font-bold text-blue-600">
+                                                {servicePricing.find(p => p.service_subtype === requestSubtype)
+                                                    ? (isRTL
+                                                        ? servicePricing.find(p => p.service_subtype === requestSubtype)?.service_name_ar
+                                                        : servicePricing.find(p => p.service_subtype === requestSubtype)?.service_name)
+                                                    : requestSubtype}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm text-gray-600">{isRTL ? 'المبلغ' : 'Amount'}</div>
+                                            <div className="text-2xl font-bold text-blue-600">₪{selectedPrice}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {!requestSubtype && servicePricing.length > 0 && (
+                                <div className="mt-2 text-sm text-amber-600">
+                                    {isRTL ? '⚠️ يرجى اختيار نوع الفحص' : '⚠️ Please select a service type'}
+                                </div>
+                            )}
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    {isRTL ? 'ملاحظات' : 'Notes'}
+                                </label>
+                                <textarea
+                                    value={requestNotes}
+                                    onChange={(e) => setRequestNotes(e.target.value)}
+                                    rows={4}
+                                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                                    placeholder={isRTL ? 'أدخل ملاحظات الطلب...' : 'Enter request notes...'}
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-2 justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowRequestModal(false);
+                                        setRequestType(null);
+                                        setRequestSubtype(null);
+                                        setRequestNotes('');
+                                        setSelectedPrice(null);
+                                        setServicePricing([]);
+                                        setIsLoadingServicePricing(false);
+                                    }}
+                                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                                >
+                                    {isRTL ? 'إلغاء' : 'Cancel'}
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={!requestType || ((requestType === 'ultrasound' || requestType === 'audiometry' || requestType === 'lab') && !requestSubtype)}
+                                    className={`px-6 py-2 rounded-md text-white font-medium flex items-center gap-2 ${!requestType || ((requestType === 'ultrasound' || requestType === 'audiometry' || requestType === 'lab') && !requestSubtype)
+                                            ? 'bg-gray-400 cursor-not-allowed'
+                                            : 'bg-blue-600 hover:bg-blue-700'
+                                        }`}
+                                    onClick={async () => {
+                                        if (!requestType || !selectedPatient || !user) {
+                                            toast({
+                                                title: isRTL ? 'خطأ' : 'Error',
+                                                description: isRTL ? 'يرجى اختيار نوع الخدمة' : 'Please select a service type',
+                                                variant: 'destructive',
+                                            });
+                                            return;
+                                        }
+
+                                        // Validate that subtype is selected for ultrasound, audiometry, and lab
+                                        if ((requestType === 'ultrasound' || requestType === 'audiometry' || requestType === 'lab') && !requestSubtype) {
+                                            toast({
+                                                title: isRTL ? 'خطأ' : 'Error',
+                                                description: isRTL 
+                                                    ? requestType === 'lab' 
+                                                        ? 'يرجى اختيار فئة واختبار من المختبر' 
+                                                        : 'يرجى اختيار نوع الفحص المحدد (مثل: الرقبة، الرأس، البطن، إلخ)'
+                                                    : requestType === 'lab'
+                                                        ? 'Please select a category and test from the lab'
+                                                        : 'Please select a specific service type (e.g., Neck, Head, Abdomen, etc.)',
+                                                variant: 'destructive',
+                                            });
+                                            return;
+                                        }
+
+                                        try {
+                                            // Get doctor info
+                                            const { data: userInfo, error: userError } = await supabase
+                                                .from('userinfo')
+                                                .select('userid, english_username_a, english_username_b, english_username_c, english_username_d, arabic_username_a, arabic_username_b, arabic_username_c, arabic_username_d')
+                                                .eq('user_email', user.email)
+                                                .single();
+
+                                            if (userError || !userInfo) {
+                                                throw new Error('User information not found');
+                                            }
+
+                                            const firstName = isRTL
+                                                ? (userInfo.arabic_username_a || userInfo.english_username_a)
+                                                : (userInfo.english_username_a || userInfo.arabic_username_a);
+                                            const secondName = isRTL
+                                                ? (userInfo.arabic_username_b || userInfo.english_username_b)
+                                                : (userInfo.english_username_b || userInfo.arabic_username_b);
+                                            const thirdName = isRTL
+                                                ? (userInfo.arabic_username_c || userInfo.english_username_c)
+                                                : (userInfo.english_username_c || userInfo.arabic_username_c);
+                                            const fourthName = isRTL
+                                                ? (userInfo.arabic_username_d || userInfo.english_username_d)
+                                                : (userInfo.english_username_d || userInfo.arabic_username_d);
+
+                                            const doctorName = `${firstName} ${secondName} ${thirdName} ${fourthName}`.trim();
+
+                                            // Get service name for display
+                                            let serviceDisplayName: string | null = requestType;
+                                            if (requestSubtype && servicePricing.length > 0) {
+                                                const selectedPricing = servicePricing.find(p => p.service_subtype === requestSubtype);
+                                                if (selectedPricing) {
+                                                    serviceDisplayName = isRTL ? (selectedPricing.service_name_ar || selectedPricing.service_name) : selectedPricing.service_name;
+                                                }
+                                            }
+
+                                            // Create service request
+                                            const requestDataToInsert = {
+                                                patient_id: selectedPatient.id,
+                                                patient_email: selectedPatient.email,
+                                                patient_name: selectedPatient.name,
+                                                doctor_id: userInfo.userid,
+                                                doctor_name: doctorName,
+                                                service_type: requestType,
+                                                service_subtype: requestSubtype || null,
+                                                price: selectedPrice || null,
+                                                currency: 'ILS',
+                                                notes: requestNotes || null,
+                                                status: 'pending',
+                                                payment_status: 'pending'
+                                            };
+
+                                            console.log('Creating service request with data:', requestDataToInsert);
+
+                                            const { data: requestData, error: requestError } = await supabase
+                                                .from('service_requests')
+                                                .insert([requestDataToInsert])
+                                                .select()
+                                                .single();
+
+                                            if (requestError) throw requestError;
+
+                                            // Create notifications for secretary and service provider
+                                            const { createNotification } = await import('../lib/deletionRequests');
+
+                                            // Notify secretary
+                                            const secretaryEmails = await supabase
+                                                .from('userinfo')
+                                                .select('user_email')
+                                                .eq('user_roles', 'Secretary');
+
+                                            if (secretaryEmails.data) {
+                                                for (const secretary of secretaryEmails.data) {
+                                                    await createNotification(
+                                                        secretary.user_email,
+                                                        isRTL ? 'طلب خدمة جديد' : 'New Service Request',
+                                                        isRTL
+                                                            ? `طلب ${requestType === 'xray' ? 'أشعة إكس' : requestType === 'ultrasound' ? 'موجات فوق صوتية' : requestType === 'lab' ? 'مختبر' : 'قياس السمع'} جديد للمريض ${selectedPatient.name}`
+                                                            : `New ${requestType} request for patient ${selectedPatient.name}`,
+                                                        'info',
+                                                        'service_requests',
+                                                        requestData.id.toString()
+                                                    );
+                                                }
+                                            }
+
+                                            // Notify patient
+                                            await createNotification(
+                                                selectedPatient.email,
+                                                isRTL ? 'طلب خدمة جديد' : 'New Service Request',
+                                                isRTL
+                                                    ? `تم إنشاء طلب ${requestType === 'xray' ? 'أشعة إكس' : requestType === 'ultrasound' ? 'موجات فوق صوتية' : requestType === 'lab' ? 'مختبر' : 'قياس السمع'} لك`
+                                                    : `A ${requestType} request has been created for you`,
+                                                'info',
+                                                'service_requests',
+                                                requestData.id.toString()
+                                            );
+
+                                            toast({
+                                                title: isRTL ? 'نجح' : 'Success',
+                                                description: isRTL ? 'تم إنشاء الطلب بنجاح' : 'Request created successfully',
+                                                style: { backgroundColor: '#16a34a', color: '#fff' },
+                                            });
+
+                                            setShowRequestModal(false);
+                                            setRequestType(null);
+                                            setRequestSubtype('');
+                                            setRequestNotes('');
+                                            setServicePricing([]);
+                                            setSelectedPrice(null);
+                                            setIsLoadingServicePricing(false);
+                                        } catch (err: unknown) {
+                                            console.error('Error creating request:', err);
+                                            const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+                                            toast({
+                                                title: isRTL ? 'خطأ' : 'Error',
+                                                description: isRTL ? `فشل إنشاء الطلب: ${errorMessage}` : `Failed to create request: ${errorMessage}`,
+                                                variant: 'destructive',
+                                            });
+                                        }
+                                    }}
+                                >
+                                    <Send className="h-4 w-4" />
+                                    {isRTL ? 'إرسال الطلب' : 'Send Request'}
+                                </button>
                             </div>
                         </div>
                     </div>

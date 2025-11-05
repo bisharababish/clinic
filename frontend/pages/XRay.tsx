@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import SEOHead from "../src/components/seo/SEOHead";
 import {
   Upload,
@@ -11,6 +11,9 @@ import {
   X,
   Search,
   Loader2,
+  Clock,
+  RefreshCw,
+  Eye,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -18,10 +21,12 @@ import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from 'react-i18next';
 import BodyPartDropdownSelector from '../components/BodyPartDropdownSelector';
+import { createNotification } from "../lib/deletionRequests";
 
 // Patient interface
 interface Patient {
@@ -89,6 +94,31 @@ const XRay = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Service requests states
+  interface ServiceRequest {
+    id: number;
+    patient_email: string;
+    patient_name: string;
+    doctor_name: string;
+    service_type: string;
+    service_subtype?: string;
+    service_name?: string;
+    service_name_ar?: string;
+    price?: number;
+    currency?: string;
+    payment_status?: string;
+    status: string;
+    notes?: string;
+    secretary_confirmed_at?: string | null;
+    completed_at?: string | null;
+    created_at: string;
+    updated_at: string;
+  }
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [showRequestDetails, setShowRequestDetails] = useState(false);
 
   // Doctor search function
   const searchDoctors = async (searchTerm: string) => {
@@ -275,6 +305,104 @@ const XRay = () => {
     setSearchResults([]);
   };
 
+  // Load service requests for xray
+  const loadServiceRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      // Get requests that are secretary_confirmed OR payment_required (after secretary confirms, even if not paid yet)
+      const { data, error } = await supabase
+        .from('service_requests')
+        .select('*')
+        .eq('service_type', 'xray')
+        .in('status', ['secretary_confirmed', 'payment_required', 'in_progress', 'completed'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setServiceRequests(data || []);
+    } catch (err: unknown) {
+      console.error('Error loading service requests:', err);
+      toast({
+        title: isRTL ? 'خطأ' : 'Error',
+        description: isRTL ? 'فشل تحميل الطلبات' : 'Failed to load service requests',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  // Update request status
+  const updateRequestStatus = async (requestId: number, newStatus: string) => {
+    try {
+      const updateData: { status: string; completed_at?: string } = { status: newStatus };
+
+      if (newStatus === 'completed') {
+        updateData.completed_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('service_requests')
+        .update(updateData)
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      const request = serviceRequests.find(r => r.id === requestId);
+      if (request) {
+        await createNotification(
+          request.patient_email,
+          isRTL ? 'تحديث حالة الطلب' : 'Request Status Updated',
+          isRTL
+            ? `تم تحديث حالة طلب الأشعة إلى ${newStatus === 'in_progress' ? 'قيد التنفيذ' : 'مكتمل'}`
+            : `Your X-Ray request status has been updated to ${newStatus === 'in_progress' ? 'in progress' : 'completed'}`,
+          'info',
+          'service_requests',
+          requestId.toString()
+        );
+      }
+
+      toast({
+        title: isRTL ? 'نجح' : 'Success',
+        description: isRTL ? 'تم تحديث حالة الطلب' : 'Request status updated',
+        style: { backgroundColor: '#16a34a', color: '#fff' },
+      });
+
+      await loadServiceRequests();
+    } catch (err: unknown) {
+      console.error('Error updating request status:', err);
+      toast({
+        title: isRTL ? 'خطأ' : 'Error',
+        description: isRTL ? 'فشل تحديث حالة الطلب' : 'Failed to update request status',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; labelAr: string; className: string }> = {
+      pending: { label: 'Pending', labelAr: 'قيد الانتظار', className: 'bg-yellow-100 text-yellow-800' },
+      secretary_confirmed: { label: 'Confirmed', labelAr: 'تم التأكيد', className: 'bg-blue-100 text-blue-800' },
+      payment_required: { label: 'Payment Required', labelAr: 'يتطلب الدفع', className: 'bg-orange-100 text-orange-800' },
+      in_progress: { label: 'In Progress', labelAr: 'قيد التنفيذ', className: 'bg-purple-100 text-purple-800' },
+      completed: { label: 'Completed', labelAr: 'مكتمل', className: 'bg-green-100 text-green-800' },
+      cancelled: { label: 'Cancelled', labelAr: 'ملغي', className: 'bg-red-100 text-red-800' },
+    };
+
+    const statusInfo = statusMap[status] || statusMap.pending;
+    return (
+      <Badge className={statusInfo.className}>
+        {isRTL ? statusInfo.labelAr : statusInfo.label}
+      </Badge>
+    );
+  };
+
+  // Load service requests on mount
+  useEffect(() => {
+    loadServiceRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -351,11 +479,11 @@ const XRay = () => {
       });
       return;
     }
-  
+
     try {
       // Get patient ID for folder structure
       const patientId = selectedPatient ? selectedPatient.userid : null;
-      
+
       if (!patientId) {
         toast({
           title: t('xray.errors.missingData') || 'Missing Data',
@@ -365,35 +493,35 @@ const XRay = () => {
         });
         return;
       }
-  
+
       // Create patient-specific folder path
       const patientFolder = `patient_${patientId}`;
-      
+
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
       const timestamp = Date.now();
       const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const fileName = `${timestamp}_${sanitizedName}`;
-      
+
       // Full path: patient_folder/filename
       const filePath = `${patientFolder}/${fileName}`;
-  
+
       // Upload file to Supabase Storage with patient folder structure
       const { error: uploadError } = await supabase.storage
         .from('xray-images')
         .upload(filePath, file);
-  
+
       if (uploadError) {
         throw uploadError;
       }
-  
+
       // Prepare patient data
       const patientData = {
         patient_id: selectedPatient.userid,
         patient_name: selectedPatient.english_username_a,
         date_of_birth: selectedPatient.date_of_birth
       };
-  
+
       // Insert single record with all selected body parts
       const { error: insertError } = await supabase
         .from('xray_images')
@@ -404,18 +532,18 @@ const XRay = () => {
           requesting_doctor: selectedDoctor?.name || requestingDoctor,
           image_url: filePath // Store the path with folder, not public URL
         });
-  
+
       if (insertError) {
         throw insertError;
       }
-  
+
       toast({
         title: t('xray.success.title') || 'Success',
         description: t('xray.success.saved') || `X-ray record saved successfully for ${selectedBodyParts.length} body part(s).`,
         variant: "default",
         className: "bg-green-50 border-green-200 text-green-800",
       });
-  
+
       // Reset form
       setSelectedBodyParts([]);
       setPatientName("");
@@ -425,7 +553,7 @@ const XRay = () => {
       setFile(null);
       setSelectedPatient(null);
       setSelectedDoctor(null);
-  
+
     } catch (error) {
       console.error('Error saving X-ray record:', error);
       toast({
@@ -840,6 +968,116 @@ const XRay = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Service Requests Card */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm xl:col-span-3">
+              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
+                    <Clock className="w-6 h-6" />
+                    {isRTL ? 'طلبات الخدمة' : 'Service Requests'}
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadServiceRequests}
+                    disabled={loadingRequests}
+                    className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${loadingRequests ? 'animate-spin' : ''} ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {isRTL ? 'تحديث' : 'Refresh'}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                {loadingRequests ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                    <span className={`ml-2 ${isRTL ? 'mr-2 ml-0' : ''}`}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</span>
+                  </div>
+                ) : serviceRequests.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <AlertCircle className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                    <p>{isRTL ? 'لا توجد طلبات' : 'No service requests'}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {serviceRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className="flex-1">
+                            <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                              <h3 className="font-semibold text-gray-900">{request.patient_name}</h3>
+                              {getStatusBadge(request.status)}
+                              {request.status === 'pending' && (
+                                <Badge className="bg-gray-100 text-gray-600 text-xs">
+                                  {isRTL ? 'بانتظار تأكيد السكرتارية' : 'Awaiting Secretary Confirmation'}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className={`space-y-1 text-sm text-gray-600 ${isRTL ? 'text-right' : 'text-left'}`}>
+                              <p>
+                                <span className="font-medium">{isRTL ? 'الطبيب: ' : 'Doctor: '}</span>
+                                {request.doctor_name}
+                              </p>
+                              {request.notes && (
+                                <p>
+                                  <span className="font-medium">{isRTL ? 'ملاحظات: ' : 'Notes: '}</span>
+                                  {request.notes}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500">
+                                {isRTL ? 'تاريخ الطلب: ' : 'Requested: '}
+                                {new Date(request.created_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                              </p>
+                              {request.secretary_confirmed_at && (
+                                <p className="text-xs text-green-600">
+                                  {isRTL ? 'تم التأكيد من السكرتارية: ' : 'Confirmed by Secretary: '}
+                                  {new Date(request.secretary_confirmed_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className={`flex flex-col gap-2 ${isRTL ? 'ml-4' : 'ml-4'}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRequest(request);
+                                setShowRequestDetails(true);
+                              }}
+                            >
+                              <Eye className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                              {isRTL ? 'التفاصيل' : 'Details'}
+                            </Button>
+                            {(request.status === 'secretary_confirmed' || request.status === 'payment_required') ? (
+                              <Button
+                                size="sm"
+                                onClick={() => updateRequestStatus(request.id, 'in_progress')}
+                                className="bg-purple-600 hover:bg-purple-700"
+                              >
+                                {isRTL ? 'بدء العمل' : 'Start Work'}
+                              </Button>
+                            ) : request.status === 'in_progress' ? (
+                              <Button
+                                size="sm"
+                                onClick={() => updateRequestStatus(request.id, 'completed')}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {isRTL ? 'إكمال' : 'Complete'}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Action Buttons */}
@@ -874,6 +1112,69 @@ const XRay = () => {
           </div>
         </div>
       </div>
+
+      {/* Request Details Modal */}
+      {showRequestDetails && selectedRequest && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <CardTitle>{isRTL ? 'تفاصيل الطلب' : 'Request Details'}</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowRequestDetails(false);
+                    setSelectedRequest(null);
+                  }}
+                  className="text-white hover:bg-white/20"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'المريض' : 'Patient'}</h3>
+                  <p className="text-gray-700">{selectedRequest.patient_name}</p>
+                  <p className="text-sm text-gray-500">{selectedRequest.patient_email}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'الطبيب' : 'Doctor'}</h3>
+                  <p className="text-gray-700">{selectedRequest.doctor_name}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'الحالة' : 'Status'}</h3>
+                  {getStatusBadge(selectedRequest.status)}
+                </div>
+                {selectedRequest.notes && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'ملاحظات' : 'Notes'}</h3>
+                    <p className="text-gray-700 whitespace-pre-wrap">{selectedRequest.notes}</p>
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'التواريخ' : 'Timestamps'}</h3>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>{isRTL ? 'تاريخ الطلب: ' : 'Requested: '}{new Date(selectedRequest.created_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}</p>
+                    {selectedRequest.secretary_confirmed_at && (
+                      <p className="text-green-600">
+                        {isRTL ? 'تم التأكيد: ' : 'Confirmed: '}{new Date(selectedRequest.secretary_confirmed_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                      </p>
+                    )}
+                    {selectedRequest.completed_at && (
+                      <p className="text-blue-600">
+                        {isRTL ? 'تم الإكمال: ' : 'Completed: '}{new Date(selectedRequest.completed_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </>
   );
 };
