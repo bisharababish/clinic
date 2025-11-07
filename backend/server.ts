@@ -275,75 +275,81 @@ app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, a
         }
 
         const now = new Date().toISOString();
-        const updates: Array<Promise<unknown>> = [];
-
         if (referenceNumber.startsWith('APT-')) {
             const bookingId = referenceNumber.replace('APT-', '');
 
-            updates.push(
-                supabaseAdmin
-                    .from('payment_bookings')
-                    .update({
-                        payment_status: status === 'completed' ? 'paid' : 'failed',
-                        payment_method: 'visa',
-                        gateway_transaction_id: transactionId,
-                        gateway_name: 'cybersource',
-                        updated_at: now,
-                    })
-                    .eq('id', bookingId)
-            );
+            const { error: bookingUpdateError } = await supabaseAdmin
+                .from('payment_bookings')
+                .update({
+                    payment_status: status === 'completed' ? 'paid' : 'failed',
+                    payment_method: 'visa',
+                    gateway_transaction_id: transactionId,
+                    gateway_name: 'cybersource',
+                    updated_at: now,
+                })
+                .eq('id', bookingId);
 
-            updates.push(
-                supabaseAdmin
-                    .from('payment_transactions')
-                    .insert({
-                        payment_booking_id: bookingId,
-                        payment_method: 'visa',
-                        amount,
-                        currency,
-                        transaction_status: status,
-                        transaction_id: transactionId,
-                        gateway_transaction_id: transactionId,
-                        gateway_name: 'cybersource',
-                        gateway_response: normalizedFields,
-                    })
-            );
+            if (bookingUpdateError) {
+                throw bookingUpdateError;
+            }
+
+            const { error: transactionInsertError } = await supabaseAdmin
+                .from('payment_transactions')
+                .insert({
+                    payment_booking_id: bookingId,
+                    payment_method: 'visa',
+                    amount,
+                    currency,
+                    transaction_status: status,
+                    transaction_id: transactionId,
+                    gateway_transaction_id: transactionId,
+                    gateway_name: 'cybersource',
+                    gateway_response: normalizedFields,
+                });
+
+            if (transactionInsertError) {
+                throw transactionInsertError;
+            }
+
         } else if (referenceNumber.startsWith('SR-')) {
             const requestId = referenceNumber.replace('SR-', '');
 
-            updates.push(
-                supabaseAdmin
-                    .from('service_requests')
-                    .update({
-                        payment_status: status === 'completed' ? 'paid' : 'failed',
-                        payment_method: 'visa',
-                        gateway_transaction_id: transactionId,
-                        gateway_name: 'cybersource',
-                        updated_at: now,
-                    })
-                    .eq('id', requestId)
-            );
+            const { error: serviceUpdateError } = await supabaseAdmin
+                .from('service_requests')
+                .update({
+                    payment_status: status === 'completed' ? 'paid' : 'failed',
+                    payment_method: 'visa',
+                    gateway_transaction_id: transactionId,
+                    gateway_name: 'cybersource',
+                    updated_at: now,
+                })
+                .eq('id', requestId);
 
-            updates.push(
-                supabaseAdmin
-                    .from('payment_transactions')
-                    .insert({
-                        payment_booking_id: requestId,
-                        payment_method: 'visa',
-                        amount,
-                        currency,
-                        transaction_status: status,
-                        transaction_id: transactionId,
-                        gateway_transaction_id: transactionId,
-                        gateway_name: 'cybersource',
-                        gateway_response: normalizedFields,
-                    })
-            );
+            if (serviceUpdateError) {
+                throw serviceUpdateError;
+            }
+
+            const { error: transactionInsertError } = await supabaseAdmin
+                .from('payment_transactions')
+                .insert({
+                    payment_booking_id: requestId,
+                    payment_method: 'visa',
+                    amount,
+                    currency,
+                    transaction_status: status,
+                    transaction_id: transactionId,
+                    gateway_transaction_id: transactionId,
+                    gateway_name: 'cybersource',
+                    gateway_response: normalizedFields,
+                });
+
+            if (transactionInsertError) {
+                throw transactionInsertError;
+            }
+
         } else {
             logError(new Error(`Unknown CyberSource reference prefix for ${referenceNumber}`), 'cybersource_hosted_checkout_confirm');
         }
-
-        await Promise.all(updates);
 
         res.status(200).json({
             success: true,
