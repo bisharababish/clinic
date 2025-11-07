@@ -25,6 +25,7 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Index = lazy(() => import("./pages/Index"));
 const Clinics = lazy(() => import("./pages/Clinics"));
 const Payment = lazy(() => import("./pages/Payment"));
+const PaymentResult = lazy(() => import("./pages/PaymentResult"));
 const Confirmation = lazy(() => import("./pages/Confirmation"));
 const Labs = lazy(() => import("./pages/Labs"));
 const XRay = lazy(() => import("./pages/XRay"));
@@ -138,6 +139,15 @@ function App() {
                     element={
                       <HeaderOnlyLayout>
                         <Payment />
+                      </HeaderOnlyLayout>
+                    }
+                  />
+
+                  <Route
+                    path="/payment/result"
+                    element={
+                      <HeaderOnlyLayout>
+                        <PaymentResult />
                       </HeaderOnlyLayout>
                     }
                   />

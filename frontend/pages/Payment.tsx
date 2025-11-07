@@ -12,8 +12,8 @@ import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { Skeleton } from "../components/ui/skeleton";
 import { freeAutoTranslateAppointmentData } from "../lib/freeTranslationService";
-import SecureCardInput, { CardData } from "../components/SecureCardInput";
 import { CreditCard, Banknote } from "lucide-react";
+import { apiCall } from "../src/lib/api";
 
 type PaymentMethod = "cash" | "visa";
 interface LocationState {
@@ -120,7 +120,6 @@ const Payment = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [isCreatingAppointment, setIsCreatingAppointment] = useState(false);
     const [agreedToCashTerms, setAgreedToCashTerms] = useState(false);
-    const [cardData, setCardData] = useState<CardData | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [appointmentId, setAppointmentId] = useState<string>("");
     const [confirmationNumber, setConfirmationNumber] = useState<string>("");
@@ -763,164 +762,82 @@ const Payment = () => {
         }
     };
 
-    // Handle Visa payment for appointments
-    const handleVisaSubmit = async (e: React.FormEvent) => {
+    // Handle Visa payment using CyberSource Hosted Checkout
+    const handleHostedCheckout = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsProcessing(true);
 
         try {
-            if (!appointmentId || !user || !cardData) {
-                throw new Error('Missing required information');
+            if (!user) {
+                throw new Error(isRTL ? 'يرجى تسجيل الدخول لإتمام الدفع' : 'Please sign in to continue with payment');
             }
 
-            // TODO: Replace with actual backend API endpoint when CyberSource is configured
-            // For now, show message that backend needs to be connected
-            toast({
-                title: isRTL ? "قيد التطوير" : "Under Development",
-                description: isRTL 
-                    ? "تطبيق الدفع بالبطاقة الائتمانية قيد التطوير. يرجى استخدام الدفع النقدي مؤقتاً."
-                    : "Credit card payment is under development. Please use cash payment for now.",
-                variant: "destructive",
-            });
+            const isServiceRequest = Boolean(isServiceRequestPayment && serviceRequestId);
+            const referenceNumber = isServiceRequest
+                ? (serviceRequestId ? `SR-${serviceRequestId}` : '')
+                : (appointmentId ? `APT-${appointmentId}` : '');
 
-            // When backend is ready, uncomment this:
-            /*
-            const response = await fetch('/api/payments/process-visa', {
+            const amountValue = isServiceRequest
+                ? serviceRequest?.price
+                : price;
+
+            const currencyValue = isServiceRequest
+                ? (serviceRequest?.currency || 'ILS')
+                : 'ILS';
+
+            if (!referenceNumber) {
+                throw new Error(isRTL ? 'معرّف الدفع غير متاح' : 'Payment reference is missing');
+            }
+
+            if (amountValue === undefined || amountValue === null) {
+                throw new Error(isRTL ? 'قيمة المبلغ غير متوفرة' : 'Unable to determine payment amount');
+            }
+
+            const payload = await apiCall<{
+                success: boolean;
+                endpoint: string;
+                fields: Record<string, string>;
+            }>('/api/payments/cybersource/session', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-                },
                 body: JSON.stringify({
-                    amount: price.toString(),
-                    currency: 'ILS',
-                    cardData: cardData,
-                    bookingId: appointmentId,
-                    patientId: user.id,
-                    patientEmail: user.email
-                })
+                    amount: amountValue,
+                    currency: currencyValue,
+                    referenceNumber,
+                    successUrl: `${window.location.origin}/payment/result`,
+                    cancelUrl: `${window.location.origin}/payment/result`,
+                }),
             });
 
-            const result = await response.json();
-
-            if (result.success) {
-                // Update payment booking
-                await supabase
-                    .from('payment_bookings')
-                    .update({
-                        payment_status: 'paid',
-                        payment_method: 'visa',
-                        gateway_transaction_id: result.transactionId
-                    })
-                    .eq('id', appointmentId);
-
-                toast({
-                    title: isRTL ? "تم الدفع بنجاح" : "Payment Successful",
-                    description: isRTL ? "تم معالجة الدفع بنجاح" : "Payment processed successfully",
-                    style: { backgroundColor: '#16a34a', color: '#fff' },
-                });
-
-                navigate("/confirmation", {
-                    state: {
-                        clinicName,
-                        doctorName,
-                        specialty,
-                        appointmentDay,
-                        appointmentTime,
-                        paymentMethod: 'visa',
-                        status: 'paid',
-                        confirmationNumber: confirmationNumber,
-                        appointmentId: appointmentId,
-                        transactionId: result.transactionId
-                    }
-                });
-            } else {
-                throw new Error(result.errorMessage || 'Payment failed');
+            if (!payload?.success || !payload.endpoint || !payload.fields) {
+                throw new Error(isRTL ? 'تعذر بدء عملية الدفع. حاول مرة أخرى.' : 'Failed to initialize payment. Please try again.');
             }
-            */
 
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = payload.endpoint;
+            form.style.display = 'none';
+
+            Object.entries(payload.fields).forEach(([key, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value ?? '';
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
         } catch (error) {
-            console.error('Visa payment error:', error);
+            console.error('Hosted checkout error:', error);
             toast({
-                title: isRTL ? "خطأ في الدفع" : "Payment Error",
-                description: error instanceof Error ? error.message : (isRTL ? "فشل معالجة الدفع. يرجى المحاولة مرة أخرى." : "Failed to process payment. Please try again."),
-                variant: "destructive",
+                title: isRTL ? 'خطأ في الدفع' : 'Payment Error',
+                description: error instanceof Error
+                    ? error.message
+                    : (isRTL ? 'فشل بدء الدفع. يرجى المحاولة مرة أخرى.' : 'Failed to start the payment. Please try again.'),
+                variant: 'destructive',
             });
         } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    // Handle Visa payment for service requests
-    const handleVisaServiceRequestPayment = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsProcessing(true);
-
-        try {
-            if (!serviceRequestId || !user || !serviceRequest || !cardData) {
-                throw new Error('Missing required information');
-            }
-
-            // TODO: Replace with actual backend API endpoint when CyberSource is configured
-            toast({
-                title: isRTL ? "قيد التطوير" : "Under Development",
-                description: isRTL 
-                    ? "تطبيق الدفع بالبطاقة الائتمانية قيد التطوير. يرجى استخدام الدفع النقدي مؤقتاً."
-                    : "Credit card payment is under development. Please use cash payment for now.",
-                variant: "destructive",
-            });
-
-            // When backend is ready, uncomment this:
-            /*
-            const response = await fetch('/api/payments/process-visa', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-                },
-                body: JSON.stringify({
-                    amount: (serviceRequest.price || 0).toString(),
-                    currency: serviceRequest.currency || 'ILS',
-                    cardData: cardData,
-                    serviceRequestId: serviceRequestId,
-                    patientId: user.id,
-                    patientEmail: user.email
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                // Update service request
-                await supabase
-                    .from('service_requests')
-                    .update({
-                        payment_status: 'paid',
-                        payment_method: 'visa',
-                        gateway_transaction_id: result.transactionId
-                    })
-                    .eq('id', serviceRequestId);
-
-                toast({
-                    title: isRTL ? "تم الدفع بنجاح" : "Payment Successful",
-                    description: isRTL ? "تم معالجة الدفع بنجاح" : "Payment processed successfully",
-                    style: { backgroundColor: '#16a34a', color: '#fff' },
-                });
-
-                navigate("/patient-dashboard");
-            } else {
-                throw new Error(result.errorMessage || 'Payment failed');
-            }
-            */
-
-        } catch (error) {
-            console.error('Visa payment error:', error);
-            toast({
-                title: isRTL ? "خطأ في الدفع" : "Payment Error",
-                description: error instanceof Error ? error.message : (isRTL ? "فشل معالجة الدفع. يرجى المحاولة مرة أخرى." : "Failed to process payment. Please try again."),
-                variant: "destructive",
-            });
-        } finally {
+            // If the browser prevented navigation for any reason, re-enable the button
             setIsProcessing(false);
         }
     };
@@ -1164,7 +1081,6 @@ const Payment = () => {
                             type="button"
                             onClick={() => {
                                 setPaymentMethod('cash');
-                                setCardData(null);
                             }}
                             className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${
                                 paymentMethod === 'cash'
@@ -1285,67 +1201,62 @@ const Payment = () => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-6 py-2" dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
-                        <SecureCardInput
-                            onCardDataChange={setCardData}
-                            isRTL={isRTL}
-                            disabled={isProcessing}
-                        />
-                        <form onSubmit={isServiceRequestPayment ? handleVisaServiceRequestPayment : handleVisaSubmit} className="space-y-6">
-                            <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                {!isRTL && (
-                                    <Checkbox
-                                        id="visaTerms"
-                                        checked={agreedToCashTerms}
-                                        onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
-                                    />
-                                )}
-                                <div className="grid gap-1.5 leading-none flex-1">
-                                    <label
-                                        htmlFor="visaTerms"
-                                        className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isRTL ? 'text-right' : 'text-left'}`}
-                                    >
-                                        {isRTL 
-                                            ? 'أوافق على معالجة الدفع والرسوم المرتبطة'
-                                            : 'I agree to process the payment and associated fees'}
-                                    </label>
-                                </div>
-                                {isRTL && (
-                                    <Checkbox
-                                        id="visaTerms"
-                                        checked={agreedToCashTerms}
-                                        onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
-                                    />
-                                )}
+                    <form onSubmit={handleHostedCheckout} className="space-y-6 py-2" dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
+                        <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-4 text-sm text-blue-800">
+                            {isRTL
+                                ? 'ستتم إعادة توجيهك إلى صفحة الدفع الآمنة الخاصة بـ CyberSource لإدخال تفاصيل البطاقة وإكمال العملية.'
+                                : 'You will be redirected to CyberSource’s secure checkout page to enter your card details and complete the payment.'}
+                        </div>
+                        <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            {!isRTL && (
+                                <Checkbox
+                                    id="visaTerms"
+                                    checked={agreedToCashTerms}
+                                    onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
+                                />
+                            )}
+                            <div className="grid gap-1.5 leading-none flex-1">
+                                <label
+                                    htmlFor="visaTerms"
+                                    className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${isRTL ? 'text-right' : 'text-left'}`}
+                                >
+                                    {isRTL
+                                        ? 'أوافق على معالجة الدفع عبر بوابة آمنة وأتحمل الرسوم المرتبطة'
+                                        : 'I agree to proceed to the secure payment gateway and accept associated fees'}
+                                </label>
                             </div>
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={isProcessing || !agreedToCashTerms || !cardData || (!isServiceRequestPayment && !appointmentId) || (isServiceRequestPayment && !serviceRequest)}
-                                style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}
-                            >
-                                {isProcessing 
-                                    ? (isRTL ? 'جاري المعالجة...' : 'Processing...')
-                                    : (isRTL ? `دفع ₪${isServiceRequestPayment ? serviceRequest?.price || price : price}` : `Pay ₪${isServiceRequestPayment ? serviceRequest?.price || price : price}`)
-                                }
-                            </Button>
-                            {!cardData && (
-                                <div className="text-sm text-amber-700">
-                                    {isRTL ? '⚠️ يرجى إدخال معلومات البطاقة' : '⚠️ Please enter card information'}
-                                </div>
+                            {isRTL && (
+                                <Checkbox
+                                    id="visaTerms"
+                                    checked={agreedToCashTerms}
+                                    onCheckedChange={(checked) => setAgreedToCashTerms(checked === true)}
+                                />
                             )}
-                            {!isServiceRequestPayment && !appointmentId && (
-                                <div className="text-sm text-amber-700">
-                                    {t('payment.loadingPaymentInfo') || 'Preparing your booking...'}
-                                </div>
-                            )}
-                            {isServiceRequestPayment && !serviceRequest && (
-                                <div className="text-sm text-amber-700">
-                                    {isRTL ? 'جاري تحميل تفاصيل الطلب...' : 'Loading service request details...'}
-                                </div>
-                            )}
-                        </form>
-                    </div>
+                        </div>
+                        <Button
+                            type="submit"
+                            className="w-full"
+                            disabled={isProcessing || !agreedToCashTerms || (!isServiceRequestPayment && !appointmentId) || (isServiceRequestPayment && !serviceRequest)}
+                            style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}
+                        >
+                            {isProcessing
+                                ? (isRTL ? 'جاري التحويل...' : 'Redirecting...')
+                                : (isRTL
+                                    ? `دفع ₪${isServiceRequestPayment ? serviceRequest?.price || price : price}`
+                                    : `Pay ₪${isServiceRequestPayment ? serviceRequest?.price || price : price}`)
+                            }
+                        </Button>
+                        {!isServiceRequestPayment && !appointmentId && (
+                            <div className="text-sm text-amber-700">
+                                {t('payment.loadingPaymentInfo') || 'Preparing your booking...'}
+                            </div>
+                        )}
+                        {isServiceRequestPayment && !serviceRequest && (
+                            <div className="text-sm text-amber-700">
+                                {isRTL ? 'جاري تحميل تفاصيل الطلب...' : 'Loading service request details...'}
+                            </div>
+                        )}
+                    </form>
                 </CardContent>
                 <CardFooter className={`justify-between border-t pt-4 ${isRTL ? 'flex-row-reverse font-arabic' : ''}`} dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
                     <Button variant="outline" onClick={() => navigate("/clinics")}
