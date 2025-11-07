@@ -142,3 +142,21 @@ Once you have CyberSource credentials:
 
 **Remember:** Never commit `.env` file to git! Add it to `.gitignore`.
 
+## Updating Profile Field Configuration via Script
+
+If the CyberSource dashboard UI hides the "Signed Data Fields" settings, run the helper script:
+
+```bash
+cd backend
+npm run update:cybersource
+```
+
+Make sure the following environment variables are set before running the command:
+- `CYBERSOURCE_MERCHANT_ID`
+- `CYBERSOURCE_PROFILE_ID`
+- `CYBERSOURCE_ACCESS_KEY`
+- `CYBERSOURCE_SECRET_KEY`
+- `CYBERSOURCE_ENVIRONMENT` (set to `test` or `production`)
+
+The script will push the required signed/unsigned field names directly through CyberSource's REST API and print the response status.
+

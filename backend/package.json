@@ -8,6 +8,7 @@
         "dev": "tsx watch server.ts",
         "build": "tsc",
         "start": "npm run build && node dist/server.js",
+        "update:cybersource": "tsx ./scripts/updateCybersourceProfile.ts",
         "prod": "npm run build && node dist/server.js",
         "lint": "eslint . --ext .ts",
         "type-check": "tsc --noEmit",
