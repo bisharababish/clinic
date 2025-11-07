@@ -24,7 +24,7 @@ const DEFAULT_SIGNED_FIELDS = (process.env.CYBERSOURCE_SIGNED_FIELD_NAMES ||
 ).split(',').map(field => field.trim()).filter(Boolean);
 
 const DEFAULT_UNSIGNED_FIELDS = (process.env.CYBERSOURCE_UNSIGNED_FIELD_NAMES ||
-    'decision,message,reason_code,transaction_id,auth_code,override_custom_receipt_page,override_custom_cancel_page'
+    'decision,message,reason_code,transaction_id,auth_code'
 ).split(',').map(field => field.trim()).filter(Boolean);
 
 const TEST_ENDPOINT = 'https://testsecureacceptance.cybersource.com/pay';
@@ -157,12 +157,14 @@ export const buildHostedCheckoutPayload = (options: HostedCheckoutOptions): Host
         signature,
     };
 
-    if (successUrl) {
-        payload.override_custom_receipt_page = successUrl;
-    }
+    if (process.env.CYBERSOURCE_ALLOW_OVERRIDE === 'true') {
+        if (successUrl) {
+            payload.override_custom_receipt_page = successUrl;
+        }
 
-    if (cancelUrl) {
-        payload.override_custom_cancel_page = cancelUrl;
+        if (cancelUrl) {
+            payload.override_custom_cancel_page = cancelUrl;
+        }
     }
 
     return {

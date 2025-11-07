@@ -28,7 +28,8 @@ CYBERSOURCE_ENVIRONMENT=test  # or 'production' for live
 
 # Optional overrides if you need to customize the signed field configuration
 CYBERSOURCE_SIGNED_FIELD_NAMES=access_key,profile_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency
-CYBERSOURCE_UNSIGNED_FIELD_NAMES=decision,message,reason_code,transaction_id,auth_code,override_custom_receipt_page,override_custom_cancel_page
+CYBERSOURCE_UNSIGNED_FIELD_NAMES=decision,message,reason_code,transaction_id,auth_code
+CYBERSOURCE_ALLOW_OVERRIDE=false  # set to true only if your profile allows custom receipt/cancel overrides
 
 # Supabase (if needed)
 SUPABASE_URL=your_supabase_url
