@@ -19,6 +19,7 @@ import { logAuth, logError, logInfo, logSecurity } from './src/utils/logger.js';
 import { validateDeleteUser, validateUpdatePassword, sanitizeInput } from './src/middleware/validation.js';
 import { healthCheck, simpleHealthCheck } from './src/middleware/healthCheck.js';
 import { validateSession, csrfProtection, sessionTimeout, generateCSRFToken } from './src/middleware/session.js';
+import { buildHostedCheckoutPayload, verifyHostedCheckoutSignature, normalizeHostedCheckoutFields } from './api/payments/hosted-checkout.js';
 
 dotenv.config();
 
@@ -164,6 +165,203 @@ app.get('/api/csrf-token', validateSession, (req: Request, res: Response): void 
             error: 'Internal server error',
             message: 'Failed to generate CSRF token',
             details: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
+// CyberSource Secure Acceptance Hosted Checkout session generator
+app.post('/api/payments/cybersource/session', validateSession, csrfProtection, (req: Request, res: Response): void => {
+    try {
+        const {
+            amount,
+            currency = 'ILS',
+            referenceNumber,
+            locale,
+            transactionType,
+            successUrl,
+            cancelUrl,
+        } = req.body as {
+            amount?: number | string;
+            currency?: string;
+            referenceNumber?: string;
+            locale?: string;
+            transactionType?: string;
+            successUrl?: string;
+            cancelUrl?: string;
+        };
+
+        if (!amount || !referenceNumber) {
+            res.status(400).json({
+                success: false,
+                error: 'Amount and reference number are required',
+            });
+            return;
+        }
+
+        const payload = buildHostedCheckoutPayload({
+            amount,
+            currency,
+            referenceNumber: String(referenceNumber),
+            locale,
+            transactionType,
+            successUrl,
+            cancelUrl,
+        });
+
+        res.status(200).json({
+            success: true,
+            endpoint: payload.endpoint,
+            fields: payload.fields,
+            transactionUuid: payload.transactionUuid,
+            signedDateTime: payload.signedDateTime,
+        });
+
+    } catch (error) {
+        console.error('❌ Hosted checkout session error:', error);
+        logError(error instanceof Error ? error : new Error('Hosted checkout session failed'), 'cybersource_hosted_checkout');
+        res.status(500).json({
+            success: false,
+            error: 'Failed to generate hosted checkout session payload',
+            details: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
+
+app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { fields } = req.body as { fields?: Record<string, unknown> };
+
+        if (!fields || typeof fields !== 'object') {
+            res.status(400).json({
+                success: false,
+                error: 'Hosted checkout confirmation requires response fields',
+            });
+            return;
+        }
+
+        const normalizedFields = normalizeHostedCheckoutFields(fields);
+
+        if (!verifyHostedCheckoutSignature(normalizedFields)) {
+            logSecurity('Invalid CyberSource signature detected', {
+                referenceNumber: normalizedFields.reference_number,
+                transactionId: normalizedFields.transaction_id,
+            });
+
+            res.status(400).json({
+                success: false,
+                error: 'Signature verification failed',
+            });
+            return;
+        }
+
+        const decision = normalizedFields.decision || normalizedFields.auth_response;
+        const referenceNumber = normalizedFields.req_reference_number || normalizedFields.reference_number;
+        const transactionId = normalizedFields.transaction_id || normalizedFields.request_id || normalizedFields.payment_token;
+        const amountValue = normalizedFields.auth_amount || normalizedFields.amount || '0';
+        const currency = normalizedFields.req_currency || normalizedFields.currency || 'ILS';
+
+        let amount = parseFloat(amountValue);
+        if (Number.isNaN(amount)) {
+            amount = 0;
+        }
+        const status = decision === 'ACCEPT' ? 'completed' : 'failed';
+
+        if (!referenceNumber) {
+            res.status(400).json({
+                success: false,
+                error: 'Missing reference number in CyberSource response',
+            });
+            return;
+        }
+
+        const now = new Date().toISOString();
+        const updates: Array<Promise<unknown>> = [];
+
+        if (referenceNumber.startsWith('APT-')) {
+            const bookingId = referenceNumber.replace('APT-', '');
+
+            updates.push(
+                supabaseAdmin
+                    .from('payment_bookings')
+                    .update({
+                        payment_status: status === 'completed' ? 'paid' : 'failed',
+                        payment_method: 'visa',
+                        gateway_transaction_id: transactionId,
+                        gateway_name: 'cybersource',
+                        updated_at: now,
+                    })
+                    .eq('id', bookingId)
+            );
+
+            updates.push(
+                supabaseAdmin
+                    .from('payment_transactions')
+                    .insert({
+                        payment_booking_id: bookingId,
+                        payment_method: 'visa',
+                        amount,
+                        currency,
+                        transaction_status: status,
+                        transaction_id: transactionId,
+                        gateway_transaction_id: transactionId,
+                        gateway_name: 'cybersource',
+                        gateway_response: normalizedFields,
+                    })
+            );
+        } else if (referenceNumber.startsWith('SR-')) {
+            const requestId = referenceNumber.replace('SR-', '');
+
+            updates.push(
+                supabaseAdmin
+                    .from('service_requests')
+                    .update({
+                        payment_status: status === 'completed' ? 'paid' : 'failed',
+                        payment_method: 'visa',
+                        gateway_transaction_id: transactionId,
+                        gateway_name: 'cybersource',
+                        updated_at: now,
+                    })
+                    .eq('id', requestId)
+            );
+
+            updates.push(
+                supabaseAdmin
+                    .from('payment_transactions')
+                    .insert({
+                        payment_booking_id: requestId,
+                        payment_method: 'visa',
+                        amount,
+                        currency,
+                        transaction_status: status,
+                        transaction_id: transactionId,
+                        gateway_transaction_id: transactionId,
+                        gateway_name: 'cybersource',
+                        gateway_response: normalizedFields,
+                    })
+            );
+        } else {
+            logError(new Error(`Unknown CyberSource reference prefix for ${referenceNumber}`), 'cybersource_hosted_checkout_confirm');
+        }
+
+        await Promise.all(updates);
+
+        res.status(200).json({
+            success: true,
+            status,
+            decision,
+            referenceNumber,
+            transactionId,
+            amount,
+            currency,
+        });
+
+    } catch (error) {
+        console.error('❌ Hosted checkout confirmation error:', error);
+        logError(error instanceof Error ? error : new Error('Hosted checkout confirmation failed'), 'cybersource_hosted_checkout_confirm');
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process hosted checkout confirmation',
+            details: error instanceof Error ? error.message : 'Unknown error',
         });
     }
 });

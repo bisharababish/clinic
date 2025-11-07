@@ -12,6 +12,13 @@ const envSchema = z.object({
     FRONTEND_URL: z.string().url('Invalid frontend URL'),
     JWT_SECRET: z.string().min(32, 'JWT secret must be at least 32 characters'),
     LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+    CYBERSOURCE_MERCHANT_ID: z.string().optional(),
+    CYBERSOURCE_PROFILE_ID: z.string().optional(),
+    CYBERSOURCE_ACCESS_KEY: z.string().optional(),
+    CYBERSOURCE_SECRET_KEY: z.string().optional(),
+    CYBERSOURCE_ENVIRONMENT: z.enum(['test', 'production']).default('test'),
+    CYBERSOURCE_SIGNED_FIELD_NAMES: z.string().optional(),
+    CYBERSOURCE_UNSIGNED_FIELD_NAMES: z.string().optional(),
 });
 
 // Validate environment variables
@@ -42,6 +49,13 @@ export const {
     FRONTEND_URL,
     JWT_SECRET,
     LOG_LEVEL,
+    CYBERSOURCE_MERCHANT_ID,
+    CYBERSOURCE_PROFILE_ID,
+    CYBERSOURCE_ACCESS_KEY,
+    CYBERSOURCE_SECRET_KEY,
+    CYBERSOURCE_ENVIRONMENT,
+    CYBERSOURCE_SIGNED_FIELD_NAMES,
+    CYBERSOURCE_UNSIGNED_FIELD_NAMES,
 } = env;
 
 export default env;

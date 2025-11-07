@@ -19,12 +19,16 @@ This guide explains how to securely integrate CyberSource Visa payments into you
 Create a `.env` file in your backend directory with:
 
 ```env
-# CyberSource Credentials (Get these from your provider)
+# CyberSource Hosted Checkout (Secure Acceptance) Credentials
 CYBERSOURCE_MERCHANT_ID=your_merchant_id
-CYBERSOURCE_API_KEY=your_api_key
-CYBERSOURCE_SECRET_KEY=your_secret_key
-CYBERSOURCE_ENDPOINT=https://ebc2.cybersource.com/ebc2/
+CYBERSOURCE_PROFILE_ID=your_secure_acceptance_profile_id
+CYBERSOURCE_ACCESS_KEY=your_secure_acceptance_access_key
+CYBERSOURCE_SECRET_KEY=your_secure_acceptance_secret_key
 CYBERSOURCE_ENVIRONMENT=test  # or 'production' for live
+
+# Optional overrides if you need to customize the signed field configuration
+CYBERSOURCE_SIGNED_FIELD_NAMES=access_key,profile_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency
+CYBERSOURCE_UNSIGNED_FIELD_NAMES=decision,message,reason_code,transaction_id,auth_code,override_custom_receipt_page,override_custom_cancel_page
 
 # Supabase (if needed)
 SUPABASE_URL=your_supabase_url
@@ -96,46 +100,16 @@ The frontend components are ready:
 
 ## API Endpoints
 
-### POST /api/payments/process-visa
+- `POST /api/payments/cybersource/session`
+  - Authenticated + CSRF protected
+  - Request body: `{ amount, currency, referenceNumber, successUrl, cancelUrl }`
+  - Returns the Secure Acceptance endpoint and signed field payload to post to CyberSource
+- `POST /api/payments/cybersource/confirm`
+  - Authenticated + CSRF protected
+  - Request body: `{ fields: { ...returnedQueryParams } }`
+  - Verifies the signature, updates payment status, and records the transaction in Supabase
 
-**Request:**
-```json
-{
-  "amount": "100.00",
-  "currency": "ILS",
-  "cardData": {
-    "cardNumber": "4111111111111111",
-    "expiryMonth": "12",
-    "expiryYear": "25",
-    "cvv": "123",
-    "cardholderName": "JOHN DOE"
-  },
-  "bookingId": "booking-123",
-  "patientId": "user-456",
-  "patientEmail": "patient@example.com"
-}
-```
-
-**Success Response:**
-```json
-{
-  "success": true,
-  "transactionId": "cybersource-txn-123",
-  "amount": 100.00,
-  "currency": "ILS",
-  "status": "completed",
-  "message": "Payment processed successfully"
-}
-```
-
-**Error Response:**
-```json
-{
-  "success": false,
-  "errorCode": "DECLINED",
-  "errorMessage": "Payment declined"
-}
-```
+The previous direct REST payment endpoint (`/api/payments/process-visa`) is deprecated in favor of the hosted checkout flow.
 
 ## Security Checklist
 
