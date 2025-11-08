@@ -23,11 +23,12 @@ Create a `.env` file in your backend directory with:
 CYBERSOURCE_MERCHANT_ID=your_merchant_id
 CYBERSOURCE_PROFILE_ID=your_secure_acceptance_profile_id
 CYBERSOURCE_ACCESS_KEY=your_secure_acceptance_access_key
-CYBERSOURCE_SECRET_KEY=your_secure_acceptance_secret_key
+CYBERSOURCE_SECRET_KEY=your_cybersource_secret_key
+CYBERSOURCE_SECRET_ENCODING=utf8  # use 'hex' if CyberSource supplies the key as hexadecimal
 CYBERSOURCE_ENVIRONMENT=test  # or 'production' for live
 
 # Optional overrides if you need to customize the signed field configuration
-CYBERSOURCE_SIGNED_FIELD_NAMES=access_key,profile_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency
+CYBERSOURCE_SIGNED_FIELD_NAMES=access_key,profile_id,merchant_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency
 CYBERSOURCE_UNSIGNED_FIELD_NAMES=decision,message,reason_code,transaction_id,auth_code
 CYBERSOURCE_ALLOW_OVERRIDE=false  # set to true only if your profile allows custom receipt/cancel overrides
 

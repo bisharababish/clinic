@@ -20,7 +20,7 @@ export interface HostedCheckoutPayload {
 }
 
 const DEFAULT_SIGNED_FIELDS = (process.env.CYBERSOURCE_SIGNED_FIELD_NAMES ||
-    'access_key,profile_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency'
+    'access_key,profile_id,merchant_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency'
 ).split(',').map(field => field.trim()).filter(Boolean);
 
 const DEFAULT_UNSIGNED_FIELDS = (process.env.CYBERSOURCE_UNSIGNED_FIELD_NAMES ||
@@ -54,8 +54,14 @@ const getSecretKeyBuffer = (): Buffer => {
         throw new Error('CyberSource secret key is not configured');
     }
 
-    const hexRegex = /^[0-9a-f]+$/i;
-    if (hexRegex.test(secretKey)) {
+    const encoding = (process.env.CYBERSOURCE_SECRET_ENCODING || 'hex').toLowerCase();
+
+    if (encoding === 'hex') {
+        const hexRegex = /^[0-9a-f]+$/i;
+        if (!hexRegex.test(secretKey)) {
+            console.warn('⚠️ CYBERSOURCE_SECRET_ENCODING=hex but key is not hex – falling back to utf8');
+            return Buffer.from(secretKey, 'utf8');
+        }
         return Buffer.from(secretKey, 'hex');
     }
 
@@ -139,6 +145,7 @@ export const buildHostedCheckoutPayload = (options: HostedCheckoutOptions): Host
     const baseFields: Record<string, string> = {
         access_key: process.env.CYBERSOURCE_ACCESS_KEY as string,
         profile_id: process.env.CYBERSOURCE_PROFILE_ID as string,
+        merchant_id: process.env.CYBERSOURCE_MERCHANT_ID as string,
         transaction_uuid: transactionUuid,
         signed_field_names: signedFieldNames.join(','),
         unsigned_field_names: unsignedFieldNames.join(','),
