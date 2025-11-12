@@ -15,11 +15,26 @@ if (!CYBERSOURCE_MERCHANT_ID || !CYBERSOURCE_PROFILE_ID || !CYBERSOURCE_ACCESS_K
 }
 
 const isProduction = CYBERSOURCE_ENVIRONMENT === 'production';
-const host = isProduction ? 'secureacceptance.cybersource.com' : 'testsecureacceptance.cybersource.com';
-const path = `/secureacceptance/profiles/${CYBERSOURCE_PROFILE_ID}`;
+const host = isProduction ? 'api.cybersource.com' : 'apitest.cybersource.com';
+const path = `/secure-acceptance/configuration/v1/profiles/${CYBERSOURCE_PROFILE_ID}`;
 
-const signedDataFields = 'access_key,profile_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency';
-const unsignedDataFields = 'decision,message,reason_code,transaction_id,auth_code,override_custom_receipt_page,override_custom_cancel_page';
+const normalizeFields = (value: string | undefined, fallback: string): string => {
+    return (value ?? fallback)
+        .split(',')
+        .map(field => field.trim())
+        .filter(Boolean)
+        .join(',');
+};
+
+const signedDataFields = normalizeFields(
+    process.env.CYBERSOURCE_SIGNED_FIELD_NAMES,
+    'access_key,profile_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency'
+);
+
+const unsignedDataFields = normalizeFields(
+    process.env.CYBERSOURCE_UNSIGNED_FIELD_NAMES,
+    ''
+);
 
 const payload = JSON.stringify({
     signed_data_fields: signedDataFields,
@@ -48,7 +63,7 @@ const signature = crypto
 const options: https.RequestOptions = {
     host,
     path,
-    method: 'PATCH',
+    method: 'PUT',
     headers: {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(payload),
@@ -56,6 +71,7 @@ const options: https.RequestOptions = {
         'Host': host,
         'v-c-merchant-id': CYBERSOURCE_MERCHANT_ID,
         'Signature': `keyid="${CYBERSOURCE_ACCESS_KEY}", algorithm="HmacSHA256", headers="host date (request-target) content-type content-length", signature="${signature}"`,
+        'Authorization': `HMAC-SHA256 ${signature}`,
     },
 };
 

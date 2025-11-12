@@ -1194,7 +1194,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                     {isRTL ? 'تغيير الموعد' : 'Reschedule'}
                                                 </Button>
                                             </DialogTrigger>
-                                            <DialogContent className="w-[92vw] sm:w-auto max-w-[92vw] sm:max-w-lg p-4 sm:p-6 max-h-[80vh] overflow-y-auto rounded-md sm:rounded-lg">
+                                            <DialogContent className={`w-[92vw] sm:w-auto max-w-[92vw] sm:max-w-lg p-4 sm:p-6 max-h-[80vh] overflow-y-auto rounded-md sm:rounded-lg ${isRTL ? '[&>button]:left-4 [&>button]:right-auto' : ''}`}>
                                                 <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
                                                     <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
                                                         {isRTL ? 'تغيير الموعد' : 'Reschedule Appointment'}

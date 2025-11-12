@@ -614,12 +614,23 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
             {/* Weekly Calendar */}
             <Card className="mt-6">
                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">Weekly Calendar</CardTitle>
+                    <div
+                        className={`flex items-center justify-between ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}
+                    >
+                        <CardTitle className={`text-lg ${i18n.language === 'ar' ? 'text-right' : ''}`}>
+                            {t('admin.weeklyCalendar') || 'Weekly Calendar'}
+                        </CardTitle>
                         {/* Admin Office Hours Toggle */}
                         {(currentUserRole === 'admin' || currentUserRole === 'administrator') && (
-                            <div className="flex items-center gap-2">
-                                <label className="text-sm font-medium" htmlFor="office-hours-toggle">
+                            <div
+                                className={`flex items-center gap-2 ${
+                                    i18n.language === 'ar' ? 'flex-row-reverse' : ''
+                                }`}
+                            >
+                                <label
+                                    className={`text-sm font-medium ${i18n.language === 'ar' ? 'text-right' : ''}`}
+                                    htmlFor="office-hours-toggle"
+                                >
                                     {t('admin.showOfficeHours') || 'Show Office Hours'}
                                 </label>
                                 <input

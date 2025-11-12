@@ -1,7 +1,11 @@
 // Google Analytics utility functions
+type GtagParams = Record<string, unknown>;
+
+type GtagFunction = (command: 'config' | 'event', targetIdOrEventName: string, params?: GtagParams) => void;
+
 declare global {
     interface Window {
-        gtag: (...args: any[]) => void;
+        gtag: GtagFunction;
     }
 }
 
@@ -16,7 +20,7 @@ export const trackPageView = (url: string, title?: string) => {
 };
 
 // Track custom events
-export const trackEvent = (eventName: string, parameters?: Record<string, any>) => {
+export const trackEvent = (eventName: string, parameters?: GtagParams) => {
     if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', eventName, parameters);
     }
@@ -86,7 +90,7 @@ export const trackUserRoleAction = (role: string, action: string) => {
 };
 
 // Set user properties
-export const setUserProperties = (properties: Record<string, any>) => {
+export const setUserProperties = (properties: GtagParams) => {
     if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('config', 'G-0MEDJS1EZ1', {
             user_properties: properties,
