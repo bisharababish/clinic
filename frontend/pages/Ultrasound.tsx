@@ -991,7 +991,7 @@ const Ultrasound = () => {
                       { value: 'neck', label: t('ultrasound.bodyParts.neck') || 'Neck' },
                       { value: 'head', label: t('ultrasound.bodyParts.head') || 'Head' },
                       { value: 'abdomen', label: t('ultrasound.bodyParts.abdomen') || 'Abdomen' },
-                      { value: 'abdomen_kidney', label: t('ultrasound.bodyParts.abdomen_kidney') || 'Abdomen (Kidney)' },
+                      { value: 'abdomen_kidney', label: t('ultrasound.bodyParts.abdomen_kidney') || 'Abdomen (Kidneys)' },
                       { value: 'abdomen_spleen', label: t('ultrasound.bodyParts.abdomen_spleen') || 'Abdomen (Spleen)' },
                       { value: 'abdomen_liver', label: t('ultrasound.bodyParts.abdomen_liver') || 'Abdomen (Liver)' },
                       { value: 'abdomen_stomach', label: t('ultrasound.bodyParts.abdomen_stomach') || 'Abdomen (Stomach)' },

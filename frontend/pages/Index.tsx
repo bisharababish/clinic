@@ -1,5 +1,5 @@
 // pages/Index.tsx - Enhanced version with nurse patient creation functionality and sidebar
-import React, { useState, useContext, useEffect, useRef } from "react";
+import React, { useState, useContext, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { usePatientHealth, PatientHealthData } from "../hooks/usePatientHealth";
 import SEOHead from "../src/components/seo/SEOHead";
@@ -248,22 +248,31 @@ const Index = () => {
   const [showCreatePassword, setShowCreatePassword] = useState(false);
 
   const [selectedMedicines, setSelectedMedicines] = useState<string[]>([]);
+  const [takesMedicines, setTakesMedicines] = useState<"yes" | "no">("no");
   const [patientLogs, setPatientLogs] = useState<LogEntry[]>([]);
 
   // NEW: Store complete health data for user tracking display
   const [healthData, setHealthData] = useState<PatientHealthData | null>(null);
   const isFetchingRef = useRef(false); // Add this line
 
+  const canSearchPatients = useCallback((): boolean => {
+    return ["nurse", "doctor", "admin", "administrator", "secretary"].includes(userRole);
+  }, [userRole]);
+
+  const canCreatePatients = useCallback((): boolean => {
+    return ["nurse", "admin", "administrator", "secretary"].includes(userRole);
+  }, [userRole]);
+
   // FIXED: Updated disease keys to match database schema
   const commonDiseases = [
-    { key: "has_high_blood_pressure", en: "High blood pressure", ar: "ضغط الدم المرتفع" },
-    { key: "has_diabetes", en: "Diabetes", ar: "السكري" },
-    { key: "has_cholesterol", en: "Cholesterol", ar: "الكوليسترول" },
-    { key: "has_kidney_disease", en: "Kidney Disease", ar: "أمراض الكلى" },
-    { key: "has_cancer", en: "Cancer", ar: "السرطان" },
-    { key: "has_heart_disease", en: "Heart Disease", ar: "أمراض القلب" },
-    { key: "has_asthma", en: "Asthma", ar: "الربو" },
     { key: "has_alzheimer_dementia", en: "Alzheimer/Dementia", ar: "الزهايمر/الخرف" },
+    { key: "has_asthma", en: "Asthma", ar: "الربو" },
+    { key: "has_cancer", en: "Cancer", ar: "السرطان" },
+    { key: "has_cholesterol", en: "Cholesterol", ar: "الكوليسترول" },
+    { key: "has_diabetes", en: "Diabetes", ar: "السكري" },
+    { key: "has_heart_disease", en: "Heart Disease", ar: "أمراض القلب" },
+    { key: "has_high_blood_pressure", en: "Hypertension", ar: "ارتفاع ضغط الدم" },
+    { key: "has_kidney_disease", en: "Kidney Disease", ar: "أمراض الكلى" },
   ];
 
   const [selectedAllergies, setSelectedAllergies] = useState<string[]>([]);
@@ -607,7 +616,7 @@ const Index = () => {
   };
 
   // NEW: Load all patients for sidebar (for nurses)
-  const loadAllPatients = async () => {
+  const loadAllPatients = useCallback(async () => {
     if (!canSearchPatients() || isFetchingRef.current) return;
 
     try {
@@ -681,7 +690,7 @@ const Index = () => {
       setIsLoadingPatients(false);
       isFetchingRef.current = false;
     }
-  };
+  }, [canSearchPatients, getPatientHealthData, isRTL, toast]);
 
   // NEW: Create a new patient account
   const createNewPatient = async () => {
@@ -825,7 +834,7 @@ const Index = () => {
         }
 
         // Check if it's a duplicate key error
-        let errorMsg = insertError.message;
+        const errorMsg = insertError.message;
         if (errorMsg && (errorMsg.includes('duplicate key value') || errorMsg.includes('unique constraint'))) {
           // Check which field caused the duplicate
           if (errorMsg.includes('phonenumber')) {
@@ -1082,6 +1091,9 @@ const Index = () => {
           }
         });
         setSelectedMedicines(allMeds);
+        setTakesMedicines(allMeds.length > 0 ? "yes" : "no");
+      } else {
+        setTakesMedicines("no");
       }
       // NEW: Load allergies
       if (patient.health_data.allergies) {
@@ -1114,6 +1126,7 @@ const Index = () => {
       });
       setSelectedDiseases([]);
       setSelectedMedicines([]);
+      setTakesMedicines("no");
       setSelectedAllergies([]);
       setCustomAllergy(""); // ADD THIS LINE HERE
       setHealthData(null);
@@ -1132,58 +1145,40 @@ const Index = () => {
     }]);
   };
 
-  // Load existing patient health data when component mounts (for patients only)
-  useEffect(() => {
-    if (user?.id && userRole === 'patient') {
-      // Delay loading to prevent flashing
-      const timer = setTimeout(() => {
-        setIsLoadingHealthData(true);
-        loadPatientHealthData();
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [user]);
-
   // Load all patients when component mounts (for nurses/doctors/admins)
   useEffect(() => {
     let isMounted = true;
 
-    const initializeComponent = async () => {
+    const initializeComponent = () => {
       if (canSearchPatients() && isMounted) {
         // Delay loading to prevent flashing
-        setTimeout(async () => {
+        const timer = setTimeout(() => {
           if (isMounted) {
-            await loadAllPatients();
+            void loadAllPatients();
           }
         }, 500); // Reduced delay for faster loading
+
+        return () => clearTimeout(timer);
       }
     };
 
-    initializeComponent();
+    const cleanup = initializeComponent();
 
     return () => {
       isMounted = false;
       isFetchingRef.current = false;
+      if (typeof cleanup === 'function') {
+        cleanup();
+      }
     };
-  }, []);
-
-  // Function to check if the current user role can search for patients
-  const canSearchPatients = (): boolean => {
-    return ["nurse", "doctor", "admin", "administrator", "secretary"].includes(userRole);
-  };
-
-  // Function to check if the current user role can create patients
-  const canCreatePatients = (): boolean => {
-    return ["nurse", "admin", "administrator", "secretary"].includes(userRole);
-  };
+  }, [canSearchPatients, loadAllPatients]);
 
   // Auto-refresh patient count when allPatients changes
   useEffect(() => {
     if (canSearchPatients() && allPatients.length > 0) {
       console.log('📊 Patient count updated automatically:', allPatients.length);
     }
-  }, [allPatients, userRole]);
+  }, [allPatients, canSearchPatients]);
 
   // Back to top button visibility
   useEffect(() => {
@@ -1257,7 +1252,7 @@ const Index = () => {
 
 
   // UPDATED: Enhanced loadPatientHealthData function with user tracking
-  const loadPatientHealthData = async () => {
+  const loadPatientHealthData = useCallback(async () => {
     if (!user?.id) {
       setPatientLogs(prev => [...prev, { key: 'errorNoUserLoggedIn', timestamp: new Date() }]);
       return;
@@ -1312,6 +1307,9 @@ const Index = () => {
             }
           });
           setSelectedMedicines(allMeds);
+          setTakesMedicines(allMeds.length > 0 ? "yes" : "no");
+        } else {
+          setTakesMedicines("no");
         }
         // NEW: Load allergies
         if (data.allergies) {
@@ -1357,7 +1355,7 @@ const Index = () => {
         setSelectedMedicines([]);
         setHealthData(null);
         setSelectedAllergies([]);
-        setSelectedMedicines([]);
+        setTakesMedicines("no");
         setSocialSituation(""); // ADD THIS LINE
 
         setPatientLogs(prev => [...prev, { key: 'welcomeHealthInfo', timestamp: new Date() }]);
@@ -1382,7 +1380,20 @@ const Index = () => {
       setIsLoadingHealthData(false);
 
     }
-  };
+  }, [getPatientHealthData, isRTL, user, userRole]);
+
+  // Load existing patient health data when component mounts (for patients only)
+  useEffect(() => {
+    if (!(user?.id && userRole === 'patient')) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      void loadPatientHealthData();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [loadPatientHealthData, user?.id, userRole]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -1460,8 +1471,24 @@ const Index = () => {
     );
   };
 
+  const handleMedicinesStatusChange = (status: "yes" | "no") => {
+    setTakesMedicines(status);
+    if (status === "no") {
+      setSelectedMedicines([]);
+    }
+  };
+
   // FIXED: Organize medicines by category for database storage
   const organizeMedicinesByCategory = (selectedMeds: string[]) => {
+    if (takesMedicines === "no") {
+      return {
+        pain_relief: [] as string[],
+        allergy: [] as string[],
+        flu: [] as string[],
+        antibiotics: [] as string[],
+      };
+    }
+
     const organizedMeds = {
       pain_relief: [] as string[],
       allergy: [] as string[],
@@ -2833,6 +2860,43 @@ const Index = () => {
             {/* Enhanced Medicine Categories - visible to ALL users */}
             <section className="section bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6">
               <h2 className="text-xl font-bold mb-4 text-gray-800">{t("home.medicinesTitle")}</h2>
+              <div
+                className={`flex gap-3 mb-4 ${isRTL
+                  ? "flex-col items-end text-right sm:flex-row sm:items-center sm:justify-end"
+                  : "flex-col sm:flex-row sm:items-center"
+                  }`}
+              >
+                <span className={`font-medium text-gray-700 ${isRTL ? "text-right" : ""}`} dir={isRTL ? "rtl" : "ltr"}>
+                  {t("home.medicinesStatusQuestion")}
+                </span>
+                <div
+                  className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse sm:mr-4" : "sm:ml-4"
+                    }`}
+                  dir={isRTL ? "rtl" : "ltr"}
+                >
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={takesMedicines === "yes" ? "default" : "outline"}
+                    onClick={() => handleMedicinesStatusChange("yes")}
+                  >
+                    {t("home.medicinesStatusYes")}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={takesMedicines === "no" ? "default" : "outline"}
+                    onClick={() => handleMedicinesStatusChange("no")}
+                  >
+                    {t("home.medicinesStatusNo")}
+                  </Button>
+                </div>
+              </div>
+              {takesMedicines === "no" && (
+                <p className={`text-sm text-gray-500 mb-4 ${isRTL ? "text-right" : ""}`}>
+                  {t("home.medicinesStatusHint")}
+                </p>
+              )}
               {isLoadingHealthData ? (
                 <div className="patient-info-grid form-grid grid grid-cols-1 gap-4 sm:gap-6">
                   {[...Array(4)].map((_, index) => (
@@ -2847,7 +2911,10 @@ const Index = () => {
                   ))}
                 </div>
               ) : (
-                <div className="patient-info-grid form-grid grid grid-cols-1 gap-4 sm:gap-6">
+                <div
+                  className={`patient-info-grid form-grid grid grid-cols-1 gap-4 sm:gap-6 transition-opacity duration-200 ${takesMedicines === "no" ? "opacity-40 pointer-events-none" : "opacity-100"
+                    }`}
+                >
                   {medicineCategories.map(({ category, medicines }) => (
                     <div key={category.en} className="space-y-4">
                       <h3 className="text-lg font-semibold text-gray-700">
@@ -2861,6 +2928,7 @@ const Index = () => {
                               id={`med-${medicine.en}`} checked={selectedMedicines.includes(medicine.en)}
                               onChange={() => handleMedicineSelect(medicine.en)}
                               className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              disabled={takesMedicines === "no"}
                             />
                             <Label htmlFor={`med-${medicine.en}`} className="text-base">
                               {isRTL ? medicine.ar : medicine.en}

@@ -1141,7 +1141,7 @@ const enTranslations = {
             "neck": "Neck",
             "head": "Head",
             "abdomen": "Abdomen",
-            "abdomen_kidney": "Abdomen (Kidney)",
+            "abdomen_kidney": "Abdomen (Kidneys)",
             "abdomen_spleen": "Abdomen (Spleen)",
             "abdomen_liver": "Abdomen (Liver)",
             "abdomen_stomach": "Abdomen (Stomach)",
@@ -1275,7 +1275,7 @@ const enTranslations = {
 
         // File Upload
         "fileUpload": {
-            "title": "Audiometry Image Upload",
+            "title": "Hearing Exam Upload",
             "fileSelected": "File Selected",
             "removeFile": "Remove File",
             "dragDropText": "Drag and drop your audiometry image",
@@ -1908,8 +1908,12 @@ const enTranslations = {
         weight: 'Weight',
         height: 'Height',
         bloodType: 'Blood Type',
-        commonDiseases: 'Common Diseases',
+        commonDiseases: 'Chronic Diseases',
         medicinesTitle: 'Medicines',
+        medicinesStatusQuestion: 'Is the patient currently taking medicines?',
+        medicinesStatusYes: 'Yes',
+        medicinesStatusNo: 'No',
+        medicinesStatusHint: 'Toggle to Yes to select medicines from the list below.',
         patientLogs: 'Patient Activity Logs',
         information: 'Information',
         patientInfoUpdated: 'Patient information updated at',
@@ -1930,7 +1934,7 @@ const enTranslations = {
             errorSavingInfo: 'Error saving information'
         },
         diseases: {
-            highBloodPressure: 'High blood pressure',
+            highBloodPressure: 'Hypertension',
             diabetes: 'Diabetes',
             cholesterolHDL: 'Cholesterol HDL',
             cholesterolLDL: 'Cholesterol LDL',
@@ -3681,8 +3685,12 @@ const arTranslations = {
         height: 'الطول',
         homeemail: 'أدخل بريدك الإلكتروني',
         bloodType: 'فصيلة الدم',
-        commonDiseases: 'الأمراض الشائعة',
+        commonDiseases: 'الأمراض المزمنة',
         medicinesTitle: 'الأدوية',
+        medicinesStatusQuestion: 'هل يتناول المريض أدوية حالياً؟',
+        medicinesStatusYes: 'نعم',
+        medicinesStatusNo: 'لا',
+        medicinesStatusHint: 'غيّر الحالة إلى نعم لاختيار الأدوية من القائمة أدناه.',
         patientLogs: 'سجل نشاط المريض',
         information: 'المعلومات',
         patientInfoUpdated: 'تم تحديث معلومات المريض في',
@@ -3703,7 +3711,7 @@ const arTranslations = {
             errorSavingInfo: 'خطأ في حفظ المعلومات'
         },
         diseases: {
-            highBloodPressure: 'ضغط الدم المرتفع',
+            highBloodPressure: 'ارتفاع ضغط الدم',
             diabetes: 'السكري',
             cholesterolHDL: 'الكوليسترول HDL',
             cholesterolLDL: 'الكوليسترول LDL',
@@ -4369,7 +4377,7 @@ const arTranslations = {
 
         // File Upload
         fileUpload: {
-            title: 'رفع صورة قياس السمع',
+            title: 'رفع قياس السمع',
             fileSelected: 'تم اختيار الملف',
             removeFile: 'إزالة الملف',
             dragDropText: 'اسحب وأفلت صورة قياس السمع',

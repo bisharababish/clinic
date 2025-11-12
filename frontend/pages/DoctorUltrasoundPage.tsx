@@ -649,7 +649,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                                 <option value="neck">{t('ultrasound.bodyParts.neck') || 'Neck'}</option>
                                 <option value="head">{t('ultrasound.bodyParts.head') || 'Head'}</option>
                                 <option value="abdomen">{t('ultrasound.bodyParts.abdomen') || 'Abdomen'}</option>
-                                <option value="abdomen_kidney">{t('ultrasound.bodyParts.abdomen_kidney') || 'Abdomen (Kidney)'}</option>
+                                <option value="abdomen_kidney">{t('ultrasound.bodyParts.abdomen_kidney') || 'Abdomen (Kidneys)'}</option>
                                 <option value="abdomen_spleen">{t('ultrasound.bodyParts.abdomen_spleen') || 'Abdomen (Spleen)'}</option>
                                 <option value="abdomen_liver">{t('ultrasound.bodyParts.abdomen_liver') || 'Abdomen (Liver)'}</option>
                                 <option value="abdomen_stomach">{t('ultrasound.bodyParts.abdomen_stomach') || 'Abdomen (Stomach)'}</option>

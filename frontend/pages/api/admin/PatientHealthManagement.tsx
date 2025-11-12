@@ -222,15 +222,15 @@ const PatientHealthForm: React.FC<{
 
         // Common diseases and medicines data
         const commonDiseases = [
-            { key: "has_high_blood_pressure", en: "High blood pressure", ar: "ضغط الدم المرتفع" },
-            { key: "has_diabetes", en: "Diabetes", ar: "السكري" },
+            { key: "has_alzheimer_dementia", en: "Alzheimer/Dementia", ar: "الزهايمر/الخرف" },
+            { key: "has_asthma", en: "Asthma", ar: "الربو" },
+            { key: "has_cancer", en: "Cancer", ar: "السرطان" },
             { key: "has_cholesterol_hdl", en: "Cholesterol HDL", ar: "الكوليسترول HDL" },
             { key: "has_cholesterol_ldl", en: "Cholesterol LDL", ar: "الكوليسترول LDL" },
-            { key: "has_kidney_disease", en: "Kidney Disease", ar: "أمراض الكلى" },
-            { key: "has_cancer", en: "Cancer", ar: "السرطان" },
+            { key: "has_diabetes", en: "Diabetes", ar: "السكري" },
             { key: "has_heart_disease", en: "Heart Disease", ar: "أمراض القلب" },
-            { key: "has_asthma", en: "Asthma", ar: "الربو" },
-            { key: "has_alzheimer_dementia", en: "Alzheimer/Dementia", ar: "الزهايمر/الخرف" },
+            { key: "has_high_blood_pressure", en: "Hypertension", ar: "ارتفاع ضغط الدم" },
+            { key: "has_kidney_disease", en: "Kidney Disease", ar: "أمراض الكلى" },
         ];
 
         // Validation functions
