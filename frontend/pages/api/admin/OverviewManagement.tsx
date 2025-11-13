@@ -154,7 +154,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
     ];
 
     // Helper function to get role configuration with colors
-    // Order: Patients, administrators, Secretary, doctors, nurses, lab, ultrasound, audiometry
+    // Order: Patients, administrators, Secretary, doctors, nurses, lab, x ray, ultrasound, audiometry
     // Each role has a unique text color and unique background color
     const getRoleConfig = () => {
         return [
@@ -164,6 +164,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
             { key: 'doctor', name: t('admin.doctors'), color: '#059669', bgColor: '#d1fae5' }, // Green text, light green background
             { key: 'nurse', name: t('admin.nurses'), color: '#db2777', bgColor: '#fce7f3' }, // Pink text, light pink background
             { key: 'lab', name: t('admin.labTechnicians'), color: '#ca8a04', bgColor: '#fef9c3' }, // Yellow text, light yellow background
+            { key: 'x ray', name: t('admin.xrayTechnicians'), color: '#7c3aed', bgColor: '#ede9fe' }, // Indigo text, light indigo background
             { key: 'ultrasound', name: t('admin.ultrasoundTechnicians'), color: '#ea580c', bgColor: '#ffedd5' }, // Orange text, light orange background
             { key: 'audiometry', name: t('admin.audiometryTechnicians'), color: '#0891b2', bgColor: '#cffafe' } // Cyan text, light cyan background
         ];
@@ -187,11 +188,55 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
         return allRoles.map(role => {
             let count = 0;
             if (role.key === 'admin') {
-                count = users.filter(u =>
-                    u.user_roles?.toLowerCase() === 'admin' ||
-                    u.user_roles?.toLowerCase() === 'administrator'
-                ).length;
+                // Handle admin role variations
+                count = users.filter(u => {
+                    const userRole = u.user_roles?.toLowerCase();
+                    return userRole === 'admin' || userRole === 'administrator';
+                }).length;
+            } else if (role.key === 'x ray') {
+                // Handle X-Ray role variations: 'x ray', 'xray', 'x-ray'
+                count = users.filter(u => {
+                    const userRole = u.user_roles?.toLowerCase();
+                    return userRole === 'x ray' || userRole === 'xray' || userRole === 'x-ray';
+                }).length;
+            } else if (role.key === 'doctor') {
+                // Handle doctor role variations
+                count = users.filter(u => {
+                    const userRole = u.user_roles?.toLowerCase();
+                    return userRole === 'doctor' || userRole === 'dr' || userRole === 'doctors';
+                }).length;
+            } else if (role.key === 'secretary') {
+                // Handle secretary role variations
+                count = users.filter(u => {
+                    const userRole = u.user_roles?.toLowerCase();
+                    return userRole === 'secretary' || userRole === 'secretaries';
+                }).length;
+            } else if (role.key === 'nurse') {
+                // Handle nurse role variations
+                count = users.filter(u => {
+                    const userRole = u.user_roles?.toLowerCase();
+                    return userRole === 'nurse' || userRole === 'nurses';
+                }).length;
+            } else if (role.key === 'lab') {
+                // Handle lab role variations
+                count = users.filter(u => {
+                    const userRole = u.user_roles?.toLowerCase();
+                    return userRole === 'lab' || userRole === 'laboratory';
+                }).length;
+            } else if (role.key === 'ultrasound') {
+                // Handle ultrasound role variations
+                count = users.filter(u => {
+                    const userRole = u.user_roles?.toLowerCase();
+                    return userRole === 'ultrasound' || userRole === 'ultrasound technician';
+                }).length;
+            } else if (role.key === 'audiometry') {
+                // Handle audiometry role variations
+                count = users.filter(u => {
+                    const userRole = u.user_roles?.toLowerCase();
+                    return userRole === 'audiometry' || userRole === 'audiometry technician';
+                }).length;
             } else {
+                // Default: exact match
                 count = users.filter(u => u.user_roles?.toLowerCase() === role.key).length;
             }
 
@@ -427,41 +472,47 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                     <CardContent className="pt-4">
                         <div className="space-y-3">
                             {(() => {
-                                // Get role configuration with colors
+                                // Use the SAME data source as the charts for perfect synchronization
+                                const chartData = getRoleChartData();
                                 const allRoles = getRoleConfig();
                                 
-                                // Map roles to their icon and filter configuration
-                                const roleConfigs = [
-                                    { key: 'patient', icon: Users, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'patient' },
-                                    { key: 'admin', icon: Shield, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'admin' || u.user_roles?.toLowerCase() === 'administrator' },
-                                    { key: 'secretary', icon: FileText, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'secretary' },
-                                    { key: 'doctor', icon: Stethoscope, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'doctor' },
-                                    { key: 'nurse', icon: Activity, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'nurse' },
-                                    { key: 'lab', icon: Database, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'lab' },
-                                    { key: 'ultrasound', icon: Activity, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'ultrasound' },
-                                    { key: 'audiometry', icon: Activity, filter: (u: UserInfo) => u.user_roles?.toLowerCase() === 'audiometry' }
-                                ];
+                                // Map role keys to their icons
+                                const roleIcons: Record<string, any> = {
+                                    'patient': Users,
+                                    'admin': Shield,
+                                    'secretary': FileText,
+                                    'doctor': Stethoscope,
+                                    'nurse': Activity,
+                                    'lab': Database,
+                                    'x ray': Activity,
+                                    'ultrasound': Activity,
+                                    'audiometry': Activity
+                                };
 
-                                const roleCards = roleConfigs.map((config, index) => {
-                                    const roleStyle = allRoles[index];
-                                    const count = users.filter(config.filter).length;
+                                // Create role cards using the SAME chart data
+                                const roleCards = chartData.map((chartEntry) => {
+                                    // Find the matching role config by matching the role name
+                                    const roleConfig = allRoles.find(r => r.name === chartEntry.role);
+                                    if (!roleConfig) return null;
+                                    
+                                    const count = chartEntry.count;
                                     const percentage = users.length > 0 ? Math.round((count / users.length) * 100) : 0;
-                                    const IconComponent = config.icon;
+                                    const IconComponent = roleIcons[roleConfig.key] || Activity;
 
                                     return (
                                         <div 
-                                            key={config.key} 
+                                            key={roleConfig.key} 
                                             className={`flex items-center p-3 rounded-lg border hover:shadow-sm transition-shadow ${isRTL ? 'flex-row-reverse' : ''}`}
-                                            style={{ backgroundColor: roleStyle.bgColor }}
+                                            style={{ backgroundColor: roleConfig.bgColor }}
                                         >
-                                            <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center mx-3 border-2" style={{ borderColor: roleStyle.color }}>
-                                                <IconComponent className="h-5 w-5" style={{ color: roleStyle.color }} />
+                                            <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center mx-3 border-2" style={{ borderColor: roleConfig.color }}>
+                                                <IconComponent className="h-5 w-5" style={{ color: roleConfig.color }} />
                                             </div>
                                             <div className={`flex-1 ${isRTL ? 'text-left' : 'text-left'}`}>
-                                                <p className="font-medium" style={{ color: roleStyle.color }}>
-                                                    {roleStyle.name}
+                                                <p className="font-medium" style={{ color: roleConfig.color }}>
+                                                    {roleConfig.name}
                                                 </p>
-                                                <p className="text-sm" style={{ color: roleStyle.color }}>
+                                                <p className="text-sm" style={{ color: roleConfig.color }}>
                                                     {count} {t('admin.users')}
                                                     <span className="ml-1 text-xs">
                                                         ({percentage}%)
@@ -470,7 +521,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                             </div>
                                         </div>
                                     );
-                                });
+                                }).filter(Boolean); // Remove any null entries
 
                                 return roleCards;
                             })()}

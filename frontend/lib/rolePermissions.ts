@@ -317,7 +317,6 @@ export const getAccessibleRoutes = (role: string): string[] => {
   if (permissions.canViewDoctorLabs) routes.push('/doctor/labs');
   if (permissions.canViewDoctorXray) routes.push('/doctor/xray');
   if (permissions.canViewDoctorUltrasound) routes.push('/doctor/ultrasound');
-  if (permissions.canViewDoctorAudiometry) routes.push('/doctor/audiometry');
   if (permissions.canViewPatients) routes.push('/doctor/patients');
   return routes;
 };

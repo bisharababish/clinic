@@ -206,7 +206,7 @@ const enTranslations = {
         home: 'Home',
         clinics: 'Clinics',
         aboutUs: 'About Us',
-        labs: 'Labs',
+        labs: 'Lab',
         xray: 'X-Ray',
         ultrasound: 'Ultrasound',
         audiometry: 'Audiometry',
@@ -1273,14 +1273,14 @@ const enTranslations = {
             "placeholder": "Enter audiometry test notes and findings..."
         },
 
-        // File Upload
-        "fileUpload": {
-            "title": "Hearing Exam Upload",
-            "fileSelected": "File Selected",
-            "removeFile": "Remove File",
-            "dragDropText": "Drag and drop your audiometry image",
-            "clickToBrowse": "or click to browse",
-            "supportedFormats": "Supported formats: JPEG, PNG (Max 10MB)"
+        // Hearing Exam ABR
+        "hearingExam": {
+            "title": "Hearing Exam ABR",
+            "ear": "Ear",
+            "passed": "Passed",
+            "failed": "Failed",
+            "leftEar": "LT ear",
+            "rightEar": "RT ear"
         },
 
         // Actions
@@ -1296,6 +1296,7 @@ const enTranslations = {
             "patientSearchFailed": "Failed to search patients. Please try again.",
             "missingData": "Missing Data",
             "selectFile": "Please upload an image file.",
+            "selectResult": "Please select at least one exam result.",
             "patientRequired": "Please select a patient or enter patient name.",
             "dobRequired": "Please enter patient date of birth.",
             "selectPatientFromList": "Please select a patient from the search results. Manual entry requires patient registration first.",
@@ -4375,14 +4376,14 @@ const arTranslations = {
             placeholder: 'أدخل ملاحظات ونتائج اختبار قياس السمع...'
         },
 
-        // File Upload
-        fileUpload: {
-            title: 'رفع قياس السمع',
-            fileSelected: 'تم اختيار الملف',
-            removeFile: 'إزالة الملف',
-            dragDropText: 'اسحب وأفلت صورة قياس السمع',
-            clickToBrowse: 'أو انقر للتصفح',
-            supportedFormats: 'الصيغ المدعومة: JPEG، PNG (بحد أقصى 10 ميجابايت)'
+        // Hearing Exam ABR
+        hearingExam: {
+            title: 'فحص السمع ABR',
+            ear: 'الأذن',
+            passed: 'نجح',
+            failed: 'فشل',
+            leftEar: 'الأذن اليسرى',
+            rightEar: 'الأذن اليمنى'
         },
 
         // Actions
@@ -4398,6 +4399,7 @@ const arTranslations = {
             patientSearchFailed: 'فشل البحث عن المرضى. يرجى المحاولة مرة أخرى.',
             missingData: 'بيانات مفقودة',
             selectFile: 'يرجى رفع ملف صورة.',
+            selectResult: 'يرجى اختيار نتيجة فحص واحدة على الأقل.',
             patientRequired: 'يرجى اختيار مريض أو إدخال اسم المريض.',
             dobRequired: 'يرجى إدخال تاريخ ميلاد المريض.',
             selectPatientFromList: 'يرجى اختيار مريض من نتائج البحث. الإدخال اليدوي يتطلب تسجيل المريض أولاً.',

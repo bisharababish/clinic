@@ -334,75 +334,70 @@ export function Header() {
                         </Link>
                     </div>
 
-                    {/* Center-Left: Navigation */}
-                    <nav className={`hidden lg:flex items-center ${isAdmin ? 'gap-0.5 flex-shrink min-w-0' : 'gap-1'} ${isAdmin ? 'ml-2' : 'ml-4'} flex-1 ${isAudiometry || isUltrasound || isXRay || isLab || isNurse || isSecretary || isDoctor || isPatient ? 'justify-center' : ''} ${isAdmin ? 'overflow-x-auto' : ''} ${isAdmin ? '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' : ''}`}>
+                    {/* Center: Navigation */}
+                    <nav className={`hidden lg:flex items-center justify-center ${isAdmin ? 'gap-1 flex-shrink min-w-0' : 'gap-2'} flex-1 ${isAdmin ? 'overflow-x-auto' : ''} ${isAdmin ? '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' : ''}`}>
                         {canViewHome && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/home" className="font-medium">{t('navbar.home') || 'Home'}</Link>
                             </Button>
                         )}
                         {canViewClinics && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/clinics" className="font-medium">{t('navbar.clinics') || 'Clinics'}</Link>
                             </Button>
                         )}
                         {canViewLabs && !isDoctor && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
-                                <Link to="/labs" className="font-medium">{t('navbar.labs') || 'Labs'}</Link>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                                <Link to="/labs" className="font-medium">{t('navbar.labs') || 'Lab'}</Link>
                             </Button>
                         )}
                         {canViewDoctorLabs && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/doctor/labs" className="font-medium">{t('navbar.doctorLabs') || 'Lab Results'}</Link>
                             </Button>
                         )}
                         {canViewXray && !isDoctor && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/xray" className="font-medium">{t('navbar.xray') || 'X-Ray'}</Link>
                             </Button>
                         )}
                         {canViewDoctorXray && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/doctor/xray" className="font-medium">{t('navbar.doctorXRay') || 'X-Ray Images'}</Link>
                             </Button>
                         )}
                         {canViewUltrasound && !isDoctor && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/ultrasound" className="font-medium">{t('navbar.ultrasound') || 'Ultrasound'}</Link>
                             </Button>
                         )}
                         {canViewDoctorUltrasound && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/doctor/ultrasound" className="font-medium">{t('navbar.doctorUltrasound') || 'Ultrasound Images'}</Link>
                             </Button>
                         )}
                         {(canViewAudiometry || isAdmin) && !isDoctor && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/audiometry" className="font-medium">{t('navbar.audiometry') || 'Audiometry'}</Link>
                             </Button>
                         )}
-                        {(canViewDoctorAudiometry || isAdmin) && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
-                                <Link to="/doctor/audiometry" className="font-medium">{t('navbar.doctorAudiometry') || 'Audiometry Images'}</Link>
-                            </Button>
-                        )}
                         {canViewPatients && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/doctor/patients" className="font-medium">{t('navbar.patients') || 'Patients'}</Link>
                             </Button>
                         )}
                         {isPatient && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/patient/dashboard" className="font-medium">{t('navbar.myAppointments') || 'My Appointments'}</Link>
                             </Button>
                         )}
                         {canViewPreview && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 whitespace-nowrap`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
                                 <Link to="/preview" className="font-medium">{t('navbar.myRecords') || 'My Medical Records'}</Link>
                             </Button>
                         )}
                         {canViewAdmin && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "sm"} asChild className={`${isAdmin ? 'px-2 text-xs' : ''} transition-colors duration-200 whitespace-nowrap ${isAdmin ? 'hover:bg-red-50 hover:text-red-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 transition-all duration-200 whitespace-nowrap border border-transparent rounded-lg ${isAdmin ? 'hover:bg-red-50 hover:text-red-700 hover:border-red-200' : 'hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200'}`}>
                                 <Link to="/admin" className="font-medium">
                                     {getDashboardText(effectiveRole || '')}
                                 </Link>
@@ -537,7 +532,7 @@ export function Header() {
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-2 h-2 rounded-full ${(effectiveRole)}`}></div>
                                                 <span>
-                                                    Restricted Access: {isLab ? (t('navbar.labs') || 'Labs') : (t('navbar.xray') || 'X-Ray')} only
+                                                    Restricted Access: {isLab ? (t('navbar.labs') || 'Lab') : (t('navbar.xray') || 'X-Ray')} only
                                                 </span>
                                             </div>
                                         </div>
@@ -580,7 +575,7 @@ export function Header() {
                                                 }}
                                                 className="font-medium"
                                             >
-                                                {t('navbar.labs') || 'Labs'}
+                                                {t('navbar.labs') || 'Lab'}
                                             </Link>
                                         </Button>
                                     )}
@@ -665,20 +660,6 @@ export function Header() {
                                                 className="font-medium"
                                             >
                                                 {t('navbar.audiometry') || 'Audiometry'}
-                                            </Link>
-                                        </Button>
-                                    )}
-                                    {(canViewDoctorAudiometry || isAdmin) && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
-                                            <Link
-                                                to="/doctor/audiometry"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMobileNavigation('/doctor/audiometry');
-                                                }}
-                                                className="font-medium"
-                                            >
-                                                {t('navbar.doctorAudiometry') || 'Audiometry Images'}
                                             </Link>
                                         </Button>
                                     )}

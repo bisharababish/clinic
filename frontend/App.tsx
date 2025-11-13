@@ -37,7 +37,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 const DoctorLabsPage = lazy(() => import("./pages/DoctorLabsPage"));
 const DoctorXRayPage = lazy(() => import("./pages/DoctorXRayPage"));
 const DoctorUltrasoundPage = lazy(() => import("./pages/DoctorUltrasoundPage"));
-const DoctorAudiometryPage = lazy(() => import("./pages/DoctorAudiometryPage"));
 const DoctorPatientsPage = lazy(() => import("./pages/DoctorPatientPage"));
 const PatientDashboardPage = lazy(() => import("./pages/PatientDashboard"));
 const UserPreviewPage = lazy(() => import("./pages/UserPreviewPage"));
@@ -228,16 +227,6 @@ function App() {
                     element={
                       <HeaderOnlyLayout>
                         <DoctorUltrasoundPage />
-                      </HeaderOnlyLayout>
-                    }
-                  />
-
-                  {/* Doctor Audiometry */}
-                  <Route
-                    path="/doctor/audiometry"
-                    element={
-                      <HeaderOnlyLayout>
-                        <DoctorAudiometryPage />
                       </HeaderOnlyLayout>
                     }
                   />

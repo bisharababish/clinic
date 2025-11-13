@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import SEOHead from "../src/components/seo/SEOHead";
 import {
-  Upload,
   CheckCircle,
   AlertCircle,
   User,
@@ -74,8 +73,11 @@ const Audiometry = () => {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [requestingDoctor, setRequestingDoctor] = useState("");
 
-  const [file, setFile] = useState<File | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  // Hearing Exam ABR results
+  const [leftEarPassed, setLeftEarPassed] = useState(false);
+  const [leftEarFailed, setLeftEarFailed] = useState(false);
+  const [rightEarPassed, setRightEarPassed] = useState(false);
+  const [rightEarFailed, setRightEarFailed] = useState(false);
 
   // Doctor selection states
   const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
@@ -459,39 +461,45 @@ const Audiometry = () => {
 
 
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  // Handle checkbox changes - ensure only one is selected per ear
+  const handleLeftEarPassedChange = (checked: boolean | "indeterminate") => {
+    const isChecked = checked === true;
+    setLeftEarPassed(isChecked);
+    if (isChecked) {
+      setLeftEarFailed(false);
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setFile(e.dataTransfer.files[0]);
+  const handleLeftEarFailedChange = (checked: boolean | "indeterminate") => {
+    const isChecked = checked === true;
+    setLeftEarFailed(isChecked);
+    if (isChecked) {
+      setLeftEarPassed(false);
     }
   };
 
-  const removeFile = () => {
-    setFile(null);
+  const handleRightEarPassedChange = (checked: boolean | "indeterminate") => {
+    const isChecked = checked === true;
+    setRightEarPassed(isChecked);
+    if (isChecked) {
+      setRightEarFailed(false);
+    }
+  };
+
+  const handleRightEarFailedChange = (checked: boolean | "indeterminate") => {
+    const isChecked = checked === true;
+    setRightEarFailed(isChecked);
+    if (isChecked) {
+      setRightEarPassed(false);
+    }
   };
 
   const handleSubmit = async () => {
-    if (!file) {
+    // Validate that at least one ear has a result
+    if (!leftEarPassed && !leftEarFailed && !rightEarPassed && !rightEarFailed) {
       toast({
         title: t('audiometry.errors.missingData') || 'Missing Data',
-        description: t('audiometry.errors.selectFile') || 'Please upload a file.',
+        description: t('audiometry.errors.selectResult') || 'Please select at least one exam result.',
         variant: "destructive",
         className: "bg-red-50 border-red-200 text-red-800",
       });
@@ -521,40 +529,7 @@ const Audiometry = () => {
     }
 
     try {
-      // Upload file to Supabase Storage with patient-specific folder
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-      // ✅ NEW: Store in patient-specific folder
-      const filePath = `patient_${selectedPatient.userid}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('audiometry-images')
-        .upload(filePath, file); // Use filePath instead of fileName
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('audiometry-images')
-        .getPublicUrl(fileName);
-      // Prepare patient data - patient_id is required, so if no patient selected,
-      // we need to create a temporary patient entry or use a placeholder
-      // For now, we'll require patient selection or use a fallback patient_id
-      let finalPatientId: number;
-      let finalPatientName: string;
-      let finalDateOfBirth: string | null;
-
-      if (selectedPatient) {
-        finalPatientId = selectedPatient.userid;
-        finalPatientName = selectedPatient.english_username_a || '';
-        finalDateOfBirth = selectedPatient.date_of_birth || null;
-      } else {
-        // For manual entry without patient selection, we need to create a patient
-        // or use a system patient ID. For now, we'll throw an error asking to select patient.
-        // Alternatively, we could create a temporary patient record.
+      if (!selectedPatient) {
         toast({
           title: t('audiometry.errors.patientRequired') || 'Patient Required',
           description: t('audiometry.errors.selectPatientFromList') || 'Please select a patient from the search results. Manual entry requires patient registration first.',
@@ -564,7 +539,11 @@ const Audiometry = () => {
         return;
       }
 
-      // Insert record with the full path
+      // Determine exam results for each ear
+      const leftEarResult = leftEarPassed ? 'passed' : (leftEarFailed ? 'failed' : null);
+      const rightEarResult = rightEarPassed ? 'passed' : (rightEarFailed ? 'failed' : null);
+
+      // Insert record with structured exam results
       const { error: insertError } = await supabase
         .from('audiometry_images')
         .insert({
@@ -573,7 +552,9 @@ const Audiometry = () => {
           date_of_birth: selectedPatient.date_of_birth,
           notes: notes || null,
           requesting_doctor: selectedDoctor?.name || requestingDoctor || null,
-          image_url: filePath  // ✅ Store the full path including patient folder
+          image_url: null,  // NULL since we're not uploading images anymore
+          left_ear_result: leftEarResult,
+          right_ear_result: rightEarResult
         });
 
       if (insertError) {
@@ -592,17 +573,20 @@ const Audiometry = () => {
       setPatientName("");
       setDateOfBirth("");
       setRequestingDoctor("");
-      setFile(null);
+      setLeftEarPassed(false);
+      setLeftEarFailed(false);
+      setRightEarPassed(false);
+      setRightEarFailed(false);
       setSelectedPatient(null);
       setSelectedDoctor(null);
       setPatientSearchTerm("");
       setDoctorSearchTerm("");
 
     } catch (error: unknown) {
-      console.error('Error saving Ultrasound record:', error);
+      console.error('Error saving Audiometry record:', error);
 
       // Show detailed error message to help debug
-      let errorMessage = t('audiometry.errors.tryAgain') || 'Failed to save Ultrasound record. Please try again.';
+      let errorMessage = t('audiometry.errors.tryAgain') || 'Failed to save Audiometry record. Please try again.';
 
       if (error && typeof error === 'object' && 'message' in error) {
         const err = error as { message?: string; code?: string; details?: string; hint?: string };
@@ -617,7 +601,7 @@ const Audiometry = () => {
               errorMessage = 'Permission denied. Please check your role permissions.';
               break;
             case 'PGRST301': // RLS policy violation
-              errorMessage = 'Access denied. Your role may not have permission to save ultrasound records.';
+              errorMessage = 'Access denied. Your role may not have permission to save audiometry records.';
               break;
             case '23503': // Foreign key violation
               errorMessage = 'Invalid patient data. Please select a valid patient.';
@@ -950,77 +934,70 @@ const Audiometry = () => {
               </CardContent>
             </Card>
 
-            {/* File Upload Card */}
+            {/* Hearing Exam ABR Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
-                  <Upload className="w-6 h-6" />
-                  {t('audiometry.fileUpload.title')}
+                  <Activity className="w-6 h-6" />
+                  {t('audiometry.hearingExam.title') || 'Hearing Exam ABR'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <div
-                  className={`border-2 border-dashed rounded-xl p-8 transition-all duration-300 cursor-pointer hover:bg-slate-50 ${isDragging
-                    ? "border-blue-500 bg-blue-50"
-                    : file
-                      ? "border-green-500 bg-green-50"
-                      : "border-slate-300"
-                    } ${isRTL ? 'text-right' : 'text-center'}`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => document.getElementById('fileInput')?.click()}
-                >
-                  <input
-                    id="fileInput"
-                    type="file"
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/jpeg,image/png,image/jpg"
-                  />
+                <div className="space-y-6">
+                  {/* Table Header */}
+                  <div className={`grid grid-cols-3 gap-4 border-b-2 border-slate-300 pb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="font-semibold text-slate-700">
+                      {t('audiometry.hearingExam.ear') || 'Ear'}
+                    </div>
+                    <div className={`font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+                      {t('audiometry.hearingExam.passed') || 'Passed'}
+                    </div>
+                    <div className={`font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-center'}`}>
+                      {t('audiometry.hearingExam.failed') || 'Failed'}
+                    </div>
+                  </div>
 
-                  {file ? (
-                    <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-center'}`}>
-                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
-                        <CheckCircle className="w-16 h-16 text-green-500" />
-                      </div>
-                      <div className={isRTL ? 'text-right' : 'text-center'}>
-                        <p className="text-lg font-semibold text-green-700">{t('audiometry.fileUpload.fileSelected')}</p>
-                        <p className="text-slate-600 mt-1 break-all">{file.name}</p>
-                        <p className="text-sm text-slate-500 mt-1">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
-                      </div>
-                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFile();
-                          }}
-                          variant="outline"
-                          className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-                        >
-                          <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                          {t('audiometry.fileUpload.removeFile')}
-                        </Button>
-                      </div>
+                  {/* Left Ear Row */}
+                  <div className={`grid grid-cols-3 gap-4 items-center ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="font-medium text-slate-700">
+                      {t('audiometry.hearingExam.leftEar') || 'LT ear'}
                     </div>
-                  ) : (
-                    <div className="space-y-4 text-center">
-                      <div className="flex justify-center">
-                        <Upload className={`w-16 h-16 ${isDragging ? "text-blue-500" : "text-slate-400"}`} />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-semibold text-slate-700">
-                          {t('audiometry.fileUpload.dragDropText')}
-                        </p>
-                        <p className="text-slate-500 mt-1">{t('audiometry.fileUpload.clickToBrowse')}</p>
-                      </div>
-                      <div className="text-sm text-slate-500 text-center">
-                        {t('audiometry.fileUpload.supportedFormats')}
-                      </div>
+                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                      <Checkbox
+                        checked={leftEarPassed}
+                        onCheckedChange={handleLeftEarPassedChange}
+                        className="w-5 h-5"
+                      />
                     </div>
-                  )}
+                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                      <Checkbox
+                        checked={leftEarFailed}
+                        onCheckedChange={handleLeftEarFailedChange}
+                        className="w-5 h-5"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Ear Row */}
+                  <div className={`grid grid-cols-3 gap-4 items-center ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="font-medium text-slate-700">
+                      {t('audiometry.hearingExam.rightEar') || 'RT ear'}
+                    </div>
+                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                      <Checkbox
+                        checked={rightEarPassed}
+                        onCheckedChange={handleRightEarPassedChange}
+                        className="w-5 h-5"
+                      />
+                    </div>
+                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                      <Checkbox
+                        checked={rightEarFailed}
+                        onCheckedChange={handleRightEarFailedChange}
+                        className="w-5 h-5"
+                      />
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1153,7 +1130,7 @@ const Audiometry = () => {
             <Button
               size="lg"
               className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
-              disabled={!selectedPatient || !file || !selectedDoctor}
+              disabled={!selectedPatient || !selectedDoctor || (!leftEarPassed && !leftEarFailed && !rightEarPassed && !rightEarFailed)}
               onClick={handleSubmit}
             >
               <CheckCircle className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -1169,7 +1146,10 @@ const Audiometry = () => {
                 setPatientName("");
                 setDateOfBirth("");
                 setRequestingDoctor("");
-                setFile(null);
+                setLeftEarPassed(false);
+                setLeftEarFailed(false);
+                setRightEarPassed(false);
+                setRightEarFailed(false);
                 clearPatientSelection();
                 clearDoctorSelection();
               }}
