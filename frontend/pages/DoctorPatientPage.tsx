@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Users, Calendar, User, Filter, Plus, Edit, Save, X, FileText, AlertCircle, Clock, Stethoscope, Eye, Send, ScanLine, Activity, FlaskConical, CheckCircle, RefreshCw } from 'lucide-react';
 import { UltrasoundIcon } from '../components/icons/UltrasoundIcon';
+import { AudiometryIcon } from '../components/icons/AudiometryIcon';
+import { XRayIcon } from '../components/icons/XRayIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -1084,7 +1086,7 @@ const DoctorPatientsPage: React.FC = () => {
                                             onCheckedChange={() => toggleServiceType('xray')}
                                             className="w-5 h-5"
                                         />
-                                        <ScanLine className="h-6 w-6" />
+                                        <XRayIcon className="h-6 w-6" />
                                         <span className="font-medium">{isRTL ? 'أشعة إكس' : 'X-Ray'}</span>
                                     </div>
                                     <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('ultrasound')
@@ -1120,7 +1122,7 @@ const DoctorPatientsPage: React.FC = () => {
                                             onCheckedChange={() => toggleServiceType('audiometry')}
                                             className="w-5 h-5"
                                         />
-                                        <Activity className="h-6 w-6" />
+                                        <AudiometryIcon className="h-6 w-6" />
                                         <span className="font-medium">{isRTL ? 'قياس السمع' : 'Audiometry'}</span>
                                     </div>
                                 </div>

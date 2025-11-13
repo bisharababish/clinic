@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Eye,
 } from "lucide-react";
+import { AudiometryIcon } from "../components/icons/AudiometryIcon";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -635,7 +636,7 @@ const Audiometry = () => {
           <div className="mb-6 text-center px-2 pt-8">
             <div className="flex items-center mb-4 justify-center">
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
-                <Activity className="w-8 h-8 text-white" />
+                <AudiometryIcon className="w-8 h-8 text-white" />
               </div>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4 text-center px-2 break-words leading-loose whitespace-normal py-2">
@@ -939,7 +940,7 @@ const Audiometry = () => {
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
-                  <Activity className="w-6 h-6" />
+                  <AudiometryIcon className="w-6 h-6" />
                   {t('audiometry.hearingExam.title') || 'Hearing Exam ABR'}
                 </CardTitle>
               </CardHeader>

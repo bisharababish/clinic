@@ -1,6 +1,7 @@
 // DoctorXRayPage.tsx - With comprehensive skeleton loading
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Image, Calendar, User, Filter, Download, Eye, ZoomIn, ZoomOut, RotateCw, AlertCircle } from 'lucide-react';
+import { XRayIcon } from '../components/icons/XRayIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -625,7 +626,7 @@ const DoctorXRayPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                    <Image className="h-8 w-8 text-blue-600" />
+                                    <XRayIcon className="h-8 w-8 text-blue-600" />
                                     {t('doctorPages.xrayImages') || 'X-Ray Images'}
                                 </h1>
                                 <p className="mt-1 text-sm text-gray-600">

@@ -27,6 +27,8 @@ import {
     Download
 } from "lucide-react";
 import { UltrasoundIcon } from "../../../components/icons/UltrasoundIcon";
+import { AudiometryIcon } from "../../../components/icons/AudiometryIcon";
+import { XRayIcon } from "../../../components/icons/XRayIcon";
 import { Switch } from "../../../components/ui/switch";
 import { useEffect } from 'react';
 
@@ -485,9 +487,9 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                     'doctor': Stethoscope,
                                     'nurse': Activity,
                                     'lab': Database,
-                                    'x ray': Activity,
+                                    'x ray': XRayIcon,
                                     'ultrasound': UltrasoundIcon,
-                                    'audiometry': Activity
+                                    'audiometry': AudiometryIcon
                                 };
 
                                 // Create role cards using the SAME chart data

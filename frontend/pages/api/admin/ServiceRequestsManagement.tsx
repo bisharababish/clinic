@@ -20,6 +20,8 @@ import {
     AlertCircle
 } from 'lucide-react';
 import { UltrasoundIcon } from '../../../components/icons/UltrasoundIcon';
+import { AudiometryIcon } from '../../../components/icons/AudiometryIcon';
+import { XRayIcon } from '../../../components/icons/XRayIcon';
 
 interface ServiceRequest {
     id: number;
@@ -281,10 +283,10 @@ const ServiceRequestsManagement: React.FC = () => {
     // Get service icon
     const getServiceIcon = (type: string) => {
         switch (type) {
-            case 'xray': return <ScanLine className="h-5 w-5" />;
+            case 'xray': return <XRayIcon className="h-5 w-5" />;
             case 'ultrasound': return <UltrasoundIcon className="h-5 w-5" />;
             case 'lab': return <FlaskConical className="h-5 w-5" />;
-            case 'audiometry': return <Activity className="h-5 w-5" />;
+            case 'audiometry': return <AudiometryIcon className="h-5 w-5" />;
             default: return <Activity className="h-5 w-5" />;
         }
     };
