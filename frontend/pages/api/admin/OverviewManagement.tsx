@@ -26,6 +26,7 @@ import {
     RefreshCw,
     Download
 } from "lucide-react";
+import { UltrasoundIcon } from "../../../components/icons/UltrasoundIcon";
 import { Switch } from "../../../components/ui/switch";
 import { useEffect } from 'react';
 
@@ -485,7 +486,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                                     'nurse': Activity,
                                     'lab': Database,
                                     'x ray': Activity,
-                                    'ultrasound': Activity,
+                                    'ultrasound': UltrasoundIcon,
                                     'audiometry': Activity
                                 };
 

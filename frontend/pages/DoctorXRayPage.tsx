@@ -196,7 +196,7 @@ const DoctorXRayPage: React.FC = () => {
         // Skull
         if (lowerPart.includes('skull') || lowerPart.includes('frontal') || lowerPart.includes('parietal') ||
             lowerPart.includes('temporal') || lowerPart.includes('occipital') || lowerPart.includes('sphenoid') ||
-            lowerPart.includes('ethmoid')) {
+            lowerPart.includes('ethmoid') || lowerPart.includes('paranasal') || lowerPart.includes('sinus')) {
             return 'skull';
         }
 

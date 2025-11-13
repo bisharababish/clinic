@@ -523,11 +523,12 @@ const XRay = () => {
       };
 
       // Insert single record with all selected body parts
+      // Note: selectedBodyParts array includes values like "paranasal_sinus" which will be saved to body_part column
       const { error: insertError } = await supabase
         .from('xray_images')
         .insert({
           ...patientData,
-          body_part: selectedBodyParts,
+          body_part: selectedBodyParts, // Array of body part values (e.g., ["skull", "paranasal_sinus"])
           indication: clinicalIndication,
           requesting_doctor: selectedDoctor?.name || requestingDoctor,
           image_url: filePath // Store the path with folder, not public URL

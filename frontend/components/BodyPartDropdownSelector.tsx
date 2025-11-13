@@ -27,7 +27,8 @@ const BodyPartDropdownSelector: React.FC<BodyPartDropdownSelectorProps> = ({
                 { value: "right_temporal_bone", label: i18n.language === 'ar' ? 'العظم الصدغي الأيمن' : 'Right Temporal Bone' },
                 { value: "occipital_bone", label: i18n.language === 'ar' ? 'العظم القذالي' : 'Occipital Bone' },
                 { value: "sphenoid_bone", label: i18n.language === 'ar' ? 'العظم الوتدي' : 'Sphenoid Bone' },
-                { value: "ethmoid_bone", label: i18n.language === 'ar' ? 'العظم الغربالي' : 'Ethmoid Bone' }
+                { value: "ethmoid_bone", label: i18n.language === 'ar' ? 'العظم الغربالي' : 'Ethmoid Bone' },
+                { value: "paranasal_sinus", label: i18n.language === 'ar' ? 'الجيوب الأنفية' : 'Paranasal Sinus' }
             ]
         },
         facialBones: {

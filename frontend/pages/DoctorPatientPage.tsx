@@ -1,11 +1,13 @@
 // DoctorPatientsPage.tsx - Patient Management with Clinical Notes
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Users, Calendar, User, Filter, Plus, Edit, Save, X, FileText, AlertCircle, Clock, Stethoscope, Eye, Send, ScanLine, Activity, FlaskConical, CheckCircle, RefreshCw } from 'lucide-react';
+import { UltrasoundIcon } from '../components/icons/UltrasoundIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { Skeleton } from "../components/ui/skeleton";
 import { Input } from "../components/ui/input";
+import { Checkbox } from "../components/ui/checkbox";
 import { useToast } from "../hooks/use-toast";
 import {
     AlertDialog,
@@ -172,14 +174,19 @@ const DoctorPatientsPage: React.FC = () => {
     const [filterPriority, setFilterPriority] = useState<string>('');
     const isFetchingRef = useRef(false);
     const [showRequestModal, setShowRequestModal] = useState<boolean>(false);
-    const [requestType, setRequestType] = useState<'xray' | 'ultrasound' | 'lab' | 'audiometry' | null>(null);
-    const [requestSubtype, setRequestSubtype] = useState<string>('');
+    // Multiple service selection support
+    const [selectedServiceTypes, setSelectedServiceTypes] = useState<Set<'xray' | 'ultrasound' | 'lab' | 'audiometry'>>(new Set());
+    const [selectedSubtypes, setSelectedSubtypes] = useState<Map<string, { subtype: string; price: number; serviceType: string }>>(new Map());
     const [requestNotes, setRequestNotes] = useState<string>('');
-    const [servicePricing, setServicePricing] = useState<ServicePricing[]>([]);
-    const [isLoadingServicePricing, setIsLoadingServicePricing] = useState(false);
-    const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
+    const [servicePricing, setServicePricing] = useState<Map<string, ServicePricing[]>>(new Map());
+    const [isLoadingServicePricing, setIsLoadingServicePricing] = useState<Map<string, boolean>>(new Map());
     const [selectedLabCategory, setSelectedLabCategory] = useState<string | null>(null);
     const [labSearchQuery, setLabSearchQuery] = useState<string>('');
+    
+    // Legacy state for backward compatibility (will be removed)
+    const [requestType, setRequestType] = useState<'xray' | 'ultrasound' | 'lab' | 'audiometry' | null>(null);
+    const [requestSubtype, setRequestSubtype] = useState<string>('');
+    const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
     
     // Lab test categories mapping
     const labCategories = {
@@ -548,6 +555,96 @@ const DoctorPatientsPage: React.FC = () => {
             case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
             default: return 'bg-gray-100 text-gray-800 border-gray-200';
         }
+    };
+
+    // Helper: Toggle service type selection
+    const toggleServiceType = async (serviceType: 'xray' | 'ultrasound' | 'lab' | 'audiometry') => {
+        const newSelectedTypes = new Set(selectedServiceTypes);
+        if (newSelectedTypes.has(serviceType)) {
+            newSelectedTypes.delete(serviceType);
+            // Remove all subtypes for this service type
+            const newSubtypes = new Map(selectedSubtypes);
+            for (const [key, value] of selectedSubtypes.entries()) {
+                if (value.serviceType === serviceType) {
+                    newSubtypes.delete(key);
+                }
+            }
+            setSelectedSubtypes(newSubtypes);
+            // Remove pricing for this service type
+            const newPricing = new Map(servicePricing);
+            newPricing.delete(serviceType);
+            setServicePricing(newPricing);
+        } else {
+            newSelectedTypes.add(serviceType);
+            // Load pricing for this service type
+            await loadServicePricing(serviceType);
+        }
+        setSelectedServiceTypes(newSelectedTypes);
+    };
+
+    // Helper: Load service pricing for a specific service type
+    const loadServicePricing = async (serviceType: 'xray' | 'ultrasound' | 'lab' | 'audiometry') => {
+        const newLoading = new Map(isLoadingServicePricing);
+        newLoading.set(serviceType, true);
+        setIsLoadingServicePricing(newLoading);
+
+        try {
+            if (serviceType === 'xray') {
+                // X-Ray doesn't need subtypes
+                const newPricing = new Map(servicePricing);
+                newPricing.set(serviceType, []);
+                setServicePricing(newPricing);
+            } else if (serviceType === 'lab') {
+                // Lab needs category selection first, so we'll handle it differently
+                const newPricing = new Map(servicePricing);
+                newPricing.set(serviceType, []);
+                setServicePricing(newPricing);
+            } else {
+                // Ultrasound and Audiometry
+                const { data, error } = await supabase
+                    .from('service_pricing')
+                    .select('*')
+                    .eq('service_type', serviceType)
+                    .eq('is_active', true)
+                    .order('service_subtype');
+
+                if (error) {
+                    console.error(`Error loading ${serviceType} pricing:`, error);
+                    toast({
+                        title: isRTL ? 'خطأ' : 'Error',
+                        description: isRTL ? `فشل تحميل خيارات ${serviceType}` : `Failed to load ${serviceType} options`,
+                        variant: 'destructive',
+                    });
+                } else if (data) {
+                    const newPricing = new Map(servicePricing);
+                    newPricing.set(serviceType, data);
+                    setServicePricing(newPricing);
+                }
+            }
+        } catch (err) {
+            console.error(`Error loading ${serviceType} pricing:`, err);
+            toast({
+                title: isRTL ? 'خطأ' : 'Error',
+                description: isRTL ? 'حدث خطأ أثناء تحميل الخيارات' : 'An error occurred while loading options',
+                variant: 'destructive',
+            });
+        } finally {
+            const newLoading = new Map(isLoadingServicePricing);
+            newLoading.set(serviceType, false);
+            setIsLoadingServicePricing(newLoading);
+        }
+    };
+
+    // Helper: Toggle subtype selection
+    const toggleSubtype = (serviceType: string, subtype: string, price: number) => {
+        const key = `${serviceType}_${subtype}`;
+        const newSubtypes = new Map(selectedSubtypes);
+        if (newSubtypes.has(key)) {
+            newSubtypes.delete(key);
+        } else {
+            newSubtypes.set(key, { subtype, price, serviceType });
+        }
+        setSelectedSubtypes(newSubtypes);
     };
 
     if (!user && initializing) {
@@ -953,14 +1050,17 @@ const DoctorPatientsPage: React.FC = () => {
                                 <button
                                     onClick={() => {
                                         setShowRequestModal(false);
-                                        setRequestType(null);
+                                        setSelectedServiceTypes(new Set());
+                                        setSelectedSubtypes(new Map());
                                         setRequestNotes('');
+                                        setServicePricing(new Map());
+                                        setIsLoadingServicePricing(new Map());
+                                        setSelectedLabCategory(null);
+                                        setLabSearchQuery('');
+                                        // Reset legacy state
+                                        setRequestType(null);
                                         setRequestSubtype('');
                                         setSelectedPrice(null);
-                                        setServicePricing([]);
-                                        setSelectedLabCategory(null);
-                                        setIsLoadingServicePricing(false);
-                                        setLabSearchQuery('');
                                     }}
                                     className="text-gray-400 hover:text-gray-600"
                                 >
@@ -972,363 +1072,268 @@ const DoctorPatientsPage: React.FC = () => {
                         <div className="p-6">
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    {isRTL ? 'نوع الخدمة' : 'Service Type'}
+                                    {isRTL ? 'نوع الخدمة (يمكن اختيار أكثر من واحد)' : 'Service Type (Multiple Selection)'}
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setRequestType('xray');
-                                            setRequestSubtype('');
-                                            setSelectedPrice(null);
-                                            setServicePricing([]);
-                                            setIsLoadingServicePricing(false);
-                                        }}
-                                        className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${requestType === 'xray'
-                                                ? 'border-blue-600 bg-blue-50'
-                                                : 'border-gray-300 hover:border-gray-400'
-                                            }`}
-                                    >
+                                    <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('xray')
+                                            ? 'border-blue-600 bg-blue-50'
+                                            : 'border-gray-300 hover:border-gray-400'
+                                        }`}>
+                                        <Checkbox
+                                            checked={selectedServiceTypes.has('xray')}
+                                            onCheckedChange={() => toggleServiceType('xray')}
+                                            className="w-5 h-5"
+                                        />
                                         <ScanLine className="h-6 w-6" />
-                                        <span>{isRTL ? 'أشعة إكس' : 'X-Ray'}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            setRequestType('ultrasound');
-                                            setRequestSubtype('');
-                                            setSelectedPrice(null);
-                                            setIsLoadingServicePricing(true);
-                                            setServicePricing([]);
-                                            // Load ultrasound pricing
-                                            try {
-                                                const { data, error } = await supabase
-                                                    .from('service_pricing')
-                                                    .select('*')
-                                                    .eq('service_type', 'ultrasound')
-                                                    .eq('is_active', true)
-                                                    .order('service_subtype');
-                                                if (error) {
-                                                    console.error('Error loading ultrasound pricing:', error);
-                                                    toast({
-                                                        title: isRTL ? 'خطأ' : 'Error',
-                                                        description: isRTL ? 'فشل تحميل خيارات الموجات فوق الصوتية' : 'Failed to load ultrasound options',
-                                                        variant: 'destructive',
-                                                    });
-                                                } else if (data) {
-                                                    setServicePricing(data);
-                                                }
-                                            } catch (err) {
-                                                console.error('Error loading ultrasound pricing:', err);
-                                                toast({
-                                                    title: isRTL ? 'خطأ' : 'Error',
-                                                    description: isRTL ? 'حدث خطأ أثناء تحميل الخيارات' : 'An error occurred while loading options',
-                                                    variant: 'destructive',
-                                                });
-                                            } finally {
-                                                setIsLoadingServicePricing(false);
-                                            }
-                                        }}
-                                        className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${requestType === 'ultrasound'
-                                                ? 'border-blue-600 bg-blue-50'
-                                                : 'border-gray-300 hover:border-gray-400'
-                                            }`}
-                                    >
-                                        <Activity className="h-6 w-6" />
-                                        <span>{isRTL ? 'موجات فوق صوتية' : 'Ultrasound'}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            setRequestType('lab');
-                                            setRequestSubtype('');
-                                            setSelectedPrice(null);
-                                            setIsLoadingServicePricing(true);
-                                            setServicePricing([]);
-                                            // Reset category selection when switching to lab
-                                            setSelectedLabCategory(null);
-                                            setServicePricing([]);
-                                            setIsLoadingServicePricing(false);
-                                        }}
-                                        className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${requestType === 'lab'
-                                                ? 'border-blue-600 bg-blue-50'
-                                                : 'border-gray-300 hover:border-gray-400'
-                                            }`}
-                                    >
+                                        <span className="font-medium">{isRTL ? 'أشعة إكس' : 'X-Ray'}</span>
+                                    </div>
+                                    <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('ultrasound')
+                                            ? 'border-blue-600 bg-blue-50'
+                                            : 'border-gray-300 hover:border-gray-400'
+                                        }`}>
+                                        <Checkbox
+                                            checked={selectedServiceTypes.has('ultrasound')}
+                                            onCheckedChange={() => toggleServiceType('ultrasound')}
+                                            className="w-5 h-5"
+                                        />
+                                        <UltrasoundIcon className="h-6 w-6" />
+                                        <span className="font-medium">{isRTL ? 'موجات فوق صوتية' : 'Ultrasound'}</span>
+                                    </div>
+                                    <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('lab')
+                                            ? 'border-blue-600 bg-blue-50'
+                                            : 'border-gray-300 hover:border-gray-400'
+                                        }`}>
+                                        <Checkbox
+                                            checked={selectedServiceTypes.has('lab')}
+                                            onCheckedChange={() => toggleServiceType('lab')}
+                                            className="w-5 h-5"
+                                        />
                                         <FlaskConical className="h-6 w-6" />
-                                        <span>{isRTL ? 'مختبر' : 'Lab'}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            setRequestType('audiometry');
-                                            setRequestSubtype('');
-                                            setSelectedPrice(null);
-                                            setIsLoadingServicePricing(true);
-                                            setServicePricing([]);
-                                            // Load audiometry pricing
-                                            try {
-                                                const { data, error } = await supabase
-                                                    .from('service_pricing')
-                                                    .select('*')
-                                                    .eq('service_type', 'audiometry')
-                                                    .eq('is_active', true)
-                                                    .order('service_subtype');
-                                                if (error) {
-                                                    console.error('Error loading audiometry pricing:', error);
-                                                    toast({
-                                                        title: isRTL ? 'خطأ' : 'Error',
-                                                        description: isRTL ? 'فشل تحميل خيارات قياس السمع' : 'Failed to load audiometry options',
-                                                        variant: 'destructive',
-                                                    });
-                                                } else if (data) {
-                                                    setServicePricing(data);
-                                                }
-                                            } catch (err) {
-                                                console.error('Error loading audiometry pricing:', err);
-                                                toast({
-                                                    title: isRTL ? 'خطأ' : 'Error',
-                                                    description: isRTL ? 'حدث خطأ أثناء تحميل الخيارات' : 'An error occurred while loading options',
-                                                    variant: 'destructive',
-                                                });
-                                            } finally {
-                                                setIsLoadingServicePricing(false);
-                                            }
-                                        }}
-                                        className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${requestType === 'audiometry'
-                                                ? 'border-blue-600 bg-blue-50'
-                                                : 'border-gray-300 hover:border-gray-400'
-                                            }`}
-                                    >
+                                        <span className="font-medium">{isRTL ? 'مختبر' : 'Lab'}</span>
+                                    </div>
+                                    <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('audiometry')
+                                            ? 'border-blue-600 bg-blue-50'
+                                            : 'border-gray-300 hover:border-gray-400'
+                                        }`}>
+                                        <Checkbox
+                                            checked={selectedServiceTypes.has('audiometry')}
+                                            onCheckedChange={() => toggleServiceType('audiometry')}
+                                            className="w-5 h-5"
+                                        />
                                         <Activity className="h-6 w-6" />
-                                        <span>{isRTL ? 'قياس السمع' : 'Audiometry'}</span>
-                                    </button>
+                                        <span className="font-medium">{isRTL ? 'قياس السمع' : 'Audiometry'}</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Lab Category Selection */}
-                            {requestType === 'lab' && !selectedLabCategory && (
-                                <div className="mb-6">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        {isRTL ? 'اختر الفئة *' : 'Select Category *'}
-                                        <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {Object.entries(labCategories).map(([key, category]) => (
+                            {/* Service Subtype Selection for each selected service type */}
+                            {Array.from(selectedServiceTypes).map((serviceType) => {
+                                if (serviceType === 'xray') {
+                                    // X-Ray doesn't need subtypes
+                                    return null;
+                                }
+                                
+                                const pricing = servicePricing.get(serviceType) || [];
+                                const isLoading = isLoadingServicePricing.get(serviceType) || false;
+                                
+                                return (
+                                    <div key={serviceType} className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="text-lg font-semibold text-gray-800">
+                                                {serviceType === 'ultrasound' ? (isRTL ? 'موجات فوق الصوتية' : 'Ultrasound') :
+                                                 serviceType === 'audiometry' ? (isRTL ? 'قياس السمع' : 'Audiometry') :
+                                                 serviceType === 'lab' ? (isRTL ? 'مختبر' : 'Lab') : ''}
+                                            </h3>
                                             <button
-                                                key={key}
                                                 type="button"
-                                                onClick={async () => {
-                                                    setSelectedLabCategory(key);
-                                                    setIsLoadingServicePricing(true);
-                                                    setServicePricing([]);
-                                                    setRequestSubtype('');
-                                                    setSelectedPrice(null);
-                                                    setLabSearchQuery('');
-                                                    // Load tests for this category
-                                                    try {
-                                                        const { data, error } = await supabase
-                                                            .from('service_pricing')
-                                                            .select('*')
-                                                            .eq('service_type', 'lab')
-                                                            .eq('is_active', true)
-                                                            .in('service_subtype', category.subtypes)
-                                                            .order('service_name');
-                                                        if (error) {
-                                                            console.error('Error loading lab pricing:', error);
-                                                            toast({
-                                                                title: isRTL ? 'خطأ' : 'Error',
-                                                                description: isRTL ? 'فشل تحميل خيارات المختبر' : 'Failed to load lab options',
-                                                                variant: 'destructive',
-                                                            });
-                                                        } else if (data) {
-                                                            setServicePricing(data);
-                                                        }
-                                                    } catch (err) {
-                                                        console.error('Error loading lab pricing:', err);
-                                                        toast({
-                                                            title: isRTL ? 'خطأ' : 'Error',
-                                                            description: isRTL ? 'حدث خطأ أثناء تحميل الخيارات' : 'An error occurred while loading options',
-                                                            variant: 'destructive',
-                                                        });
-                                                    } finally {
-                                                        setIsLoadingServicePricing(false);
-                                                    }
-                                                }}
-                                                className="p-4 border-2 rounded-lg text-left transition-all border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                                                onClick={() => toggleServiceType(serviceType)}
+                                                className="text-sm text-red-600 hover:text-red-800"
                                             >
-                                                <div className="font-medium text-gray-900">
-                                                    {isRTL ? category.nameAr : category.name}
-                                                </div>
-                                                <div className="text-sm text-gray-600 mt-1">
-                                                    {category.subtypes.length} {isRTL ? 'اختبار' : 'tests'}
-                                                </div>
+                                                {isRTL ? 'إزالة' : 'Remove'}
                                             </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Service Subtype Selection - REQUIRED for ultrasound, audiometry, and lab */}
-                            {requestType && (
-                                (requestType === 'ultrasound' || requestType === 'audiometry') ? (
-                                    <div className="mb-6">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            {isRTL ? 'اختر نوع الفحص *' : 'Select Service Type *'}
-                                            <span className="text-red-500">*</span>
-                                        </label>
-                                        {isLoadingServicePricing ? (
-                                            <div className="text-center py-4 text-gray-500">
-                                                <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
-                                                <p>{isRTL ? 'جاري تحميل الخيارات...' : 'Loading options...'}</p>
-                                            </div>
-                                        ) : servicePricing.length === 0 ? (
-                                            <div className="text-center py-4 text-amber-600 border border-amber-200 rounded-lg bg-amber-50">
-                                                <AlertCircle className="h-6 w-6 mx-auto mb-2" />
-                                                <p className="font-medium">{isRTL ? 'لا توجد خيارات متاحة' : 'No options available'}</p>
-                                                <p className="text-sm mt-1">{isRTL ? 'يرجى التحقق من إعدادات قاعدة البيانات' : 'Please check database configuration'}</p>
-                                            </div>
-                                        ) : (
-                                            <div className="grid grid-cols-2 gap-3">
-                                                {servicePricing.map((pricing) => (
-                                                    <button
-                                                        key={pricing.id}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setRequestSubtype(pricing.service_subtype);
-                                                            setSelectedPrice(pricing.price);
-                                                        }}
-                                                        className={`p-4 border-2 rounded-lg text-left transition-all ${requestSubtype === pricing.service_subtype
-                                                                ? 'border-blue-600 bg-blue-50 shadow-md'
-                                                                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-start justify-between">
-                                                            <div className="flex-1">
-                                                                <div className="font-medium text-gray-900">
-                                                                    {isRTL ? (pricing.service_name_ar || pricing.service_name) : pricing.service_name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-600 mt-1">
-                                                                    {isRTL ? 'السعر' : 'Price'}: <span className="font-bold text-blue-600">₪{pricing.price}</span> {pricing.currency}
-                                                                </div>
+                                        </div>
+                                        
+                                        {serviceType === 'lab' && !selectedLabCategory && (
+                                            <div className="mb-4">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    {isRTL ? 'اختر الفئة *' : 'Select Category *'}
+                                                    <span className="text-red-500">*</span>
+                                                </label>
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    {Object.entries(labCategories).map(([key, category]) => (
+                                                        <button
+                                                            key={key}
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                setSelectedLabCategory(key);
+                                                                const newLoading = new Map(isLoadingServicePricing);
+                                                                newLoading.set('lab', true);
+                                                                setIsLoadingServicePricing(newLoading);
+                                                                setLabSearchQuery('');
+                                                                // Load tests for this category
+                                                                try {
+                                                                    const { data, error } = await supabase
+                                                                        .from('service_pricing')
+                                                                        .select('*')
+                                                                        .eq('service_type', 'lab')
+                                                                        .eq('is_active', true)
+                                                                        .in('service_subtype', category.subtypes)
+                                                                        .order('service_name');
+                                                                    if (error) {
+                                                                        console.error('Error loading lab pricing:', error);
+                                                                        toast({
+                                                                            title: isRTL ? 'خطأ' : 'Error',
+                                                                            description: isRTL ? 'فشل تحميل خيارات المختبر' : 'Failed to load lab options',
+                                                                            variant: 'destructive',
+                                                                        });
+                                                                    } else if (data) {
+                                                                        const newPricing = new Map(servicePricing);
+                                                                        newPricing.set('lab', data);
+                                                                        setServicePricing(newPricing);
+                                                                    }
+                                                                } catch (err) {
+                                                                    console.error('Error loading lab pricing:', err);
+                                                                    toast({
+                                                                        title: isRTL ? 'خطأ' : 'Error',
+                                                                        description: isRTL ? 'حدث خطأ أثناء تحميل الخيارات' : 'An error occurred while loading options',
+                                                                        variant: 'destructive',
+                                                                    });
+                                                                } finally {
+                                                                    const newLoading = new Map(isLoadingServicePricing);
+                                                                    newLoading.set('lab', false);
+                                                                    setIsLoadingServicePricing(newLoading);
+                                                                }
+                                                            }}
+                                                            className="p-4 border-2 rounded-lg text-left transition-all border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                                                        >
+                                                            <div className="font-medium text-gray-900">
+                                                                {isRTL ? category.nameAr : category.name}
                                                             </div>
-                                                            {requestSubtype === pricing.service_subtype && (
-                                                                <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                                                            )}
-                                                        </div>
-                                                    </button>
-                                                ))}
+                                                            <div className="text-sm text-gray-600 mt-1">
+                                                                {category.subtypes.length} {isRTL ? 'اختبار' : 'tests'}
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
-                                    </div>
-                                ) : requestType === 'lab' && selectedLabCategory ? (
-                                    <div className="mb-6">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <label className="block text-sm font-medium text-gray-700">
-                                                {isRTL ? 'اختر نوع الفحص *' : 'Select Test *'}
-                                                <span className="text-red-500">*</span>
-                                            </label>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                            setSelectedLabCategory(null);
-                                            setServicePricing([]);
-                                            setRequestSubtype('');
-                                            setSelectedPrice(null);
-                                            setLabSearchQuery('');
-                                                }}
-                                                className="text-sm text-blue-600 hover:text-blue-800"
-                                            >
-                                                {isRTL ? '← العودة للفئات' : '← Back to Categories'}
-                                            </button>
-                                        </div>
-                                        <div className="mb-2 p-2 bg-gray-50 rounded-lg">
-                                            <span className="text-sm font-medium text-gray-700">
-                                                {isRTL ? 'الفئة:' : 'Category:'} {isRTL ? labCategories[selectedLabCategory as keyof typeof labCategories].nameAr : labCategories[selectedLabCategory as keyof typeof labCategories].name}
-                                            </span>
-                                        </div>
-                                        {/* Search Input for Lab Tests */}
-                                        <div className="mb-4">
-                                            <div className="relative">
-                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <Input
-                                                    type="text"
-                                                    placeholder={isRTL ? 'ابحث عن الاختبار...' : 'Search for test...'}
-                                                    value={labSearchQuery}
-                                                    onChange={(e) => setLabSearchQuery(e.target.value)}
-                                                    className={`pl-10 ${isRTL ? 'text-right' : 'text-left'}`}
-                                                />
+                                        
+                                        {serviceType === 'lab' && selectedLabCategory && (
+                                            <div className="mb-4">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700">
+                                                        {isRTL ? 'اختر نوع الفحص (متعدد)' : 'Select Tests (Multiple)'}
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedLabCategory(null);
+                                                            const newPricing = new Map(servicePricing);
+                                                            newPricing.delete('lab');
+                                                            setServicePricing(newPricing);
+                                                            // Remove all lab subtypes
+                                                            const newSubtypes = new Map(selectedSubtypes);
+                                                            for (const [key, value] of selectedSubtypes.entries()) {
+                                                                if (value.serviceType === 'lab') {
+                                                                    newSubtypes.delete(key);
+                                                                }
+                                                            }
+                                                            setSelectedSubtypes(newSubtypes);
+                                                            setLabSearchQuery('');
+                                                        }}
+                                                        className="text-sm text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        {isRTL ? '← العودة للفئات' : '← Back to Categories'}
+                                                    </button>
+                                                </div>
+                                                <div className="mb-2 p-2 bg-gray-50 rounded-lg">
+                                                    <span className="text-sm font-medium text-gray-700">
+                                                        {isRTL ? 'الفئة:' : 'Category:'} {isRTL ? labCategories[selectedLabCategory as keyof typeof labCategories].nameAr : labCategories[selectedLabCategory as keyof typeof labCategories].name}
+                                                    </span>
+                                                </div>
+                                                {/* Search Input for Lab Tests */}
+                                                <div className="mb-4">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                        <Input
+                                                            type="text"
+                                                            placeholder={isRTL ? 'ابحث عن الاختبار...' : 'Search for test...'}
+                                                            value={labSearchQuery}
+                                                            onChange={(e) => setLabSearchQuery(e.target.value)}
+                                                            className={`pl-10 ${isRTL ? 'text-right' : 'text-left'}`}
+                                                        />
+                                                    </div>
+                                                    {labSearchQuery && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setLabSearchQuery('')}
+                                                            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                                                        >
+                                                            {isRTL ? 'مسح البحث' : 'Clear search'}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-                                            {labSearchQuery && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setLabSearchQuery('')}
-                                                    className="mt-2 text-sm text-blue-600 hover:text-blue-800"
-                                                >
-                                                    {isRTL ? 'مسح البحث' : 'Clear search'}
-                                                </button>
-                                            )}
-                                        </div>
-                                        {isLoadingServicePricing ? (
+                                        )}
+                                        
+                                        {isLoading ? (
                                             <div className="text-center py-4 text-gray-500">
                                                 <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
                                                 <p>{isRTL ? 'جاري تحميل الخيارات...' : 'Loading options...'}</p>
                                             </div>
-                                        ) : servicePricing.length === 0 ? (
+                                        ) : pricing.length === 0 && serviceType !== 'lab' ? (
                                             <div className="text-center py-4 text-amber-600 border border-amber-200 rounded-lg bg-amber-50">
                                                 <AlertCircle className="h-6 w-6 mx-auto mb-2" />
                                                 <p className="font-medium">{isRTL ? 'لا توجد خيارات متاحة' : 'No options available'}</p>
                                                 <p className="text-sm mt-1">{isRTL ? 'يرجى التحقق من إعدادات قاعدة البيانات' : 'Please check database configuration'}</p>
                                             </div>
-                                        ) : (
-                                            <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
-                                                {servicePricing
-                                                    .filter((pricing) => {
-                                                        if (!labSearchQuery.trim()) return true;
-                                                        const query = labSearchQuery.toLowerCase().trim();
-                                                        const nameEn = pricing.service_name?.toLowerCase() || '';
-                                                        const nameAr = pricing.service_name_ar?.toLowerCase() || '';
-                                                        const subtype = pricing.service_subtype?.toLowerCase() || '';
-                                                        return nameEn.includes(query) || nameAr.includes(query) || subtype.includes(query);
-                                                    })
-                                                    .map((pricing) => (
-                                                    <button
-                                                        key={pricing.id}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setRequestSubtype(pricing.service_subtype);
-                                                            setSelectedPrice(pricing.price);
-                                                        }}
-                                                        className={`p-4 border-2 rounded-lg text-left transition-all ${requestSubtype === pricing.service_subtype
-                                                                ? 'border-blue-600 bg-blue-50 shadow-md'
-                                                                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                                        ) : serviceType === 'lab' && !selectedLabCategory ? null : (
+                                            <div className={serviceType === 'lab' ? 'grid grid-cols-1 gap-3 max-h-96 overflow-y-auto' : 'grid grid-cols-2 gap-3'}>
+                                                {(serviceType === 'lab' ? pricing.filter((p) => {
+                                                    if (!labSearchQuery.trim()) return true;
+                                                    const query = labSearchQuery.toLowerCase().trim();
+                                                    const nameEn = p.service_name?.toLowerCase() || '';
+                                                    const nameAr = p.service_name_ar?.toLowerCase() || '';
+                                                    const subtype = p.service_subtype?.toLowerCase() || '';
+                                                    return nameEn.includes(query) || nameAr.includes(query) || subtype.includes(query);
+                                                }) : pricing).map((p) => {
+                                                    const key = `${serviceType}_${p.service_subtype}`;
+                                                    const isSelected = selectedSubtypes.has(key);
+                                                    return (
+                                                        <div
+                                                            key={p.id}
+                                                            className={`p-4 border-2 rounded-lg text-left transition-all flex items-start gap-3 ${
+                                                                isSelected
+                                                                    ? 'border-blue-600 bg-blue-50 shadow-md'
+                                                                    : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                                                             }`}
-                                                    >
-                                                        <div className="flex items-start justify-between">
+                                                        >
+                                                            <Checkbox
+                                                                checked={isSelected}
+                                                                onCheckedChange={() => toggleSubtype(serviceType, p.service_subtype || '', p.price)}
+                                                                className="w-5 h-5 mt-0.5"
+                                                            />
                                                             <div className="flex-1">
                                                                 <div className="font-medium text-gray-900">
-                                                                    {isRTL ? (pricing.service_name_ar || pricing.service_name) : pricing.service_name}
+                                                                    {isRTL ? (p.service_name_ar || p.service_name) : p.service_name}
                                                                 </div>
-                                                                {pricing.service_subtype && (
+                                                                {p.service_subtype && serviceType === 'lab' && (
                                                                     <div className="text-xs text-gray-500 mt-1">
-                                                                        {pricing.service_subtype}
+                                                                        {p.service_subtype}
                                                                     </div>
                                                                 )}
                                                                 <div className="text-sm text-gray-600 mt-1">
-                                                                    {isRTL ? 'السعر' : 'Price'}: <span className="font-bold text-blue-600">₪{pricing.price}</span> {pricing.currency}
+                                                                    {isRTL ? 'السعر' : 'Price'}: <span className="font-bold text-blue-600">₪{p.price}</span> {p.currency}
                                                                 </div>
                                                             </div>
-                                                            {requestSubtype === pricing.service_subtype && (
-                                                                <CheckCircle className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                                                            )}
                                                         </div>
-                                                    </button>
-                                                    ))}
-                                                {labSearchQuery.trim() && servicePricing.filter((pricing) => {
+                                                    );
+                                                })}
+                                                {serviceType === 'lab' && labSearchQuery.trim() && pricing.filter((p) => {
                                                     const query = labSearchQuery.toLowerCase().trim();
-                                                    const nameEn = pricing.service_name?.toLowerCase() || '';
-                                                    const nameAr = pricing.service_name_ar?.toLowerCase() || '';
-                                                    const subtype = pricing.service_subtype?.toLowerCase() || '';
+                                                    const nameEn = p.service_name?.toLowerCase() || '';
+                                                    const nameAr = p.service_name_ar?.toLowerCase() || '';
+                                                    const subtype = p.service_subtype?.toLowerCase() || '';
                                                     return nameEn.includes(query) || nameAr.includes(query) || subtype.includes(query);
                                                 }).length === 0 && (
                                                     <div className="text-center py-8 text-gray-500">
@@ -1340,33 +1345,46 @@ const DoctorPatientsPage: React.FC = () => {
                                             </div>
                                         )}
                                     </div>
-                                ) : null
-                            )}
-                            {selectedPrice && requestSubtype && (
-                                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <div className="text-sm font-medium text-gray-700">{isRTL ? 'تم اختيار' : 'Selected'}</div>
-                                            <div className="text-lg font-bold text-blue-600">
-                                                {servicePricing.find(p => p.service_subtype === requestSubtype)
-                                                    ? (isRTL
-                                                        ? servicePricing.find(p => p.service_subtype === requestSubtype)?.service_name_ar
-                                                        : servicePricing.find(p => p.service_subtype === requestSubtype)?.service_name)
-                                                    : requestSubtype}
+                                );
+                            })}
+
+                            {/* Summary of Selected Services */}
+                            {(selectedServiceTypes.has('xray') || selectedSubtypes.size > 0) && (
+                                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div className="text-sm font-medium text-gray-700 mb-3">{isRTL ? 'الخدمات المختارة' : 'Selected Services'}</div>
+                                    <div className="space-y-2">
+                                        {selectedServiceTypes.has('xray') && (
+                                            <div className="flex items-center justify-between p-2 bg-white rounded">
+                                                <span className="font-medium text-gray-900">{isRTL ? 'أشعة إكس' : 'X-Ray'}</span>
+                                                <span className="text-sm text-gray-600">{isRTL ? 'بدون نوع محدد' : 'No subtype'}</span>
                                             </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-sm text-gray-600">{isRTL ? 'المبلغ' : 'Amount'}</div>
-                                            <div className="text-2xl font-bold text-blue-600">₪{selectedPrice}</div>
-                                        </div>
+                                        )}
+                                        {Array.from(selectedSubtypes.values()).map((subtypeInfo, idx) => {
+                                            const pricing = servicePricing.get(subtypeInfo.serviceType)?.find(p => p.service_subtype === subtypeInfo.subtype);
+                                            return (
+                                                <div key={idx} className="flex items-center justify-between p-2 bg-white rounded">
+                                                    <div>
+                                                        <span className="font-medium text-gray-900">
+                                                            {isRTL ? (pricing?.service_name_ar || pricing?.service_name || subtypeInfo.subtype) : (pricing?.service_name || subtypeInfo.subtype)}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500 ml-2">
+                                                            ({subtypeInfo.serviceType})
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-sm font-bold text-blue-600">₪{subtypeInfo.price}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="mt-3 pt-3 border-t border-blue-200 flex items-center justify-between">
+                                        <span className="font-bold text-gray-900">{isRTL ? 'المجموع' : 'Total'}</span>
+                                        <span className="text-xl font-bold text-blue-600">
+                                            ₪{Array.from(selectedSubtypes.values()).reduce((sum, s) => sum + s.price, 0)}
+                                        </span>
                                     </div>
                                 </div>
                             )}
-                            {!requestSubtype && servicePricing.length > 0 && (
-                                <div className="mt-2 text-sm text-amber-600">
-                                    {isRTL ? '⚠️ يرجى اختيار نوع الفحص' : '⚠️ Please select a service type'}
-                                </div>
-                            )}
+
 
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1386,12 +1404,17 @@ const DoctorPatientsPage: React.FC = () => {
                                     type="button"
                                     onClick={() => {
                                         setShowRequestModal(false);
-                                        setRequestType(null);
-                                        setRequestSubtype(null);
+                                        setSelectedServiceTypes(new Set());
+                                        setSelectedSubtypes(new Map());
                                         setRequestNotes('');
+                                        setServicePricing(new Map());
+                                        setIsLoadingServicePricing(new Map());
+                                        setSelectedLabCategory(null);
+                                        setLabSearchQuery('');
+                                        // Reset legacy state
+                                        setRequestType(null);
+                                        setRequestSubtype('');
                                         setSelectedPrice(null);
-                                        setServicePricing([]);
-                                        setIsLoadingServicePricing(false);
                                     }}
                                     className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
                                 >
@@ -1399,32 +1422,35 @@ const DoctorPatientsPage: React.FC = () => {
                                 </button>
                                 <button
                                     type="button"
-                                    disabled={!requestType || ((requestType === 'ultrasound' || requestType === 'audiometry' || requestType === 'lab') && !requestSubtype)}
-                                    className={`px-6 py-2 rounded-md text-white font-medium flex items-center gap-2 ${!requestType || ((requestType === 'ultrasound' || requestType === 'audiometry' || requestType === 'lab') && !requestSubtype)
+                                    disabled={selectedServiceTypes.size === 0 || (selectedServiceTypes.has('ultrasound') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound')) || (selectedServiceTypes.has('audiometry') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry')) || (selectedServiceTypes.has('lab') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab'))}
+                                    className={`px-6 py-2 rounded-md text-white font-medium flex items-center gap-2 ${selectedServiceTypes.size === 0 || (selectedServiceTypes.has('ultrasound') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound')) || (selectedServiceTypes.has('audiometry') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry')) || (selectedServiceTypes.has('lab') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab'))
                                             ? 'bg-gray-400 cursor-not-allowed'
                                             : 'bg-blue-600 hover:bg-blue-700'
                                         }`}
                                     onClick={async () => {
-                                        if (!requestType || !selectedPatient || !user) {
+                                        if (selectedServiceTypes.size === 0 || !selectedPatient || !user) {
                                             toast({
                                                 title: isRTL ? 'خطأ' : 'Error',
-                                                description: isRTL ? 'يرجى اختيار نوع الخدمة' : 'Please select a service type',
+                                                description: isRTL ? 'يرجى اختيار نوع الخدمة على الأقل' : 'Please select at least one service type',
                                                 variant: 'destructive',
                                             });
                                             return;
                                         }
 
-                                        // Validate that subtype is selected for ultrasound, audiometry, and lab
-                                        if ((requestType === 'ultrasound' || requestType === 'audiometry' || requestType === 'lab') && !requestSubtype) {
+                                        // Validate that subtypes are selected for services that require them
+                                        const hasUltrasound = selectedServiceTypes.has('ultrasound');
+                                        const hasAudiometry = selectedServiceTypes.has('audiometry');
+                                        const hasLab = selectedServiceTypes.has('lab');
+                                        const hasUltrasoundSubtypes = Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound');
+                                        const hasAudiometrySubtypes = Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry');
+                                        const hasLabSubtypes = Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab');
+
+                                        if ((hasUltrasound && !hasUltrasoundSubtypes) || (hasAudiometry && !hasAudiometrySubtypes) || (hasLab && !hasLabSubtypes)) {
                                             toast({
                                                 title: isRTL ? 'خطأ' : 'Error',
                                                 description: isRTL 
-                                                    ? requestType === 'lab' 
-                                                        ? 'يرجى اختيار فئة واختبار من المختبر' 
-                                                        : 'يرجى اختيار نوع الفحص المحدد (مثل: الرقبة، الرأس، البطن، إلخ)'
-                                                    : requestType === 'lab'
-                                                        ? 'Please select a category and test from the lab'
-                                                        : 'Please select a specific service type (e.g., Neck, Head, Abdomen, etc.)',
+                                                    ? 'يرجى اختيار نوع الفحص المحدد للخدمات المختارة'
+                                                    : 'Please select specific service types for the selected services',
                                                 variant: 'destructive',
                                             });
                                             return;
@@ -1457,38 +1483,52 @@ const DoctorPatientsPage: React.FC = () => {
 
                                             const doctorName = `${firstName} ${secondName} ${thirdName} ${fourthName}`.trim();
 
-                                            // Get service name for display
-                                            let serviceDisplayName: string | null = requestType;
-                                            if (requestSubtype && servicePricing.length > 0) {
-                                                const selectedPricing = servicePricing.find(p => p.service_subtype === requestSubtype);
-                                                if (selectedPricing) {
-                                                    serviceDisplayName = isRTL ? (selectedPricing.service_name_ar || selectedPricing.service_name) : selectedPricing.service_name;
-                                                }
+                                            // Build array of service requests to insert
+                                            const requestsToInsert: any[] = [];
+
+                                            // Add X-Ray request if selected
+                                            if (selectedServiceTypes.has('xray')) {
+                                                requestsToInsert.push({
+                                                    patient_id: selectedPatient.id,
+                                                    patient_email: selectedPatient.email,
+                                                    patient_name: selectedPatient.name,
+                                                    doctor_id: userInfo.userid,
+                                                    doctor_name: doctorName,
+                                                    service_type: 'xray',
+                                                    service_subtype: null,
+                                                    price: null,
+                                                    currency: 'ILS',
+                                                    notes: requestNotes || null,
+                                                    status: 'pending',
+                                                    payment_status: 'pending'
+                                                });
                                             }
 
-                                            // Create service request
-                                            const requestDataToInsert = {
-                                                patient_id: selectedPatient.id,
-                                                patient_email: selectedPatient.email,
-                                                patient_name: selectedPatient.name,
-                                                doctor_id: userInfo.userid,
-                                                doctor_name: doctorName,
-                                                service_type: requestType,
-                                                service_subtype: requestSubtype || null,
-                                                price: selectedPrice || null,
-                                                currency: 'ILS',
-                                                notes: requestNotes || null,
-                                                status: 'pending',
-                                                payment_status: 'pending'
-                                            };
+                                            // Add requests for each selected subtype
+                                            for (const subtypeInfo of selectedSubtypes.values()) {
+                                                requestsToInsert.push({
+                                                    patient_id: selectedPatient.id,
+                                                    patient_email: selectedPatient.email,
+                                                    patient_name: selectedPatient.name,
+                                                    doctor_id: userInfo.userid,
+                                                    doctor_name: doctorName,
+                                                    service_type: subtypeInfo.serviceType,
+                                                    service_subtype: subtypeInfo.subtype,
+                                                    price: subtypeInfo.price,
+                                                    currency: 'ILS',
+                                                    notes: requestNotes || null,
+                                                    status: 'pending',
+                                                    payment_status: 'pending'
+                                                });
+                                            }
 
-                                            console.log('Creating service request with data:', requestDataToInsert);
+                                            console.log('Creating service requests:', requestsToInsert);
 
-                                            const { data: requestData, error: requestError } = await supabase
+                                            // Insert all requests at once
+                                            const { data: requestDataArray, error: requestError } = await supabase
                                                 .from('service_requests')
-                                                .insert([requestDataToInsert])
-                                                .select()
-                                                .single();
+                                                .insert(requestsToInsert)
+                                                .select();
 
                                             if (requestError) throw requestError;
 
@@ -1496,19 +1536,45 @@ const DoctorPatientsPage: React.FC = () => {
                                             const { createNotification } = await import('../lib/deletionRequests');
 
                                             // Notify secretary
-                                            const secretaryEmails = await supabase
+                                            const { data: secretaryEmails } = await supabase
                                                 .from('userinfo')
                                                 .select('user_email')
                                                 .eq('user_roles', 'Secretary');
 
-                                            if (secretaryEmails.data) {
-                                                for (const secretary of secretaryEmails.data) {
+                                            if (secretaryEmails && requestDataArray) {
+                                                for (const secretary of secretaryEmails) {
+                                                    for (const requestData of requestDataArray) {
+                                                        const serviceTypeName = requestData.service_type === 'xray' ? (isRTL ? 'أشعة إكس' : 'X-Ray') :
+                                                                               requestData.service_type === 'ultrasound' ? (isRTL ? 'موجات فوق صوتية' : 'Ultrasound') :
+                                                                               requestData.service_type === 'lab' ? (isRTL ? 'مختبر' : 'Lab') :
+                                                                               (isRTL ? 'قياس السمع' : 'Audiometry');
+                                                        await createNotification(
+                                                            secretary.user_email,
+                                                            isRTL ? 'طلب خدمة جديد' : 'New Service Request',
+                                                            isRTL
+                                                                ? `طلب ${serviceTypeName} جديد للمريض ${selectedPatient.name}`
+                                                                : `New ${requestData.service_type} request for patient ${selectedPatient.name}`,
+                                                            'info',
+                                                            'service_requests',
+                                                            requestData.id.toString()
+                                                        );
+                                                    }
+                                                }
+                                            }
+
+                                            // Notify patient
+                                            if (requestDataArray) {
+                                                for (const requestData of requestDataArray) {
+                                                    const serviceTypeName = requestData.service_type === 'xray' ? (isRTL ? 'أشعة إكس' : 'X-Ray') :
+                                                                           requestData.service_type === 'ultrasound' ? (isRTL ? 'موجات فوق صوتية' : 'Ultrasound') :
+                                                                           requestData.service_type === 'lab' ? (isRTL ? 'مختبر' : 'Lab') :
+                                                                           (isRTL ? 'قياس السمع' : 'Audiometry');
                                                     await createNotification(
-                                                        secretary.user_email,
+                                                        selectedPatient.email,
                                                         isRTL ? 'طلب خدمة جديد' : 'New Service Request',
                                                         isRTL
-                                                            ? `طلب ${requestType === 'xray' ? 'أشعة إكس' : requestType === 'ultrasound' ? 'موجات فوق صوتية' : requestType === 'lab' ? 'مختبر' : 'قياس السمع'} جديد للمريض ${selectedPatient.name}`
-                                                            : `New ${requestType} request for patient ${selectedPatient.name}`,
+                                                            ? `تم إنشاء طلب ${serviceTypeName} لك`
+                                                            : `A ${requestData.service_type} request has been created for you`,
                                                         'info',
                                                         'service_requests',
                                                         requestData.id.toString()
@@ -1516,31 +1582,26 @@ const DoctorPatientsPage: React.FC = () => {
                                                 }
                                             }
 
-                                            // Notify patient
-                                            await createNotification(
-                                                selectedPatient.email,
-                                                isRTL ? 'طلب خدمة جديد' : 'New Service Request',
-                                                isRTL
-                                                    ? `تم إنشاء طلب ${requestType === 'xray' ? 'أشعة إكس' : requestType === 'ultrasound' ? 'موجات فوق صوتية' : requestType === 'lab' ? 'مختبر' : 'قياس السمع'} لك`
-                                                    : `A ${requestType} request has been created for you`,
-                                                'info',
-                                                'service_requests',
-                                                requestData.id.toString()
-                                            );
-
                                             toast({
                                                 title: isRTL ? 'نجح' : 'Success',
-                                                description: isRTL ? 'تم إنشاء الطلب بنجاح' : 'Request created successfully',
+                                                description: isRTL 
+                                                    ? `تم إنشاء ${requestDataArray?.length || 0} طلب بنجاح` 
+                                                    : `Successfully created ${requestDataArray?.length || 0} request(s)`,
                                                 style: { backgroundColor: '#16a34a', color: '#fff' },
                                             });
 
                                             setShowRequestModal(false);
+                                            setSelectedServiceTypes(new Set());
+                                            setSelectedSubtypes(new Map());
+                                            setRequestNotes('');
+                                            setServicePricing(new Map());
+                                            setIsLoadingServicePricing(new Map());
+                                            setSelectedLabCategory(null);
+                                            setLabSearchQuery('');
+                                            // Reset legacy state
                                             setRequestType(null);
                                             setRequestSubtype('');
-                                            setRequestNotes('');
-                                            setServicePricing([]);
                                             setSelectedPrice(null);
-                                            setIsLoadingServicePricing(false);
                                         } catch (err: unknown) {
                                             console.error('Error creating request:', err);
                                             const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';

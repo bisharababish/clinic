@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Eye,
 } from "lucide-react";
+import { UltrasoundIcon } from "../components/icons/UltrasoundIcon";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -662,7 +663,7 @@ const Ultrasound = () => {
           <div className="mb-6 text-center px-2 pt-8">
             <div className="flex items-center mb-4 justify-center">
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
-                <Activity className="w-8 h-8 text-white" />
+                <UltrasoundIcon className="w-8 h-8 text-white" />
               </div>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4 text-center px-2 break-words leading-loose whitespace-normal py-2">
