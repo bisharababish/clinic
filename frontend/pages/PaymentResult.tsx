@@ -32,18 +32,73 @@ const PaymentResult = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
+        // CyberSource can send data either via:
+        // 1. GET redirect (query parameters in URL)
+        // 2. POST redirect (form data - but React Router can't read POST body)
+        
         const params = new URLSearchParams(location.search);
-
-        if (!params.has("signature")) {
-            setStatus("failed");
-            setErrorMessage(isRTL ? "بيانات الدفع غير متوفرة." : "Payment confirmation data is missing.");
-            return;
-        }
-
         const fields: Record<string, string> = {};
-        params.forEach((value, key) => {
-            fields[key] = value;
-        });
+
+        // Check URL query parameters first
+        if (params.has("signature")) {
+            params.forEach((value, key) => {
+                fields[key] = value;
+            });
+        } else {
+            // Check for error parameters from backend callback
+            if (params.has("error")) {
+                const errorType = params.get("error");
+                let errorMsg = isRTL 
+                    ? "حدث خطأ أثناء معالجة الدفع." 
+                    : "An error occurred while processing the payment.";
+                
+                if (errorType === "no_data") {
+                    errorMsg = isRTL 
+                        ? "لم يتم استلام بيانات الدفع من بوابة الدفع." 
+                        : "Payment data was not received from the payment gateway.";
+                } else if (errorType === "invalid_signature") {
+                    errorMsg = isRTL 
+                        ? "فشل التحقق من صحة بيانات الدفع." 
+                        : "Payment data verification failed.";
+                } else if (errorType === "missing_reference") {
+                    errorMsg = isRTL 
+                        ? "معرّف الدفع مفقود." 
+                        : "Payment reference is missing.";
+                } else if (errorType === "processing_failed") {
+                    errorMsg = isRTL 
+                        ? "فشل معالجة الدفع. يرجى المحاولة مرة أخرى." 
+                        : "Payment processing failed. Please try again.";
+                }
+                
+                setStatus("failed");
+                setErrorMessage(errorMsg);
+                return;
+            }
+            
+            // If no signature in URL, check if we have any payment-related params
+            // Sometimes CyberSource sends data with different field names
+            const hasPaymentData = params.has("req_reference_number") || 
+                                   params.has("reference_number") || 
+                                   params.has("transaction_id") ||
+                                   params.has("decision");
+            
+            if (hasPaymentData) {
+                params.forEach((value, key) => {
+                    fields[key] = value;
+                });
+            } else {
+                // No payment data found - this could mean:
+                // 1. User navigated directly to this page
+                // 2. CyberSource POSTed but React Router can't read POST body
+                // 3. Redirect failed
+                console.warn("No payment data found in URL:", location.search);
+                setStatus("failed");
+                setErrorMessage(isRTL 
+                    ? "بيانات الدفع غير متوفرة. يرجى التحقق من أنك قمت بإكمال عملية الدفع." 
+                    : "Payment confirmation data is missing. Please verify that you completed the payment process.");
+                return;
+            }
+        }
 
         let isCancelled = false;
 

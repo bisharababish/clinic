@@ -804,6 +804,10 @@ const Payment = () => {
             };
 
             try {
+                // Use backend callback endpoint that will redirect to frontend
+                const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+                const callbackUrl = `${apiBaseUrl}/api/payments/cybersource/callback`;
+                
                 payload = await apiCall<{
                     success: boolean;
                     endpoint: string;
@@ -814,8 +818,8 @@ const Payment = () => {
                         amount: amountValue,
                         currency: currencyValue,
                         referenceNumber,
-                        successUrl: `${window.location.origin}/payment/result`,
-                        cancelUrl: `${window.location.origin}/payment/result`,
+                        successUrl: callbackUrl,
+                        cancelUrl: callbackUrl,
                     }),
                     signal: controller.signal,
                 });

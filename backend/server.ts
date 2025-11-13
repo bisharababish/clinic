@@ -227,6 +227,164 @@ app.post('/api/payments/cybersource/session', validateSession, csrfProtection, (
     }
 });
 
+// Public endpoint for CyberSource to POST payment results (no auth required)
+// Note: This endpoint is public and doesn't require authentication since CyberSource POSTs from their servers
+app.post('/api/payments/cybersource/callback', async (req: Request, res: Response): Promise<void> => {
+    try {
+        // CyberSource POSTs form data directly, so we need to parse it from req.body
+        const fields = req.body as Record<string, unknown>;
+        
+        if (!fields || Object.keys(fields).length === 0) {
+            console.error('❌ CyberSource callback: No fields received');
+            // Redirect to frontend with error
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            res.redirect(`${frontendUrl}/payment/result?error=no_data`);
+            return;
+        }
+
+        console.log('📥 CyberSource callback received:', Object.keys(fields));
+
+        const normalizedFields = normalizeHostedCheckoutFields(fields);
+
+        // Verify signature
+        if (!verifyHostedCheckoutSignature(normalizedFields)) {
+            console.error('❌ CyberSource callback: Invalid signature');
+            logSecurity('Invalid CyberSource signature detected', {
+                referenceNumber: normalizedFields.reference_number,
+                transactionId: normalizedFields.transaction_id,
+            });
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            res.redirect(`${frontendUrl}/payment/result?error=invalid_signature`);
+            return;
+        }
+
+        const decision = normalizedFields.decision || normalizedFields.auth_response;
+        const referenceNumber = normalizedFields.req_reference_number || normalizedFields.reference_number;
+        const transactionId = normalizedFields.transaction_id || normalizedFields.request_id || normalizedFields.payment_token;
+        const amountValue = normalizedFields.auth_amount || normalizedFields.amount || '0';
+        const currency = normalizedFields.req_currency || normalizedFields.currency || 'ILS';
+
+        let amount = parseFloat(amountValue);
+        if (Number.isNaN(amount)) {
+            amount = 0;
+        }
+        const status = decision === 'ACCEPT' ? 'completed' : 'failed';
+
+        if (!referenceNumber) {
+            console.error('❌ CyberSource callback: Missing reference number');
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            res.redirect(`${frontendUrl}/payment/result?error=missing_reference`);
+            return;
+        }
+
+        // Process payment in database
+        const now = new Date().toISOString();
+        if (referenceNumber.startsWith('APT-')) {
+            const bookingId = referenceNumber.replace('APT-', '');
+
+            const { error: bookingUpdateError } = await supabaseAdmin
+                .from('payment_bookings')
+                .update({
+                    payment_status: status === 'completed' ? 'paid' : 'failed',
+                    payment_method: 'visa',
+                    gateway_transaction_id: transactionId,
+                    gateway_name: 'cybersource',
+                    updated_at: now,
+                })
+                .eq('id', bookingId);
+
+            if (bookingUpdateError) {
+                console.error('❌ Error updating booking:', bookingUpdateError);
+            }
+
+            const { error: transactionInsertError } = await supabaseAdmin
+                .from('payment_transactions')
+                .insert({
+                    payment_booking_id: bookingId,
+                    payment_method: 'visa',
+                    amount,
+                    currency,
+                    transaction_status: status,
+                    transaction_id: transactionId,
+                    gateway_transaction_id: transactionId,
+                    gateway_name: 'cybersource',
+                    gateway_response: normalizedFields,
+                });
+
+            if (transactionInsertError) {
+                console.error('❌ Error inserting transaction:', transactionInsertError);
+            }
+
+        } else if (referenceNumber.startsWith('SR-')) {
+            const requestId = referenceNumber.replace('SR-', '');
+
+            const { error: serviceUpdateError } = await supabaseAdmin
+                .from('service_requests')
+                .update({
+                    payment_status: status === 'completed' ? 'paid' : 'failed',
+                    payment_method: 'visa',
+                    gateway_transaction_id: transactionId,
+                    gateway_name: 'cybersource',
+                    updated_at: now,
+                })
+                .eq('id', requestId);
+
+            if (serviceUpdateError) {
+                console.error('❌ Error updating service request:', serviceUpdateError);
+            }
+
+            const { error: transactionInsertError } = await supabaseAdmin
+                .from('payment_transactions')
+                .insert({
+                    payment_booking_id: requestId,
+                    payment_method: 'visa',
+                    amount,
+                    currency,
+                    transaction_status: status,
+                    transaction_id: transactionId,
+                    gateway_transaction_id: transactionId,
+                    gateway_name: 'cybersource',
+                    gateway_response: normalizedFields,
+                });
+
+            if (transactionInsertError) {
+                console.error('❌ Error inserting transaction:', transactionInsertError);
+            }
+        }
+
+        // Redirect to frontend with payment data as query parameters
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const params = new URLSearchParams();
+        
+        // Include all relevant fields for the frontend
+        if (normalizedFields.signature) params.append('signature', normalizedFields.signature);
+        if (normalizedFields.signed_field_names) params.append('signed_field_names', normalizedFields.signed_field_names);
+        if (referenceNumber) params.append('reference_number', referenceNumber);
+        if (transactionId) params.append('transaction_id', transactionId);
+        if (decision) params.append('decision', decision);
+        if (amount) params.append('amount', amount.toString());
+        if (currency) params.append('currency', currency);
+        if (status) params.append('status', status);
+        
+        // Include all other fields that might be useful
+        Object.entries(normalizedFields).forEach(([key, value]) => {
+            if (value && !params.has(key)) {
+                params.append(key, String(value));
+            }
+        });
+
+        console.log('✅ Redirecting to frontend with payment result');
+        res.redirect(`${frontendUrl}/payment/result?${params.toString()}`);
+
+    } catch (error) {
+        console.error('❌ CyberSource callback error:', error);
+        logError(error instanceof Error ? error : new Error('CyberSource callback failed'), 'cybersource_callback');
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        res.redirect(`${frontendUrl}/payment/result?error=processing_failed`);
+    }
+});
+
+// Original endpoint (kept for backward compatibility, but now requires auth)
 app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, async (req: Request, res: Response): Promise<void> => {
     try {
         const { fields } = req.body as { fields?: Record<string, unknown> };
