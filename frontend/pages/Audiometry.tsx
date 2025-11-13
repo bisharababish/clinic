@@ -646,9 +646,10 @@ const Audiometry = () => {
             </p>
           </div>
 
-          <div className={`grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 lg:gap-8 ${isRTL ? 'rtl' : 'ltr'}`}>
-            {/* Patient Information Card */}
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <div className={`flex flex-col items-center ${isRTL ? 'rtl' : 'ltr'}`}>
+            <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8 w-full max-w-6xl ${isRTL ? 'rtl' : 'ltr'}`}>
+              {/* Patient Information Card */}
+              <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <User className="w-6 h-6" />
@@ -1002,8 +1003,10 @@ const Audiometry = () => {
               </CardContent>
             </Card>
 
+            </div>
+
             {/* Service Requests Card */}
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm xl:col-span-3">
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm w-full max-w-6xl mt-6 md:mt-8">
               <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
@@ -1123,10 +1126,9 @@ const Audiometry = () => {
                 )}
               </CardContent>
             </Card>
-          </div>
 
-          {/* Action Buttons */}
-          <div className={`mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4 ${isRTL ? 'justify-center' : 'justify-center'}`}>
+            {/* Action Buttons */}
+            <div className={`mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4 justify-center w-full max-w-6xl`}>
             <Button
               size="lg"
               className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
@@ -1156,6 +1158,7 @@ const Audiometry = () => {
             >
               {t('audiometry.actions.resetForm')}
             </Button>
+            </div>
           </div>
         </div>
       </div>

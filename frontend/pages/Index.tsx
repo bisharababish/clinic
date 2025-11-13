@@ -461,11 +461,11 @@ const Index = () => {
   const validatePatientCreationForm = (): boolean => {
     const form = createPatientForm;
 
-    // Check required English name fields
-    if (!form.english_username_a.trim() || !form.english_username_d.trim()) {
+    // Check ALL required English name fields (First, Second, Third, Last)
+    if (!form.english_username_a.trim() || !form.english_username_b.trim() || !form.english_username_c.trim() || !form.english_username_d.trim()) {
       toast({
         title: isRTL ? "خطأ في النموذج" : "Form Error",
-        description: isRTL ? "الاسم الأول والأخير باللغة الإنجليزية مطلوبان" : "First and last names in English are required",
+        description: isRTL ? "جميع حقول الاسم باللغة الإنجليزية مطلوبة (الأول، الثاني، الثالث، الأخير)" : "All English name fields are required (First, Second, Third, Last)",
         variant: "destructive",
       });
       return false;
@@ -483,11 +483,11 @@ const Index = () => {
       }
     }
 
-    // Check required Arabic name fields
-    if (!form.arabic_username_a.trim() || !form.arabic_username_d.trim()) {
+    // Check ALL required Arabic name fields (First, Second, Third, Last)
+    if (!form.arabic_username_a.trim() || !form.arabic_username_b.trim() || !form.arabic_username_c.trim() || !form.arabic_username_d.trim()) {
       toast({
         title: isRTL ? "خطأ في النموذج" : "Form Error",
-        description: isRTL ? "الاسم الأول والأخير بالعربية مطلوبان" : "First and last names in Arabic are required",
+        description: isRTL ? "جميع حقول الاسم باللغة العربية مطلوبة (الأول، الثاني، الثالث، الأخير)" : "All Arabic name fields are required (First, Second, Third, Last)",
         variant: "destructive",
       });
       return false;

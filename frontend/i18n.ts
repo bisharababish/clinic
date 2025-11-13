@@ -1225,7 +1225,7 @@ const enTranslations = {
         "pageTitle": "Audiometry Test Upload System",
         "pageDescription": "Securely upload and manage audiometry test results",
         "title": "Audiometry",
-        "subtitle": "Submit audiometry test results with notes and images",
+        "subtitle": "Submit audiometry test results with notes",
         "uploadAudiometryImage": "Upload Audiometry Image",
 
         // SEO
@@ -1279,8 +1279,8 @@ const enTranslations = {
             "ear": "Ear",
             "passed": "Passed",
             "failed": "Failed",
-            "leftEar": "LT ear",
-            "rightEar": "RT ear"
+            "leftEar": "LT Ear",
+            "rightEar": "RT Ear"
         },
 
         // Actions
@@ -4328,7 +4328,7 @@ const arTranslations = {
         pageTitle: 'نظام رفع نتائج قياس السمع',
         pageDescription: 'رفع وإدارة نتائج اختبارات قياس السمع بأمان',
         title: 'قياس السمع',
-        subtitle: 'إرسال نتائج اختبار قياس السمع مع الملاحظات والصور',
+        subtitle: 'إرسال نتائج اختبار قياس السمع مع الملاحظات',
         uploadAudiometryImage: 'رفع صورة قياس السمع',
 
         // SEO
