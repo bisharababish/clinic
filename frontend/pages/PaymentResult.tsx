@@ -7,6 +7,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../compone
 import { Button } from "../components/ui/button";
 import { apiCall } from "../src/lib/api";
 import { useToast } from "../components/ui/use-toast";
+import { useAuth } from "../hooks/useAuth";
+import { supabase } from "../lib/supabase";
 
 interface HostedCheckoutConfirmResponse {
     success: boolean;
@@ -25,6 +27,7 @@ const PaymentResult = () => {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const { toast } = useToast();
+    const { user } = useAuth();
     const isRTL = useMemo(() => i18n.dir() === "rtl", [i18n]);
 
     const [status, setStatus] = useState<"processing" | "success" | "failed">("processing");
@@ -87,16 +90,100 @@ const PaymentResult = () => {
                     fields[key] = value;
                 });
             } else {
-                // No payment data found - this could mean:
-                // 1. User navigated directly to this page
-                // 2. CyberSource POSTed but React Router can't read POST body
-                // 3. Redirect failed
-                console.warn("No payment data found in URL:", location.search);
-                setStatus("failed");
-                setErrorMessage(isRTL 
-                    ? "بيانات الدفع غير متوفرة. يرجى التحقق من أنك قمت بإكمال عملية الدفع." 
-                    : "Payment confirmation data is missing. Please verify that you completed the payment process.");
-                return;
+                // No payment data in URL - check database for recent successful payment
+                // This handles the case where CyberSource redirects without URL params
+                // but the backend callback already processed the payment
+                console.log("No payment data in URL, checking database for recent payment...");
+                
+                if (user?.id) {
+                    // Check for recent payment in the last 5 minutes
+                    const checkRecentPayment = async () => {
+                        try {
+                            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+                            
+                            // Check payment_bookings for recent successful payment
+                            const { data: recentBooking, error: bookingError } = await supabase
+                                .from('payment_bookings')
+                                .select('id, price, currency, payment_status, gateway_transaction_id, created_at')
+                                .eq('patient_id', user.id)
+                                .eq('payment_status', 'paid')
+                                .gte('updated_at', fiveMinutesAgo)
+                                .order('updated_at', { ascending: false })
+                                .limit(1)
+                                .maybeSingle();
+
+                            if (!bookingError && recentBooking) {
+                                // Found recent successful payment
+                                setStatus("success");
+                                setDetails({
+                                    success: true,
+                                    status: "completed",
+                                    referenceNumber: `APT-${recentBooking.id}`,
+                                    transactionId: recentBooking.gateway_transaction_id || undefined,
+                                    amount: recentBooking.price,
+                                    currency: recentBooking.currency || "ILS",
+                                });
+                                toast({
+                                    title: isRTL ? "تم تأكيد الدفع" : "Payment Confirmed",
+                                    description: isRTL ? "تمت معالجة دفعتك بنجاح." : "Your payment has been processed successfully.",
+                                });
+                                return;
+                            }
+
+                            // Check payment_transactions as fallback
+                            const { data: recentTransaction, error: transactionError } = await supabase
+                                .from('payment_transactions')
+                                .select('payment_booking_id, amount, currency, transaction_status, transaction_id, created_at')
+                                .eq('transaction_status', 'completed')
+                                .gte('created_at', fiveMinutesAgo)
+                                .order('created_at', { ascending: false })
+                                .limit(1)
+                                .maybeSingle();
+
+                            if (!transactionError && recentTransaction) {
+                                // Found recent successful transaction
+                                setStatus("success");
+                                setDetails({
+                                    success: true,
+                                    status: "completed",
+                                    referenceNumber: `APT-${recentTransaction.payment_booking_id}`,
+                                    transactionId: recentTransaction.transaction_id || undefined,
+                                    amount: recentTransaction.amount,
+                                    currency: recentTransaction.currency || "ILS",
+                                });
+                                toast({
+                                    title: isRTL ? "تم تأكيد الدفع" : "Payment Confirmed",
+                                    description: isRTL ? "تمت معالجة دفعتك بنجاح." : "Your payment has been processed successfully.",
+                                });
+                                return;
+                            }
+
+                            // No recent payment found
+                            console.warn("No recent payment found in database");
+                            setStatus("failed");
+                            setErrorMessage(isRTL 
+                                ? "بيانات الدفع غير متوفرة. يرجى التحقق من أنك قمت بإكمال عملية الدفع." 
+                                : "Payment confirmation data is missing. Please verify that you completed the payment process.");
+                        } catch (error) {
+                            console.error("Error checking recent payment:", error);
+                            setStatus("failed");
+                            setErrorMessage(isRTL 
+                                ? "حدث خطأ أثناء التحقق من حالة الدفع." 
+                                : "An error occurred while checking payment status.");
+                        }
+                    };
+
+                    checkRecentPayment();
+                    return;
+                } else {
+                    // No user logged in
+                    console.warn("No payment data found in URL and no user logged in:", location.search);
+                    setStatus("failed");
+                    setErrorMessage(isRTL 
+                        ? "بيانات الدفع غير متوفرة. يرجى التحقق من أنك قمت بإكمال عملية الدفع." 
+                        : "Payment confirmation data is missing. Please verify that you completed the payment process.");
+                    return;
+                }
             }
         }
 
@@ -140,7 +227,7 @@ const PaymentResult = () => {
         return () => {
             isCancelled = true;
         };
-    }, [i18n, isRTL, location.search, toast]);
+    }, [i18n, isRTL, location.search, toast, user]);
 
     const handleGoHome = () => {
         navigate("/home");

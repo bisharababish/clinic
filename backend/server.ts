@@ -282,6 +282,13 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
         if (referenceNumber.startsWith('APT-')) {
             const bookingId = referenceNumber.replace('APT-', '');
 
+            // First, get the booking details to find the corresponding appointment
+            const { data: bookingData, error: bookingFetchError } = await supabaseAdmin
+                .from('payment_bookings')
+                .select('patient_id, clinic_name, doctor_name, appointment_day, appointment_time, price')
+                .eq('id', bookingId)
+                .single();
+
             const { error: bookingUpdateError } = await supabaseAdmin
                 .from('payment_bookings')
                 .update({
@@ -295,6 +302,80 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
 
             if (bookingUpdateError) {
                 console.error('❌ Error updating booking:', bookingUpdateError);
+            }
+
+            // Update corresponding appointment in appointments table if payment succeeded
+            if (status === 'completed' && bookingData) {
+                // Find the appointment by matching patient, date, time, doctor, and clinic
+                const { data: existingAppointments, error: appointmentFindError } = await supabaseAdmin
+                    .from('appointments')
+                    .select('id, patient_id, date, time, doctor_id, clinic_id')
+                    .eq('patient_id', bookingData.patient_id)
+                    .eq('date', bookingData.appointment_day)
+                    .eq('time', bookingData.appointment_time)
+                    .limit(10);
+
+                if (!appointmentFindError && existingAppointments && existingAppointments.length > 0) {
+                    // Find matching appointment by doctor and clinic names
+                    // We need to get doctor and clinic IDs from their names
+                    const { data: doctorData } = await supabaseAdmin
+                        .from('doctors')
+                        .select('id')
+                        .eq('name', bookingData.doctor_name)
+                        .limit(1)
+                        .maybeSingle();
+
+                    const { data: clinicData } = await supabaseAdmin
+                        .from('clinics')
+                        .select('id')
+                        .eq('name', bookingData.clinic_name)
+                        .limit(1)
+                        .maybeSingle();
+
+                    // Find the appointment that matches both doctor and clinic
+                    const matchingAppointment = existingAppointments.find(apt => {
+                        if (doctorData && apt.doctor_id === doctorData.id) {
+                            if (clinicData && apt.clinic_id === clinicData.id) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+
+                    if (matchingAppointment) {
+                        // Update the appointment's payment status to paid (Visa)
+                        // Get existing notes to append Visa payment info
+                        const { data: existingAppointment } = await supabaseAdmin
+                            .from('appointments')
+                            .select('notes')
+                            .eq('id', matchingAppointment.id)
+                            .maybeSingle();
+
+                        const existingNotes = existingAppointment?.notes || '';
+                        const visaNote = existingNotes 
+                            ? `${existingNotes}\n[Paid by Visa - ${now}]`
+                            : `Paid by Visa via CyberSource - Transaction ID: ${transactionId || 'N/A'}`;
+
+                        const { error: appointmentUpdateError } = await supabaseAdmin
+                            .from('appointments')
+                            .update({
+                                payment_status: 'paid',
+                                notes: visaNote,
+                                updated_at: now,
+                            })
+                            .eq('id', matchingAppointment.id);
+
+                        if (appointmentUpdateError) {
+                            console.error('❌ Error updating appointment payment status:', appointmentUpdateError);
+                        } else {
+                            console.log('✅ Updated appointment payment status to paid (visa)');
+                        }
+                    } else {
+                        console.log('⚠️ No matching appointment found to update payment status');
+                    }
+                } else {
+                    console.log('⚠️ No appointments found for this booking');
+                }
             }
 
             const { error: transactionInsertError } = await supabaseAdmin
@@ -436,6 +517,13 @@ app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, a
         if (referenceNumber.startsWith('APT-')) {
             const bookingId = referenceNumber.replace('APT-', '');
 
+            // First, get the booking details to find the corresponding appointment
+            const { data: bookingData, error: bookingFetchError } = await supabaseAdmin
+                .from('payment_bookings')
+                .select('patient_id, clinic_name, doctor_name, appointment_day, appointment_time, price')
+                .eq('id', bookingId)
+                .single();
+
             const { error: bookingUpdateError } = await supabaseAdmin
                 .from('payment_bookings')
                 .update({
@@ -449,6 +537,75 @@ app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, a
 
             if (bookingUpdateError) {
                 throw bookingUpdateError;
+            }
+
+            // Update corresponding appointment in appointments table if payment succeeded
+            if (status === 'completed' && bookingData) {
+                // Find the appointment by matching patient, date, time, doctor, and clinic
+                const { data: existingAppointments, error: appointmentFindError } = await supabaseAdmin
+                    .from('appointments')
+                    .select('id, patient_id, date, time, doctor_id, clinic_id')
+                    .eq('patient_id', bookingData.patient_id)
+                    .eq('date', bookingData.appointment_day)
+                    .eq('time', bookingData.appointment_time)
+                    .limit(10);
+
+                if (!appointmentFindError && existingAppointments && existingAppointments.length > 0) {
+                    // Find matching appointment by doctor and clinic names
+                    const { data: doctorData } = await supabaseAdmin
+                        .from('doctors')
+                        .select('id')
+                        .eq('name', bookingData.doctor_name)
+                        .limit(1)
+                        .maybeSingle();
+
+                    const { data: clinicData } = await supabaseAdmin
+                        .from('clinics')
+                        .select('id')
+                        .eq('name', bookingData.clinic_name)
+                        .limit(1)
+                        .maybeSingle();
+
+                    // Find the appointment that matches both doctor and clinic
+                    const matchingAppointment = existingAppointments.find(apt => {
+                        if (doctorData && apt.doctor_id === doctorData.id) {
+                            if (clinicData && apt.clinic_id === clinicData.id) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+
+                    if (matchingAppointment) {
+                        // Update the appointment's payment status to paid (Visa)
+                        // Get existing notes to append Visa payment info
+                        const { data: existingAppointment } = await supabaseAdmin
+                            .from('appointments')
+                            .select('notes')
+                            .eq('id', matchingAppointment.id)
+                            .maybeSingle();
+
+                        const existingNotes = existingAppointment?.notes || '';
+                        const visaNote = existingNotes 
+                            ? `${existingNotes}\n[Paid by Visa - ${now}]`
+                            : `Paid by Visa via CyberSource - Transaction ID: ${transactionId || 'N/A'}`;
+
+                        const { error: appointmentUpdateError } = await supabaseAdmin
+                            .from('appointments')
+                            .update({
+                                payment_status: 'paid',
+                                notes: visaNote,
+                                updated_at: now,
+                            })
+                            .eq('id', matchingAppointment.id);
+
+                        if (appointmentUpdateError) {
+                            console.error('❌ Error updating appointment payment status:', appointmentUpdateError);
+                        } else {
+                            console.log('✅ Updated appointment payment status to paid (visa)');
+                        }
+                    }
+                }
             }
 
             const { error: transactionInsertError } = await supabaseAdmin
