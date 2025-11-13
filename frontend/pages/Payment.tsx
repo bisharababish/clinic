@@ -793,29 +793,52 @@ const Payment = () => {
                 throw new Error(isRTL ? 'قيمة المبلغ غير متوفرة' : 'Unable to determine payment amount');
             }
 
-            const payload = await apiCall<{
+            // Add timeout to API call (15 seconds)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+            let payload: {
                 success: boolean;
                 endpoint: string;
                 fields: Record<string, string>;
-            }>('/api/payments/cybersource/session', {
-                method: 'POST',
-                body: JSON.stringify({
-                    amount: amountValue,
-                    currency: currencyValue,
-                    referenceNumber,
-                    successUrl: `${window.location.origin}/payment/result`,
-                    cancelUrl: `${window.location.origin}/payment/result`,
-                }),
-            });
+            };
+
+            try {
+                payload = await apiCall<{
+                    success: boolean;
+                    endpoint: string;
+                    fields: Record<string, string>;
+                }>('/api/payments/cybersource/session', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        amount: amountValue,
+                        currency: currencyValue,
+                        referenceNumber,
+                        successUrl: `${window.location.origin}/payment/result`,
+                        cancelUrl: `${window.location.origin}/payment/result`,
+                    }),
+                    signal: controller.signal,
+                });
+            } catch (apiError) {
+                clearTimeout(timeoutId);
+                if (apiError instanceof Error && apiError.name === 'AbortError') {
+                    throw new Error(isRTL ? 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.' : 'Request timed out. Please try again.');
+                }
+                throw apiError;
+            }
+
+            clearTimeout(timeoutId);
 
             if (!payload?.success || !payload.endpoint || !payload.fields) {
                 throw new Error(isRTL ? 'تعذر بدء عملية الدفع. حاول مرة أخرى.' : 'Failed to initialize payment. Please try again.');
             }
 
+            // Create and submit form immediately
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = payload.endpoint;
             form.style.display = 'none';
+            form.target = '_self';
 
             Object.entries(payload.fields).forEach(([key, value]) => {
                 const input = document.createElement('input');
@@ -826,9 +849,13 @@ const Payment = () => {
             });
 
             document.body.appendChild(form);
+            
+            // Submit immediately - don't wait
+            // Note: form.submit() is synchronous and will navigate away from the page
             form.submit();
         } catch (error) {
             console.error('Hosted checkout error:', error);
+            setIsProcessing(false); // Only reset on error
             toast({
                 title: isRTL ? 'خطأ في الدفع' : 'Payment Error',
                 description: error instanceof Error
@@ -836,10 +863,9 @@ const Payment = () => {
                     : (isRTL ? 'فشل بدء الدفع. يرجى المحاولة مرة أخرى.' : 'Failed to start the payment. Please try again.'),
                 variant: 'destructive',
             });
-        } finally {
-            // If the browser prevented navigation for any reason, re-enable the button
-            setIsProcessing(false);
         }
+        // Note: We don't reset isProcessing on success because the page should redirect
+        // If redirect fails, the error handler above will catch it
     };
 
     // Handle service request payment (cash)
