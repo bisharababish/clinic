@@ -45,7 +45,12 @@ const getBackendUrl = (): string => {
 
         // Use localhost only if actually running on localhost
         if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
-            return 'http://localhost:5000';
+            // Backend default port is 10000, but can be overridden with PORT env var
+            // Try common development ports
+            const backendPort = import.meta.env.VITE_BACKEND_PORT || '10000';
+            const backendUrl = `http://localhost:${backendPort}`;
+            console.log('🔧 Using local backend URL:', backendUrl);
+            return backendUrl;
         }
 
         // For production domain or any other domain, use production API
@@ -480,78 +485,518 @@ const UsersManagement = () => {
         try {
             console.log("🗑️ Starting COMPLETE user deletion for user ID:", userid);
 
-            // Step 1: Delete from database tables using the RPC function
+            // Step 0: Get auth user ID BEFORE deleting from database (so we can delete from auth.users)
+            let authUserId: string | null = null;
+            const authUserIdFromUser = (userToDelete as UserInfo & { id?: string }).id;
+            
+            if (authUserIdFromUser) {
+                authUserId = authUserIdFromUser;
+                console.log('✅ Auth user ID found in userToDelete:', authUserId);
+            } else {
+                console.log('🔍 Auth user ID not in userToDelete, fetching from database...');
+                const { data: userData, error: fetchError } = await supabase
+                    .from('userinfo')
+                    .select('id')
+                    .eq('userid', userid)
+                    .single();
+                
+                if (!fetchError && userData && userData.id) {
+                    authUserId = userData.id;
+                    console.log('✅ Found auth user ID from database:', authUserId);
+                } else {
+                    console.warn('⚠️ Could not find auth user ID:', fetchError?.message || 'No id field in userinfo');
+                }
+            }
+
+            // Step 1: Delete from database tables
             console.log("Deleting from database tables...");
+            
+            // Try RPC function first, if it doesn't exist, delete directly from tables
+            let deletionSuccess = false;
             const { data: deletionResult, error: deletionError } = await supabase.rpc('delete_user_completely', {
                 user_id_to_delete: userid
             });
 
+            // Check if RPC call itself failed (network/connection error)
             if (deletionError) {
-                console.error('Database deletion failed:', deletionError);
-                throw new Error(`Database deletion failed: ${deletionError.message}`);
+                console.warn('⚠️ RPC function call failed, trying direct deletion:', deletionError.message);
+                
+                // Fallback: Delete directly from userinfo table
+                // Note: This will cascade delete related records if foreign keys are set up correctly
+                const { error: directDeleteError } = await supabase
+                    .from('userinfo')
+                    .delete()
+                    .eq('userid', userid);
+
+                if (directDeleteError) {
+                    console.error('❌ Direct deletion also failed:', directDeleteError);
+                    throw new Error(`Database deletion failed: ${directDeleteError.message}`);
+                } else {
+                    console.log('✅ Direct deletion successful');
+                    deletionSuccess = true;
+                }
+            } 
+            // Check if RPC function returned but with success: false
+            else if (deletionResult && deletionResult.success === false) {
+                console.warn('⚠️ RPC function returned failure, trying manual deletion of related records:', deletionResult.error || 'Unknown error');
+                
+                // Fallback: Delete related records first, then delete user
+                try {
+                    // CRITICAL: Delete service_requests where this user is the doctor FIRST
+                    // The foreign key has ON DELETE SET NULL but doctor_id is NOT NULL, causing constraint violation
+                    // We must delete these BEFORE deleting the user
+                    console.log('🔍 Checking for service_requests where user is doctor...');
+                    const { data: doctorServiceRequests, error: doctorCheckError } = await supabase
+                        .from('service_requests')
+                        .select('id')
+                        .eq('doctor_id', userid);
+
+                    if (doctorCheckError) {
+                        console.warn('⚠️ Failed to check service_requests (doctor):', doctorCheckError.message);
+                    } else if (doctorServiceRequests && doctorServiceRequests.length > 0) {
+                        console.log(`🔍 Found ${doctorServiceRequests.length} service_requests where user is doctor - deleting...`);
+                        // Delete them one by one to ensure they're all deleted
+                        for (const sr of doctorServiceRequests) {
+                            const { error: deleteError } = await supabase
+                                .from('service_requests')
+                                .delete()
+                                .eq('id', sr.id);
+                            if (deleteError) {
+                                console.error(`❌ Failed to delete service_request ${sr.id}:`, deleteError);
+                            }
+                        }
+                        console.log(`✅ Deleted ${doctorServiceRequests.length} service_requests where user is doctor`);
+                    } else {
+                        console.log('✅ No service_requests found where user is doctor');
+                    }
+
+                    // Delete service_requests where this user is the patient
+                    console.log('🔍 Checking for service_requests where user is patient...');
+                    const { data: patientServiceRequests, error: patientCheckError } = await supabase
+                        .from('service_requests')
+                        .select('id')
+                        .eq('patient_id', userid);
+
+                    if (patientCheckError) {
+                        console.warn('⚠️ Failed to check service_requests (patient):', patientCheckError.message);
+                    } else if (patientServiceRequests && patientServiceRequests.length > 0) {
+                        console.log(`🔍 Found ${patientServiceRequests.length} service_requests where user is patient - deleting...`);
+                        for (const sr of patientServiceRequests) {
+                            const { error: deleteError } = await supabase
+                                .from('service_requests')
+                                .delete()
+                                .eq('id', sr.id);
+                            if (deleteError) {
+                                console.error(`❌ Failed to delete service_request ${sr.id}:`, deleteError);
+                            }
+                        }
+                        console.log(`✅ Deleted ${patientServiceRequests.length} service_requests where user is patient`);
+                    } else {
+                        console.log('✅ No service_requests found where user is patient');
+                    }
+
+                    // Final verification: Make absolutely sure no service_requests remain
+                    const { data: finalVerification, error: verifyError } = await supabase
+                        .from('service_requests')
+                        .select('id, doctor_id, patient_id')
+                        .or(`doctor_id.eq.${userid},patient_id.eq.${userid}`);
+
+                    if (verifyError) {
+                        console.warn('⚠️ Failed to verify service_requests deletion:', verifyError.message);
+                    } else if (finalVerification && finalVerification.length > 0) {
+                        console.error(`❌ CRITICAL: ${finalVerification.length} service_requests still exist!`, finalVerification);
+                        throw new Error(`Cannot delete user: ${finalVerification.length} service_requests still reference this user. Please run the SQL fix first (see fix_service_requests_constraint.sql)`);
+                    } else {
+                        console.log('✅ Verified: All service_requests deleted');
+                    }
+
+                    // Delete appointments
+                    const { error: appointmentsError } = await supabase
+                        .from('appointments')
+                        .delete()
+                        .eq('patient_id', userid);
+
+                    if (appointmentsError) {
+                        console.warn('⚠️ Failed to delete appointments:', appointmentsError.message);
+                    } else {
+                        console.log('✅ Deleted related appointments');
+                    }
+
+                    // Delete clinical_notes where user is patient
+                    const { error: clinicalNotesPatientError } = await supabase
+                        .from('clinical_notes')
+                        .delete()
+                        .eq('patient_id', userid);
+
+                    if (clinicalNotesPatientError) {
+                        console.warn('⚠️ Failed to delete clinical_notes (patient):', clinicalNotesPatientError.message);
+                    } else {
+                        console.log('✅ Deleted clinical_notes where user is patient');
+                    }
+
+                    // Delete clinical_notes where user is doctor
+                    const { error: clinicalNotesDoctorError } = await supabase
+                        .from('clinical_notes')
+                        .delete()
+                        .eq('doctor_id', userid);
+
+                    if (clinicalNotesDoctorError) {
+                        console.warn('⚠️ Failed to delete clinical_notes (doctor):', clinicalNotesDoctorError.message);
+                    } else {
+                        console.log('✅ Deleted clinical_notes where user is doctor');
+                    }
+
+                    // Delete lab_results where user is patient
+                    const { error: labResultsPatientError } = await supabase
+                        .from('lab_results')
+                        .delete()
+                        .eq('patient_id', userid);
+
+                    if (labResultsPatientError) {
+                        console.warn('⚠️ Failed to delete lab_results (patient):', labResultsPatientError.message);
+                    } else {
+                        console.log('✅ Deleted lab_results where user is patient');
+                    }
+
+                    // Delete lab_results where user is creator
+                    const { error: labResultsCreatorError } = await supabase
+                        .from('lab_results')
+                        .delete()
+                        .eq('created_by', userid);
+
+                    if (labResultsCreatorError) {
+                        console.warn('⚠️ Failed to delete lab_results (creator):', labResultsCreatorError.message);
+                    } else {
+                        console.log('✅ Deleted lab_results where user is creator');
+                    }
+
+                    // Delete other related records
+                    const relatedTables = [
+                        { table: 'patient_health_info', field: 'patient_id' },
+                        { table: 'audiometry_images', field: 'patient_id' },
+                        { table: 'ultrasound_images', field: 'patient_id' },
+                        { table: 'xray_images', field: 'patient_id' },
+                    ];
+
+                    for (const { table, field } of relatedTables) {
+                        const { error } = await supabase
+                            .from(table)
+                            .delete()
+                            .eq(field, userid);
+                        if (error) {
+                            console.warn(`⚠️ Failed to delete from ${table}:`, error.message);
+                        } else {
+                            console.log(`✅ Deleted related records from ${table}`);
+                        }
+                    }
+
+                    // Delete notifications by email
+                    const { error: notificationsError } = await supabase
+                        .from('notifications')
+                        .delete()
+                        .eq('user_email', userToDelete.user_email);
+
+                    if (notificationsError) {
+                        console.warn('⚠️ Failed to delete notifications:', notificationsError.message);
+                    } else {
+                        console.log('✅ Deleted related notifications');
+                    }
+
+                    // Delete activity_log by email
+                    const { error: activityLogError } = await supabase
+                        .from('activity_log')
+                        .delete()
+                        .eq('user_email', userToDelete.user_email);
+
+                    if (activityLogError) {
+                        console.warn('⚠️ Failed to delete activity_log:', activityLogError.message);
+                    } else {
+                        console.log('✅ Deleted related activity_log');
+                    }
+
+                    // Additional cleanup: Delete any other tables that might reference this user
+                    // Delete patient_status_change_logs
+                    const { error: statusLogsError } = await supabase
+                        .from('patient_status_change_logs')
+                        .delete()
+                        .eq('patient_id', userid);
+
+                    if (statusLogsError) {
+                        console.warn('⚠️ Failed to delete patient_status_change_logs:', statusLogsError.message);
+                    } else {
+                        console.log('✅ Deleted patient_status_change_logs');
+                    }
+
+                    // Delete appointment_change_logs (if exists and references user)
+                    try {
+                        const { error: appointmentLogsError } = await supabase
+                            .from('appointment_change_logs')
+                            .delete()
+                            .eq('patient_id', userid.toString());
+
+                        if (appointmentLogsError && !appointmentLogsError.message.includes('does not exist')) {
+                            console.warn('⚠️ Failed to delete appointment_change_logs:', appointmentLogsError.message);
+                        } else {
+                            console.log('✅ Deleted appointment_change_logs');
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ appointment_change_logs table may not exist or have different structure');
+                    }
+
+                    // Delete deletion_requests for this user
+                    const { error: deletionRequestsError } = await supabase
+                        .from('deletion_requests')
+                        .delete()
+                        .eq('user_id', userid);
+
+                    if (deletionRequestsError) {
+                        console.warn('⚠️ Failed to delete deletion_requests:', deletionRequestsError.message);
+                    } else {
+                        console.log('✅ Deleted deletion_requests');
+                    }
+
+                    // Final verification: Check for any remaining service_requests one more time
+                    // This is critical because doctor_id has ON DELETE SET NULL but is NOT NULL
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    
+                    while (retryCount < maxRetries) {
+                        const { data: finalCheck, error: finalCheckError } = await supabase
+                            .from('service_requests')
+                            .select('id, doctor_id, patient_id')
+                            .or(`doctor_id.eq.${userid},patient_id.eq.${userid}`)
+                            .limit(100);
+
+                        if (finalCheckError) {
+                            console.warn(`⚠️ Error checking service_requests (attempt ${retryCount + 1}):`, finalCheckError.message);
+                            break;
+                        }
+
+                        if (!finalCheck || finalCheck.length === 0) {
+                            console.log('✅ Verified: No service_requests remain that reference this user');
+                            break;
+                        }
+
+                        console.error(`❌ CRITICAL: Found ${finalCheck.length} service_requests still referencing this user (attempt ${retryCount + 1})!`);
+                        console.error('Service requests:', finalCheck);
+                        
+                        // Delete them individually by ID
+                        let deletedCount = 0;
+                        for (const sr of finalCheck) {
+                            const { error: individualDeleteError } = await supabase
+                                .from('service_requests')
+                                .delete()
+                                .eq('id', sr.id);
+                            if (individualDeleteError) {
+                                console.error(`❌ Failed to delete service_request ${sr.id}:`, individualDeleteError);
+                            } else {
+                                deletedCount++;
+                            }
+                        }
+                        console.log(`✅ Deleted ${deletedCount} of ${finalCheck.length} remaining service_requests`);
+                        
+                        retryCount++;
+                        
+                        // Wait a bit before retrying
+                        if (retryCount < maxRetries) {
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        }
+                    }
+
+                    // One final check - if still found, throw error
+                    const { data: absoluteFinalCheck, error: absoluteFinalCheckError } = await supabase
+                        .from('service_requests')
+                        .select('id')
+                        .or(`doctor_id.eq.${userid},patient_id.eq.${userid}`)
+                        .limit(1);
+
+                    if (!absoluteFinalCheckError && absoluteFinalCheck && absoluteFinalCheck.length > 0) {
+                        throw new Error(`Cannot delete user: ${absoluteFinalCheck.length} service_requests still reference this user. Please delete them manually first.`);
+                    }
+
+                    // Now delete from userinfo table
+                    const { error: directDeleteError } = await supabase
+                        .from('userinfo')
+                        .delete()
+                        .eq('userid', userid);
+
+                    if (directDeleteError) {
+                        console.error('❌ Direct deletion failed:', directDeleteError);
+                        console.error('Error details:', {
+                            code: directDeleteError.code,
+                            message: directDeleteError.message,
+                            details: directDeleteError.details,
+                            hint: directDeleteError.hint
+                        });
+                        throw new Error(`Database deletion failed: ${directDeleteError.message}. This user may have remaining references in other tables.`);
+                    } else {
+                        console.log('✅ Direct deletion successful (after cleaning related records)');
+                        deletionSuccess = true;
+                    }
+                } catch (cleanupError) {
+                    console.error('❌ Error during manual cleanup:', cleanupError);
+                    throw new Error(`Database deletion failed: ${cleanupError instanceof Error ? cleanupError.message : 'Unknown error'}`);
+                }
+            }
+            // RPC function succeeded
+            else if (deletionResult && deletionResult.success === true) {
+                console.log('✅ RPC deletion successful:', deletionResult);
+                deletionSuccess = true;
+            }
+            // Unexpected response
+            else {
+                console.warn('⚠️ Unexpected RPC response, trying direct deletion:', deletionResult);
+                
+                // Fallback: Delete directly from userinfo table
+                const { error: directDeleteError } = await supabase
+                    .from('userinfo')
+                    .delete()
+                    .eq('userid', userid);
+
+                if (directDeleteError) {
+                    console.error('❌ Direct deletion also failed:', directDeleteError);
+                    throw new Error(`Database deletion failed: ${directDeleteError.message}`);
+                } else {
+                    console.log('✅ Direct deletion successful (fallback)');
+                    deletionSuccess = true;
+                }
             }
 
-            console.log('✅ Database deletion successful:', deletionResult);
+            if (!deletionSuccess) {
+                throw new Error('Failed to delete user from database');
+            }
 
             // Step 2: Delete auth user via backend (only if user has auth account)
+            // Note: authUserId was already fetched in Step 0 (before database deletion)
             let authDeletionSuccess = false;
 
             console.log('🔍 Full user data for deletion:', userToDelete);
-
-            // Access optional auth fields safely
-            const authUserId = (userToDelete as UserInfo & { id?: string }).id;
+            console.log('🔍 Auth user ID to delete:', authUserId);
+            
             if (authUserId) {
-                console.log('🗑️ Calling backend to delete auth user...');
+                console.log('🗑️ Attempting to delete auth user...');
                 console.log('🔍 User data:', userToDelete);
                 console.log('🔍 Auth user ID:', authUserId);
 
-                // Get current session for authentication
-                const { data: { session } } = await supabase.auth.getSession();
-                if (!session?.access_token) {
-                    console.warn('⚠️ No authentication session found for delete request');
-                    toast({
-                        title: t('common.error'),
-                        description: 'Authentication required for user deletion',
-                        variant: "destructive",
-                    });
-                    return;
-                }
+                try {
+                    // Get current session for authentication
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session?.access_token) {
+                        console.warn('⚠️ No authentication session found for delete request');
+                        console.warn('⚠️ Auth user will need to be deleted manually from Supabase Auth dashboard');
+                        // Don't return - continue with success message
+                    } else {
+                        const backendUrl = getBackendUrl();
 
-                const backendUrl = getBackendUrl();
+                        try {
+                            // Step 1: Get CSRF token from backend (required for admin endpoints)
+                            console.log('🔐 Fetching CSRF token from backend...');
+                            let csrfToken = sessionStorage.getItem('csrf_token');
+                            
+                            // Get fresh CSRF token from backend
+                            const csrfResponse = await fetch(
+                                `${backendUrl}/api/csrf-token`,
+                                {
+                                    method: 'GET',
+                                    headers: {
+                                        'Authorization': `Bearer ${session.access_token}`
+                                    }
+                                }
+                            );
 
-                // Get CSRF token (must be at least 32 characters as required by backend)
-                const generateCSRFToken = (): string => {
-                    return Array.from(crypto.getRandomValues(new Uint8Array(32)))
-                        .map(b => b.toString(36))
-                        .join('')
-                        .substring(0, 32);
-                };
+                            if (csrfResponse.ok) {
+                                const csrfData = await csrfResponse.json();
+                                csrfToken = csrfData.csrfToken;
+                                sessionStorage.setItem('csrf_token', csrfToken);
+                                console.log('✅ CSRF token obtained from backend');
+                            } else {
+                                console.warn('⚠️ Failed to get CSRF token, trying stored token');
+                                if (!csrfToken) {
+                                    throw new Error('Could not obtain CSRF token from backend');
+                                }
+                            }
 
-                const csrfToken = sessionStorage.getItem('csrf_token') || generateCSRFToken();
-                sessionStorage.setItem('csrf_token', csrfToken);
+                            // Step 2: Delete auth user
+                            console.log('📡 Sending auth deletion request to:', `${backendUrl}/api/admin/delete-user`);
+                            console.log('🔑 Auth User ID:', authUserId);
+                            console.log('🔐 Session token present:', !!session.access_token);
+                            console.log('🛡️ CSRF token length:', csrfToken?.length || 0);
 
-                const authDeleteResponse = await fetch(
-                    `${backendUrl}/api/admin/delete-user`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${session.access_token}`,
-                            'X-CSRF-Token': csrfToken
-                        },
-                        body: JSON.stringify({
-                            authUserId: authUserId // This is the UUID from auth.users
-                        })
+                            const authDeleteResponse = await fetch(
+                                `${backendUrl}/api/admin/delete-user`,
+                                {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${session.access_token}`,
+                                        'X-CSRF-Token': csrfToken || ''
+                                    },
+                                    body: JSON.stringify({
+                                        authUserId: authUserId // This is the UUID from auth.users
+                                    }),
+                                    // Add timeout to prevent hanging
+                                    signal: AbortSignal.timeout(15000) // 15 second timeout (increased for CSRF + delete)
+                                }
+                            );
+
+                            console.log('📥 Response status:', authDeleteResponse.status);
+                            console.log('📥 Response ok:', authDeleteResponse.ok);
+
+                            const authDeleteData = await authDeleteResponse.json();
+                            console.log('📥 Response data:', authDeleteData);
+
+                            if (authDeleteResponse.ok) {
+                                console.log('✅ Auth user deletion successful');
+                                authDeletionSuccess = true;
+                            } else {
+                                console.error('❌ Auth deletion failed:', authDeleteData);
+                                // Show error to user but don't block the deletion
+                                toast({
+                                    title: t('common.warning'),
+                                    description: `User deleted from database, but auth deletion failed: ${authDeleteData.error || authDeleteData.detail || 'Unknown error'}. Auth User ID: ${authUserId}`,
+                                    variant: "destructive",
+                                });
+                            }
+                        } catch (fetchError) {
+                            // Handle network errors gracefully
+                            if (fetchError instanceof Error) {
+                                if (fetchError.name === 'AbortError') {
+                                    console.error('❌ Auth deletion request timed out');
+                                    toast({
+                                        title: t('common.warning'),
+                                        description: `User deleted from database, but auth deletion timed out. Auth User ID: ${authUserId}`,
+                                        variant: "destructive",
+                                    });
+                                } else if (fetchError.message.includes('Failed to fetch') || fetchError.message.includes('ERR_CONNECTION_REFUSED')) {
+                                    console.error('❌ Backend server is not available');
+                                    toast({
+                                        title: t('common.warning'),
+                                        description: `User deleted from database, but backend server is not available. Please delete auth user manually. Auth User ID: ${authUserId}`,
+                                        variant: "destructive",
+                                    });
+                                } else {
+                                    console.error('❌ Auth deletion request failed:', fetchError.message);
+                                    toast({
+                                        title: t('common.warning'),
+                                        description: `User deleted from database, but auth deletion failed: ${fetchError.message}. Auth User ID: ${authUserId}`,
+                                        variant: "destructive",
+                                    });
+                                }
+                            } else {
+                                console.error('❌ Auth deletion request failed:', fetchError);
+                                toast({
+                                    title: t('common.warning'),
+                                    description: `User deleted from database, but auth deletion failed. Auth User ID: ${authUserId}`,
+                                    variant: "destructive",
+                                });
+                            }
+                            // Don't throw error - continue with success message
+                        }
                     }
-                );
-
-                const authDeleteData = await authDeleteResponse.json();
-
-                if (authDeleteResponse.ok) {
-                    console.log('✅ Auth user deletion successful');
-                    authDeletionSuccess = true;
-                } else {
-                    console.warn('⚠️ Auth deletion failed (user may not have auth account):', authDeleteData);
+                } catch (error) {
+                    console.warn('⚠️ Error during auth deletion:', error);
+                    console.warn('⚠️ Auth user will need to be deleted manually from Supabase Auth dashboard.');
+                    console.warn('⚠️ Auth User ID to delete manually:', authUserId);
                     // Don't throw error - continue with success message
                 }
             } else {
@@ -651,17 +1096,31 @@ const UsersManagement = () => {
     };
 
     const handleDeleteButtonClick = (userid: number) => {
+        console.log("🗑️ Delete button clicked for user ID:", userid);
+        console.log("🔍 Permissions check:", { canDirectDelete, canRequestDeletion, currentUserRole });
+        
         const user = users.find(u => u.userid === userid);
-        if (!user) return;
+        if (!user) {
+            console.error("❌ User not found:", userid);
+            toast({
+                title: t('common.error'),
+                description: t('usersManagement.userNotFound'),
+                variant: "destructive",
+            });
+            return;
+        }
 
         if (canDirectDelete) {
             // Admin can delete directly (existing behavior)
+            console.log("✅ Admin has direct delete permission, calling handleDeleteUser");
             handleDeleteUser(userid);
         } else if (canRequestDeletion) {
             // Secretary must request deletion
+            console.log("✅ User has deletion request permission, showing modal");
             setUserToDelete(user);
             setShowDeletionModal(true);
         } else {
+            console.warn("⚠️ User does not have delete permissions");
             toast({
                 title: t('common.error'),
                 description: t('usersManagement.noDeletePermission') || 'You do not have permission to delete users',

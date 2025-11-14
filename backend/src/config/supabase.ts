@@ -1,9 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from './env.js';
+
+// Validate that required environment variables are set
+if (!SUPABASE_URL) {
+    throw new Error('SUPABASE_URL environment variable is required. Please check your .env file.');
+}
+
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required. Please check your .env file.');
+}
 
 // Supabase configuration
 export const supabaseAdmin = createClient(
-    process.env.SUPABASE_URL as string,
-    process.env.SUPABASE_SERVICE_ROLE_KEY as string,
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY,
     {
         auth: {
             autoRefreshToken: false,

@@ -14,8 +14,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import * as dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
 import { logAuth, logError, logInfo, logSecurity } from './src/utils/logger.js';
+import { supabaseAdmin } from './src/config/supabase.js';
 import { validateDeleteUser, validateUpdatePassword, sanitizeInput } from './src/middleware/validation.js';
 import { healthCheck, simpleHealthCheck } from './src/middleware/healthCheck.js';
 import { validateSession, csrfProtection, sessionTimeout, generateCSRFToken } from './src/middleware/session.js';
@@ -59,6 +59,16 @@ app.use(cors({
             'https://bethlehem-medical-center-frontend.onrender.com',
         ];
 
+        // Allow localhost in development
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        if (isDevelopment) {
+            // Allow localhost with any port for development
+            if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.startsWith('http://192.168.')) {
+                console.log('✅ CORS: Allowing development origin:', origin);
+                return callback(null, true);
+            }
+        }
+
         if (!origin) {
             return callback(null, true);
         }
@@ -94,17 +104,8 @@ app.use(sanitizeInput);
 // Session timeout middleware
 app.use(sessionTimeout);
 
-// Initialize Supabase with SERVICE_ROLE_KEY
-const supabaseAdmin = createClient(
-    process.env.SUPABASE_URL as string,
-    process.env.SUPABASE_SERVICE_ROLE_KEY as string,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
-    }
-);
+// Supabase client is imported from config/supabase.ts
+// It's already initialized with SERVICE_ROLE_KEY and validated environment variables
 
 // Root endpoint - simple response for deployment health checks
 app.get('/', (req: Request, res: Response): void => {
@@ -910,49 +911,13 @@ app.post('/api/admin/create-user-with-email', authenticateAdmin, csrfProtection,
             return;
         }
 
-        // IMPORTANT: Admin API createUser does NOT send confirmation emails automatically
-        // We must explicitly generate and send the confirmation email
+        // NOTE: Since we're using regular signup() in the frontend (which automatically sends emails),
+        // this backend endpoint is mainly for fallback scenarios. The frontend now uses signup()
+        // which handles email sending automatically using the same configuration as regular registration.
         if (sendEmail && newUser.user) {
-            try {
-                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-                
-                // Generate confirmation link - this creates the link but doesn't send email
-                const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-                    type: 'signup',
-                    email: email,
-                    options: {
-                        redirectTo: `${frontendUrl}/auth/callback`
-                    }
-                });
-
-                if (linkError) {
-                    console.error('❌ Failed to generate confirmation link:', linkError.message);
-                    // Try alternative: use recovery link which might trigger email
-                    const { error: recoveryError } = await supabaseAdmin.auth.admin.generateLink({
-                        type: 'recovery',
-                        email: email,
-                        options: {
-                            redirectTo: `${frontendUrl}/auth/callback`
-                        }
-                    });
-                    
-                    if (recoveryError) {
-                        console.error('❌ Failed to generate recovery link:', recoveryError.message);
-                    } else {
-                        console.log('✅ Recovery link generated (may send email)');
-                    }
-                } else {
-                    console.log('✅ Confirmation link generated:', linkData?.properties?.action_link ? 'Link created' : 'No link');
-                    
-                    // NOTE: generateLink does NOT send emails automatically
-                    // We need to use resend or the link won't be sent via email
-                    // The email must be sent through Supabase's email system
-                    // For now, we'll log that the link was generated
-                    // The actual email sending depends on Supabase email configuration
-                }
-            } catch (emailSendError) {
-                console.error('❌ Error generating confirmation link:', emailSendError);
-            }
+            console.log('✅ User created. Email confirmation will be handled by frontend signup() method.');
+            // The frontend uses supabase.auth.signUp() which automatically sends confirmation emails
+            // No need to generate links here since the frontend handles it
         }
 
         logAuth('create_user_with_email', email, true);
