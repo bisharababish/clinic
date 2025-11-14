@@ -911,15 +911,17 @@ app.post('/api/admin/create-user-with-email', authenticateAdmin, csrfProtection,
         }
 
         // IMPORTANT: Admin API createUser does NOT send confirmation emails automatically
-        // We must explicitly generate and send the confirmation email
+        // Since we're using regular signup in frontend now, this endpoint is mainly for fallback
+        // The frontend uses supabase.auth.signUp() which automatically sends confirmation emails
         if (sendEmail && newUser.user) {
             try {
                 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
                 
-                // Generate confirmation link - this creates the link but doesn't send email
+                // Generate confirmation link with password (required for signup type)
                 const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
                     type: 'signup',
                     email: email,
+                    password: password, // Required for signup type
                     options: {
                         redirectTo: `${frontendUrl}/auth/callback`
                     }
@@ -945,10 +947,7 @@ app.post('/api/admin/create-user-with-email', authenticateAdmin, csrfProtection,
                     console.log('✅ Confirmation link generated:', linkData?.properties?.action_link ? 'Link created' : 'No link');
                     
                     // NOTE: generateLink does NOT send emails automatically
-                    // We need to use resend or the link won't be sent via email
-                    // The email must be sent through Supabase's email system
-                    // For now, we'll log that the link was generated
-                    // The actual email sending depends on Supabase email configuration
+                    // The frontend now uses regular signup which automatically sends emails
                 }
             } catch (emailSendError) {
                 console.error('❌ Error generating confirmation link:', emailSendError);
