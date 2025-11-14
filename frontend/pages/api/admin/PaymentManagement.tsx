@@ -746,10 +746,21 @@ const PaymentManagement: React.FC = () => {
 
     // Get payment method icon
     const getPaymentMethodIcon = (method: string) => {
-        switch (method) {
+        switch (method?.toLowerCase()) {
             case 'cash': return <Banknote className="h-4 w-4" />;
             case 'credit_card': return <CreditCard className="h-4 w-4" />;
+            case 'visa': return <CreditCard className="h-4 w-4" />;
             default: return <CreditCard className="h-4 w-4" />;
+        }
+    };
+
+    // Get payment method display name
+    const getPaymentMethodName = (method: string) => {
+        switch (method?.toLowerCase()) {
+            case 'cash': return isRTL ? 'نقدي' : 'Cash';
+            case 'credit_card': return isRTL ? 'بطاقة ائتمان' : 'Credit Card';
+            case 'visa': return 'Visa';
+            default: return method ? method.charAt(0).toUpperCase() + method.slice(1) : (isRTL ? 'نقدي' : 'Cash');
         }
     };
 
@@ -989,9 +1000,9 @@ const PaymentManagement: React.FC = () => {
                                             </td>
                                             <td className={`p-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                                                 <div className="flex items-center gap-2">
-                                                    {getPaymentMethodIcon(payment.payment_transaction?.payment_method || 'cash')}
-                                                    <span className="capitalize">
-                                                        {payment.payment_transaction?.payment_method || 'cash'}
+                                                    {getPaymentMethodIcon(payment.payment_transaction?.payment_method || payment.payment_method || 'cash')}
+                                                    <span>
+                                                        {getPaymentMethodName(payment.payment_transaction?.payment_method || payment.payment_method || 'cash')}
                                                     </span>
                                                 </div>
                                             </td>
@@ -1132,9 +1143,9 @@ const PaymentManagement: React.FC = () => {
                                 <div>
                                     <Label className="font-medium">{isRTL ? 'طريقة الدفع' : 'Payment Method'}</Label>
                                     <div className="flex items-center gap-2">
-                                        {getPaymentMethodIcon(selectedPayment.payment_transaction?.payment_method || 'cash')}
-                                        <span className="capitalize">
-                                            {selectedPayment.payment_transaction?.payment_method || 'cash'}
+                                        {getPaymentMethodIcon(selectedPayment.payment_transaction?.payment_method || selectedPayment.payment_method || 'cash')}
+                                        <span>
+                                            {getPaymentMethodName(selectedPayment.payment_transaction?.payment_method || selectedPayment.payment_method || 'cash')}
                                         </span>
                                     </div>
                                 </div>

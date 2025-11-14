@@ -399,6 +399,34 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
         } else if (referenceNumber.startsWith('SR-')) {
             const requestId = referenceNumber.replace('SR-', '');
 
+            // Get current service request status to determine next status
+            const { data: currentRequest, error: fetchError } = await supabaseAdmin
+                .from('service_requests')
+                .select('status, payment_status, notes')
+                .eq('id', requestId)
+                .maybeSingle();
+
+            // Determine the new status based on payment success
+            let newStatus = currentRequest?.status;
+            if (status === 'completed') {
+                // If payment succeeded, update status to allow service to start
+                // If it was 'payment_required', change to 'in_progress'
+                // If it was 'pending' or 'secretary_confirmed', change to 'in_progress'
+                if (currentRequest?.status === 'payment_required' || 
+                    currentRequest?.status === 'secretary_confirmed' ||
+                    currentRequest?.status === 'pending') {
+                    newStatus = 'in_progress';
+                }
+            }
+
+            // Get existing notes to append Visa payment info
+            const existingNotes = currentRequest?.notes || '';
+            const visaNote = status === 'completed' 
+                ? (existingNotes 
+                    ? `${existingNotes}\n[Paid by Visa - ${now}]`
+                    : `Paid by Visa via CyberSource - Transaction ID: ${transactionId || 'N/A'}`)
+                : existingNotes;
+
             const { error: serviceUpdateError } = await supabaseAdmin
                 .from('service_requests')
                 .update({
@@ -406,12 +434,16 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
                     payment_method: 'visa',
                     gateway_transaction_id: transactionId,
                     gateway_name: 'cybersource',
+                    status: newStatus,
+                    notes: visaNote,
                     updated_at: now,
                 })
                 .eq('id', requestId);
 
             if (serviceUpdateError) {
                 console.error('❌ Error updating service request:', serviceUpdateError);
+            } else if (status === 'completed') {
+                console.log('✅ Updated service request payment status to paid (visa) and status to in_progress');
             }
 
             const { error: transactionInsertError } = await supabaseAdmin
@@ -629,6 +661,34 @@ app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, a
         } else if (referenceNumber.startsWith('SR-')) {
             const requestId = referenceNumber.replace('SR-', '');
 
+            // Get current service request status to determine next status
+            const { data: currentRequest, error: fetchError } = await supabaseAdmin
+                .from('service_requests')
+                .select('status, payment_status, notes')
+                .eq('id', requestId)
+                .maybeSingle();
+
+            // Determine the new status based on payment success
+            let newStatus = currentRequest?.status;
+            if (status === 'completed') {
+                // If payment succeeded, update status to allow service to start
+                // If it was 'payment_required', change to 'in_progress'
+                // If it was 'pending' or 'secretary_confirmed', change to 'in_progress'
+                if (currentRequest?.status === 'payment_required' || 
+                    currentRequest?.status === 'secretary_confirmed' ||
+                    currentRequest?.status === 'pending') {
+                    newStatus = 'in_progress';
+                }
+            }
+
+            // Get existing notes to append Visa payment info
+            const existingNotes = currentRequest?.notes || '';
+            const visaNote = status === 'completed' 
+                ? (existingNotes 
+                    ? `${existingNotes}\n[Paid by Visa - ${now}]`
+                    : `Paid by Visa via CyberSource - Transaction ID: ${transactionId || 'N/A'}`)
+                : existingNotes;
+
             const { error: serviceUpdateError } = await supabaseAdmin
                 .from('service_requests')
                 .update({
@@ -636,6 +696,8 @@ app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, a
                     payment_method: 'visa',
                     gateway_transaction_id: transactionId,
                     gateway_name: 'cybersource',
+                    status: newStatus,
+                    notes: visaNote,
                     updated_at: now,
                 })
                 .eq('id', requestId);

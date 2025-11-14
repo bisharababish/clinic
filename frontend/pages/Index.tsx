@@ -2860,36 +2860,53 @@ const Index = () => {
             {/* Enhanced Medicine Categories - visible to ALL users */}
             <section className="section bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-4 sm:mb-6">
               <h2 className="text-xl font-bold mb-4 text-gray-800">{t("home.medicinesTitle")}</h2>
-              <div
-                className={`flex gap-3 mb-4 ${isRTL
-                  ? "flex-col items-end text-right sm:flex-row sm:items-center sm:justify-end"
-                  : "flex-col sm:flex-row sm:items-center"
-                  }`}
-              >
-                <span className={`font-medium text-gray-700 ${isRTL ? "text-right" : ""}`} dir={isRTL ? "rtl" : "ltr"}>
+              <div className={`mb-4 ${isRTL ? "text-right" : ""}`}>
+                <span className={`font-medium text-gray-700 block mb-2 ${isRTL ? "text-right" : ""}`} dir={isRTL ? "rtl" : "ltr"}>
                   {t("home.medicinesStatusQuestion")}
                 </span>
                 <div
-                  className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse sm:mr-4" : "sm:ml-4"
-                    }`}
+                  className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse justify-end" : ""}`}
                   dir={isRTL ? "rtl" : "ltr"}
                 >
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={takesMedicines === "yes" ? "default" : "outline"}
-                    onClick={() => handleMedicinesStatusChange("yes")}
-                  >
-                    {t("home.medicinesStatusYes")}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={takesMedicines === "no" ? "default" : "outline"}
-                    onClick={() => handleMedicinesStatusChange("no")}
-                  >
-                    {t("home.medicinesStatusNo")}
-                  </Button>
+                  {isRTL ? (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={takesMedicines === "no" ? "default" : "outline"}
+                        onClick={() => handleMedicinesStatusChange("no")}
+                      >
+                        {t("home.medicinesStatusNo")}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={takesMedicines === "yes" ? "default" : "outline"}
+                        onClick={() => handleMedicinesStatusChange("yes")}
+                      >
+                        {t("home.medicinesStatusYes")}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={takesMedicines === "yes" ? "default" : "outline"}
+                        onClick={() => handleMedicinesStatusChange("yes")}
+                      >
+                        {t("home.medicinesStatusYes")}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={takesMedicines === "no" ? "default" : "outline"}
+                        onClick={() => handleMedicinesStatusChange("no")}
+                      >
+                        {t("home.medicinesStatusNo")}
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
               {takesMedicines === "no" && (

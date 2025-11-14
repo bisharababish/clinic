@@ -331,6 +331,8 @@ const enTranslations = {
         notes: 'Medical Notes',
         labs: 'Lab Results',
         xrays: 'X-Ray Images',
+        ultrasound: 'Ultrasound',
+        audiometry: 'Audiometry',
 
         // Appointments tab
         noAppointmentsFound: 'No appointments found',
@@ -3081,6 +3083,8 @@ const arTranslations = {
         notes: 'الملاحظات الطبية',
         labs: 'نتائج المختبر',
         xrays: 'صور الأشعة',
+        ultrasound: 'الموجات فوق الصوتية',
+        audiometry: 'قياس السمع',
 
         // Appointments tab
         noAppointmentsFound: 'لا توجد مواعيد مسجلة',
