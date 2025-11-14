@@ -13,6 +13,7 @@ export const medicalTranslations: Record<string, { en: string; ar: string }> = {
     urology: { en: "Urology", ar: "المسالك البولية" },
     ophthalmology: { en: "Ophthalmology", ar: "طب العيون" },
     dentistry: { en: "Dentistry", ar: "طب الانف والاذن والحنجرة" },
+    ent: { en: "ENT", ar: "طب الانف والاذن والحنجرة" },
     radiology: { en: "Radiology", ar: "الأشعة" },
     anesthesiology: { en: "Anesthesiology", ar: "التخدير" },
     surgery: { en: "Surgery", ar: "الجراحة" },

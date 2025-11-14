@@ -8,6 +8,8 @@ import { supabase } from "../lib/supabase";
 import { useToast } from "../hooks/use-toast";
 import "./styles/Clinics.css";
 import { Skeleton } from "../components/ui/skeleton";
+import { translateMedicalCategory } from "../lib/medicalTranslations";
+import { fallbackTranslate } from "../lib/fallbackTranslationService";
 
 type AvailabilitySlot = {
     id: string;
@@ -92,10 +94,37 @@ const Clinics = () => {
         }
         return categoryName; // Fallback to original name
     };
-    const getClinicDisplayName = (clinic: Clinic) => {
-        console.log('🔍 Display check:', { isRTL, clinic_name: clinic.name, clinic_name_ar: clinic.name_ar });
-        return isRTL && clinic.name_ar ? clinic.name_ar : clinic.name;
-    };
+    const getClinicDisplayName = useCallback((clinic: Clinic) => {
+        // If not RTL, return English name
+        if (!isRTL) {
+            return clinic.name;
+        }
+        
+        // If Arabic name exists in database AND is different from English name, use it
+        // (This handles cases where name_ar was incorrectly set to the English name)
+        if (clinic.name_ar && clinic.name_ar.trim() && clinic.name_ar.trim() !== clinic.name.trim()) {
+            console.log('📝 Using database Arabic name:', clinic.name, '→', clinic.name_ar);
+            return clinic.name_ar;
+        }
+        
+        // Fallback: Try to translate using medical translations
+        const medicalTranslation = translateMedicalCategory(clinic.name.trim(), 'ar');
+        if (medicalTranslation !== clinic.name.trim()) {
+            console.log('✅ Medical translation found:', clinic.name, '→', medicalTranslation);
+            return medicalTranslation;
+        }
+        
+        // Final fallback: Use fallback translation service
+        const fallbackTranslation = fallbackTranslate(clinic.name.trim(), 'ar');
+        if (fallbackTranslation !== clinic.name.trim()) {
+            console.log('🔄 Using fallback translation:', clinic.name, '→', fallbackTranslation);
+            return fallbackTranslation;
+        }
+        
+        // If no translation found, return original (shouldn't happen for known terms)
+        console.log('⚠️ No translation found for:', clinic.name);
+        return clinic.name;
+    }, [isRTL]);
 
     const getDoctorDisplayName = (doctor: Doctor) => {
         return isRTL && doctor.name_ar ? doctor.name_ar : doctor.name;
@@ -138,6 +167,12 @@ const Clinics = () => {
             isFetchingRef.current = false;
         };
     }, []);
+
+    // Force re-render when language changes
+    useEffect(() => {
+        // This will trigger a re-render when language changes
+        // The component will update with the new isRTL value
+    }, [i18n.language]);
     const loadData = async () => {
         if (isFetchingRef.current) return;
 

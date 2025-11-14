@@ -28,7 +28,7 @@ import { hasPermission } from '../../../lib/rolePermissions';
 // Add these imports to your existing imports
 import { isValidPalestinianID } from '../../../lib/PalID_temp';
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
-import { updatePassword, confirmEmail } from '../../../src/lib/api';
+import { updatePassword, confirmEmail, createUserWithEmailConfirmed } from '../../../src/lib/api';
 
 // Note: getBackendUrl is kept for delete-user endpoint only
 // Password updates now use the updatePassword function from api.ts which handles URL detection
@@ -770,25 +770,72 @@ const UsersManagement = () => {
 
                 const capitalizedRole = capitalizeRole(userFormData.user_roles);
 
+                let authUserId: string | null = null;
                 try {
+                    // Use the EXACT same signup method as regular user registration
+                    // This automatically sends confirmation email (same as RegisterForm.tsx)
+                    console.log("🔐 Creating user via signup (same as regular registration - sends confirmation email automatically)...");
                     const { data: authData, error: authError } = await supabase.auth.signUp({
                         email: userFormData.user_email,
                         password: userFormData.user_password,
                         options: {
-                            data: {
-                                full_name: `${userFormData.english_username_a} ${userFormData.english_username_d || ''}`.trim(),
-                                role: capitalizedRole
-                            }
+                            emailRedirectTo: `${window.location.origin}/auth/callback`
                         }
                     });
 
                     if (authError) {
-                        console.error("Auth signup error:", authError);
-                    } else {
-                        console.log("Auth user created successfully:", authData);
+                        console.error("❌ Auth signup error:", authError);
+                        
+                        // Handle rate limiting error gracefully (same as RegisterForm)
+                        if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
+                            const secondsMatch = authError.message.match(/(\d+)\s*seconds?/i);
+                            const waitTime = secondsMatch ? parseInt(secondsMatch[1]) : 60;
+                            toast({
+                                title: t('common.error'),
+                                description: isRTL
+                                    ? `يرجى المحاولة مرة أخرى بعد ${waitTime} ثانية`
+                                    : `Please try again after ${waitTime} seconds`,
+                                variant: "destructive",
+                                duration: 5000,
+                            });
+                            return;
+                        }
+                        
+                        // If user already exists, show error
+                        if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+                            toast({
+                                title: t('common.error'),
+                                description: isRTL
+                                    ? "هذا البريد الإلكتروني مسجل بالفعل"
+                                    : "This email is already registered",
+                                variant: "destructive",
+                            });
+                            return;
+                        }
+                        
+                        throw authError;
                     }
-                } catch (authError) {
-                    console.error("Auth error:", authError);
+
+                    if (!authData.user) {
+                        throw new Error('Failed to create auth user');
+                    }
+
+                    console.log("✅ Auth user created successfully. Confirmation email sent automatically (same as regular signup)");
+                    console.log('🔍 Auth user created:', authData.user);
+                    console.log('🔍 Auth user ID:', authData.user.id);
+                    authUserId = authData.user.id;
+                    // Supabase automatically sends confirmation email on signup ✅
+                    // This uses the same email configuration as regular user registration
+                } catch (createError) {
+                    console.error("❌ Error creating user:", createError);
+                    toast({
+                        title: t('common.error'),
+                        description: isRTL
+                            ? "فشل إنشاء المستخدم. يرجى المحاولة مرة أخرى."
+                            : "Failed to create user. Please try again.",
+                        variant: "destructive",
+                    });
+                    return;
                 }
 
                 const timestamp = new Date().toISOString();
@@ -811,6 +858,8 @@ const UsersManagement = () => {
                 const { data: userData, error: userError } = await supabase
                     .from("userinfo")
                     .insert({
+                        // Link to auth user (same as RegisterForm.tsx)
+                        id: authUserId, // This is the UUID from auth.users
                         english_username_a: userFormData.english_username_a,
                         english_username_b: userFormData.english_username_b || null,
                         english_username_c: userFormData.english_username_c || null,
@@ -881,31 +930,23 @@ const UsersManagement = () => {
 
                 console.log("User created successfully:", userData);
 
-                // Auto-confirm email for admin-created users
-                try {
-                    console.log("🔐 Confirming email for admin-created user:", userFormData.user_email);
-                    await confirmEmail(userFormData.user_email);
-                    console.log("✅ Email confirmed successfully");
-                } catch (confirmError) {
-                    console.error("⚠️ Failed to confirm email (non-critical):", confirmError);
-                    // Don't fail the entire operation if email confirmation fails
-                    // The user can still verify their email manually if needed
-                }
+                // Confirmation email is sent automatically by createUserWithEmailConfirmed or signUp
+                // User must click the confirmation link in their email to verify before they can login
 
                 // ✅ Let real-time subscription handle the update automatically
 
                 toast({
                     title: t('common.success'),
                     description: isRTL 
-                        ? "تم إنشاء المستخدم بنجاح. تم تأكيد البريد الإلكتروني تلقائياً."
-                        : "User created successfully. Email has been automatically confirmed.",
+                        ? "تم إنشاء المستخدم بنجاح. تم إرسال بريد التأكيد. يجب على المستخدم النقر على الرابط في البريد للتحقق قبل تسجيل الدخول."
+                        : "User created successfully. A confirmation email has been sent. The user must click the link in the email to verify before they can login.",
                     style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
                 });
 
                 logActivity(
                     t('usersManagement.userCreated'),
                     "admin",
-                    `New user ${userFormData.user_email} (${capitalizedRole}) created and email confirmed`,
+                    `New user ${userFormData.user_email} (${capitalizedRole}) created. Confirmation email sent - user must verify before login.`,
                     "success"
                 );
 

@@ -209,6 +209,18 @@ export async function confirmEmail(userEmail: string): Promise<{ success: boolea
     });
 }
 
+export async function createUserWithEmailConfirmed(
+    email: string, 
+    password: string, 
+    userMetadata?: Record<string, any>,
+    sendEmail: boolean = true
+): Promise<{ success: boolean; message: string; user: { id: string; email: string; email_confirmed_at: string | null } }> {
+    return apiCall('/api/admin/create-user-with-email', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, userMetadata, sendEmail }),
+    });
+}
+
 export async function checkHealth(): Promise<{ status: string; timestamp: string }> {
     return apiCall('/health');
 }

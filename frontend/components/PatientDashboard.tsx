@@ -44,6 +44,8 @@ import {
     ChevronRight
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { translateMedicalCategory } from '../lib/medicalTranslations';
+import { fallbackTranslate } from '../lib/fallbackTranslationService';
 
 interface PatientAppointment {
     id: string;
@@ -119,6 +121,29 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
     const { toast } = useToast();
+
+    // Function to translate clinic names
+    const getClinicDisplayName = useCallback((clinicName: string) => {
+        // If not RTL, return English name
+        if (!isRTL) {
+            return clinicName;
+        }
+        
+        // Try to translate using medical translations
+        const medicalTranslation = translateMedicalCategory(clinicName.trim(), 'ar');
+        if (medicalTranslation !== clinicName.trim()) {
+            return medicalTranslation;
+        }
+        
+        // Final fallback: Use fallback translation service
+        const fallbackTranslation = fallbackTranslate(clinicName.trim(), 'ar');
+        if (fallbackTranslation !== clinicName.trim()) {
+            return fallbackTranslation;
+        }
+        
+        // If no translation found, return original
+        return clinicName;
+    }, [isRTL]);
 
     const [appointments, setAppointments] = useState<PatientAppointment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -905,14 +930,14 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                                 <div className="font-semibold">
                                                     {payment.source === 'service_request'
                                                         ? (isRTL
-                                                            ? `${payment.clinic_name} - ${payment.doctor_name}`
-                                                            : `${payment.clinic_name} - ${payment.doctor_name}`)
-                                                        : `${payment.doctor_name} - ${payment.clinic_name}`
+                                                            ? `${getClinicDisplayName(payment.clinic_name)} - ${payment.doctor_name}`
+                                                            : `${getClinicDisplayName(payment.clinic_name)} - ${payment.doctor_name}`)
+                                                        : `${payment.doctor_name} - ${getClinicDisplayName(payment.clinic_name)}`
                                                     }
                                                 </div>
                                                 {payment.source === 'service_request' ? (
                                                     <div className="text-sm text-gray-600">
-                                                        {isRTL ? 'طلب خدمة' : 'Service Request'} - {payment.clinic_name} - {payment.appointment_day}
+                                                        {isRTL ? 'طلب خدمة' : 'Service Request'} - {getClinicDisplayName(payment.clinic_name)} - {payment.appointment_day}
                                                     </div>
                                                 ) : (
                                                     <div className="text-sm text-gray-600">
@@ -1167,7 +1192,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <MapPin className="h-3 w-3" />
-                                                {appointment.clinic_name}
+                                                {getClinicDisplayName(appointment.clinic_name)}
                                             </div>
                                         </div>
 
@@ -1354,7 +1379,7 @@ const PatientDashboard: React.FC<PatientDashboardProps> = ({ patientEmail }) => 
                             <div className="space-y-2">
                                 <p><strong>{isRTL ? 'الموعد' : 'Appointment'}:</strong> {selectedAppointment.appointment_day} {t('common.at')} {selectedAppointment.appointment_time}</p>
                                 <p><strong>{isRTL ? 'الطبيب' : 'Doctor'}:</strong> {isRTL ? '' : 'Dr. '}{selectedAppointment.doctor_name}</p>
-                                <p><strong>{isRTL ? 'العيادة' : 'Clinic'}:</strong> {selectedAppointment.clinic_name}</p>
+                                <p><strong>{isRTL ? 'العيادة' : 'Clinic'}:</strong> {getClinicDisplayName(selectedAppointment.clinic_name)}</p>
                                 <p><strong>{isRTL ? 'المبلغ' : 'Amount'}:</strong> ₪{selectedAppointment.price}</p>
                             </div>
                         </div>

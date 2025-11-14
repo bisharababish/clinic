@@ -19,6 +19,7 @@ const medicalTerms: Record<string, string> = {
     // Medical specialties
     'dentist': 'طبيب أسنان',
     'dentistry': 'طب الأسنان',
+    'ent': 'طب الانف والاذن والحنجرة',
     'cardiology': 'أمراض القلب',
     'pediatrics': 'طب الأطفال',
     'dermatology': 'الأمراض الجلدية',
