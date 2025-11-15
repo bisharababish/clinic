@@ -29,7 +29,7 @@ const medicalTerms: Record<string, string> = {
     'gynecology': 'طب النساء',
     'urology': 'المسالك البولية',
     'ophthalmology': 'طب العيون',
-    'radiology': 'الأشعة',
+    'radiology': ' طب الأشعة',
     'surgery': 'الجراحة',
     'emergency': 'طب الطوارئ',
     'emergency medicine': 'طب الطوارئ',

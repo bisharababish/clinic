@@ -145,18 +145,21 @@ const ClinicManagement = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Empty dependency array - run only once on mount
 
-    // Handle search filtering
+    // Handle search filtering and sorting
     useEffect(() => {
-        if (searchQuery.trim() === '') {
-            setFilteredClinics(effectiveClinics);
-        } else {
+        let filtered = effectiveClinics;
+        
+        if (searchQuery.trim() !== '') {
             const query = searchQuery.toLowerCase();
-            const filtered = effectiveClinics.filter(clinic =>
+            filtered = effectiveClinics.filter(clinic =>
                 clinic.name.toLowerCase().includes(query) ||
                 clinic.category.toLowerCase().includes(query)
             );
-            setFilteredClinics(filtered);
         }
+        
+        // Sort by display_order
+        filtered = [...filtered].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        setFilteredClinics(filtered);
     }, [searchQuery, effectiveClinics]);
 
     // Load doctors from database
@@ -216,27 +219,50 @@ const ClinicManagement = () => {
             });
         }
     };
-    // ADD THESE FUNCTIONS:
+    // Improved ordering functions that properly swap adjacent items
     const moveClinicUp = async (clinicId: string) => {
-        const currentClinic = clinics.find(c => c.id === clinicId);
-        if (!currentClinic) return;
+        // Sort clinics by display_order to find adjacent items
+        const sortedClinics = [...clinics].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        const currentIndex = sortedClinics.findIndex(c => c.id === clinicId);
+        
+        if (currentIndex === -1 || currentIndex === 0) {
+            // Already at top or not found
+            return;
+        }
 
-        const currentOrder = currentClinic.display_order ?? 0;
+        const currentClinic = sortedClinics[currentIndex];
+        const previousClinic = sortedClinics[currentIndex - 1];
 
         try {
-            const { error } = await supabase
-                .from('clinics')
-                .update({ display_order: currentOrder - 1 })
-                .eq('id', clinicId);
+            // Swap display_order values
+            const currentOrder = currentClinic.display_order ?? 0;
+            const previousOrder = previousClinic.display_order ?? 0;
 
-            if (error) throw error;
+            // Update both items in parallel
+            const [update1, update2] = await Promise.all([
+                supabase
+                    .from('clinics')
+                    .update({ display_order: previousOrder })
+                    .eq('id', currentClinic.id),
+                supabase
+                    .from('clinics')
+                    .update({ display_order: currentOrder })
+                    .eq('id', previousClinic.id)
+            ]);
+
+            if (update1.error) throw update1.error;
+            if (update2.error) throw update2.error;
+
+            // Refresh data
+            await loadClinics(true);
 
             toast({
                 title: t('common.success'),
                 description: t('clinicManagement.orderUpdated'),
-                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
+                style: { backgroundColor: '#16a34a', color: '#fff' },
             });
         } catch (error) {
+            console.error('Error moving clinic up:', error);
             toast({
                 title: t('common.error'),
                 description: t('clinicManagement.orderUpdateFailed'),
@@ -246,83 +272,153 @@ const ClinicManagement = () => {
     };
 
     const moveClinicDown = async (clinicId: string) => {
-        const currentClinic = clinics.find(c => c.id === clinicId);
-        if (!currentClinic) return;
+        // Sort clinics by display_order to find adjacent items
+        const sortedClinics = [...clinics].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        const currentIndex = sortedClinics.findIndex(c => c.id === clinicId);
+        
+        if (currentIndex === -1 || currentIndex === sortedClinics.length - 1) {
+            // Already at bottom or not found
+            return;
+        }
 
-        const currentOrder = currentClinic.display_order ?? 0;
+        const currentClinic = sortedClinics[currentIndex];
+        const nextClinic = sortedClinics[currentIndex + 1];
 
         try {
-            const { error } = await supabase
-                .from('clinics')
-                .update({ display_order: currentOrder + 1 })
-                .eq('id', clinicId);
+            // Swap display_order values
+            const currentOrder = currentClinic.display_order ?? 0;
+            const nextOrder = nextClinic.display_order ?? 0;
 
-            if (error) throw error;
+            // Update both items in parallel
+            const [update1, update2] = await Promise.all([
+                supabase
+                    .from('clinics')
+                    .update({ display_order: nextOrder })
+                    .eq('id', currentClinic.id),
+                supabase
+                    .from('clinics')
+                    .update({ display_order: currentOrder })
+                    .eq('id', nextClinic.id)
+            ]);
+
+            if (update1.error) throw update1.error;
+            if (update2.error) throw update2.error;
+
+            // Refresh data
+            await loadClinics(true);
 
             toast({
                 title: t('common.success'),
-                description: 'Clinic moved down successfully',
-                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
+                description: t('clinicManagement.orderUpdated'),
+                style: { backgroundColor: '#16a34a', color: '#fff' },
             });
         } catch (error) {
+            console.error('Error moving clinic down:', error);
             toast({
                 title: t('common.error'),
-                description: 'Failed to move clinic',
+                description: t('clinicManagement.orderUpdateFailed'),
                 variant: "destructive",
             });
         }
     };
-    const moveCategoryUp = async (categoryId: string) => {
-        const currentCategory = categories.find(c => c.id === categoryId);
-        if (!currentCategory) return;
 
-        const currentOrder = currentCategory.display_order ?? 0;
+    const moveCategoryUp = async (categoryId: string) => {
+        // Sort categories by display_order to find adjacent items
+        const sortedCategories = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        const currentIndex = sortedCategories.findIndex(c => c.id === categoryId);
+        
+        if (currentIndex === -1 || currentIndex === 0) {
+            // Already at top or not found
+            return;
+        }
+
+        const currentCategory = sortedCategories[currentIndex];
+        const previousCategory = sortedCategories[currentIndex - 1];
 
         try {
-            const { error } = await supabase
-                .from('clinic_categories')
-                .update({ display_order: currentOrder - 1 })
-                .eq('id', categoryId);
+            // Swap display_order values
+            const currentOrder = currentCategory.display_order ?? 0;
+            const previousOrder = previousCategory.display_order ?? 0;
 
-            if (error) throw error;
+            // Update both items in parallel
+            const [update1, update2] = await Promise.all([
+                supabase
+                    .from('clinic_categories')
+                    .update({ display_order: previousOrder })
+                    .eq('id', currentCategory.id),
+                supabase
+                    .from('clinic_categories')
+                    .update({ display_order: currentOrder })
+                    .eq('id', previousCategory.id)
+            ]);
+
+            if (update1.error) throw update1.error;
+            if (update2.error) throw update2.error;
+
+            // Refresh data
+            await loadCategories(true);
 
             toast({
                 title: t('common.success'),
-                description: 'Category moved up successfully',
-                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
+                description: t('clinicManagement.orderUpdated'),
+                style: { backgroundColor: '#16a34a', color: '#fff' },
             });
         } catch (error) {
+            console.error('Error moving category up:', error);
             toast({
                 title: t('common.error'),
-                description: 'Failed to move category',
+                description: t('clinicManagement.orderUpdateFailed'),
                 variant: "destructive",
             });
         }
     };
 
     const moveCategoryDown = async (categoryId: string) => {
-        const currentCategory = categories.find(c => c.id === categoryId);
-        if (!currentCategory) return;
+        // Sort categories by display_order to find adjacent items
+        const sortedCategories = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        const currentIndex = sortedCategories.findIndex(c => c.id === categoryId);
+        
+        if (currentIndex === -1 || currentIndex === sortedCategories.length - 1) {
+            // Already at bottom or not found
+            return;
+        }
 
-        const currentOrder = currentCategory.display_order ?? 0;
+        const currentCategory = sortedCategories[currentIndex];
+        const nextCategory = sortedCategories[currentIndex + 1];
 
         try {
-            const { error } = await supabase
-                .from('clinic_categories')
-                .update({ display_order: currentOrder + 1 })
-                .eq('id', categoryId);
+            // Swap display_order values
+            const currentOrder = currentCategory.display_order ?? 0;
+            const nextOrder = nextCategory.display_order ?? 0;
 
-            if (error) throw error;
+            // Update both items in parallel
+            const [update1, update2] = await Promise.all([
+                supabase
+                    .from('clinic_categories')
+                    .update({ display_order: nextOrder })
+                    .eq('id', currentCategory.id),
+                supabase
+                    .from('clinic_categories')
+                    .update({ display_order: currentOrder })
+                    .eq('id', nextCategory.id)
+            ]);
+
+            if (update1.error) throw update1.error;
+            if (update2.error) throw update2.error;
+
+            // Refresh data
+            await loadCategories(true);
 
             toast({
                 title: t('common.success'),
-                description: 'Category moved down successfully',
-                style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
+                description: t('clinicManagement.orderUpdated'),
+                style: { backgroundColor: '#16a34a', color: '#fff' },
             });
         } catch (error) {
+            console.error('Error moving category down:', error);
             toast({
                 title: t('common.error'),
-                description: 'Failed to move category',
+                description: t('clinicManagement.orderUpdateFailed'),
                 variant: "destructive",
             });
         }
@@ -900,6 +996,34 @@ const ClinicManagement = () => {
         }
     };
 
+    // Helper functions to check if move buttons should be disabled
+    const canMoveClinicUp = (clinicId: string) => {
+        const sortedClinics = [...clinics].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        const currentIndex = sortedClinics.findIndex(c => c.id === clinicId);
+        return currentIndex > 0;
+    };
+
+    const canMoveClinicDown = (clinicId: string) => {
+        const sortedClinics = [...clinics].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        const currentIndex = sortedClinics.findIndex(c => c.id === clinicId);
+        return currentIndex >= 0 && currentIndex < sortedClinics.length - 1;
+    };
+
+    const canMoveCategoryUp = (categoryId: string) => {
+        const sortedCategories = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        const currentIndex = sortedCategories.findIndex(c => c.id === categoryId);
+        return currentIndex > 0;
+    };
+
+    const canMoveCategoryDown = (categoryId: string) => {
+        const sortedCategories = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+        const currentIndex = sortedCategories.findIndex(c => c.id === categoryId);
+        return currentIndex >= 0 && currentIndex < sortedCategories.length - 1;
+    };
+
+    // Get sorted categories for display
+    const sortedCategories = [...categories].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+
     // Main render
     const getClinicDisplayName = (clinic: ClinicInfo) => {
         return i18n.language === 'ar' && clinic.name_ar ? clinic.name_ar : clinic.name;
@@ -982,12 +1106,16 @@ const ClinicManagement = () => {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
-                                        {filteredClinics.map((clinic) => (
+                                        {filteredClinics.map((clinic, index) => (
                                             <div key={clinic.id} className={`clinic-item ${isRTL ? 'rtl' : ''}`}>
                                                 <div className={`mb-2 sm:mb-0 ${isRTL ? 'text-right' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-                                                    <h3 className="font-medium">{clinic.name}</h3>
-                                                    <h3 className="font-medium">{getClinicDisplayName(clinic)}</h3>
-                                                    <div className="text-sm text-gray-500 capitalize">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                                                            #{clinic.display_order ?? index + 1}
+                                                        </span>
+                                                        <h3 className="font-medium">{getClinicDisplayName(clinic)}</h3>
+                                                    </div>
+                                                    <div className="text-sm text-gray-500 capitalize mt-1">
                                                         {t('clinicManagement.category')}: {clinic.category}
                                                     </div>
                                                     {clinic.description && (
@@ -1002,13 +1130,24 @@ const ClinicManagement = () => {
                                                         </span>
                                                     </div>
                                                 </div>
-                                                {/* ADD THIS NEW DIV: */}
                                                 <div className={`flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 ${isRTL ? 'sm:flex-row-reverse sm:space-x-reverse' : ''}`}>
                                                     <div className={`flex space-x-1 ${isRTL ? 'space-x-reverse' : ''}`}>
-                                                        <Button variant="outline" size="sm" onClick={() => moveClinicUp(clinic.id)}>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => moveClinicUp(clinic.id)}
+                                                            disabled={!canMoveClinicUp(clinic.id) || isLoading}
+                                                            title={canMoveClinicUp(clinic.id) ? t('clinicManagement.moveUp') : ''}
+                                                        >
                                                             <ArrowUp className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="outline" size="sm" onClick={() => moveClinicDown(clinic.id)}>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => moveClinicDown(clinic.id)}
+                                                            disabled={!canMoveClinicDown(clinic.id) || isLoading}
+                                                            title={canMoveClinicDown(clinic.id) ? t('clinicManagement.moveDown') : ''}
+                                                        >
                                                             <ArrowDown className="h-4 w-4" />
                                                         </Button>
                                                     </div>
@@ -1224,10 +1363,15 @@ const ClinicManagement = () => {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
-                                        {categories.map((category) => (
+                                        {sortedCategories.map((category, index) => (
                                             <div key={category.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
                                                 <div className={`clinic-item-info ${isRTL ? 'rtl' : ''}`}>
-                                                    <h3 className="font-medium">{getDisplayName(category)}</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded">
+                                                            #{category.display_order ?? index + 1}
+                                                        </span>
+                                                        <h3 className="font-medium">{getDisplayName(category)}</h3>
+                                                    </div>
                                                     <div className="mt-1" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                                                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${category.is_active
                                                             ? "bg-green-100 text-green-800"
@@ -1239,10 +1383,22 @@ const ClinicManagement = () => {
                                                 </div>
                                                 <div className={`clinic-item-actions ${isRTL ? 'rtl' : ''}`}>
                                                     <div className={`flex space-x-1 ${isRTL ? 'space-x-reverse' : ''}`}>
-                                                        <Button variant="outline" size="sm" onClick={() => moveCategoryUp(category.id)}>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => moveCategoryUp(category.id)}
+                                                            disabled={!canMoveCategoryUp(category.id) || isLoading}
+                                                            title={canMoveCategoryUp(category.id) ? t('clinicManagement.moveUp') : ''}
+                                                        >
                                                             <ArrowUp className="h-4 w-4" />
                                                         </Button>
-                                                        <Button variant="outline" size="sm" onClick={() => moveCategoryDown(category.id)}>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => moveCategoryDown(category.id)}
+                                                            disabled={!canMoveCategoryDown(category.id) || isLoading}
+                                                            title={canMoveCategoryDown(category.id) ? t('clinicManagement.moveDown') : ''}
+                                                        >
                                                             <ArrowDown className="h-4 w-4" />
                                                         </Button>
                                                     </div>

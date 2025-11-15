@@ -2598,7 +2598,7 @@ const arTranslations = {
         gynecology: 'أمراض النساء',
         urology: 'المسالك البولية',
         ophthalmology: 'طب العيون',
-        radiology: 'الأشعة',
+        radiology: 'طب الأشعة',
         surgery: 'الجراحة',
         emergency: 'طب الطوارئ',
         family: 'طب الأسرة',
