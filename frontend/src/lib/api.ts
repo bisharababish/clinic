@@ -146,11 +146,15 @@ export async function apiCall<T>(
             console.log('✅ CSRF token added to headers');
         }
 
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        // Use keepalive for payment requests to maintain connection
+        const fetchOptions: RequestInit = {
             ...options,
             headers: headers as HeadersInit,
             credentials: 'include',
-        });
+            keepalive: endpoint.includes('/payments/') ? true : false, // Keep connection alive for payment requests
+        };
+        
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, fetchOptions);
 
         console.log(`📡 Response status: ${response.status} ${response.statusText}`);
 

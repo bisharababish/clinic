@@ -793,9 +793,9 @@ const Payment = () => {
                 throw new Error(isRTL ? 'قيمة المبلغ غير متوفرة' : 'Unable to determine payment amount');
             }
 
-            // Add timeout to API call (15 seconds)
+            // Optimize API call with longer timeout and better error handling
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const timeoutId = setTimeout(() => controller.abort(), 25000); // Increased to 25 seconds
 
             let payload: {
                 success: boolean;
@@ -808,12 +808,19 @@ const Payment = () => {
                 const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
                 const callbackUrl = `${apiBaseUrl}/api/payments/cybersource/callback`;
                 
+                // Show immediate loading feedback
+                console.log('🚀 Initiating payment session...');
+                
                 payload = await apiCall<{
                     success: boolean;
                     endpoint: string;
                     fields: Record<string, string>;
                 }>('/api/payments/cybersource/session', {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
                     body: JSON.stringify({
                         amount: amountValue,
                         currency: currencyValue,
@@ -823,39 +830,56 @@ const Payment = () => {
                     }),
                     signal: controller.signal,
                 });
+                
+                console.log('✅ Payment session created successfully');
             } catch (apiError) {
                 clearTimeout(timeoutId);
+                
+                // Better error handling
                 if (apiError instanceof Error && apiError.name === 'AbortError') {
+                    console.error('❌ Payment request timed out');
                     throw new Error(isRTL ? 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.' : 'Request timed out. Please try again.');
                 }
+                
+                if (apiError instanceof Error) {
+                    console.error('❌ Payment API error:', apiError.message);
+                    // Check for network errors
+                    if (apiError.message.includes('fetch') || apiError.message.includes('network')) {
+                        throw new Error(isRTL ? 'خطأ في الاتصال. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.' : 'Connection error. Please check your internet connection and try again.');
+                    }
+                }
+                
                 throw apiError;
+            } finally {
+                clearTimeout(timeoutId);
             }
-
-            clearTimeout(timeoutId);
 
             if (!payload?.success || !payload.endpoint || !payload.fields) {
                 throw new Error(isRTL ? 'تعذر بدء عملية الدفع. حاول مرة أخرى.' : 'Failed to initialize payment. Please try again.');
             }
 
-            // Create and submit form immediately
+            // Create and submit form immediately - optimized for speed
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = payload.endpoint;
             form.style.display = 'none';
             form.target = '_self';
+            form.noValidate = true; // Skip HTML5 validation for faster submission
 
+            // Batch create inputs for better performance
+            const fragment = document.createDocumentFragment();
             Object.entries(payload.fields).forEach(([key, value]) => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
                 input.name = key;
                 input.value = value ?? '';
-                form.appendChild(input);
+                fragment.appendChild(input);
             });
+            form.appendChild(fragment);
 
             document.body.appendChild(form);
             
-            // Submit immediately - don't wait
-            // Note: form.submit() is synchronous and will navigate away from the page
+            // Submit immediately - form.submit() is synchronous and will navigate away
             form.submit();
         } catch (error) {
             console.error('Hosted checkout error:', error);

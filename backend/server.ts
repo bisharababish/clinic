@@ -172,7 +172,10 @@ app.get('/api/csrf-token', validateSession, (req: Request, res: Response): void 
 
 // CyberSource Secure Acceptance Hosted Checkout session generator
 app.post('/api/payments/cybersource/session', validateSession, csrfProtection, (req: Request, res: Response): void => {
+    const startTime = Date.now();
     try {
+        console.log('🚀 Payment session request received');
+        
         const {
             amount,
             currency = 'ILS',
@@ -199,6 +202,7 @@ app.post('/api/payments/cybersource/session', validateSession, csrfProtection, (
             return;
         }
 
+        console.log('📋 Building payment payload...');
         const payload = buildHostedCheckoutPayload({
             amount,
             currency,
@@ -209,6 +213,9 @@ app.post('/api/payments/cybersource/session', validateSession, csrfProtection, (
             cancelUrl,
         });
 
+        const processingTime = Date.now() - startTime;
+        console.log(`✅ Payment session created in ${processingTime}ms`);
+
         res.status(200).json({
             success: true,
             endpoint: payload.endpoint,
@@ -218,7 +225,8 @@ app.post('/api/payments/cybersource/session', validateSession, csrfProtection, (
         });
 
     } catch (error) {
-        console.error('❌ Hosted checkout session error:', error);
+        const processingTime = Date.now() - startTime;
+        console.error(`❌ Hosted checkout session error after ${processingTime}ms:`, error);
         logError(error instanceof Error ? error : new Error('Hosted checkout session failed'), 'cybersource_hosted_checkout');
         res.status(500).json({
             success: false,
