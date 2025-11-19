@@ -591,18 +591,13 @@ const DoctorPatientsPage: React.FC = () => {
         setIsLoadingServicePricing(newLoading);
 
         try {
-            if (serviceType === 'xray') {
-                // X-Ray doesn't need subtypes
-                const newPricing = new Map(servicePricing);
-                newPricing.set(serviceType, []);
-                setServicePricing(newPricing);
-            } else if (serviceType === 'lab') {
+            if (serviceType === 'lab') {
                 // Lab needs category selection first, so we'll handle it differently
                 const newPricing = new Map(servicePricing);
                 newPricing.set(serviceType, []);
                 setServicePricing(newPricing);
             } else {
-                // Ultrasound and Audiometry
+                // X-Ray, Ultrasound and Audiometry
                 const { data, error } = await supabase
                     .from('service_pricing')
                     .select('*')
@@ -1130,11 +1125,6 @@ const DoctorPatientsPage: React.FC = () => {
 
                             {/* Service Subtype Selection for each selected service type */}
                             {Array.from(selectedServiceTypes).map((serviceType) => {
-                                if (serviceType === 'xray') {
-                                    // X-Ray doesn't need subtypes
-                                    return null;
-                                }
-                                
                                 const pricing = servicePricing.get(serviceType) || [];
                                 const isLoading = isLoadingServicePricing.get(serviceType) || false;
                                 
@@ -1142,7 +1132,8 @@ const DoctorPatientsPage: React.FC = () => {
                                     <div key={serviceType} className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
                                         <div className="flex items-center justify-between mb-3">
                                             <h3 className="text-lg font-semibold text-gray-800">
-                                                {serviceType === 'ultrasound' ? (isRTL ? 'موجات فوق الصوتية' : 'Ultrasound') :
+                                                {serviceType === 'xray' ? (isRTL ? 'أشعة إكس' : 'X-Ray') :
+                                                 serviceType === 'ultrasound' ? (isRTL ? 'موجات فوق الصوتية' : 'Ultrasound') :
                                                  serviceType === 'audiometry' ? (isRTL ? 'قياس السمع' : 'Audiometry') :
                                                  serviceType === 'lab' ? (isRTL ? 'مختبر' : 'Lab') : ''}
                                             </h3>
@@ -1351,16 +1342,10 @@ const DoctorPatientsPage: React.FC = () => {
                             })}
 
                             {/* Summary of Selected Services */}
-                            {(selectedServiceTypes.has('xray') || selectedSubtypes.size > 0) && (
+                            {selectedSubtypes.size > 0 && (
                                 <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                     <div className="text-sm font-medium text-gray-700 mb-3">{isRTL ? 'الخدمات المختارة' : 'Selected Services'}</div>
                                     <div className="space-y-2">
-                                        {selectedServiceTypes.has('xray') && (
-                                            <div className="flex items-center justify-between p-2 bg-white rounded">
-                                                <span className="font-medium text-gray-900">{isRTL ? 'أشعة إكس' : 'X-Ray'}</span>
-                                                <span className="text-sm text-gray-600">{isRTL ? 'بدون نوع محدد' : 'No subtype'}</span>
-                                            </div>
-                                        )}
                                         {Array.from(selectedSubtypes.values()).map((subtypeInfo, idx) => {
                                             const pricing = servicePricing.get(subtypeInfo.serviceType)?.find(p => p.service_subtype === subtypeInfo.subtype);
                                             return (
@@ -1424,8 +1409,8 @@ const DoctorPatientsPage: React.FC = () => {
                                 </button>
                                 <button
                                     type="button"
-                                    disabled={selectedServiceTypes.size === 0 || (selectedServiceTypes.has('ultrasound') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound')) || (selectedServiceTypes.has('audiometry') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry')) || (selectedServiceTypes.has('lab') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab'))}
-                                    className={`px-6 py-2 rounded-md text-white font-medium flex items-center gap-2 ${selectedServiceTypes.size === 0 || (selectedServiceTypes.has('ultrasound') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound')) || (selectedServiceTypes.has('audiometry') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry')) || (selectedServiceTypes.has('lab') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab'))
+                                    disabled={selectedServiceTypes.size === 0 || (selectedServiceTypes.has('xray') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'xray')) || (selectedServiceTypes.has('ultrasound') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound')) || (selectedServiceTypes.has('audiometry') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry')) || (selectedServiceTypes.has('lab') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab'))}
+                                    className={`px-6 py-2 rounded-md text-white font-medium flex items-center gap-2 ${selectedServiceTypes.size === 0 || (selectedServiceTypes.has('xray') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'xray')) || (selectedServiceTypes.has('ultrasound') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound')) || (selectedServiceTypes.has('audiometry') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry')) || (selectedServiceTypes.has('lab') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab'))
                                             ? 'bg-gray-400 cursor-not-allowed'
                                             : 'bg-blue-600 hover:bg-blue-700'
                                         }`}
@@ -1440,14 +1425,16 @@ const DoctorPatientsPage: React.FC = () => {
                                         }
 
                                         // Validate that subtypes are selected for services that require them
+                                        const hasXray = selectedServiceTypes.has('xray');
                                         const hasUltrasound = selectedServiceTypes.has('ultrasound');
                                         const hasAudiometry = selectedServiceTypes.has('audiometry');
                                         const hasLab = selectedServiceTypes.has('lab');
+                                        const hasXraySubtypes = Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'xray');
                                         const hasUltrasoundSubtypes = Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound');
                                         const hasAudiometrySubtypes = Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry');
                                         const hasLabSubtypes = Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab');
 
-                                        if ((hasUltrasound && !hasUltrasoundSubtypes) || (hasAudiometry && !hasAudiometrySubtypes) || (hasLab && !hasLabSubtypes)) {
+                                        if ((hasXray && !hasXraySubtypes) || (hasUltrasound && !hasUltrasoundSubtypes) || (hasAudiometry && !hasAudiometrySubtypes) || (hasLab && !hasLabSubtypes)) {
                                             toast({
                                                 title: isRTL ? 'خطأ' : 'Error',
                                                 description: isRTL 
@@ -1488,25 +1475,7 @@ const DoctorPatientsPage: React.FC = () => {
                                             // Build array of service requests to insert
                                             const requestsToInsert: any[] = [];
 
-                                            // Add X-Ray request if selected
-                                            if (selectedServiceTypes.has('xray')) {
-                                                requestsToInsert.push({
-                                                    patient_id: selectedPatient.id,
-                                                    patient_email: selectedPatient.email,
-                                                    patient_name: selectedPatient.name,
-                                                    doctor_id: userInfo.userid,
-                                                    doctor_name: doctorName,
-                                                    service_type: 'xray',
-                                                    service_subtype: null,
-                                                    price: null,
-                                                    currency: 'ILS',
-                                                    notes: requestNotes || null,
-                                                    status: 'pending',
-                                                    payment_status: 'pending'
-                                                });
-                                            }
-
-                                            // Add requests for each selected subtype
+                                            // Add requests for each selected subtype (including X-ray)
                                             for (const subtypeInfo of selectedSubtypes.values()) {
                                                 requestsToInsert.push({
                                                     patient_id: selectedPatient.id,

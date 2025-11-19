@@ -319,6 +319,26 @@ const XRay = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      // Load pricing info for requests with subtypes
+      if (data) {
+        for (const request of data) {
+          if (request.service_subtype) {
+            const { data: pricingData } = await supabase
+              .from('service_pricing')
+              .select('service_name, service_name_ar')
+              .eq('service_type', 'xray')
+              .eq('service_subtype', request.service_subtype)
+              .single();
+
+            if (pricingData) {
+              request.service_name = pricingData.service_name;
+              request.service_name_ar = pricingData.service_name_ar;
+            }
+          }
+        }
+      }
+
       setServiceRequests(data || []);
     } catch (err: unknown) {
       console.error('Error loading service requests:', err);
@@ -1158,6 +1178,20 @@ const XRay = () => {
                   <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'الطبيب' : 'Doctor'}</h3>
                   <p className="text-gray-700">{selectedRequest.doctor_name}</p>
                 </div>
+                {selectedRequest.service_name || selectedRequest.service_name_ar ? (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'نوع الفحص' : 'Service'}</h3>
+                    <p className="text-gray-700">
+                      {isRTL ? (selectedRequest.service_name_ar || selectedRequest.service_name) : (selectedRequest.service_name || selectedRequest.service_name_ar)}
+                    </p>
+                  </div>
+                ) : null}
+                {selectedRequest.price && (
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'السعر' : 'Price'}</h3>
+                    <p className="text-gray-700">₪{selectedRequest.price} {selectedRequest.currency || 'ILS'}</p>
+                  </div>
+                )}
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'الحالة' : 'Status'}</h3>
                   {getStatusBadge(selectedRequest.status)}

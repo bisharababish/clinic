@@ -392,6 +392,26 @@ ON CONFLICT (service_type, service_subtype) DO UPDATE SET
     price = EXCLUDED.price,
     updated_at = now();
 
+-- Remove all 80 shekel X-ray services (sinus X-rays) first
+DELETE FROM public.service_pricing 
+WHERE service_type = 'xray' 
+AND price = 80;
+
+-- Insert X-Ray pricing (40 shekels only - the services you specified)
+INSERT INTO public.service_pricing (service_type, service_subtype, service_name, service_name_ar, price, currency) VALUES
+('xray', 'head_neck', 'Head & Neck', 'الرأس والرقبة', 40, 'ILS'),
+('xray', 'chest', 'Chest', 'الصدر', 40, 'ILS'),
+('xray', 'abdomen', 'Abdomen', 'البطن', 40, 'ILS'),
+('xray', 'hip', 'Hip', 'الورك', 40, 'ILS'),
+('xray', 'leg_left', 'Leg (Left)', 'الساق (يسار)', 40, 'ILS'),
+('xray', 'leg_right', 'Leg (Right)', 'الساق (يمين)', 40, 'ILS'),
+('xray', 'spine', 'Spine', 'العمود الفقري', 40, 'ILS')
+ON CONFLICT (service_type, service_subtype) DO UPDATE SET
+    service_name = EXCLUDED.service_name,
+    service_name_ar = EXCLUDED.service_name_ar,
+    price = EXCLUDED.price,
+    updated_at = now();
+
 -- Add indexes
 CREATE INDEX IF NOT EXISTS idx_service_pricing_service_type ON public.service_pricing(service_type);
 CREATE INDEX IF NOT EXISTS idx_service_pricing_active ON public.service_pricing(is_active);
