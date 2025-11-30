@@ -488,7 +488,7 @@ const UsersManagement = () => {
             // Step 0: Get auth user ID BEFORE deleting from database (so we can delete from auth.users)
             let authUserId: string | null = null;
             const authUserIdFromUser = (userToDelete as UserInfo & { id?: string }).id;
-            
+
             if (authUserIdFromUser) {
                 authUserId = authUserIdFromUser;
                 console.log('✅ Auth user ID found in userToDelete:', authUserId);
@@ -499,7 +499,7 @@ const UsersManagement = () => {
                     .select('id')
                     .eq('userid', userid)
                     .single();
-                
+
                 if (!fetchError && userData && userData.id) {
                     authUserId = userData.id;
                     console.log('✅ Found auth user ID from database:', authUserId);
@@ -510,7 +510,7 @@ const UsersManagement = () => {
 
             // Step 1: Delete from database tables
             console.log("Deleting from database tables...");
-            
+
             // Try RPC function first, if it doesn't exist, delete directly from tables
             let deletionSuccess = false;
             const { data: deletionResult, error: deletionError } = await supabase.rpc('delete_user_completely', {
@@ -520,7 +520,7 @@ const UsersManagement = () => {
             // Check if RPC call itself failed (network/connection error)
             if (deletionError) {
                 console.warn('⚠️ RPC function call failed, trying direct deletion:', deletionError.message);
-                
+
                 // Fallback: Delete directly from userinfo table
                 // Note: This will cascade delete related records if foreign keys are set up correctly
                 const { error: directDeleteError } = await supabase
@@ -535,11 +535,11 @@ const UsersManagement = () => {
                     console.log('✅ Direct deletion successful');
                     deletionSuccess = true;
                 }
-            } 
+            }
             // Check if RPC function returned but with success: false
             else if (deletionResult && deletionResult.success === false) {
                 console.warn('⚠️ RPC function returned failure, trying manual deletion of related records:', deletionResult.error || 'Unknown error');
-                
+
                 // Fallback: Delete related records first, then delete user
                 try {
                     // CRITICAL: Delete service_requests where this user is the doctor FIRST
@@ -759,7 +759,7 @@ const UsersManagement = () => {
                     // This is critical because doctor_id has ON DELETE SET NULL but is NOT NULL
                     let retryCount = 0;
                     const maxRetries = 3;
-                    
+
                     while (retryCount < maxRetries) {
                         const { data: finalCheck, error: finalCheckError } = await supabase
                             .from('service_requests')
@@ -779,7 +779,7 @@ const UsersManagement = () => {
 
                         console.error(`❌ CRITICAL: Found ${finalCheck.length} service_requests still referencing this user (attempt ${retryCount + 1})!`);
                         console.error('Service requests:', finalCheck);
-                        
+
                         // Delete them individually by ID
                         let deletedCount = 0;
                         for (const sr of finalCheck) {
@@ -794,9 +794,9 @@ const UsersManagement = () => {
                             }
                         }
                         console.log(`✅ Deleted ${deletedCount} of ${finalCheck.length} remaining service_requests`);
-                        
+
                         retryCount++;
-                        
+
                         // Wait a bit before retrying
                         if (retryCount < maxRetries) {
                             await new Promise(resolve => setTimeout(resolve, 500));
@@ -846,7 +846,7 @@ const UsersManagement = () => {
             // Unexpected response
             else {
                 console.warn('⚠️ Unexpected RPC response, trying direct deletion:', deletionResult);
-                
+
                 // Fallback: Delete directly from userinfo table
                 const { error: directDeleteError } = await supabase
                     .from('userinfo')
@@ -872,7 +872,7 @@ const UsersManagement = () => {
 
             console.log('🔍 Full user data for deletion:', userToDelete);
             console.log('🔍 Auth user ID to delete:', authUserId);
-            
+
             if (authUserId) {
                 console.log('🗑️ Attempting to delete auth user...');
                 console.log('🔍 User data:', userToDelete);
@@ -892,7 +892,7 @@ const UsersManagement = () => {
                             // Step 1: Get CSRF token from backend (required for admin endpoints)
                             console.log('🔐 Fetching CSRF token from backend...');
                             let csrfToken = sessionStorage.getItem('csrf_token');
-                            
+
                             // Get fresh CSRF token from backend
                             const csrfResponse = await fetch(
                                 `${backendUrl}/api/csrf-token`,
@@ -1098,7 +1098,7 @@ const UsersManagement = () => {
     const handleDeleteButtonClick = (userid: number) => {
         console.log("🗑️ Delete button clicked for user ID:", userid);
         console.log("🔍 Permissions check:", { canDirectDelete, canRequestDeletion, currentUserRole });
-        
+
         const user = users.find(u => u.userid === userid);
         if (!user) {
             console.error("❌ User not found:", userid);
@@ -1244,7 +1244,7 @@ const UsersManagement = () => {
 
                     if (authError) {
                         console.error("❌ Auth signup error:", authError);
-                        
+
                         // Handle rate limiting error gracefully (same as RegisterForm)
                         if (authError.message && authError.message.includes('security purposes') && authError.message.includes('seconds')) {
                             const secondsMatch = authError.message.match(/(\d+)\s*seconds?/i);
@@ -1259,7 +1259,7 @@ const UsersManagement = () => {
                             });
                             return;
                         }
-                        
+
                         // If user already exists, show error
                         if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
                             toast({
@@ -1271,7 +1271,7 @@ const UsersManagement = () => {
                             });
                             return;
                         }
-                        
+
                         throw authError;
                     }
 
@@ -1298,22 +1298,22 @@ const UsersManagement = () => {
                 }
 
                 const timestamp = new Date().toISOString();
-                
+
                 // Ensure date_of_birth and gender_user are not empty (validation should prevent this, but double-check)
                 const dateOfBirth = userFormData.date_of_birth?.trim() || null;
                 const genderUser = userFormData.gender_user?.trim() || null;
-                
+
                 if (!dateOfBirth || !genderUser) {
                     toast({
                         title: t('common.error'),
-                        description: isRTL 
-                            ? "تاريخ الميلاد والجنس مطلوبان" 
+                        description: isRTL
+                            ? "تاريخ الميلاد والجنس مطلوبان"
                             : "Date of birth and gender are required",
                         variant: "destructive",
                     });
                     return;
                 }
-                
+
                 const { data: userData, error: userError } = await supabase
                     .from("userinfo")
                     .insert({
@@ -1396,7 +1396,7 @@ const UsersManagement = () => {
 
                 toast({
                     title: t('common.success'),
-                    description: isRTL 
+                    description: isRTL
                         ? "تم إنشاء المستخدم بنجاح. تم إرسال بريد التأكيد. يجب على المستخدم النقر على الرابط في البريد للتحقق قبل تسجيل الدخول."
                         : "User created successfully. A confirmation email has been sent. The user must click the link in the email to verify before they can login.",
                     style: { backgroundColor: '#16a34a', color: '#fff' }, // Green bg, white text
@@ -1462,8 +1462,10 @@ const UsersManagement = () => {
                         let errorMessage = "Failed to update password";
                         if (error instanceof Error) {
                             const errMsg = error.message.toLowerCase();
-                            if (errMsg.includes('fetch') || errMsg.includes('network')) {
-                                errorMessage = 'Network error: Could not connect to server. Please check your internet connection.';
+                            if (errMsg.includes('failed to fetch') || errMsg.includes('connection refused') || errMsg.includes('networkerror')) {
+                                errorMessage = 'Backend server is not running. Please start the backend server on port 10000 (run: cd backend && npm run dev)';
+                            } else if (errMsg.includes('fetch') || errMsg.includes('network')) {
+                                errorMessage = 'Network error: Could not connect to server. Please check your internet connection and ensure the backend server is running.';
                             } else if (errMsg.includes('cors')) {
                                 errorMessage = 'CORS error: Server configuration issue.';
                             } else if (errMsg.includes('401') || errMsg.includes('unauthorized')) {

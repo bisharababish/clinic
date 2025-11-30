@@ -2,33 +2,54 @@
 import { supabase } from '../../lib/supabase';
 
 // Determine API base URL based on environment
-const getApiBaseUrl = (): string => {
-    if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
-        return 'https://api.bethlehemmedcenter.com';
+// This function is called dynamically at runtime to ensure correct URL detection
+export const getApiBaseUrl = (): string => {
+    // Check for explicit environment variable override first (highest priority)
+    if (import.meta.env.VITE_API_URL) {
+        const envUrl = import.meta.env.VITE_API_URL;
+        console.log('📍 Using API URL from VITE_API_URL env var:', envUrl);
+        return envUrl;
     }
 
-    if (typeof window !== 'undefined') {
+    // Runtime hostname detection (only works in browser) - PRIORITY: Check this BEFORE build-time env vars
+    if (typeof window !== 'undefined' && window.location) {
         const hostname = window.location.hostname.toLowerCase();
-        console.log('🌐 API Base URL - Detected hostname:', hostname);
+        const protocol = window.location.protocol;
+        console.log('🌐 API Base URL - Detected hostname:', hostname, 'Protocol:', protocol);
 
-        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
-            console.log('📍 Using localhost backend:', 'http://localhost:10000');
-            return 'http://localhost:10000';
-        }
-
+        // Production domain detection (check this FIRST)
         if (hostname.includes('bethlehemmedcenter.com')) {
-            console.log('📍 Using production backend:', 'https://api.bethlehemmedcenter.com');
-            return 'https://api.bethlehemmedcenter.com';
+            const prodUrl = 'https://api.bethlehemmedcenter.com';
+            console.log('📍 Using production backend (domain match):', prodUrl);
+            return prodUrl;
         }
 
-        console.log('📍 Using production backend (default):', 'https://api.bethlehemmedcenter.com');
-        return 'https://api.bethlehemmedcenter.com';
+        // Local development
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '' || hostname.startsWith('192.168.')) {
+            const backendPort = import.meta.env.VITE_BACKEND_PORT || '10000';
+            const localUrl = `http://localhost:${backendPort}`;
+            console.log('📍 Using localhost backend:', localUrl);
+            return localUrl;
+        }
+
+        // For any other domain (staging, preview, etc.), default to production API
+        const prodUrl = 'https://api.bethlehemmedcenter.com';
+        console.log('📍 Using production backend (unknown domain default):', prodUrl);
+        return prodUrl;
     }
 
-    return 'https://api.bethlehemmedcenter.com';
-};
+    // Check if we're in production mode (build-time check, lower priority)
+    if (import.meta.env.PROD || import.meta.env.VITE_NODE_ENV === 'production') {
+        const prodUrl = 'https://api.bethlehemmedcenter.com';
+        console.log('📍 Using production backend (PROD mode):', prodUrl);
+        return prodUrl;
+    }
 
-export const API_BASE_URL = getApiBaseUrl();
+    // Final fallback to production (for SSR or unknown contexts)
+    const prodUrl = 'https://api.bethlehemmedcenter.com';
+    console.log('📍 Using production backend (fallback):', prodUrl);
+    return prodUrl;
+};
 
 // CSRF token cache
 let csrfTokenCache: { token: string; expires: number } | null = null;
@@ -57,10 +78,11 @@ async function getCSRFToken(): Promise<string> {
             throw new Error('No active session - please log in');
         }
 
-        console.log('✅ Session found, requesting CSRF token from:', `${API_BASE_URL}/api/csrf-token`);
+        const apiBaseUrl = getApiBaseUrl();
+        console.log('✅ Session found, requesting CSRF token from:', `${apiBaseUrl}/api/csrf-token`);
 
         // Fetch new CSRF token from backend
-        const response = await fetch(`${API_BASE_URL}/api/csrf-token`, {
+        const response = await fetch(`${apiBaseUrl}/api/csrf-token`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${session.access_token}`,
@@ -108,6 +130,16 @@ async function getCSRFToken(): Promise<string> {
         csrfTokenCache = null;
 
         if (error instanceof Error) {
+            // Provide more helpful error message for connection errors
+            const errMsg = error.message.toLowerCase();
+            const apiBaseUrl = getApiBaseUrl();
+            if (errMsg.includes('failed to fetch') || errMsg.includes('connection refused') || errMsg.includes('networkerror')) {
+                if (apiBaseUrl.includes('localhost')) {
+                    throw new Error(`Backend server is not running. Please start the backend server on port 10000. Error: ${error.message}`);
+                } else {
+                    throw new Error(`Cannot connect to backend API at ${apiBaseUrl}. Please check if the backend server is running and accessible. Error: ${error.message}`);
+                }
+            }
             throw error;
         }
         throw new Error('Failed to obtain CSRF token');
@@ -153,8 +185,9 @@ export async function apiCall<T>(
             credentials: 'include',
             keepalive: endpoint.includes('/payments/') ? true : false, // Keep connection alive for payment requests
         };
-        
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, fetchOptions);
+
+        const apiBaseUrl = getApiBaseUrl();
+        const response = await fetch(`${apiBaseUrl}${endpoint}`, fetchOptions);
 
         console.log(`📡 Response status: ${response.status} ${response.statusText}`);
 
@@ -187,6 +220,20 @@ export async function apiCall<T>(
         return data;
     } catch (error) {
         console.error('❌ API call failed:', error);
+
+        // Provide more helpful error message for connection errors
+        if (error instanceof Error) {
+            const errMsg = error.message.toLowerCase();
+            const apiBaseUrl = getApiBaseUrl();
+            if (errMsg.includes('failed to fetch') || errMsg.includes('connection refused') || errMsg.includes('networkerror')) {
+                if (apiBaseUrl.includes('localhost')) {
+                    throw new Error(`Backend server is not running. Please start the backend server on port 10000. Error: ${error.message}`);
+                } else {
+                    throw new Error(`Cannot connect to backend API at ${apiBaseUrl}. Please check if the backend server is running and accessible. Error: ${error.message}`);
+                }
+            }
+        }
+
         throw error;
     }
 }
@@ -214,8 +261,8 @@ export async function confirmEmail(userEmail: string): Promise<{ success: boolea
 }
 
 export async function createUserWithEmailConfirmed(
-    email: string, 
-    password: string, 
+    email: string,
+    password: string,
     userMetadata?: Record<string, any>,
     sendEmail: boolean = true
 ): Promise<{ success: boolean; message: string; user: { id: string; email: string; email_confirmed_at: string | null } }> {

@@ -175,7 +175,7 @@ app.post('/api/payments/cybersource/session', validateSession, csrfProtection, (
     const startTime = Date.now();
     try {
         console.log('🚀 Payment session request received');
-        
+
         const {
             amount,
             currency = 'ILS',
@@ -242,7 +242,7 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
     try {
         // CyberSource POSTs form data directly, so we need to parse it from req.body
         const fields = req.body as Record<string, unknown>;
-        
+
         if (!fields || Object.keys(fields).length === 0) {
             console.error('❌ CyberSource callback: No fields received');
             // Redirect to frontend with error
@@ -361,7 +361,7 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
                             .maybeSingle();
 
                         const existingNotes = existingAppointment?.notes || '';
-                        const visaNote = existingNotes 
+                        const visaNote = existingNotes
                             ? `${existingNotes}\n[Paid by Visa - ${now}]`
                             : `Paid by Visa via CyberSource - Transaction ID: ${transactionId || 'N/A'}`;
 
@@ -421,7 +421,7 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
                 // If payment succeeded, update status to allow service to start
                 // If it was 'payment_required', change to 'in_progress'
                 // If it was 'pending' or 'secretary_confirmed', change to 'in_progress'
-                if (currentRequest?.status === 'payment_required' || 
+                if (currentRequest?.status === 'payment_required' ||
                     currentRequest?.status === 'secretary_confirmed' ||
                     currentRequest?.status === 'pending') {
                     newStatus = 'in_progress';
@@ -430,8 +430,8 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
 
             // Get existing notes to append Visa payment info
             const existingNotes = currentRequest?.notes || '';
-            const visaNote = status === 'completed' 
-                ? (existingNotes 
+            const visaNote = status === 'completed'
+                ? (existingNotes
                     ? `${existingNotes}\n[Paid by Visa - ${now}]`
                     : `Paid by Visa via CyberSource - Transaction ID: ${transactionId || 'N/A'}`)
                 : existingNotes;
@@ -477,7 +477,7 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
         // Redirect to frontend with payment data as query parameters
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         const params = new URLSearchParams();
-        
+
         // Include all relevant fields for the frontend
         if (normalizedFields.signature) params.append('signature', normalizedFields.signature);
         if (normalizedFields.signed_field_names) params.append('signed_field_names', normalizedFields.signed_field_names);
@@ -487,7 +487,7 @@ app.post('/api/payments/cybersource/callback', async (req: Request, res: Respons
         if (amount) params.append('amount', amount.toString());
         if (currency) params.append('currency', currency);
         if (status) params.append('status', status);
-        
+
         // Include all other fields that might be useful
         Object.entries(normalizedFields).forEach(([key, value]) => {
             if (value && !params.has(key)) {
@@ -627,7 +627,7 @@ app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, a
                             .maybeSingle();
 
                         const existingNotes = existingAppointment?.notes || '';
-                        const visaNote = existingNotes 
+                        const visaNote = existingNotes
                             ? `${existingNotes}\n[Paid by Visa - ${now}]`
                             : `Paid by Visa via CyberSource - Transaction ID: ${transactionId || 'N/A'}`;
 
@@ -683,7 +683,7 @@ app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, a
                 // If payment succeeded, update status to allow service to start
                 // If it was 'payment_required', change to 'in_progress'
                 // If it was 'pending' or 'secretary_confirmed', change to 'in_progress'
-                if (currentRequest?.status === 'payment_required' || 
+                if (currentRequest?.status === 'payment_required' ||
                     currentRequest?.status === 'secretary_confirmed' ||
                     currentRequest?.status === 'pending') {
                     newStatus = 'in_progress';
@@ -692,8 +692,8 @@ app.post('/api/payments/cybersource/confirm', validateSession, csrfProtection, a
 
             // Get existing notes to append Visa payment info
             const existingNotes = currentRequest?.notes || '';
-            const visaNote = status === 'completed' 
-                ? (existingNotes 
+            const visaNote = status === 'completed'
+                ? (existingNotes
                     ? `${existingNotes}\n[Paid by Visa - ${now}]`
                     : `Paid by Visa via CyberSource - Transaction ID: ${transactionId || 'N/A'}`)
                 : existingNotes;
@@ -882,9 +882,9 @@ app.post('/api/admin/update-password', authenticateAdmin, validateUpdatePassword
 // Create user with email confirmed and send confirmation email
 app.post('/api/admin/create-user-with-email', authenticateAdmin, csrfProtection, async (req: Request, res: Response): Promise<void> => {
     try {
-        const { email, password, userMetadata, sendEmail = true } = req.body as { 
-            email?: string; 
-            password?: string; 
+        const { email, password, userMetadata, sendEmail = true } = req.body as {
+            email?: string;
+            password?: string;
             userMetadata?: Record<string, any>;
             sendEmail?: boolean;
         };
@@ -968,7 +968,7 @@ app.post('/api/admin/confirm-email', authenticateAdmin, csrfProtection, async (r
         let targetUser: { email?: string; id: string } | null = null;
         let page = 1;
         const perPage = 1000; // Supabase allows up to 1000 per page
-        
+
         while (!targetUser) {
             const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers({
                 page,
@@ -986,19 +986,19 @@ app.post('/api/admin/confirm-email', authenticateAdmin, csrfProtection, async (r
             }
 
             const usersList: Array<{ email?: string; id: string }> = existingUsers?.users ?? [];
-            
+
             // If no users returned, we've reached the end
             if (usersList.length === 0) {
                 break;
             }
-            
+
             targetUser = usersList.find(u => u.email && u.email.toLowerCase() === userEmail.toLowerCase()) || null;
-            
+
             // If we found the user or there are no more pages, break
             if (targetUser || usersList.length < perPage) {
                 break;
             }
-            
+
             page++;
         }
 
@@ -1015,7 +1015,7 @@ app.post('/api/admin/confirm-email', authenticateAdmin, csrfProtection, async (r
         // Confirm the user's email using Supabase Admin API
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
             targetUser.id,
-            { 
+            {
                 email_confirm: true,
                 // Also ensure the user is active
                 ban_duration: 'none'
