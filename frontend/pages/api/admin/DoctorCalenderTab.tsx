@@ -141,10 +141,23 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
 
     // Memoized filtered appointments based on selected doctor
     const filteredAppointments = useMemo(() => {
-        if (selectedDoctor === 'all') {
-            return appointments;
-        }
-        return appointments.filter(apt => apt.doctor_id === selectedDoctor);
+        const filtered = selectedDoctor === 'all'
+            ? appointments
+            : appointments.filter(apt => apt.doctor_id === selectedDoctor);
+
+        // Debug: Log appointment data
+        console.log('📋 Filtered Appointments:', {
+            total: appointments.length,
+            filtered: filtered.length,
+            selectedDoctor,
+            sampleAppointments: filtered.slice(0, 2).map(apt => ({
+                date: apt.date,
+                time: apt.time,
+                patient: apt.patient_name
+            }))
+        });
+
+        return filtered;
     }, [selectedDoctor, appointments]);
 
     // Memoized today's appointments (all doctors, not filtered)
@@ -201,19 +214,28 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
 
     const timeSlots = useMemo(() => {
         const slots = new Set<string>();
+        // Normalize time format to handle both "08:00" and "08:00:00"
+        const normalizeTimeForSlot = (time: string) => {
+            if (!time) return '';
+            return time.length === 8 ? time.substring(0, 5) : time; // Convert "08:00:00" to "08:00"
+        };
 
         doctorAvailability.forEach(avail => {
             if (selectedDoctor === 'all' || avail.doctor_id === selectedDoctor) {
-                slots.add(avail.start_time);
+                const normalizedTime = normalizeTimeForSlot(avail.start_time || '');
+                if (normalizedTime) slots.add(normalizedTime);
             }
         });
 
-        if (slots.size === 0) {
-            return ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
-        }
-
+        // Return actual availability slots (empty array if none configured)
+        // We'll handle defaults in the weekly calendar logic based on showOfficeHours toggle
         return Array.from(slots).sort();
     }, [doctorAvailability, selectedDoctor]);
+
+    // Track if we have actual availability data (not just defaults)
+    const hasActualAvailability = useMemo(() => {
+        return doctorAvailability.length > 0 && timeSlots.length > 0;
+    }, [doctorAvailability.length, timeSlots.length]);
 
     useEffect(() => {
         loadDoctorAvailability();
@@ -623,9 +645,8 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                         {/* Admin Office Hours Toggle */}
                         {(currentUserRole === 'admin' || currentUserRole === 'administrator') && (
                             <div
-                                className={`flex items-center gap-2 ${
-                                    i18n.language === 'ar' ? 'flex-row-reverse' : ''
-                                }`}
+                                className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''
+                                    }`}
                             >
                                 <label
                                     className={`text-sm font-medium ${i18n.language === 'ar' ? 'text-right' : ''}`}
@@ -647,18 +668,268 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                 <CardContent>
                     {/* Weekly calendar grid */}
                     {(() => {
-                        // Calculate start of week (Sunday)
-                        const weekStart = new Date(currentDate);
+                        // Calculate start of week (Sunday) based on currentDate
+                        // If current week has no appointments, try to find a week in current month with appointments
+                        // Use local date to avoid timezone issues
+                        let weekStart = new Date(currentDate);
                         weekStart.setDate(currentDate.getDate() - currentDate.getDay());
-                        // Build days of week
+                        weekStart.setHours(0, 0, 0, 0);
+
+                        // Debug: Log the week calculation
+                        console.log('📅 Week calculation:', {
+                            currentDate: currentDate.toISOString(),
+                            currentDateLocal: `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`,
+                            currentDateDay: currentDate.getDay(),
+                            weekStartISO: weekStart.toISOString(),
+                            weekStartLocal: `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`
+                        });
+
+                        // Helper to normalize dates (will be defined properly below, but using inline for this check)
+                        const normalizeDateCheck = (dateStr: string): string => {
+                            if (!dateStr) return '';
+                            return dateStr.split('T')[0].split(' ')[0].trim();
+                        };
+
+                        // Check if current week has appointments
+                        const currentWeekDates = Array.from({ length: 7 }, (_, i) => {
+                            const d = new Date(weekStart);
+                            d.setDate(weekStart.getDate() + i);
+                            const year = d.getFullYear();
+                            const month = String(d.getMonth() + 1).padStart(2, '0');
+                            const date = String(d.getDate()).padStart(2, '0');
+                            return `${year}-${month}-${date}`;
+                        });
+
+                        const currentWeekHasAppointments = filteredAppointments.some(apt => {
+                            const aptDate = normalizeDateCheck(apt.date || '');
+                            return currentWeekDates.includes(aptDate);
+                        });
+
+                        // If current week has no appointments, find first appointment in current month
+                        if (!currentWeekHasAppointments && filteredAppointments.length > 0) {
+                            const firstAppointmentInMonth = filteredAppointments.find(apt => {
+                                if (!apt.date) return false;
+                                const aptDateNormalized = normalizeDateCheck(apt.date);
+                                // Parse date components to avoid timezone issues
+                                const [year, month, day] = aptDateNormalized.split('-').map(Number);
+                                const aptDate = new Date(year, month - 1, day); // month is 0-indexed
+                                return aptDate.getMonth() === currentMonth && aptDate.getFullYear() === currentYear;
+                            });
+
+                            if (firstAppointmentInMonth && firstAppointmentInMonth.date) {
+                                const aptDateNormalized = normalizeDateCheck(firstAppointmentInMonth.date);
+                                // Parse date components to avoid timezone issues
+                                const [year, month, day] = aptDateNormalized.split('-').map(Number);
+                                const aptDate = new Date(year, month - 1, day); // month is 0-indexed
+                                weekStart = new Date(aptDate);
+                                weekStart.setDate(aptDate.getDate() - aptDate.getDay());
+                                weekStart.setHours(0, 0, 0, 0);
+                                console.log('🔄 No appointments in current week, showing week with appointment:', {
+                                    appointmentDate: firstAppointmentInMonth.date,
+                                    appointmentDateNormalized: aptDateNormalized,
+                                    parsedDate: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+                                    weekStartLocal: `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`,
+                                    weekStartDay: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][weekStart.getDay()]
+                                });
+                            }
+                        }
+
+                        // Build days of week - use local dates to avoid timezone shifts
                         const weekDaysArr = Array.from({ length: 7 }, (_, i) => {
                             const d = new Date(weekStart);
                             d.setDate(weekStart.getDate() + i);
+                            d.setHours(0, 0, 0, 0); // Normalize to start of day
+                            // Ensure we're using local time, not UTC
                             return d;
                         });
 
+                        // Debug: Log the week days
+                        console.log('📅 Week days array:', weekDaysArr.map((d, idx) => {
+                            const year = d.getFullYear();
+                            const month = String(d.getMonth() + 1).padStart(2, '0');
+                            const date = String(d.getDate()).padStart(2, '0');
+                            const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+                            return {
+                                index: idx,
+                                dayName,
+                                date: `${year}-${month}-${date}`,
+                                dayOfWeek: d.getDay(),
+                                iso: d.toISOString()
+                            };
+                        }));
+
+                        // Get all unique appointment times from filtered appointments for the current week
+                        // Normalize time format to handle both "08:00" and "08:00:00"
+                        const normalizeTimeForSlot = (time: string) => {
+                            if (!time) return '';
+                            return time.length === 8 ? time.substring(0, 5) : time; // Convert "08:00:00" to "08:00"
+                        };
+
+                        // Helper function to normalize dates for comparison (defined once, used throughout)
+                        const normalizeDateForComparison = (dateStr: string): string => {
+                            if (!dateStr) return '';
+                            return dateStr.split('T')[0].split(' ')[0].trim();
+                        };
+
+                        const weekAppointmentTimes = new Set<string>();
+                        const weekDateStrings = weekDaysArr.map(day => {
+                            const year = day.getFullYear();
+                            const month = String(day.getMonth() + 1).padStart(2, '0');
+                            const date = String(day.getDate()).padStart(2, '0');
+                            return `${year}-${month}-${date}`;
+                        });
+
+                        // Debug: Log comprehensive information
+                        console.log('📅 Weekly Calendar Debug:', {
+                            currentDate: currentDate.toISOString(),
+                            weekStart: weekStart.toISOString(),
+                            weekDates: weekDateStrings,
+                            totalAppointments: filteredAppointments.length,
+                            selectedDoctor: selectedDoctor,
+                            showOfficeHours: showOfficeHours,
+                            timeSlotsFromAvailability: timeSlots,
+                            availabilitySlotsCount: timeSlots.length,
+                            doctorAvailabilityTotal: doctorAvailability.length,
+                            doctorAvailabilitySample: doctorAvailability.slice(0, 3).map(avail => ({
+                                doctor_id: avail.doctor_id,
+                                day: avail.day,
+                                start_time: avail.start_time,
+                                end_time: avail.end_time
+                            })),
+                            sampleAppointments: filteredAppointments.slice(0, 3).map(apt => ({
+                                id: apt.id,
+                                date: apt.date,
+                                time: apt.time,
+                                patient: apt.patient_name,
+                                doctor: apt.doctor_name
+                            }))
+                        });
+
+                        weekDaysArr.forEach(day => {
+                            // Use consistent date formatting
+                            const year = day.getFullYear();
+                            const month = String(day.getMonth() + 1).padStart(2, '0');
+                            const date = String(day.getDate()).padStart(2, '0');
+                            const dateStr = `${year}-${month}-${date}`;
+
+                            const dayAppointments = filteredAppointments.filter(apt => {
+                                if (!apt.date) return false;
+
+                                // Normalize both dates for comparison
+                                const aptDateNormalized = normalizeDateForComparison(apt.date);
+                                const weekDateNormalized = normalizeDateForComparison(dateStr);
+
+                                const matches = aptDateNormalized === weekDateNormalized;
+
+                                if (matches && apt.time) {
+                                    console.log(`✅ Date match found:`, {
+                                        appointmentDate: apt.date,
+                                        appointmentDateNormalized: aptDateNormalized,
+                                        weekDate: dateStr,
+                                        weekDateNormalized: weekDateNormalized,
+                                        time: apt.time,
+                                        patient: apt.patient_name
+                                    });
+                                } else if (aptDateNormalized && weekDateNormalized && aptDateNormalized !== weekDateNormalized) {
+                                    // Debug: log near misses for first few
+                                    if (filteredAppointments.indexOf(apt) < 3) {
+                                        console.log(`❌ Date mismatch:`, {
+                                            appointmentDate: apt.date,
+                                            appointmentDateNormalized: aptDateNormalized,
+                                            weekDate: dateStr,
+                                            weekDateNormalized: weekDateNormalized
+                                        });
+                                    }
+                                }
+
+                                return matches;
+                            });
+
+                            if (dayAppointments.length > 0) {
+                                console.log(`📆 Day ${dateStr} has ${dayAppointments.length} appointments:`, dayAppointments.map(apt => ({
+                                    date: apt.date,
+                                    time: apt.time,
+                                    patient: apt.patient_name,
+                                    doctor: apt.doctor_name
+                                })));
+                            }
+
+                            dayAppointments.forEach(apt => {
+                                const normalizedTime = normalizeTimeForSlot(apt.time || '');
+                                if (normalizedTime) {
+                                    weekAppointmentTimes.add(normalizedTime);
+                                    console.log(`⏰ Added time slot: ${normalizedTime} from appointment:`, apt.patient_name);
+                                }
+                            });
+                        });
+
+                        console.log('⏰ Week appointment times found:', Array.from(weekAppointmentTimes));
+
                         // Filter time slots based on showOfficeHours setting
-                        const filteredTimeSlots = showOfficeHours ? timeSlots : [];
+                        // When showOfficeHours is false: Only show appointment times (minimal columns)
+                        // When showOfficeHours is true: Show ALL availability slots as columns (even if empty), plus appointment times
+                        let filteredTimeSlots: string[];
+                        const allTimeSlots = new Set<string>();
+
+                        if (showOfficeHours) {
+                            // When showing office hours: ALWAYS show full schedule (default office hours)
+                            // This ensures the toggle shows a difference even with just one appointment
+                            const defaultOfficeHours = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+                            defaultOfficeHours.forEach(time => allTimeSlots.add(time));
+
+                            // Also add any availability slots (in case they have more than defaults)
+                            if (hasActualAvailability && timeSlots.length > 0) {
+                                timeSlots.forEach(time => allTimeSlots.add(time));
+                                console.log('📋 Added availability slots:', timeSlots);
+                            }
+
+                            // Also add appointment times (so appointments are visible in their slots)
+                            weekAppointmentTimes.forEach(time => allTimeSlots.add(time));
+                            console.log('📋 Added default office hours (full schedule):', defaultOfficeHours);
+                            console.log('📋 Added appointment times:', Array.from(weekAppointmentTimes));
+
+                            console.log('✅ Show Office Hours ON:', {
+                                hasActualAvailability,
+                                availabilitySlots: timeSlots,
+                                availabilitySlotsCount: timeSlots.length,
+                                appointmentSlots: Array.from(weekAppointmentTimes),
+                                appointmentSlotsCount: weekAppointmentTimes.size,
+                                totalSlots: allTimeSlots.size,
+                                finalSlots: Array.from(allTimeSlots).sort(),
+                                doctorAvailabilityCount: doctorAvailability.length
+                            });
+                        } else {
+                            // When office hours are OFF: Only show appointment times (minimal view)
+                            // This creates a compact view showing only times with appointments
+                            weekAppointmentTimes.forEach(time => allTimeSlots.add(time));
+                            console.log('📋 Office Hours OFF - only added appointment times:', Array.from(weekAppointmentTimes));
+
+                            console.log('❌ Show Office Hours OFF - only showing appointment times:', {
+                                appointmentSlots: Array.from(weekAppointmentTimes),
+                                appointmentSlotsCount: weekAppointmentTimes.size,
+                                availabilitySlotsExcluded: timeSlots,
+                                availabilitySlotsExcludedCount: timeSlots.length,
+                                hasActualAvailability
+                            });
+                        }
+
+                        // Determine final time slots to display
+                        if (allTimeSlots.size > 0) {
+                            filteredTimeSlots = Array.from(allTimeSlots).sort();
+                        } else {
+                            // No slots from appointments or availability
+                            if (showOfficeHours) {
+                                // Toggle is on but no slots - use defaults to show full schedule
+                                filteredTimeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+                                console.log('📋 Using default slots (office hours on, no appointments/availability):', filteredTimeSlots);
+                            } else {
+                                // Toggle is off and no appointments - use minimal defaults
+                                filteredTimeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+                                console.log('📋 Using default slots (no appointments, office hours off):', filteredTimeSlots);
+                            }
+                        }
+
+                        console.log('📊 Final time slots for weekly calendar:', filteredTimeSlots);
                         const displayTimeSlots = i18n.language === 'ar' ? [...filteredTimeSlots].reverse() : filteredTimeSlots;
                         // Helper to format time in Arabic
                         function formatTimeArabic(time) {
@@ -715,30 +986,106 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                     </thead>
                                     <tbody>
                                         {weekDaysArr.map((d, dayIdx) => {
-                                            const dateStr = d.toISOString().split('T')[0];
-                                            // For Arabic, reverse the day index
-                                            const displayDayIdx = i18n.language === 'ar' ? 6 - dayIdx : dayIdx;
+                                            // Use consistent date formatting (avoid timezone issues with toISOString)
+                                            const year = d.getFullYear();
+                                            const month = String(d.getMonth() + 1).padStart(2, '0');
+                                            const date = String(d.getDate()).padStart(2, '0');
+                                            const dateStr = `${year}-${month}-${date}`;
+                                            const dayOfWeek = d.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+                                            // Use the actual day of week for the day name
+                                            // dayOfWeek is 0 (Sunday) to 6 (Saturday), which matches dayNames array
+                                            // For Arabic, reverse the display order
+                                            const displayDayIdx = i18n.language === 'ar' ? 6 - dayOfWeek : dayOfWeek;
+                                            const dayName = dayNames[dayOfWeek]; // Use actual day of week, not displayDayIdx
+
+                                            // Debug each day to see what's happening
+                                            if (dayIdx < 3) { // Debug first 3 days
+                                                console.log(`🔍 Day ${dayIdx} in weekly calendar:`, {
+                                                    dateStr,
+                                                    dayName,
+                                                    dayOfWeek,
+                                                    displayDayIdx,
+                                                    dateObject: d.toISOString(),
+                                                    localDate: `${year}-${month}-${date}`,
+                                                    matchingAppointments: filteredAppointments.filter(apt => {
+                                                        const aptDate = normalizeDateForComparison(apt.date);
+                                                        return aptDate === dateStr;
+                                                    }).map(apt => ({
+                                                        date: apt.date,
+                                                        normalized: normalizeDateForComparison(apt.date),
+                                                        patient: apt.patient_name
+                                                    }))
+                                                });
+                                            }
                                             return (
                                                 <tr key={dayIdx}>
                                                     {i18n.language === 'ar' ? (
                                                         <>
                                                             <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
                                                             {displayTimeSlots.map((slot, slotIdx) => {
+                                                                // Normalize time format helper - handles both "08:00" and "08:00:00"
+                                                                const normalizeTime = (time: string) => {
+                                                                    if (!time) return '';
+                                                                    return time.length === 8 ? time.substring(0, 5) : time; // Convert "08:00:00" to "08:00"
+                                                                };
                                                                 const cellApts = filteredAppointments.filter(apt => {
-                                                                    if (apt.date !== dateStr) return false;
-                                                                    if (!(selectedDoctor === 'all' || apt.doctor_id === selectedDoctor)) return false;
+                                                                    if (!apt.date || !apt.time) return false;
 
-                                                                    // If office hours are hidden, show all appointments regardless of availability
-                                                                    if (!showOfficeHours) {
-                                                                        return apt.time === slot;
+                                                                    // Filter by date - normalize date format
+                                                                    const aptDateNormalized = normalizeDateForComparison(apt.date);
+                                                                    const weekDateNormalized = normalizeDateForComparison(dateStr);
+
+                                                                    // Debug first cell
+                                                                    if (dayIdx === 0 && slotIdx === 0) {
+                                                                        console.log('🔍 Cell filtering (AR):', {
+                                                                            appointmentDate: apt.date,
+                                                                            appointmentDateNormalized: aptDateNormalized,
+                                                                            weekDate: dateStr,
+                                                                            weekDateNormalized: weekDateNormalized,
+                                                                            dayName: dayName,
+                                                                            matches: aptDateNormalized === weekDateNormalized
+                                                                        });
                                                                     }
 
-                                                                    // Check if appointment matches availability slot
-                                                                    return doctorAvailability.some(avail => {
-                                                                        return avail.doctor_id === apt.doctor_id &&
-                                                                            avail.start_time === apt.time;
+                                                                    if (aptDateNormalized !== weekDateNormalized) return false;
+
+                                                                    // Filter by selected doctor
+                                                                    if (!(selectedDoctor === 'all' || apt.doctor_id === selectedDoctor)) return false;
+
+                                                                    // Must match the time slot - normalize time format for comparison
+                                                                    const aptTime = apt.time?.trim() || '';
+                                                                    const slotTime = slot?.trim() || '';
+                                                                    const aptTimeNorm = normalizeTime(aptTime);
+                                                                    const slotTimeNorm = normalizeTime(slotTime);
+                                                                    if (aptTimeNorm !== slotTimeNorm) return false;
+
+                                                                    // Show all appointments that match the time slot
+                                                                    return true;
+                                                                });
+
+                                                                // Debug first cell
+                                                                if (dayIdx === 0 && slotIdx === 0) {
+                                                                    const allForDate = filteredAppointments.filter(apt => {
+                                                                        const aptDate = apt.date?.split('T')[0] || apt.date || '';
+                                                                        return aptDate === dateStr;
                                                                     });
-                                                                }); let hasConflict = false;
+                                                                    console.log('🔍 First Cell Debug (AR):', {
+                                                                        dateStr,
+                                                                        slot,
+                                                                        cellAptsCount: cellApts.length,
+                                                                        allForDate: allForDate.length,
+                                                                        appointments: allForDate.map(apt => ({
+                                                                            time: apt.time,
+                                                                            normalized: normalizeTime(apt.time || ''),
+                                                                            slotNormalized: normalizeTime(slot || ''),
+                                                                            matches: normalizeTime(apt.time || '') === normalizeTime(slot || ''),
+                                                                            patient: apt.patient_name
+                                                                        }))
+                                                                    });
+                                                                }
+
+                                                                let hasConflict = false;
                                                                 for (let i = 0; i < cellApts.length; i++) {
                                                                     for (let j = 0; j < cellApts.length; j++) {
                                                                         if (i !== j && cellApts[i].clinic_id === cellApts[j].clinic_id) {
@@ -772,20 +1119,44 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                                         <>
                                                             <td className="border p-2 font-bold bg-gray-50 text-lg" style={{ fontWeight: 'bold', fontSize: '1.25em' }}>{dayNames[displayDayIdx]}</td>
                                                             {displayTimeSlots.map((slot, slotIdx) => {
+                                                                // Normalize time format helper - handles both "08:00" and "08:00:00"
+                                                                const normalizeTime = (time: string) => {
+                                                                    if (!time) return '';
+                                                                    return time.length === 8 ? time.substring(0, 5) : time; // Convert "08:00:00" to "08:00"
+                                                                };
                                                                 const cellApts = filteredAppointments.filter(apt => {
-                                                                    if (apt.date !== dateStr) return false;
-                                                                    if (!(selectedDoctor === 'all' || apt.doctor_id === selectedDoctor)) return false;
+                                                                    if (!apt.date || !apt.time) return false;
 
-                                                                    // If office hours are hidden, show all appointments regardless of availability
-                                                                    if (!showOfficeHours) {
-                                                                        return apt.time === slot;
+                                                                    // Filter by date - normalize date format
+                                                                    const aptDateNormalized = normalizeDateForComparison(apt.date);
+                                                                    const weekDateNormalized = normalizeDateForComparison(dateStr);
+
+                                                                    // Debug first cell
+                                                                    if (dayIdx === 0 && slotIdx === 0) {
+                                                                        console.log('🔍 Cell filtering (EN):', {
+                                                                            appointmentDate: apt.date,
+                                                                            appointmentDateNormalized: aptDateNormalized,
+                                                                            weekDate: dateStr,
+                                                                            weekDateNormalized: weekDateNormalized,
+                                                                            dayName: dayName,
+                                                                            matches: aptDateNormalized === weekDateNormalized
+                                                                        });
                                                                     }
 
-                                                                    // Check if appointment matches availability slot
-                                                                    return doctorAvailability.some(avail => {
-                                                                        return avail.doctor_id === apt.doctor_id &&
-                                                                            avail.start_time === apt.time;
-                                                                    });
+                                                                    if (aptDateNormalized !== weekDateNormalized) return false;
+
+                                                                    // Filter by selected doctor
+                                                                    if (!(selectedDoctor === 'all' || apt.doctor_id === selectedDoctor)) return false;
+
+                                                                    // Must match the time slot - normalize time format for comparison
+                                                                    const aptTime = apt.time?.trim() || '';
+                                                                    const slotTime = slot?.trim() || '';
+                                                                    const aptTimeNorm = normalizeTime(aptTime);
+                                                                    const slotTimeNorm = normalizeTime(slotTime);
+                                                                    if (aptTimeNorm !== slotTimeNorm) return false;
+
+                                                                    // Show all appointments that match the time slot
+                                                                    return true;
                                                                 }); let hasConflict = false;
                                                                 for (let i = 0; i < cellApts.length; i++) {
                                                                     for (let j = 0; j < cellApts.length; j++) {
