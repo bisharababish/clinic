@@ -254,12 +254,14 @@ input#id_number {
     flex-direction: column;
     gap: 0.5rem;
     width: 100%;
+    align-items: center;
 }
 
 @media (min-width: 640px) {
     .user-actions {
         flex-direction: row;
         width: auto;
+        align-items: center;
     }
 
     .user-actions.rtl {

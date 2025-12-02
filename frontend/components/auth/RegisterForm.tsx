@@ -321,6 +321,82 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                 return;
             }
 
+            // ✅ NEW: Check for duplicate first name + father's name combination (both English and Arabic)
+            const englishFirstName = formData.english_username_a.trim();
+            const englishFathersName = (formData.english_username_b || "").trim();
+            const arabicFirstName = (formData.arabic_username_a || "").trim();
+            const arabicFathersName = (formData.arabic_username_b || "").trim();
+
+            if (!englishFathersName) {
+                toast({
+                    title: t("auth.registrationFailed"),
+                    description: isRTL
+                        ? "اسم الأب (الاسم الثاني بالإنجليزية) مطلوب للتحقق من التكرار"
+                        : "Father's name (second name in English) is required for duplicate checking",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            if (!arabicFirstName || !arabicFathersName) {
+                toast({
+                    title: t("auth.registrationFailed"),
+                    description: isRTL
+                        ? "الاسم الأول واسم الأب (بالعربية) مطلوبان للتحقق من التكرار"
+                        : "First name and father's name (in Arabic) are required for duplicate checking",
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            // Check for duplicate in English names
+            const { data: existingUserEnglish, error: duplicateCheckErrorEnglish } = await supabase
+                .from('userinfo')
+                .select('english_username_a, english_username_b, userid')
+                .eq('english_username_a', englishFirstName)
+                .eq('english_username_b', englishFathersName)
+                .maybeSingle();
+
+            if (duplicateCheckErrorEnglish && duplicateCheckErrorEnglish.code !== 'PGRST116') {
+                console.error('Error checking for duplicate user (English):', duplicateCheckErrorEnglish);
+                throw new Error('Error checking for duplicate user (English)');
+            }
+
+            // Check for duplicate in Arabic names
+            const { data: existingUserArabic, error: duplicateCheckErrorArabic } = await supabase
+                .from('userinfo')
+                .select('arabic_username_a, arabic_username_b, userid')
+                .eq('arabic_username_a', arabicFirstName)
+                .eq('arabic_username_b', arabicFathersName)
+                .maybeSingle();
+
+            if (duplicateCheckErrorArabic && duplicateCheckErrorArabic.code !== 'PGRST116') {
+                console.error('Error checking for duplicate user (Arabic):', duplicateCheckErrorArabic);
+                throw new Error('Error checking for duplicate user (Arabic)');
+            }
+
+            if (existingUserEnglish) {
+                toast({
+                    title: t("auth.registrationFailed"),
+                    description: isRTL
+                        ? `يوجد مستخدم بنفس الاسم الأول (${englishFirstName}) واسم الأب (${englishFathersName}) بالإنجليزية. يرجى استخدام معلومات مختلفة.`
+                        : `A user with the same first name (${englishFirstName}) and father's name (${englishFathersName}) in English already exists. Please use different information.`,
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            if (existingUserArabic) {
+                toast({
+                    title: t("auth.registrationFailed"),
+                    description: isRTL
+                        ? `يوجد مستخدم بنفس الاسم الأول (${arabicFirstName}) واسم الأب (${arabicFathersName}) بالعربية. يرجى استخدام معلومات مختلفة.`
+                        : `A user with the same first name (${arabicFirstName}) and father's name (${arabicFathersName}) in Arabic already exists. Please use different information.`,
+                    variant: "destructive",
+                });
+                return;
+            }
+
             console.log('All checks passed, proceeding with registration...');
 
             // Step 1: Create auth user directly with Supabase Auth

@@ -1314,6 +1314,112 @@ const UsersManagement = () => {
                     return;
                 }
 
+                // Check for duplicate first name + father's name combination (both English and Arabic)
+                const englishFirstName = userFormData.english_username_a.trim();
+                const englishFathersName = (userFormData.english_username_b || "").trim();
+                const arabicFirstName = (userFormData.arabic_username_a || "").trim();
+                const arabicFathersName = (userFormData.arabic_username_b || "").trim();
+
+                if (!englishFathersName) {
+                    toast({
+                        title: isRTL ? "خطأ" : "Error",
+                        description: isRTL
+                            ? "اسم الأب (الاسم الثاني بالإنجليزية) مطلوب للتحقق من التكرار"
+                            : "Father's name (second name in English) is required for duplicate checking",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                if (!arabicFirstName || !arabicFathersName) {
+                    toast({
+                        title: isRTL ? "خطأ" : "Error",
+                        description: isRTL
+                            ? "الاسم الأول واسم الأب (بالعربية) مطلوبان للتحقق من التكرار"
+                            : "First name and father's name (in Arabic) are required for duplicate checking",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                // Check for duplicate in English names
+                const { data: existingUserEnglish, error: duplicateCheckErrorEnglish } = await supabase
+                    .from("userinfo")
+                    .select("english_username_a, english_username_b, userid")
+                    .eq("english_username_a", englishFirstName)
+                    .eq("english_username_b", englishFathersName)
+                    .maybeSingle();
+
+                if (duplicateCheckErrorEnglish && duplicateCheckErrorEnglish.code !== 'PGRST116') {
+                    console.error("Error checking for duplicate user (English):", duplicateCheckErrorEnglish);
+                    toast({
+                        title: t('common.error'),
+                        description: isRTL
+                            ? "حدث خطأ أثناء التحقق من التكرار (الإنجليزية)"
+                            : "Error checking for duplicate user (English)",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                // Check for duplicate in Arabic names
+                const { data: existingUserArabic, error: duplicateCheckErrorArabic } = await supabase
+                    .from("userinfo")
+                    .select("arabic_username_a, arabic_username_b, userid")
+                    .eq("arabic_username_a", arabicFirstName)
+                    .eq("arabic_username_b", arabicFathersName)
+                    .maybeSingle();
+
+                if (duplicateCheckErrorArabic && duplicateCheckErrorArabic.code !== 'PGRST116') {
+                    console.error("Error checking for duplicate user (Arabic):", duplicateCheckErrorArabic);
+                    toast({
+                        title: t('common.error'),
+                        description: isRTL
+                            ? "حدث خطأ أثناء التحقق من التكرار (العربية)"
+                            : "Error checking for duplicate user (Arabic)",
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                if (existingUserEnglish) {
+                    toast({
+                        title: isRTL ? "معلومات موجودة مسبقاً" : "Information Already Exists",
+                        description: isRTL
+                            ? `يوجد مستخدم بنفس الاسم الأول (${englishFirstName}) واسم الأب (${englishFathersName}) بالإنجليزية. يرجى استخدام معلومات مختلفة.`
+                            : `A user with the same first name (${englishFirstName}) and father's name (${englishFathersName}) in English already exists. Please use different information.`,
+                        variant: "destructive",
+                    });
+                    // Cleanup auth user since we won't be using it
+                    try {
+                        if (authUserId) {
+                            await supabase.auth.admin.deleteUser(authUserId);
+                        }
+                    } catch (cleanupError) {
+                        console.error('Failed to cleanup auth user:', cleanupError);
+                    }
+                    return;
+                }
+
+                if (existingUserArabic) {
+                    toast({
+                        title: isRTL ? "معلومات موجودة مسبقاً" : "Information Already Exists",
+                        description: isRTL
+                            ? `يوجد مستخدم بنفس الاسم الأول (${arabicFirstName}) واسم الأب (${arabicFathersName}) بالعربية. يرجى استخدام معلومات مختلفة.`
+                            : `A user with the same first name (${arabicFirstName}) and father's name (${arabicFathersName}) in Arabic already exists. Please use different information.`,
+                        variant: "destructive",
+                    });
+                    // Cleanup auth user since we won't be using it
+                    try {
+                        if (authUserId) {
+                            await supabase.auth.admin.deleteUser(authUserId);
+                        }
+                    } catch (cleanupError) {
+                        console.error('Failed to cleanup auth user:', cleanupError);
+                    }
+                    return;
+                }
+
                 const { data: userData, error: userError } = await supabase
                     .from("userinfo")
                     .insert({
@@ -1658,7 +1764,7 @@ const UsersManagement = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className={`user-actions ${isRTL ? 'rtl' : ''}`}>
+                                        <div className={`user-actions ${isRTL ? 'rtl' : ''} items-center`}>
                                             {canEditUsers && (
                                                 <Button variant="outline" size="sm" onClick={() => handleEditUser(u.userid)}>
                                                     <Edit className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -1688,7 +1794,7 @@ const UsersManagement = () => {
                                             )}
                                             {/* Show protected message for admin users */}
                                             {u.user_roles.toLowerCase() === 'admin' && (
-                                                <div className="text-xs text-gray-500 italic">
+                                                <div className="text-xs text-gray-500 italic flex items-center">
                                                     {isRTL ? 'محمي من الحذف' : 'Protected from deletion'}
                                                 </div>
                                             )}

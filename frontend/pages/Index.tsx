@@ -783,6 +783,144 @@ const Index = () => {
 
       console.log('✅ Auth user created successfully');
 
+      // Check for duplicate first name + father's name combination (both English and Arabic)
+      const englishFirstName = createPatientForm.english_username_a.trim();
+      const englishFathersName = createPatientForm.english_username_b.trim();
+      const arabicFirstName = createPatientForm.arabic_username_a.trim();
+      const arabicFathersName = createPatientForm.arabic_username_b.trim();
+
+      if (!englishFathersName) {
+        // Try to cleanup the auth user if validation failed
+        try {
+          if (authData.user) {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          }
+        } catch (cleanupError) {
+          console.error('Failed to cleanup auth user:', cleanupError);
+        }
+        toast({
+          title: isRTL ? "خطأ" : "Error",
+          description: isRTL
+            ? "اسم الأب (الاسم الثاني بالإنجليزية) مطلوب للتحقق من التكرار"
+            : "Father's name (second name in English) is required for duplicate checking",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!arabicFirstName || !arabicFathersName) {
+        // Try to cleanup the auth user if validation failed
+        try {
+          if (authData.user) {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          }
+        } catch (cleanupError) {
+          console.error('Failed to cleanup auth user:', cleanupError);
+        }
+        toast({
+          title: isRTL ? "خطأ" : "Error",
+          description: isRTL
+            ? "الاسم الأول واسم الأب (بالعربية) مطلوبان للتحقق من التكرار"
+            : "First name and father's name (in Arabic) are required for duplicate checking",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check for duplicate in English names
+      const { data: existingUserEnglish, error: duplicateCheckErrorEnglish } = await supabase
+        .from('userinfo')
+        .select('english_username_a, english_username_b, userid')
+        .eq('english_username_a', englishFirstName)
+        .eq('english_username_b', englishFathersName)
+        .maybeSingle();
+
+      if (duplicateCheckErrorEnglish && duplicateCheckErrorEnglish.code !== 'PGRST116') {
+        console.error('Error checking for duplicate user (English):', duplicateCheckErrorEnglish);
+        // Try to cleanup the auth user if check failed
+        try {
+          if (authData.user) {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          }
+        } catch (cleanupError) {
+          console.error('Failed to cleanup auth user:', cleanupError);
+        }
+        toast({
+          title: isRTL ? "خطأ" : "Error",
+          description: isRTL
+            ? "حدث خطأ أثناء التحقق من التكرار (الإنجليزية)"
+            : "Error checking for duplicate user (English)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check for duplicate in Arabic names
+      const { data: existingUserArabic, error: duplicateCheckErrorArabic } = await supabase
+        .from('userinfo')
+        .select('arabic_username_a, arabic_username_b, userid')
+        .eq('arabic_username_a', arabicFirstName)
+        .eq('arabic_username_b', arabicFathersName)
+        .maybeSingle();
+
+      if (duplicateCheckErrorArabic && duplicateCheckErrorArabic.code !== 'PGRST116') {
+        console.error('Error checking for duplicate user (Arabic):', duplicateCheckErrorArabic);
+        // Try to cleanup the auth user if check failed
+        try {
+          if (authData.user) {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          }
+        } catch (cleanupError) {
+          console.error('Failed to cleanup auth user:', cleanupError);
+        }
+        toast({
+          title: isRTL ? "خطأ" : "Error",
+          description: isRTL
+            ? "حدث خطأ أثناء التحقق من التكرار (العربية)"
+            : "Error checking for duplicate user (Arabic)",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (existingUserEnglish) {
+        // Try to cleanup the auth user since we won't be using it
+        try {
+          if (authData.user) {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          }
+        } catch (cleanupError) {
+          console.error('Failed to cleanup auth user:', cleanupError);
+        }
+        toast({
+          title: isRTL ? "معلومات موجودة مسبقاً" : "Information Already Exists",
+          description: isRTL
+            ? `يوجد مستخدم بنفس الاسم الأول (${englishFirstName}) واسم الأب (${englishFathersName}) بالإنجليزية. يرجى استخدام معلومات مختلفة.`
+            : `A user with the same first name (${englishFirstName}) and father's name (${englishFathersName}) in English already exists. Please use different information.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (existingUserArabic) {
+        // Try to cleanup the auth user since we won't be using it
+        try {
+          if (authData.user) {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          }
+        } catch (cleanupError) {
+          console.error('Failed to cleanup auth user:', cleanupError);
+        }
+        toast({
+          title: isRTL ? "معلومات موجودة مسبقاً" : "Information Already Exists",
+          description: isRTL
+            ? `يوجد مستخدم بنفس الاسم الأول (${arabicFirstName}) واسم الأب (${arabicFathersName}) بالعربية. يرجى استخدام معلومات مختلفة.`
+            : `A user with the same first name (${arabicFirstName}) and father's name (${arabicFathersName}) in Arabic already exists. Please use different information.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Prepare database record
       const currentTimestamp = new Date().toISOString();
       let idNumberToUse = createPatientForm.id_number.trim();
@@ -792,7 +930,7 @@ const Index = () => {
       const dbRecord = {
         user_roles: 'Patient',
         english_username_a: createPatientForm.english_username_a.trim(),
-        english_username_b: createPatientForm.english_username_b.trim() || createPatientForm.english_username_a.trim(),
+        english_username_b: createPatientForm.english_username_b.trim(),
         english_username_c: createPatientForm.english_username_c.trim() || createPatientForm.english_username_a.trim(),
         english_username_d: createPatientForm.english_username_d.trim(),
         arabic_username_a: createPatientForm.arabic_username_a.trim(),
