@@ -391,7 +391,7 @@ const ServiceRequestsManagement: React.FC = () => {
                                 key={request.id}
                                 className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
                             >
-                                <div className="flex items-start justify-between gap-4">
+                                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
                                             {getServiceIcon(request.service_type)}
@@ -424,7 +424,7 @@ const ServiceRequestsManagement: React.FC = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex flex-col gap-2">
+                                    <div className="flex flex-row md:flex-col gap-2 w-full md:w-auto">
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -432,6 +432,7 @@ const ServiceRequestsManagement: React.FC = () => {
                                                 setSelectedRequest(request);
                                                 setShowDetailsModal(true);
                                             }}
+                                            className="flex-1 md:flex-none"
                                         >
                                             <Eye className="h-4 w-4 mr-1" />
                                             {isRTL ? 'عرض' : 'View'}
@@ -441,7 +442,7 @@ const ServiceRequestsManagement: React.FC = () => {
                                                 variant="default"
                                                 size="sm"
                                                 onClick={() => handleConfirmRequest(request)}
-                                                className="bg-green-600 hover:bg-green-700"
+                                                className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none"
                                             >
                                                 <CheckCircle className="h-4 w-4 mr-1" />
                                                 {isRTL ? 'تأكيد' : 'Confirm'}
@@ -452,7 +453,7 @@ const ServiceRequestsManagement: React.FC = () => {
                                                 variant="default"
                                                 size="sm"
                                                 onClick={() => handleConfirmPayment(request)}
-                                                className="bg-blue-600 hover:bg-blue-700"
+                                                className="bg-blue-600 hover:bg-blue-700 flex-1 md:flex-none"
                                             >
                                                 <CheckCircle className="h-4 w-4 mr-1" />
                                                 {isRTL ? 'تأكيد الدفع' : 'Confirm Payment'}

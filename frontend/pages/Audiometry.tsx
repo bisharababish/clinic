@@ -651,358 +651,358 @@ const Audiometry = () => {
             <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8 w-full max-w-6xl ${isRTL ? 'rtl' : 'ltr'}`}>
               {/* Patient Information Card */}
               <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
-                  <User className="w-6 h-6" />
-                  {t('audiometry.patientInfo.title')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                {/* Patient Search */}
-                <div className="space-y-2 patient-search-container">
-                  <Label htmlFor="patientSearch" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('audiometry.patientInfo.searchPatient')}
-                  </Label>
-                  <div className="relative">
-                    <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
-                    <Input
-                      id="patientSearch"
-                      value={patientSearchTerm}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      placeholder={t('audiometry.patientInfo.searchPlaceholder')}
-                      className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    />
-                    {isSearching && (
-                      <Loader2 className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 animate-spin ${isRTL ? 'left-3' : 'right-3'}`} />
-                    )}
-                    {selectedPatient && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearPatientSelection}
-                        className={`absolute top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100 ${isRTL ? 'left-3' : 'right-3'}`}
-                      >
-                        <X className="w-4 h-4 text-red-500" />
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Search Results Dropdown */}
-                  {showSearchResults && searchResults.length > 0 && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {searchResults.map((patient) => (
-                        <div
-                          key={patient.userid}
-                          onClick={() => handlePatientSelect(patient)}
-                          className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
-                        >
-                          <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
-                            <div className={isRTL ? 'text-right' : 'text-left'}>
-                              <p className="font-medium text-slate-900">
-                                {patient.english_username_a} {patient.english_username_d || ''}
-                              </p>
-                              <p className="text-sm text-slate-600">{patient.user_email}</p>
-                              {patient.id_number && (
-                                <p className="text-xs text-slate-500">{t('audiometry.patientInfo.id')}: {patient.id_number}</p>
-                              )}
-                            </div>
-                            <div className={isRTL ? 'text-left' : 'text-right'}>
-                              {patient.date_of_birth && (
-                                <p className="text-sm text-slate-600">
-                                  {t('audiometry.patientInfo.dob')}: {new Date(patient.date_of_birth).toLocaleDateString()}
-                                </p>
-                              )}
-                              {patient.gender_user && (
-                                <p className="text-xs text-slate-500 capitalize">{patient.gender_user}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* No Results Message */}
-                  {showSearchResults && searchResults.length === 0 && patientSearchTerm.trim() && !isSearching && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
-                      <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('audiometry.patientInfo.noPatientsFound')}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Selected Patient Info */}
-                {selectedPatient && (
-                  <div className="p-3 md:p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
-                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      <span className="font-semibold text-green-800 text-sm md:text-base">{t('audiometry.patientInfo.patientSelected')}</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
-                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.patientInfo.name')}: </span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>
-                          {selectedPatient.english_username_a} {selectedPatient.english_username_d || ''}
-                        </span>
-                      </div>
-                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.patientInfo.email')}: </span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'} block sm:inline`}>{selectedPatient.user_email}</span>
-                      </div>
-                      {selectedPatient.id_number && (
-                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                          <span className="font-medium text-slate-700">{t('audiometry.patientInfo.id')}: </span>
-                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedPatient.id_number}</span>
-                        </div>
-                      )}
-                      {selectedPatient.gender_user && (
-                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                          <span className="font-medium text-slate-700">{t('audiometry.patientInfo.gender')}: </span>
-                          <span className={`text-slate-600 capitalize ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedPatient.gender_user}</span>
-                        </div>
-                      )}
-                      {selectedPatient.date_of_birth && (
-                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                          <span className="font-medium text-slate-700">{t('audiometry.patientInfo.dateOfBirth')}: </span>
-                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>
-                            {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Manual Entry Fields (Hidden when patient is selected) */}
-                {!selectedPatient && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="patientName" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {t('audiometry.patientInfo.manualName')}
-                      </Label>
+                <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
+                    <User className="w-6 h-6" />
+                    {t('audiometry.patientInfo.title')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  {/* Patient Search */}
+                  <div className="space-y-2 patient-search-container">
+                    <Label htmlFor="patientSearch" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {t('audiometry.patientInfo.searchPatient')}
+                    </Label>
+                    <div className="relative">
+                      <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
                       <Input
-                        id="patientName"
-                        value={patientName}
-                        onChange={(e) => setPatientName(e.target.value)}
-                        placeholder={t('audiometry.patientInfo.namePlaceholder')}
-                        className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
+                        id="patientSearch"
+                        value={patientSearchTerm}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        placeholder={t('audiometry.patientInfo.searchPlaceholder')}
+                        className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
+                      {isSearching && (
+                        <Loader2 className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 animate-spin ${isRTL ? 'left-3' : 'right-3'}`} />
+                      )}
+                      {selectedPatient && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearPatientSelection}
+                          className={`absolute top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100 ${isRTL ? 'left-3' : 'right-3'}`}
+                        >
+                          <X className="w-4 h-4 text-red-500" />
+                        </Button>
+                      )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="dateOfBirth" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {t('audiometry.patientInfo.manualDob')}
-                      </Label>
-                      <div className="relative">
-                        <Calendar className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
+                    {/* Search Results Dropdown */}
+                    {showSearchResults && searchResults.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {searchResults.map((patient) => (
+                          <div
+                            key={patient.userid}
+                            onClick={() => handlePatientSelect(patient)}
+                            className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
+                          >
+                            <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
+                              <div className={isRTL ? 'text-right' : 'text-left'}>
+                                <p className="font-medium text-slate-900">
+                                  {patient.english_username_a} {patient.english_username_d || ''}
+                                </p>
+                                <p className="text-sm text-slate-600">{patient.user_email}</p>
+                                {patient.id_number && (
+                                  <p className="text-xs text-slate-500">{t('audiometry.patientInfo.id')}: {patient.id_number}</p>
+                                )}
+                              </div>
+                              <div className={isRTL ? 'text-left' : 'text-right'}>
+                                {patient.date_of_birth && (
+                                  <p className="text-sm text-slate-600">
+                                    {t('audiometry.patientInfo.dob')}: {new Date(patient.date_of_birth).toLocaleDateString()}
+                                  </p>
+                                )}
+                                {patient.gender_user && (
+                                  <p className="text-xs text-slate-500 capitalize">{patient.gender_user}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* No Results Message */}
+                    {showSearchResults && searchResults.length === 0 && patientSearchTerm.trim() && !isSearching && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
+                        <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('audiometry.patientInfo.noPatientsFound')}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Selected Patient Info */}
+                  {selectedPatient && (
+                    <div className="p-3 md:p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                        <span className="font-semibold text-green-800 text-sm md:text-base">{t('audiometry.patientInfo.patientSelected')}</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('audiometry.patientInfo.name')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>
+                            {selectedPatient.english_username_a} {selectedPatient.english_username_d || ''}
+                          </span>
+                        </div>
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('audiometry.patientInfo.email')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'} block sm:inline`}>{selectedPatient.user_email}</span>
+                        </div>
+                        {selectedPatient.id_number && (
+                          <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                            <span className="font-medium text-slate-700">{t('audiometry.patientInfo.id')}: </span>
+                            <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedPatient.id_number}</span>
+                          </div>
+                        )}
+                        {selectedPatient.gender_user && (
+                          <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                            <span className="font-medium text-slate-700">{t('audiometry.patientInfo.gender')}: </span>
+                            <span className={`text-slate-600 capitalize ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedPatient.gender_user}</span>
+                          </div>
+                        )}
+                        {selectedPatient.date_of_birth && (
+                          <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                            <span className="font-medium text-slate-700">{t('audiometry.patientInfo.dateOfBirth')}: </span>
+                            <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>
+                              {new Date(selectedPatient.date_of_birth).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Manual Entry Fields (Hidden when patient is selected) */}
+                  {!selectedPatient && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="patientName" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {t('audiometry.patientInfo.manualName')}
+                        </Label>
                         <Input
-                          id="dateOfBirth"
-                          type="date"
-                          value={dateOfBirth}
-                          onChange={(e) => setDateOfBirth(e.target.value)}
-                          className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 text-right [&::-webkit-datetime-edit-text]:text-right [&::-webkit-datetime-edit-month-field]:text-right [&::-webkit-datetime-edit-day-field]:text-right [&::-webkit-datetime-edit-year-field]:text-right [&::-webkit-datetime-edit]:text-right' : 'pl-10 text-left'}`}
+                          id="patientName"
+                          value={patientName}
+                          onChange={(e) => setPatientName(e.target.value)}
+                          placeholder={t('audiometry.patientInfo.namePlaceholder')}
+                          className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
                           dir={isRTL ? 'rtl' : 'ltr'}
-                          style={isRTL ? {
-                            textAlign: 'right',
-                            direction: 'rtl'
-                          } : {
-                            textAlign: 'left',
-                            direction: 'ltr'
-                          }}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="dateOfBirth" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {t('audiometry.patientInfo.manualDob')}
+                        </Label>
+                        <div className="relative">
+                          <Calendar className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
+                          <Input
+                            id="dateOfBirth"
+                            type="date"
+                            value={dateOfBirth}
+                            onChange={(e) => setDateOfBirth(e.target.value)}
+                            className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 text-right [&::-webkit-datetime-edit-text]:text-right [&::-webkit-datetime-edit-month-field]:text-right [&::-webkit-datetime-edit-day-field]:text-right [&::-webkit-datetime-edit-year-field]:text-right [&::-webkit-datetime-edit]:text-right' : 'pl-10 text-left'}`}
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            style={isRTL ? {
+                              textAlign: 'right',
+                              direction: 'rtl'
+                            } : {
+                              textAlign: 'left',
+                              direction: 'ltr'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Doctor Search */}
+                  <div className="space-y-2 doctor-search-container">
+                    <Label htmlFor="doctorSearch" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {t('audiometry.doctorInfo.title')}
+                    </Label>
+                    <div className="relative">
+                      <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
+                      <Input
+                        id="doctorSearch"
+                        value={doctorSearchTerm}
+                        onChange={(e) => handleDoctorSearchChange(e.target.value)}
+                        placeholder={t('audiometry.doctorInfo.searchPlaceholder')}
+                        className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      />
+                      {isSearchingDoctors && (
+                        <Loader2 className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 animate-spin ${isRTL ? 'left-3' : 'right-3'}`} />
+                      )}
+                      {selectedDoctor && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearDoctorSelection}
+                          className={`absolute top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100 ${isRTL ? 'left-3' : 'right-3'}`}
+                        >
+                          <X className="w-4 h-4 text-red-500" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Doctor Search Results Dropdown */}
+                    {showDoctorSearchResults && doctorSearchResults.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {doctorSearchResults.map((doctor) => (
+                          <div
+                            key={doctor.id}
+                            onClick={() => handleDoctorSelect(doctor)}
+                            className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
+                          >
+                            <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
+                              <div className={isRTL ? 'text-right' : 'text-left'}>
+                                <p className="font-medium text-slate-900">
+                                  {t('audiometry.doctorInfo.drPrefix')} {doctor.name}
+                                </p>
+                                <p className="text-sm text-slate-600">{doctor.specialty}</p>
+                                <p className="text-xs text-slate-500">{doctor.clinic_name}</p>
+                              </div>
+                              <div className={isRTL ? 'text-left' : 'text-right'}>
+                                <p className="text-sm text-slate-600">{doctor.email}</p>
+                                {doctor.phone && (
+                                  <p className="text-xs text-slate-500">{doctor.phone}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* No Doctor Results Message */}
+                    {showDoctorSearchResults && doctorSearchResults.length === 0 && doctorSearchTerm.trim() && !isSearchingDoctors && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
+                        <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('audiometry.doctorInfo.noDoctorsFound')}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Selected Doctor Info */}
+                  {selectedDoctor && (
+                    <div className="p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+                        <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                        <span className="font-semibold text-blue-800 text-sm md:text-base">{t('audiometry.doctorInfo.doctorSelected')}</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.name')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{t('audiometry.doctorInfo.drPrefix')} {selectedDoctor.name}</span>
+                        </div>
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.specialty')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.specialty}</span>
+                        </div>
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.clinic')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.clinic_name}</span>
+                        </div>
+                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                          <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.email')}: </span>
+                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'} block sm:inline`}>{selectedDoctor.email}</span>
+                        </div>
+                        {selectedDoctor.phone && (
+                          <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
+                            <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.phone')}: </span>
+                            <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="notes" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {t('audiometry.notes.title')}
+                    </Label>
+                    <Textarea
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder={t('audiometry.notes.placeholder')}
+                      rows={4}
+                      className={`border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none ${isRTL ? 'text-right' : 'text-left'}`}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Hearing Exam ABR Card */}
+              <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
+                    <AudiometryIcon className="w-6 h-6" />
+                    {t('audiometry.hearingExam.title') || 'Hearing Exam ABR'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    {/* Table Header */}
+                    <div className={`grid grid-cols-3 gap-4 border-b-2 border-slate-300 pb-3 items-center ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <div className="font-semibold text-slate-700">
+                        {t('audiometry.hearingExam.ear') || 'Ear'}
+                      </div>
+                      <div className={`font-semibold text-slate-700 flex items-center ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                        {t('audiometry.hearingExam.passed') || 'Passed'}
+                      </div>
+                      <div className={`font-semibold text-slate-700 flex items-center ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                        {t('audiometry.hearingExam.failed') || 'Failed'}
+                      </div>
+                    </div>
+
+                    {/* Left Ear Row */}
+                    <div className={`grid grid-cols-3 gap-4 items-center ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <div className="font-medium text-slate-700">
+                        {t('audiometry.hearingExam.leftEar') || 'LT ear'}
+                      </div>
+                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                        <Checkbox
+                          checked={leftEarPassed}
+                          onCheckedChange={handleLeftEarPassedChange}
+                          className="w-5 h-5"
+                        />
+                      </div>
+                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                        <Checkbox
+                          checked={leftEarFailed}
+                          onCheckedChange={handleLeftEarFailedChange}
+                          className="w-5 h-5"
                         />
                       </div>
                     </div>
-                  </>
-                )}
 
-                {/* Doctor Search */}
-                <div className="space-y-2 doctor-search-container">
-                  <Label htmlFor="doctorSearch" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('audiometry.doctorInfo.title')}
-                  </Label>
-                  <div className="relative">
-                    <Search className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 ${isRTL ? 'right-3' : 'left-3'}`} />
-                    <Input
-                      id="doctorSearch"
-                      value={doctorSearchTerm}
-                      onChange={(e) => handleDoctorSearchChange(e.target.value)}
-                      placeholder={t('audiometry.doctorInfo.searchPlaceholder')}
-                      className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    />
-                    {isSearchingDoctors && (
-                      <Loader2 className={`absolute top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5 animate-spin ${isRTL ? 'left-3' : 'right-3'}`} />
-                    )}
-                    {selectedDoctor && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearDoctorSelection}
-                        className={`absolute top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-red-100 ${isRTL ? 'left-3' : 'right-3'}`}
-                      >
-                        <X className="w-4 h-4 text-red-500" />
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Doctor Search Results Dropdown */}
-                  {showDoctorSearchResults && doctorSearchResults.length > 0 && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {doctorSearchResults.map((doctor) => (
-                        <div
-                          key={doctor.id}
-                          onClick={() => handleDoctorSelect(doctor)}
-                          className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0"
-                        >
-                          <div className={`flex items-center ${isRTL ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
-                            <div className={isRTL ? 'text-right' : 'text-left'}>
-                              <p className="font-medium text-slate-900">
-                                {t('audiometry.doctorInfo.drPrefix')} {doctor.name}
-                              </p>
-                              <p className="text-sm text-slate-600">{doctor.specialty}</p>
-                              <p className="text-xs text-slate-500">{doctor.clinic_name}</p>
-                            </div>
-                            <div className={isRTL ? 'text-left' : 'text-right'}>
-                              <p className="text-sm text-slate-600">{doctor.email}</p>
-                              {doctor.phone && (
-                                <p className="text-xs text-slate-500">{doctor.phone}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* No Doctor Results Message */}
-                  {showDoctorSearchResults && doctorSearchResults.length === 0 && doctorSearchTerm.trim() && !isSearchingDoctors && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg p-3">
-                      <p className={`text-slate-600 ${isRTL ? 'text-right' : 'text-center'}`}>{t('audiometry.doctorInfo.noDoctorsFound')}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Selected Doctor Info */}
-                {selectedDoctor && (
-                  <div className="p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
-                      <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                      <span className="font-semibold text-blue-800 text-sm md:text-base">{t('audiometry.doctorInfo.doctorSelected')}</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
-                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.name')}: </span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{t('audiometry.doctorInfo.drPrefix')} {selectedDoctor.name}</span>
+                    {/* Right Ear Row */}
+                    <div className={`grid grid-cols-3 gap-4 items-center ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <div className="font-medium text-slate-700">
+                        {t('audiometry.hearingExam.rightEar') || 'RT ear'}
                       </div>
-                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.specialty')}: </span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.specialty}</span>
+                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                        <Checkbox
+                          checked={rightEarPassed}
+                          onCheckedChange={handleRightEarPassedChange}
+                          className="w-5 h-5"
+                        />
                       </div>
-                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.clinic')}: </span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.clinic_name}</span>
+                      <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
+                        <Checkbox
+                          checked={rightEarFailed}
+                          onCheckedChange={handleRightEarFailedChange}
+                          className="w-5 h-5"
+                        />
                       </div>
-                      <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                        <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.email')}: </span>
-                        <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'} block sm:inline`}>{selectedDoctor.email}</span>
-                      </div>
-                      {selectedDoctor.phone && (
-                        <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
-                          <span className="font-medium text-slate-700">{t('audiometry.doctorInfo.phone')}: </span>
-                          <span className={`text-slate-600 ${isRTL ? 'mr-1' : 'ml-1'}`}>{selectedDoctor.phone}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="notes" className={`text-sm font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {t('audiometry.notes.title')}
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder={t('audiometry.notes.placeholder')}
-                    rows={4}
-                    className={`border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none ${isRTL ? 'text-right' : 'text-left'}`}
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Hearing Exam ABR Card */}
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
-                  <AudiometryIcon className="w-6 h-6" />
-                  {t('audiometry.hearingExam.title') || 'Hearing Exam ABR'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="space-y-6">
-                  {/* Table Header */}
-                  <div className={`grid grid-cols-3 gap-4 border-b-2 border-slate-300 pb-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="font-semibold text-slate-700">
-                      {t('audiometry.hearingExam.ear') || 'Ear'}
-                    </div>
-                    <div className={`font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-center'}`}>
-                      {t('audiometry.hearingExam.passed') || 'Passed'}
-                    </div>
-                    <div className={`font-semibold text-slate-700 ${isRTL ? 'text-right' : 'text-center'}`}>
-                      {t('audiometry.hearingExam.failed') || 'Failed'}
-                    </div>
-                  </div>
-
-                  {/* Left Ear Row */}
-                  <div className={`grid grid-cols-3 gap-4 items-center ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="font-medium text-slate-700">
-                      {t('audiometry.hearingExam.leftEar') || 'LT ear'}
-                    </div>
-                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
-                      <Checkbox
-                        checked={leftEarPassed}
-                        onCheckedChange={handleLeftEarPassedChange}
-                        className="w-5 h-5"
-                      />
-                    </div>
-                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
-                      <Checkbox
-                        checked={leftEarFailed}
-                        onCheckedChange={handleLeftEarFailedChange}
-                        className="w-5 h-5"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right Ear Row */}
-                  <div className={`grid grid-cols-3 gap-4 items-center ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="font-medium text-slate-700">
-                      {t('audiometry.hearingExam.rightEar') || 'RT ear'}
-                    </div>
-                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
-                      <Checkbox
-                        checked={rightEarPassed}
-                        onCheckedChange={handleRightEarPassedChange}
-                        className="w-5 h-5"
-                      />
-                    </div>
-                    <div className={`flex ${isRTL ? 'justify-end' : 'justify-center'}`}>
-                      <Checkbox
-                        checked={rightEarFailed}
-                        onCheckedChange={handleRightEarFailedChange}
-                        className="w-5 h-5"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
             </div>
 
@@ -1130,35 +1130,35 @@ const Audiometry = () => {
 
             {/* Action Buttons */}
             <div className={`mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4 justify-center w-full max-w-6xl`}>
-            <Button
-              size="lg"
-              className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
-              disabled={!selectedPatient || !selectedDoctor || (!leftEarPassed && !leftEarFailed && !rightEarPassed && !rightEarFailed)}
-              onClick={handleSubmit}
-            >
-              <CheckCircle className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('audiometry.actions.saveRecord')}
-            </Button>
+              <Button
+                size="lg"
+                className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
+                disabled={!selectedPatient || !selectedDoctor || (!leftEarPassed && !leftEarFailed && !rightEarPassed && !rightEarFailed)}
+                onClick={handleSubmit}
+              >
+                <CheckCircle className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('audiometry.actions.saveRecord')}
+              </Button>
 
-            <Button
-              variant="outline"
-              size="lg"
-              className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
-              onClick={() => {
-                setNotes("");
-                setPatientName("");
-                setDateOfBirth("");
-                setRequestingDoctor("");
-                setLeftEarPassed(false);
-                setLeftEarFailed(false);
-                setRightEarPassed(false);
-                setRightEarFailed(false);
-                clearPatientSelection();
-                clearDoctorSelection();
-              }}
-            >
-              {t('audiometry.actions.resetForm')}
-            </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl ${isRTL ? 'flex-row-reverse' : ''}`}
+                onClick={() => {
+                  setNotes("");
+                  setPatientName("");
+                  setDateOfBirth("");
+                  setRequestingDoctor("");
+                  setLeftEarPassed(false);
+                  setLeftEarFailed(false);
+                  setRightEarPassed(false);
+                  setRightEarFailed(false);
+                  clearPatientSelection();
+                  clearDoctorSelection();
+                }}
+              >
+                {t('audiometry.actions.resetForm')}
+              </Button>
             </div>
           </div>
         </div>
