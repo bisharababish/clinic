@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabaseClient as supabase } from '../lib/supabase';
 import { SessionManager } from '../lib/sessionManager';
+import { hashPassword } from '../lib/security';
 
 export type UserRole = 'admin' | 'doctor' | 'secretary' | 'patient' | 'x ray' | 'xray' | 'x-ray' | 'lab' | 'nurse' | 'ultrasound';
 
@@ -387,6 +388,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 const currentTimestamp = new Date().toISOString();
 
                 // Create new profile with default patient role
+                // Hash the password before storing it in the database
+                const hashedPassword = await hashPassword(password);
+                
                 const { data: insertData, error: createError } = await supabase
                     .from('userinfo')
                     .insert({
@@ -403,7 +407,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                         user_phonenumber: '0000000000',
                         date_of_birth: currentTimestamp,
                         gender_user: 'unknown',
-                        user_password: password,
+                        user_password: hashedPassword,
                         created_at: currentTimestamp,
                         updated_at: currentTimestamp,
                         pdated_at: currentTimestamp
@@ -532,6 +536,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.log('🔍 Auth user created:', authData.user);
             console.log('🔍 Auth user ID:', authData.user.id);
 
+            // Hash the password before storing it in the database
+            const hashedPassword = await hashPassword(password);
+
             // Prepare insert data - handle both formats of input data
             const insertData = {
                 // Link to auth user
@@ -555,7 +562,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 user_phonenumber: userData.user_phonenumber || userData.phoneNumber || '0000000000',
                 date_of_birth: userData.date_of_birth || userData.dateOfBirth || currentTimestamp,
                 gender_user: userData.gender_user || userData.gender || 'unknown',
-                user_password: password,
+                user_password: hashedPassword,
 
                 // Timestamps
                 created_at: currentTimestamp,

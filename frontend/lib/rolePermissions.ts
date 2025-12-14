@@ -54,7 +54,7 @@ export const RolePermissions: Record<string, UserPermissions> = {
     canRequestUserDeletion: true,
     canApproveUserDeletion: true,
     canViewPatients: true, // Add this
-    canViewPreview: true, // Admin can view preview mode
+    canViewPreview: false, // Admin cannot view preview mode (Medical Records)
 
   },
   secretary: {

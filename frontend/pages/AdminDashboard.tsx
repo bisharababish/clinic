@@ -367,7 +367,7 @@ const AdminDashboardContent = () => {
                     {/* MOBILE: Two rows with improved styling */}
                     <div className="md:hidden space-y-2">
                         {/* First Row */}
-                        <TabsList className={`flex w-full gap-1 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <TabsList className={`flex w-full gap-2 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewOverviewTab && (
                                 <TabsTrigger value="overview" className="flex-1 text-xs px-2 py-2 truncate">
                                     {t('admin.overview') || 'Overview'}
@@ -391,7 +391,7 @@ const AdminDashboardContent = () => {
                         </TabsList>
 
                         {/* Second Row */}
-                        <TabsList className={`flex w-full gap-1 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <TabsList className={`flex w-full gap-2 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewPatientHealthTab && (
                                 <TabsTrigger value="patient-health" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'الصحة' : 'Health'}
@@ -415,7 +415,7 @@ const AdminDashboardContent = () => {
                         </TabsList>
 
                         {/* Third Row (if needed) */}
-                        <TabsList className={`flex w-full gap-1 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <TabsList className={`flex w-full gap-2 p-1 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                             {canViewCalendarTab && (
                                 <TabsTrigger value="calendar" className="flex-1 text-xs px-2 py-2 truncate">
                                     {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
@@ -440,64 +440,64 @@ const AdminDashboardContent = () => {
                     </div>
 
                     {/* DESKTOP: All tabs in one row */}
-                    <TabsList className={`hidden md:flex w-full gap-0.5 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <TabsList className={`hidden md:flex w-full gap-2 flex-nowrap ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         {canViewOverviewTab && (
-                            <TabsTrigger value="overview" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="overview" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {(t('admin.overview') || 'Overview')}
                             </TabsTrigger>
                         )}
                         {canViewUsersTab && (
-                            <TabsTrigger value="users" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="users" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {(t('admin.users') || 'Users') + (users?.length ? ` (${users.length})` : '')}
                             </TabsTrigger>
                         )}
                         {canViewClinicsTab && (
-                            <TabsTrigger value="clinics" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="clinics" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {(t('admin.clinics') || 'Clinics') + (clinics?.length ? ` (${clinics.length})` : '')}
                             </TabsTrigger>
                         )}
                         {canViewDoctorsTab && (
-                            <TabsTrigger value="doctors" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="doctors" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {(t('admin.doctors') || 'Doctors') + (doctors?.length ? ` (${doctors.length})` : '')}
                             </TabsTrigger>
                         )}
                         {canViewPatientHealthTab && (
-                            <TabsTrigger value="patient-health" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="patient-health" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {i18n.language === 'ar' ? 'الصحة' : 'Health'}
                             </TabsTrigger>
                         )}
                         {canViewAppointmentsTab && (
-                            <TabsTrigger value="appointments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="appointments" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {(i18n.language === 'ar' ? 'المواعيد' : 'Appointments') + (appointments?.length ? ` (${appointments.length})` : '')}
                             </TabsTrigger>
                         )}
                         {canViewPaymentTab && (
-                            <TabsTrigger value="payments" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="payments" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {isRTL ? 'المدفوعات' : 'Payments'}
                             </TabsTrigger>
                         )}
                         {canViewPaymentTab && (
-                            <TabsTrigger value="paid-patients" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="paid-patients" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {i18n.language === 'ar' ? 'المرضى المدفوعين' : 'Paid Patients'}
                             </TabsTrigger>
                         )}
                         {canViewCalendarTab && (
-                            <TabsTrigger value="calendar" className="flex-1 text-[9px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="calendar" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {i18n.language === 'ar' ? 'التقويم' : 'Calendar'}
                             </TabsTrigger>
                         )}
                         {canViewAppointmentLogsTab && (
-                            <TabsTrigger value="appointment-logs" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="appointment-logs" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {i18n.language === 'ar' ? 'سجل المواعيد' : 'Booking Logs'}
                             </TabsTrigger>
                         )}
                         {canViewServiceRequestsTab && (
-                            <TabsTrigger value="service-requests" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="service-requests" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {i18n.language === 'ar' ? 'طلبات الخدمات' : 'Service Requests'}
                             </TabsTrigger>
                         )}
                         {canViewDeletionRequests && (
-                            <TabsTrigger value="deletion-requests" className="flex-1 text-[8px] md:text-sm px-0 md:px-3 truncate min-w-0">
+                            <TabsTrigger value="deletion-requests" className="flex-shrink-0 text-sm px-3 whitespace-nowrap">
                                 {i18n.language === 'ar' ? 'طلبات الحذف' : 'Deletions'}
                             </TabsTrigger>
                         )}

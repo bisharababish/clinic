@@ -169,7 +169,7 @@ export function Header() {
     const canViewUltrasound = isAuthenticated && userPermissions.canViewUltrasound;
     const canViewAudiometry = isAuthenticated && userPermissions.canViewAudiometry;
     const canViewAdmin = isAuthenticated && userPermissions.canViewAdmin;
-    const canViewPreview = isAuthenticated && userPermissions.canViewPreview;
+    const canViewPreview = isAuthenticated && userPermissions.canViewPreview && !isAdmin;
 
     // Doctor-specific permissions
     const canViewDoctorLabs = isAuthenticated && userPermissions.canViewDoctorLabs;

@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../contexts/LanguageContext";
 import { isValidPalestinianID } from '../../lib/PalID_temp';
+import { hashPassword } from '../../lib/security';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -442,6 +443,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             // Step 2: Create user profile in database
             const timestamp = new Date().toISOString();
 
+            // Hash the password before storing it in the database
+            const hashedPassword = await hashPassword(formData.password);
+
             const { error: insertError } = await supabase
                 .from('userinfo')
                 .insert({
@@ -462,7 +466,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
                     user_phonenumber: formData.phoneNumber,
                     date_of_birth: formData.dateOfBirth,
                     gender_user: formData.gender,
-                    user_password: formData.password,
+                    user_password: hashedPassword,
                     created_at: timestamp,
                     updated_at: timestamp
                 });

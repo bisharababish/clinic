@@ -12,6 +12,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "."),
     },
   },
+  optimizeDeps: {
+    exclude: ['bcrypt', 'bcryptjs'], // Exclude bcrypt packages (not needed for browser)
+  },
   define: {
     // Fix for framer-motion and other libraries that check for DOM
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),

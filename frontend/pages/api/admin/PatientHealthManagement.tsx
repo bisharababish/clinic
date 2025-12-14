@@ -6,6 +6,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { usePatientHealth, PatientWithHealthData, PatientHealthData } from "../../../hooks/usePatientHealth";
 import { useAdminState } from "../../../hooks/useAdminState";
 import { supabase } from "../../../lib/supabase";
+import { hashPassword } from "../../../lib/security";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
@@ -684,6 +685,10 @@ const PatientHealthForm: React.FC<{
 
                 // Prepare database record
                 const currentTimestamp = new Date().toISOString();
+                
+                // Hash the password before storing it in the database
+                const hashedPassword = await hashPassword(password);
+                
                 const dbRecord = {
                     user_roles: 'Patient',
                     english_username_a: createPatientForm.english_username_a.trim(),
@@ -699,7 +704,7 @@ const PatientHealthForm: React.FC<{
                     user_phonenumber: createPatientForm.user_phonenumber.trim(),
                     date_of_birth: createPatientForm.date_of_birth,
                     gender_user: createPatientForm.gender_user,
-                    user_password: password,
+                    user_password: hashedPassword,
                     created_at: currentTimestamp,
                     updated_at: currentTimestamp,
                 };

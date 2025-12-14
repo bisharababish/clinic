@@ -15,6 +15,7 @@ import { Badge } from "../components/ui/badge";
 import { useToast } from "../hooks/use-toast";
 import { Link } from "react-router-dom";
 import { supabaseClient as supabase } from "../lib/supabase";
+import { hashPassword } from "../lib/security";
 import "./styles/index.css";
 import {
   EyeIcon,
@@ -927,6 +928,10 @@ const Index = () => {
       if (userRole === 'secretary' && !idNumberToUse) {
         idNumberToUse = await getUnique4DigitId();
       }
+      
+      // Hash the password before storing it in the database
+      const hashedPassword = await hashPassword(password);
+      
       const dbRecord = {
         user_roles: 'Patient',
         english_username_a: createPatientForm.english_username_a.trim(),
@@ -945,7 +950,7 @@ const Index = () => {
         social_situation: createPatientForm.social_situation === "married" || createPatientForm.social_situation === "single"
           ? createPatientForm.social_situation
           : null,
-        user_password: password, // Store for reference (in production, this should be hashed)
+        user_password: hashedPassword,
         created_at: currentTimestamp,
         updated_at: currentTimestamp,
         pdated_at: currentTimestamp // Note: Keep this typo if it exists in your schema
