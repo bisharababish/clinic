@@ -443,7 +443,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                     {!error.includes('Access denied') && (
                         <button
                             onClick={handleRefresh}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                            className="bg-[#377fa8]/20 text-white px-4 py-2 rounded-md hover:bg-[#377fa8]/20 transition-colors"
                         >
                             {isRTL ? 'تحديث' : 'Refresh'}
                         </button>
@@ -461,7 +461,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                    <FileText className="h-8 w-8 text-blue-600" />
+                                    <FileText className="h-8 w-8 text-[#377fa8]" />
                                     {isRTL ? 'نتائج المختبر' : 'Lab Results'}
                                 </h1>
                                 <p className="mt-1 text-sm text-gray-600">
@@ -471,7 +471,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                             <button
                                 onClick={handleRefresh}
                                 disabled={loading}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="bg-[#377fa8]/20 text-white px-4 py-2 rounded-md hover:bg-[#377fa8]/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -495,7 +495,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 disabled={loading}
-                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#377fa8] disabled:opacity-50 disabled:cursor-not-allowed`}
                                 dir={isRTL ? 'rtl' : 'ltr'}
                             />
                         </div>
@@ -506,7 +506,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                 value={filterDate}
                                 onChange={(e) => setFilterDate(e.target.value)}
                                 disabled={loading}
-                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#377fa8] disabled:opacity-50 disabled:cursor-not-allowed`}
                             />
                         </div>
                         <div className="relative">
@@ -515,7 +515,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                 value={filterType}
                                 onChange={(e) => setFilterType(e.target.value)}
                                 disabled={loading}
-                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#377fa8] disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <option value="">{isRTL ? 'جميع أنواع الفحوصات' : 'All Test Types'}</option>
                             </select>
@@ -619,7 +619,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-[#377fa8]/20 text-[#377fa8]">
                                                     {result.blood_type || (isRTL ? 'غير محدد' : 'N/A')}
                                                 </span>
                                             </td>
@@ -627,7 +627,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                                 <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => handleViewDetails(result)}
-                                                        className="text-blue-600 hover:text-blue-900 flex items-center gap-1 mr-4"
+                                                        className="text-[#377fa8] hover:text-[#377fa8] flex items-center gap-1 mr-4"
                                                         title={isRTL ? 'عرض التفاصيل' : 'View Details'}
                                                     >
                                                         <Eye className="h-4 w-4" />
@@ -746,7 +746,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                     <h3 className="font-medium text-gray-900 mb-2">
                                         {isRTL ? 'ملاحظات الطبيب' : 'Doctor\'s Notes'}
                                     </h3>
-                                    <div className="bg-blue-50 p-4 rounded-md">
+                                    <div className="bg-[#377fa8]/20 p-4 rounded-md">
                                         <div
                                             className="text-sm text-gray-800"
                                             dir={isRTL ? 'rtl' : 'ltr'}
@@ -775,7 +775,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                                                 </div>
                                                 <button
                                                     onClick={() => handleDownloadFile(attachment)}
-                                                    className="text-blue-600 hover:text-blue-800 p-1"
+                                                    className="text-[#377fa8] hover:text-[#377fa8] p-1"
                                                 >
                                                     <Download className="w-4 h-4" />
                                                 </button>
@@ -788,7 +788,7 @@ ${isRTL ? 'تاريخ الإنشاء' : 'Created At'}: ${new Date(result.created
                         <div className="p-6 border-t bg-gray-50 flex justify-end space-x-3">
                             <button
                                 onClick={() => handleDownloadReport(selectedTest)}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                                className="px-4 py-2 bg-[#377fa8]/20 text-white rounded-md hover:bg-[#377fa8]/20 flex items-center gap-2"
                             >
                                 <Download className="h-4 w-4" />
                                 {isRTL ? 'تحميل التقرير' : 'Download Report'}

@@ -1736,7 +1736,7 @@ const UsersManagement = () => {
                             {searchQuery && ` (${t('usersManagement.filtered')})`}
                             {/* Add this line to show secretary is viewing patients only */}
                             {currentUserRole === 'secretary' && (
-                                <span className="text-blue-600 font-medium">
+                                <span className="text-[#377fa8] font-medium">
                                     {isRTL ? ' - المرضى فقط' : ' - Patients Only'}
                                 </span>
                             )}
@@ -2183,7 +2183,7 @@ const UsersManagement = () => {
                                                 </li>
                                             </ul>
                                             {userFormMode === "edit" && (
-                                                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-blue-700">
+                                                <div className="mt-2 p-2 bg-[#377fa8]/20 border border-[#377fa8]/30 rounded text-[#377fa8]">
                                                     <strong>{isRTL ? "ملاحظة:" : "Note:"}</strong> {isRTL ?
                                                         "سيتم تحديث كلمة المرور في قاعدة البيانات وإرسال رابط إعادة تعيين كلمة المرور إلى بريد المستخدم الإلكتروني." :
                                                         "Password will be updated in database and a password reset link will be sent to the user's email."

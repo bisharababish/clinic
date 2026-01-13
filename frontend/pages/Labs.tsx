@@ -438,7 +438,7 @@ const Labs = () => {
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; labelAr: string; className: string }> = {
       pending: { label: 'Pending', labelAr: 'قيد الانتظار', className: 'bg-yellow-100 text-yellow-800' },
-      secretary_confirmed: { label: 'Confirmed', labelAr: 'تم التأكيد', className: 'bg-blue-100 text-blue-800' },
+      secretary_confirmed: { label: 'Confirmed', labelAr: 'تم التأكيد', className: 'bg-[#377fa8]/20 text-[#377fa8]' },
       payment_required: { label: 'Payment Required', labelAr: 'يتطلب الدفع', className: 'bg-orange-100 text-orange-800' },
       in_progress: { label: 'In Progress', labelAr: 'قيد التنفيذ', className: 'bg-purple-100 text-purple-800' },
       completed: { label: 'Completed', labelAr: 'مكتمل', className: 'bg-green-100 text-green-800' },
@@ -1496,7 +1496,7 @@ const Labs = () => {
               <CardContent>
                 {loadingRequests ? (
                   <div className="flex items-center justify-center py-8">
-                    <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
+                    <RefreshCw className="w-6 h-6 animate-spin text-[#377fa8]" />
                     <span className={`ml-2 ${isRTL ? 'mr-2 ml-0' : ''}`}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</span>
                   </div>
                 ) : serviceRequests.length === 0 ? (
@@ -1602,7 +1602,7 @@ const Labs = () => {
       {showRequestDetails && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+            <CardHeader className={`bg-gradient-to-r from-[#102037] to-[#377fa8] text-white ${isRTL ? 'text-right' : 'text-left'}`}>
               <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <CardTitle>{isRTL ? 'تفاصيل الطلب' : 'Request Details'}</CardTitle>
                 <Button
@@ -1631,7 +1631,7 @@ const Labs = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'نوع الخدمة' : 'Service Type'}</h3>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <Badge variant="outline" className="bg-[#377fa8]/20 text-[#377fa8] border-[#377fa8]/30">
                     {isRTL ? 'مختبر' : 'Lab'}
                   </Badge>
                 </div>
@@ -1657,7 +1657,7 @@ const Labs = () => {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">{isRTL ? 'السعر' : 'Price'}</h3>
                     <div className="flex items-center gap-2">
-                      <p className="text-lg font-bold text-blue-600">
+                      <p className="text-lg font-bold text-[#377fa8]">
                         ₪{selectedRequest.price} {selectedRequest.currency || 'ILS'}
                       </p>
                       {selectedRequest.payment_status && (
@@ -1696,7 +1696,7 @@ const Labs = () => {
                       </p>
                     )}
                     {selectedRequest.completed_at && (
-                      <p className="text-blue-600">
+                      <p className="text-[#377fa8]">
                         {isRTL ? 'تم الإكمال: ' : 'Completed: '}{new Date(selectedRequest.completed_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
                       </p>
                     )}
@@ -1717,3 +1717,4 @@ const Labs = () => {
 };
 
 export default Labs;
+

@@ -161,6 +161,18 @@ export function Header() {
     // Get user permissions based on role
     const userPermissions = getRolePermissions(effectiveRole || '');
 
+    // Define role checks for styling
+    const isAdmin = effectiveRole === "admin";
+    const isDoctor = effectiveRole === "doctor";
+    const isSecretary = effectiveRole === "secretary";
+    const isNurse = effectiveRole === "nurse";
+    const isLab = effectiveRole === "lab";
+    const isXRay = effectiveRole === "x ray" || effectiveRole === "xray";
+    const isUltrasound = effectiveRole === "ultrasound" || effectiveRole === "ultrasound technician";
+    const isAudiometry = effectiveRole === "audiometry" || effectiveRole === "audiometry technician";
+    const isPatient = effectiveRole === "patient";
+    const canChangePassword = isAuthenticated && isPatient;
+
     // Define which navigation items are visible based on role permissions
     const canViewHome = isAuthenticated && userPermissions.canViewHome;
     const canViewClinics = isAuthenticated && userPermissions.canViewClinics;
@@ -177,18 +189,6 @@ export function Header() {
     const canViewDoctorUltrasound = isAuthenticated && userPermissions.canViewDoctorUltrasound;
     const canViewDoctorAudiometry = isAuthenticated && userPermissions.canViewDoctorAudiometry;
     const canViewPatients = isAuthenticated && userPermissions.canViewPatients;
-
-    // Define role checks for styling
-    const isAdmin = effectiveRole === "admin";
-    const isDoctor = effectiveRole === "doctor";
-    const isSecretary = effectiveRole === "secretary";
-    const isNurse = effectiveRole === "nurse";
-    const isLab = effectiveRole === "lab";
-    const isXRay = effectiveRole === "x ray" || effectiveRole === "xray";
-    const isUltrasound = effectiveRole === "ultrasound" || effectiveRole === "ultrasound technician";
-    const isAudiometry = effectiveRole === "audiometry" || effectiveRole === "audiometry technician";
-    const isPatient = effectiveRole === "patient";
-    const canChangePassword = isAuthenticated && isPatient;
 
     // Get the appropriate default route based on role
     const getDefaultRoute = () => {
@@ -263,7 +263,7 @@ export function Header() {
             case "admin":
                 return "bg-gradient-to-r from-red-50 to-red-100 text-red-800 border-red-200 hover:from-red-100 hover:to-red-200";
             case "doctor":
-                return "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-800 border-blue-200 hover:from-blue-100 hover:to-blue-200";
+                return "bg-gradient-to-r from-[#377fa8]/20 to-[#377fa8]/30 text-[#377fa8] border-[#377fa8]/40 hover:from-[#377fa8]/30 hover:to-[#377fa8]/40";
             case "secretary":
                 return "bg-gradient-to-r from-purple-50 to-purple-100 text-purple-800 border-purple-200 hover:from-purple-100 hover:to-purple-200";
             case "nurse":
@@ -273,7 +273,7 @@ export function Header() {
             case "x ray":
             case "xray":
             case "x-ray":
-                return "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-800 border-indigo-200 hover:from-indigo-100 hover:to-indigo-200";
+                return "bg-gradient-to-r from-[#377fa8]/10 to-[#377fa8]/20 text-[#102037] border-[#377fa8]/30 hover:from-[#377fa8]/20 hover:to-[#377fa8]/30";
             case "ultrasound":
                 return "bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-800 border-cyan-200 hover:from-cyan-100 hover:to-cyan-200";
             case "audiometry":
@@ -315,7 +315,7 @@ export function Header() {
                                         const parent = target.parentElement;
                                         if (parent) {
                                             parent.innerHTML = `
-                                                <div class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                                                <div class="w-full h-full bg-gradient-to-br from-[#377fa8] to-[#102037] rounded-xl flex items-center justify-center">
                                                     <span class="text-white font-bold text-xl">B</span>
                                                 </div>
                                             `;
@@ -327,7 +327,7 @@ export function Header() {
 
                             {/* Clinic name with better typography */}
                             <div className="flex flex-col">
-                                <span className={`${isAdmin ? 'text-base' : 'text-xl'} font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-200 whitespace-nowrap`}>
+                                <span className={`${isAdmin ? 'text-base' : 'text-xl'} font-bold text-gray-800 group-hover:text-[#377fa8] transition-colors duration-200 whitespace-nowrap`}>
                                     {t('common.clinicName') || 'Bethlehem Med Center'}
                                 </span>
                             </div>
@@ -337,62 +337,62 @@ export function Header() {
                     {/* Center: Navigation */}
                     <nav className={`hidden lg:flex items-center justify-center ${isAdmin ? 'gap-1 flex-shrink min-w-0' : 'gap-2'} flex-1 ${isAdmin ? 'overflow-x-auto' : ''} ${isAdmin ? '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]' : ''}`}>
                         {canViewHome && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/home" className="font-medium">{t('navbar.home') || 'Home'}</Link>
                             </Button>
                         )}
                         {canViewClinics && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/clinics" className="font-medium">{t('navbar.clinics') || 'Clinics'}</Link>
                             </Button>
                         )}
                         {canViewLabs && !isDoctor && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/labs" className="font-medium">{t('navbar.labs') || 'Lab'}</Link>
                             </Button>
                         )}
                         {canViewDoctorLabs && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/doctor/labs" className="font-medium">{t('navbar.doctorLabs') || 'Lab Results'}</Link>
                             </Button>
                         )}
                         {canViewXray && !isDoctor && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/xray" className="font-medium">{t('navbar.xray') || 'X-Ray'}</Link>
                             </Button>
                         )}
                         {canViewDoctorXray && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/doctor/xray" className="font-medium">{t('navbar.doctorXRay') || 'X-Ray Images'}</Link>
                             </Button>
                         )}
                         {canViewUltrasound && !isDoctor && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/ultrasound" className="font-medium">{t('navbar.ultrasound') || 'Ultrasound'}</Link>
                             </Button>
                         )}
                         {canViewDoctorUltrasound && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/doctor/ultrasound" className="font-medium">{t('navbar.doctorUltrasound') || 'Ultrasound Images'}</Link>
                             </Button>
                         )}
                         {(canViewAudiometry || isAdmin) && !isDoctor && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/audiometry" className="font-medium">{t('navbar.audiometry') || 'Audiometry'}</Link>
                             </Button>
                         )}
                         {canViewPatients && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/doctor/patients" className="font-medium">{t('navbar.patients') || 'Patients'}</Link>
                             </Button>
                         )}
                         {isPatient && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/patient/dashboard" className="font-medium">{t('navbar.myAppointments') || 'My Appointments'}</Link>
                             </Button>
                         )}
                         {canViewPreview && (
-                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-blue-700 hover:bg-blue-50/50 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-blue-200`}>
+                            <Button variant="ghost" size={isAdmin ? "sm" : "default"} asChild className={`${isAdmin ? 'px-3 py-1.5 text-xs' : 'px-4 py-2'} font-medium text-slate-700 hover:text-[#377fa8] hover:bg-[#377fa8]/10 rounded-lg transition-all duration-200 whitespace-nowrap border border-transparent hover:border-[#377fa8]/30`}>
                                 <Link to="/preview" className="font-medium">{t('navbar.myRecords') || 'My Medical Records'}</Link>
                             </Button>
                         )}
@@ -429,7 +429,7 @@ export function Header() {
                                             variant="outline"
                                             size={isAdmin ? "sm" : "sm"}
                                             onClick={() => setIsPasswordModalOpen(true)}
-                                            className={`${isAdmin ? 'px-2 text-xs' : ''} font-medium hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all duration-200 whitespace-nowrap`}
+                                            className={`${isAdmin ? 'px-2 text-xs' : ''} font-medium hover:bg-[#377fa8]/10 hover:text-[#377fa8] hover:border-[#377fa8]/30 transition-all duration-200 whitespace-nowrap`}
                                         >
                                             <Key className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                             {isRTL ? 'تغيير كلمة المرور' : 'Change Password'}
@@ -445,7 +445,7 @@ export function Header() {
                                     </Button>
                                 </>
                             ) : (
-                                <Button variant="default" size="sm" asChild className="font-medium bg-blue-600 hover:bg-blue-700 transition-colors duration-200 whitespace-nowrap">
+                                <Button variant="default" size="sm" asChild className="font-medium bg-[#377fa8] hover:bg-[#102037] transition-colors duration-200 whitespace-nowrap">
                                     <Link to="/auth">{t('common.login') || 'Login'}</Link>
                                 </Button>
                             )}
@@ -538,7 +538,7 @@ export function Header() {
                                         </div>
                                     )}
                                     {canViewHome && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/home"
                                                 onClick={(e) => {
@@ -552,7 +552,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewClinics && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/clinics"
                                                 onClick={(e) => {
@@ -566,7 +566,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewLabs && !isDoctor && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/labs"
                                                 onClick={(e) => {
@@ -580,7 +580,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewDoctorLabs && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/doctor/labs"
                                                 onClick={(e) => {
@@ -594,7 +594,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewXray && !isDoctor && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/xray"
                                                 onClick={(e) => {
@@ -608,7 +608,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewDoctorXray && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/doctor/xray"
                                                 onClick={(e) => {
@@ -622,7 +622,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewUltrasound && !isDoctor && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/ultrasound"
                                                 onClick={(e) => {
@@ -636,7 +636,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewDoctorUltrasound && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/doctor/ultrasound"
                                                 onClick={(e) => {
@@ -650,7 +650,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {(canViewAudiometry || isAdmin) && !isDoctor && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/audiometry"
                                                 onClick={(e) => {
@@ -664,7 +664,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewPatients && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/doctor/patients"
                                                 onClick={(e) => {
@@ -678,7 +678,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {isPatient && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/patient/dashboard"
                                                 onClick={(e) => {
@@ -692,7 +692,7 @@ export function Header() {
                                         </Button>
                                     )}
                                     {canViewPreview && (
-                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}>
+                                        <Button variant="ghost" asChild className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}>
                                             <Link
                                                 to="/preview"
                                                 onClick={(e) => {
@@ -727,7 +727,7 @@ export function Header() {
                                                 setIsPasswordModalOpen(true);
                                                 setIsMobileMenuOpen(false);
                                             }}
-                                            className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200`}
+                                            className={`${isRTL ? 'text-right' : 'text-left'} justify-start hover:bg-[#377fa8]/10 hover:text-[#377fa8] transition-colors duration-200`}
                                         >
                                             <div className="flex items-center gap-2">
                                                 <Key className={`h-4 w-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -755,3 +755,4 @@ export function Header() {
         </header>
     );
 }
+

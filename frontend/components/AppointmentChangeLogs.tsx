@@ -157,7 +157,7 @@ const AppointmentChangeLogs: React.FC = () => {
     const getActionIcon = (actionType: string) => {
         switch (actionType) {
             case 'reschedule':
-                return <Edit3 className="h-4 w-4 text-blue-600" />;
+                return <Edit3 className="h-4 w-4 text-[#377fa8]" />;
             case 'cancel':
                 return <XCircle className="h-4 w-4 text-red-600" />;
             case 'delete':

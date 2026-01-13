@@ -36,7 +36,7 @@ const PaymentNotification: React.FC<PaymentNotificationProps> = ({
             case 'failed':
                 return <XCircle className="h-4 w-4 text-red-600" />;
             case 'refunded':
-                return <AlertCircle className="h-4 w-4 text-blue-600" />;
+                return <AlertCircle className="h-4 w-4 text-[#377fa8]" />;
             default:
                 return <Clock className="h-4 w-4 text-gray-600" />;
         }

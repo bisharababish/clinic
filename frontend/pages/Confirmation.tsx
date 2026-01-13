@@ -146,7 +146,7 @@ const Confirmation = () => {
                         </div>
                     </div>
 
-                    <div className={`bg-blue-50 border border-blue-100 rounded-md p-4 text-blue-800 ${isRTL ? 'font-arabic text-right' : ''}`}>
+                    <div className={`bg-[#377fa8]/20 border border-[#377fa8]/30 rounded-md p-4 text-[#377fa8] ${isRTL ? 'font-arabic text-right' : ''}`}>
                         <h3 className="font-medium mb-2">
                             {isRTL ? 'تعليمات مهمة:' : 'Important Instructions:'}
                         </h3>

@@ -425,7 +425,7 @@ input#create_id_number {
     .patient-health-form input:focus,
     .patient-health-form select:focus,
     .patient-health-form textarea:focus {
-        outline: 2px solid #3B82F6 !important;
+        outline: 2px solid #377fa8 !important;
         outline-offset: 2px !important;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
     }
@@ -498,7 +498,7 @@ input#create_id_number {
 
     /* Better button contrast on mobile */
     button:focus-visible {
-        outline: 2px solid #3B82F6 !important;
+        outline: 2px solid #377fa8 !important;
         outline-offset: 2px !important;
     }
 }

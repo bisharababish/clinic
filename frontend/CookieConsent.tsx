@@ -34,7 +34,7 @@ const CookieConsent = () => {
                         {t('cookies.message') || 'We use cookies to improve your experience. By continuing to use our site, you agree to our use of cookies.'}{' '}
                         <button
                             onClick={openPrivacy}
-                            className="underline hover:text-blue-300 transition-colors"
+                            className="underline hover:text-[#377fa8] transition-colors"
                         >
                             {t('cookies.privacyPolicy') || 'View our Privacy Policy'}
                         </button>
@@ -49,7 +49,7 @@ const CookieConsent = () => {
                     </button>
                     <button
                         onClick={acceptCookies}
-                        className="px-4 py-2 text-sm bg-blue-600 rounded hover:bg-blue-700"
+                        className="px-4 py-2 text-sm bg-[#377fa8] rounded hover:bg-[#102037]"
                     >
                         {t('cookies.accept') || 'Accept'}
                     </button>
@@ -62,3 +62,4 @@ const CookieConsent = () => {
 };
 
 export default CookieConsent;
+

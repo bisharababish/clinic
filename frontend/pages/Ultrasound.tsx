@@ -383,7 +383,7 @@ const Ultrasound = () => {
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; labelAr: string; className: string }> = {
       pending: { label: 'Pending', labelAr: 'قيد الانتظار', className: 'bg-yellow-100 text-yellow-800' },
-      secretary_confirmed: { label: 'Confirmed', labelAr: 'تم التأكيد', className: 'bg-blue-100 text-blue-800' },
+      secretary_confirmed: { label: 'Confirmed', labelAr: 'تم التأكيد', className: 'bg-[#377fa8]/20 text-[#377fa8]' },
       payment_required: { label: 'Payment Required', labelAr: 'يتطلب الدفع', className: 'bg-orange-100 text-orange-800' },
       in_progress: { label: 'In Progress', labelAr: 'قيد التنفيذ', className: 'bg-purple-100 text-purple-800' },
       completed: { label: 'Completed', labelAr: 'مكتمل', className: 'bg-green-100 text-green-800' },
@@ -657,16 +657,16 @@ const Ultrasound = () => {
         keywords={t('ultrasound.seo.keywords')}
         url="https://bethlehemmedcenter.com/ultrasound"
       />
-      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2 md:p-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`min-h-screen bg-gradient-to-br from-slate-50 via-[#377fa8]/5 to-[#102037]/5 p-2 md:p-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-2">
           {/* Header */}
           <div className="mb-6 text-center px-2 pt-8">
             <div className="flex items-center mb-4 justify-center">
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
+              <div className="bg-gradient-to-r from-[#377fa8] to-[#102037] p-3 rounded-2xl shadow-lg">
                 <UltrasoundIcon className="w-8 h-8 text-white" />
               </div>
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent mb-4 text-center px-2 break-words leading-loose whitespace-normal py-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-[#377fa8] to-[#102037] bg-clip-text text-transparent mb-4 text-center px-2 break-words leading-loose whitespace-normal py-2">
               {t('ultrasound.title')}
             </h1>
             <p className="text-slate-600 text-base md:text-lg w-full text-center mx-auto px-2 break-words">
@@ -677,7 +677,7 @@ const Ultrasound = () => {
           <div className={`grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 lg:gap-8 ${isRTL ? 'rtl' : 'ltr'}`}>
             {/* Patient Information Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+              <CardHeader className={`bg-gradient-to-r from-[#102037] to-[#377fa8] text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <User className="w-6 h-6" />
                   {t('ultrasound.patientInfo.title')}
@@ -696,7 +696,7 @@ const Ultrasound = () => {
                       value={patientSearchTerm}
                       onChange={(e) => handleSearchChange(e.target.value)}
                       placeholder={t('ultrasound.patientInfo.searchPlaceholder')}
-                      className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
+                      className={`h-12 border-slate-200 focus:border-[#377fa8] focus:ring-[#377fa8] ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
                     {isSearching && (
@@ -812,7 +812,7 @@ const Ultrasound = () => {
                         value={patientName}
                         onChange={(e) => setPatientName(e.target.value)}
                         placeholder={t('ultrasound.patientInfo.namePlaceholder')}
-                        className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'text-right' : 'text-left'}`}
+                        className={`h-12 border-slate-200 focus:border-[#377fa8] focus:ring-[#377fa8] ${isRTL ? 'text-right' : 'text-left'}`}
                         dir={isRTL ? 'rtl' : 'ltr'}
                       />
                     </div>
@@ -828,7 +828,7 @@ const Ultrasound = () => {
                           type="date"
                           value={dateOfBirth}
                           onChange={(e) => setDateOfBirth(e.target.value)}
-                          className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 text-right [&::-webkit-datetime-edit-text]:text-right [&::-webkit-datetime-edit-month-field]:text-right [&::-webkit-datetime-edit-day-field]:text-right [&::-webkit-datetime-edit-year-field]:text-right [&::-webkit-datetime-edit]:text-right' : 'pl-10 text-left'}`}
+                          className={`h-12 border-slate-200 focus:border-[#377fa8] focus:ring-[#377fa8] ${isRTL ? 'pr-10 text-right [&::-webkit-datetime-edit-text]:text-right [&::-webkit-datetime-edit-month-field]:text-right [&::-webkit-datetime-edit-day-field]:text-right [&::-webkit-datetime-edit-year-field]:text-right [&::-webkit-datetime-edit]:text-right' : 'pl-10 text-left'}`}
                           dir={isRTL ? 'rtl' : 'ltr'}
                           style={isRTL ? {
                             textAlign: 'right',
@@ -855,7 +855,7 @@ const Ultrasound = () => {
                       value={doctorSearchTerm}
                       onChange={(e) => handleDoctorSearchChange(e.target.value)}
                       placeholder={t('ultrasound.doctorInfo.searchPlaceholder')}
-                      className={`h-12 border-slate-200 focus:border-blue-500 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
+                      className={`h-12 border-slate-200 focus:border-[#377fa8] focus:ring-[#377fa8] ${isRTL ? 'pr-10 pl-3 text-right' : 'pl-10 pr-10 text-left'}`}
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
                     {isSearchingDoctors && (
@@ -913,10 +913,10 @@ const Ultrasound = () => {
 
                 {/* Selected Doctor Info */}
                 {selectedDoctor && (
-                  <div className="p-3 md:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="p-3 md:p-4 bg-[#377fa8]/10 border border-[#377fa8]/30 rounded-lg">
                     <div className={`flex items-center gap-2 mb-3 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
-                      <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                      <span className="font-semibold text-blue-800 text-sm md:text-base">{t('ultrasound.doctorInfo.doctorSelected')}</span>
+                      <CheckCircle className="w-5 h-5 text-[#377fa8] flex-shrink-0" />
+                      <span className="font-semibold text-[#102037] text-sm md:text-base">{t('ultrasound.doctorInfo.doctorSelected')}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm">
                       <div className={`${isRTL ? 'text-right' : 'text-left'} break-words`}>
@@ -955,7 +955,7 @@ const Ultrasound = () => {
                     onChange={(e) => setClinicalIndication(e.target.value)}
                     placeholder={t('ultrasound.clinicalIndication.placeholder')}
                     rows={4}
-                    className={`border-slate-200 focus:border-blue-500 focus:ring-blue-500 resize-none ${isRTL ? 'text-right' : 'text-left'}`}
+                    className={`border-slate-200 focus:border-[#377fa8] focus:ring-[#377fa8] resize-none ${isRTL ? 'text-right' : 'text-left'}`}
                     dir={isRTL ? 'rtl' : 'ltr'}
                   />
                 </div>
@@ -964,7 +964,7 @@ const Ultrasound = () => {
 
             {/* Anatomical Selection Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+              <CardHeader className={`bg-gradient-to-r from-[#102037] to-[#377fa8] text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <Stethoscope className="w-6 h-6" />
                   {t('ultrasound.bodyPartSelection.title')}
@@ -1003,7 +1003,7 @@ const Ultrasound = () => {
                       <div
                         key={bodyPart.value}
                         className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all cursor-pointer hover:bg-slate-50 ${selectedBodyParts.includes(bodyPart.value)
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-[#377fa8] bg-[#377fa8]/10'
                           : 'border-slate-200'
                           } ${isRTL ? 'flex-row-reverse space-x-reverse' : ''}`}
                         onClick={() => handleBodyPartToggle(bodyPart.value)}
@@ -1045,7 +1045,7 @@ const Ultrasound = () => {
 
             {/* File Upload Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+              <CardHeader className={`bg-gradient-to-r from-[#102037] to-[#377fa8] text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                   <Upload className="w-6 h-6" />
                   {t('ultrasound.fileUpload.title')}
@@ -1054,7 +1054,7 @@ const Ultrasound = () => {
               <CardContent className="p-6">
                 <div
                   className={`border-2 border-dashed rounded-xl p-8 transition-all duration-300 cursor-pointer hover:bg-slate-50 ${isDragging
-                    ? "border-blue-500 bg-blue-50"
+                    ? "border-[#377fa8] bg-[#377fa8]/10"
                     : file
                       ? "border-green-500 bg-green-50"
                       : "border-slate-300"
@@ -1101,7 +1101,7 @@ const Ultrasound = () => {
                   ) : (
                     <div className="space-y-4 text-center">
                       <div className="flex justify-center">
-                        <Upload className={`w-16 h-16 ${isDragging ? "text-blue-500" : "text-slate-400"}`} />
+                        <Upload className={`w-16 h-16 ${isDragging ? "text-[#377fa8]" : "text-slate-400"}`} />
                       </div>
                       <div className="text-center">
                         <p className="text-lg font-semibold text-slate-700">
@@ -1120,7 +1120,7 @@ const Ultrasound = () => {
 
             {/* Service Requests Card */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm xl:col-span-3">
-              <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+              <CardHeader className={`bg-gradient-to-r from-[#102037] to-[#377fa8] text-white rounded-t-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                 <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <CardTitle className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end text-right' : 'justify-start text-left'}`}>
                     <Clock className="w-6 h-6" />
@@ -1141,7 +1141,7 @@ const Ultrasound = () => {
               <CardContent className="p-6">
                 {loadingRequests ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                    <Loader2 className="w-6 h-6 animate-spin text-[#377fa8]" />
                     <span className={`ml-2 ${isRTL ? 'mr-2 ml-0' : ''}`}>{isRTL ? 'جاري التحميل...' : 'Loading...'}</span>
                   </div>
                 ) : serviceRequests.length === 0 ? (
@@ -1245,7 +1245,7 @@ const Ultrasound = () => {
           <div className={`mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 md:gap-4 ${isRTL ? 'justify-center' : 'justify-center'}`}>
             <Button
               size="lg"
-              className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
+               className={`w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-[#377fa8] to-[#102037] hover:from-[#102037] hover:to-[#377fa8] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 ${isRTL ? 'flex-row-reverse' : ''}`}
               disabled={!selectedPatient || selectedBodyParts.length === 0 || !file || !selectedDoctor}
               onClick={handleSubmit}
             >
@@ -1278,7 +1278,7 @@ const Ultrasound = () => {
       {showRequestDetails && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <CardHeader className={`bg-gradient-to-r from-slate-900 to-blue-900 text-white ${isRTL ? 'text-right' : 'text-left'}`}>
+            <CardHeader className={`bg-gradient-to-r from-[#102037] to-[#377fa8] text-white ${isRTL ? 'text-right' : 'text-left'}`}>
               <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <CardTitle>{isRTL ? 'تفاصيل الطلب' : 'Request Details'}</CardTitle>
                 <Button
@@ -1339,7 +1339,7 @@ const Ultrasound = () => {
                       </p>
                     )}
                     {selectedRequest.completed_at && (
-                      <p className="text-blue-600">
+                      <p className="text-[#377fa8]">
                         {isRTL ? 'تم الإكمال: ' : 'Completed: '}{new Date(selectedRequest.completed_at).toLocaleString(isRTL ? 'ar-EG' : 'en-US')}
                       </p>
                     )}
@@ -1355,4 +1355,5 @@ const Ultrasound = () => {
 };
 
 export default Ultrasound;
+
 

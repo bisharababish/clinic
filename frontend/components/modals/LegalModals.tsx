@@ -114,8 +114,7 @@ export const TermsOfUseModal: React.FC<{ isOpen: boolean; onClose: () => void }>
                 title: "5. الدفع والفوترة",
                 content: [
                     "الدفع مطلوب وقت تلقي الخدمة ما لم يتم الاتفاق على خلاف ذلك مسبقاً.",
-                    "نقبل النقد وبطاقات الائتمان والتأمين الصحي المعتمد.",
-                    "المريض مسؤول عن دفع أي مبالغ غير مغطاة بالتأمين الصحي.",
+                    "نقبل النقد وبطاقات الائتمان.",
                     "الأسعار قابلة للتغيير دون إشعار مسبق."
                 ]
             },
@@ -126,7 +125,7 @@ export const TermsOfUseModal: React.FC<{ isOpen: boolean; onClose: () => void }>
                     "نلتزم بحماية سرية جميع المعلومات الطبية والشخصية وفقاً للقوانين المحلية والدولية.",
                     "لن نكشف عن معلوماتك الطبية إلا بموافقتك الكتابية أو عند الضرورة القانونية.",
                     "يحق لك الوصول إلى سجلاتك الطبية وطلب تصحيحها عند الضرورة.",
-                    "نتخذ جميع التدابير الأمنية اللازمة لحماية معلوماتك من الوصول غير المصرح به."
+                    "نعمل بجد لضمان بقاء بياناتك خاصة ومحمية."
                 ]
             },
             {
@@ -207,8 +206,7 @@ export const TermsOfUseModal: React.FC<{ isOpen: boolean; onClose: () => void }>
                 title: "5. Payment and Billing",
                 content: [
                     "Payment is due at the time of service unless otherwise agreed upon in advance.",
-                    "We accept cash, credit cards, and approved health insurance.",
-                    "Patients are responsible for payment of any amounts not covered by insurance.",
+                    "We accept cash and credit cards.",
                     "Prices are subject to change without prior notice."
                 ]
             },
@@ -219,7 +217,7 @@ export const TermsOfUseModal: React.FC<{ isOpen: boolean; onClose: () => void }>
                     "We are committed to protecting the confidentiality of all medical and personal information in accordance with local and international laws.",
                     "We will not disclose your medical information except with your written consent or when legally required.",
                     "You have the right to access your medical records and request corrections when necessary.",
-                    "We implement all necessary security measures to protect your information from unauthorized access."
+                    "We work hard to ensure your data remains private and protected."
                 ]
             },
             {
@@ -304,7 +302,7 @@ export const TermsOfUseModal: React.FC<{ isOpen: boolean; onClose: () => void }>
                 <div className="mt-12 pt-8 border-t border-gray-200">
                     <div className="bg-gray-50 rounded-xl p-6">
                         <div className="flex items-start gap-4">
-                            <Phone className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+                            <Phone className="h-5 w-5 text-[#377fa8] mt-1 flex-shrink-0" />
                             <div>
                                 <h4 className="font-semibold text-gray-900 mb-2">
                                     {isRTL ? "تحتاج مساعدة؟" : "Need Help?"}
@@ -590,14 +588,14 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                             {content.effectiveDate}
                         </div>
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="bg-[#377fa8]/20 border border-[#377fa8]/30 rounded-lg p-4 mb-4">
                         <div className="flex items-start gap-3">
-                            <Shield className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <Shield className="h-5 w-5 text-[#377fa8] mt-0.5 flex-shrink-0" />
                             <div>
-                                <h4 className="font-semibold text-blue-900 mb-1">
+                                <h4 className="font-semibold text-[#377fa8] mb-1">
                                     {isRTL ? "التزامنا بالخصوصية" : "Our Privacy Commitment"}
                                 </h4>
-                                <p className="text-blue-800 text-sm">
+                                <p className="text-[#377fa8] text-sm">
                                     {isRTL
                                         ? "نحن ملتزمون بحماية خصوصيتك ومعلوماتك الطبية وفقاً لأعلى المعايير الدولية والقوانين المحلية."
                                         : "We are committed to protecting your privacy and medical information according to the highest international standards and local laws."
@@ -623,7 +621,7 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                             </h3>
                             <div className="space-y-3">
                                 {section.content.map((paragraph, pIndex) => (
-                                    <p key={pIndex} className="text-gray-700 leading-relaxed pl-4 border-l-2 border-blue-100">
+                                    <p key={pIndex} className="text-gray-700 leading-relaxed pl-4 border-l-2 border-[#377fa8]/30">
                                         {paragraph}
                                     </p>
                                 ))}
@@ -644,12 +642,12 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                                 {isRTL ? "جميع البيانات محمية بتشفير عالي المستوى" : "All data protected with high-level encryption"}
                             </p>
                         </div>
-                        <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                            <Eye className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                            <h4 className="font-semibold text-blue-900 mb-1">
+                        <div className="text-center p-4 bg-[#377fa8]/20 rounded-lg border border-[#377fa8]/30">
+                            <Eye className="h-8 w-8 text-[#377fa8] mx-auto mb-2" />
+                            <h4 className="font-semibold text-[#377fa8] mb-1">
                                 {isRTL ? "وصول محدود" : "Limited Access"}
                             </h4>
-                            <p className="text-sm text-blue-700">
+                            <p className="text-sm text-[#377fa8]">
                                 {isRTL ? "فقط الموظفون المخولون يمكنهم الوصول" : "Only authorized personnel can access"}
                             </p>
                         </div>
@@ -667,7 +665,7 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                     {/* Contact Information */}
                     <div className="bg-gray-50 rounded-xl p-6">
                         <div className="flex items-start gap-4">
-                            <Mail className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+                            <Mail className="h-5 w-5 text-[#377fa8] mt-1 flex-shrink-0" />
                             <div>
                                 <h4 className="font-semibold text-gray-900 mb-2">
                                     {isRTL ? "تواصل معنا بشأن الخصوصية" : "Contact Us About Privacy"}

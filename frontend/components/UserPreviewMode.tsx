@@ -840,7 +840,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                                         {note.diagnosis && (
                                             <div>
                                                 <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.diagnosis')}</h4>
-                                                <p className={`text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded break-words ${isRTL ? 'text-right' : 'text-left'}`}>
+                                                <p className={`text-xs sm:text-sm bg-[#377fa8]/20 p-2 sm:p-3 rounded break-words ${isRTL ? 'text-right' : 'text-left'}`}>
                                                     {note.diagnosis}
                                                 </p>
                                             </div>
@@ -933,7 +933,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                                             <div>
                                                 <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{t('preview.doctorNotes')}</h4>
                                                 <div
-                                                    className={`text-xs sm:text-sm bg-blue-50 p-2 sm:p-3 rounded overflow-auto ${isRTL ? 'text-right rtl-content' : 'text-left ltr-content'}`}
+                                                    className={`text-xs sm:text-sm bg-[#377fa8]/20 p-2 sm:p-3 rounded overflow-auto ${isRTL ? 'text-right rtl-content' : 'text-left ltr-content'}`}
                                                     style={isRTL ? {
                                                         direction: 'rtl',
                                                         textAlign: 'right',
@@ -1127,7 +1127,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
 
                                             {/* Exam Results */}
                                             <div className="grid grid-cols-2 gap-3 pt-2 border-t">
-                                                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                                                <div className="text-center p-3 bg-[#377fa8]/20 rounded-lg">
                                                     <h4 className="font-medium text-xs sm:text-sm mb-2">{isRTL ? 'الأذن اليسرى' : 'Left Ear'}</h4>
                                                     {record.left_ear_result === 'passed' ? (
                                                         <div className="flex items-center justify-center gap-1 text-green-600">
@@ -1261,7 +1261,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                                             {request.completed_at && (
                                                 <div>
                                                     <span className="font-medium text-muted-foreground">{isRTL ? 'تاريخ الإكمال' : 'Completed Date'}: </span>
-                                                    <span className="text-blue-600">{new Date(request.completed_at).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US')}</span>
+                                                    <span className="text-[#377fa8]">{new Date(request.completed_at).toLocaleDateString(isRTL ? 'ar-EG' : 'en-US')}</span>
                                                 </div>
                                             )}
                                             {request.price && request.price > 0 && (
@@ -1281,7 +1281,7 @@ ${data.follow_up_date ? `Follow-up Date: ${new Date(data.follow_up_date).toLocal
                                             </div>
                                         </div>
                                         {request.notes && (
-                                            <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                                            <div className="bg-[#377fa8]/20 p-3 sm:p-4 rounded-lg">
                                                 <h4 className={`font-medium mb-2 text-sm ${isRTL ? 'text-right' : 'text-left'}`}>{isRTL ? 'ملاحظات الطبيب' : 'Doctor Notes'}</h4>
                                                 <p className={`text-xs sm:text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>{request.notes}</p>
                                             </div>

@@ -1912,7 +1912,7 @@ const Index = () => {
             <div className="mb-6">
               {/* Notification Alert - visible to patients and secretaries */}
               {(userRole === 'patient' || userRole === 'secretary') && (
-                <Alert variant="default" className={`alert-responsive ${isRTL ? 'rtl' : ''} bg-blue-50 border-blue-200 mb-4`}>
+                <Alert variant="default" className={`alert-responsive ${isRTL ? 'rtl' : ''} bg-[#377fa8]/10 border-[#377fa8]/30 mb-4`}>
                   <AlertDescription className={isRTL ? 'py-4 px-2' : 'py-2'}>
                     <span className="font-medium">{t("home.remindeinder")}:</span> {t("home.reservationRequired")}
                     <Button variant="link" className={`h-auto p-0 ${isRTL ? 'mr-3' : 'ml-2'}`} asChild>
@@ -1933,7 +1933,7 @@ const Index = () => {
                     {isRTL ? "إدارة المرضى" : "Patient Management"}
                   </h2>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg border border-blue-200 whitespace-nowrap flex-shrink-0 min-w-[110px]">
+                    <div className="bg-[#377fa8]/20 text-[#102037] px-3 py-1 rounded-lg border border-[#377fa8]/30 whitespace-nowrap flex-shrink-0 min-w-[110px]">
                       <div className="flex items-center justify-center gap-2">
                         <Users className="h-4 w-4" />
                         <span className="font-semibold text-sm whitespace-nowrap">
@@ -2004,7 +2004,7 @@ const Index = () => {
                     }}
                     variant="outline"
                     size="sm"
-                    className={`flex items-center gap-2 ${showAllPatients ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-blue-200 text-blue-700 hover:bg-blue-50'}`}
+                    className={`flex items-center gap-2 ${showAllPatients ? 'border-red-200 text-red-700 hover:bg-red-50' : 'border-[#377fa8]/30 text-[#377fa8] hover:bg-[#377fa8]/10'}`}
                   >
                     <Users className="h-4 w-4" />
                     {showAllPatients ?
@@ -2080,7 +2080,7 @@ const Index = () => {
                       {currentPatients.map((patient) => (
                         <Card
                           key={patient.userid}
-                          className={`cursor-pointer transition-all hover:shadow-md ${selectedPatient?.userid === patient.userid ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
+                          className={`cursor-pointer transition-all hover:shadow-md ${selectedPatient?.userid === patient.userid ? 'ring-2 ring-[#377fa8] bg-[#377fa8]/10' : ''}`}
                           onClick={() => selectPatient(patient)}
                         >
                           <CardHeader className="pb-2">
@@ -2135,7 +2135,7 @@ const Index = () => {
                                           <div className="text-gray-500">{isRTL ? "حساسية" : "Allergies"}</div>
                                         </div>
                                         <div className="text-center">
-                                          <div className="font-medium text-blue-600">
+                                          <div className="font-medium text-[#377fa8]">
                                             {stats.bmi || '--'}
                                           </div>
                                           <div className="text-gray-500">BMI</div>
@@ -2207,8 +2207,8 @@ const Index = () => {
 
                 {/* Selected Patient Info */}
                 {selectedPatient && (
-                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                  <div className="mt-6 p-4 bg-[#377fa8]/10 border border-[#377fa8]/30 rounded-lg">
+                    <h4 className="font-semibold text-[#102037] mb-2 flex items-center gap-2">
                       <User className="h-4 w-4" />
                       {isRTL ? "المريض المحدد:" : "Selected Patient:"}
                     </h4>
@@ -2925,8 +2925,8 @@ const Index = () => {
                   </RadioGroup>
                   {/* Show current status if available */}
                   {socialSituation && (
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800">
+                    <div className="mt-4 p-3 bg-[#377fa8]/10 border border-[#377fa8]/30 rounded-lg">
+                      <p className="text-sm text-[#102037]">
                         <strong>{isRTL ? "الحالة الحالية:" : "Current Status:"}</strong>
                         <span className="ml-2">
                           {socialSituation === 'married'
@@ -2962,7 +2962,7 @@ const Index = () => {
                           id={`disease-${disease.key}`}
                           checked={selectedDiseases.includes(disease.key)}
                           onChange={() => handleDiseaseSelect(disease.key)}
-                          className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="h-5 w-5 rounded border-gray-300 text-[#377fa8] focus:ring-[#377fa8]"
                         />
                         <span
                           className={`text-lg flex-1 ${isRTL ? 'text-right' : 'text-left'}`}
@@ -3087,7 +3087,7 @@ const Index = () => {
                               type="checkbox"
                               id={`med-${medicine.en}`} checked={selectedMedicines.includes(medicine.en)}
                               onChange={() => handleMedicineSelect(medicine.en)}
-                              className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="h-5 w-5 rounded border-gray-300 text-[#377fa8] focus:ring-[#377fa8]"
                               disabled={takesMedicines === "no"}
                             />
                             <Label htmlFor={`med-${medicine.en}`} className="text-base">
@@ -3239,8 +3239,8 @@ const Index = () => {
 
               {/* User Tracking Information - Show if data exists */}
               {healthData && (healthData.created_by_email || healthData.updated_by_email) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <div className="bg-[#377fa8]/10 border border-[#377fa8]/30 rounded-lg p-4 mb-6">
+                  <h3 className="font-semibold text-[#102037] mb-3 flex items-center gap-2">
                     <User className="h-4 w-4" />
                     {isRTL ? "معلومات السجل الطبي" : "Medical Record Information"}
                   </h3>
@@ -3249,27 +3249,27 @@ const Index = () => {
                     {/* Created By Info */}
                     {healthData.created_by_email && (
                       <div className="bg-white p-3 rounded-md border">
-                        <h4 className="font-medium text-blue-700 mb-2 flex items-center gap-1">
+                        <h4 className="font-medium text-[#377fa8] mb-2 flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {isRTL ? "تم الإنشاء بواسطة:" : "Created by:"}
                         </h4>
                         <div className="space-y-1 text-gray-700">
                           <div className="flex items-center gap-2">
-                            <User className="h-3 w-3 text-blue-500" />
+                            <User className="h-3 w-3 text-[#377fa8]" />
                             <span className="font-medium">{healthData.created_by_name || "Unknown User"}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Mail className="h-3 w-3 text-blue-500" />
+                            <Mail className="h-3 w-3 text-[#377fa8]" />
                             <span className="text-xs">{healthData.created_by_email}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <CreditCard className="h-3 w-3 text-blue-500" />
-                            <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                            <CreditCard className="h-3 w-3 text-[#377fa8]" />
+                            <span className="inline-block px-2 py-1 bg-[#377fa8]/20 text-[#102037] rounded text-xs font-medium">
                               {healthData.created_by_role || "Patient"}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Clock className="h-3 w-3 text-blue-500" />
+                            <Clock className="h-3 w-3 text-[#377fa8]" />
                             <span className="text-xs text-gray-600">
                               {new Date(healthData.created_at || '').toLocaleString()}
                             </span>
@@ -3327,7 +3327,7 @@ const Index = () => {
                       <div className="space-y-2">
                         {patientLogs.map((log, index) => (
                           <div key={index} className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div className="w-1.5 h-1.5 bg-[#377fa8]/100 rounded-full mt-2 flex-shrink-0"></div>
                             <p className={`text-sm text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
                               {`${t(`home.logs.${log.key}`, log.values)} ${log.timestamp.toLocaleString()}`}
                             </p>
@@ -3352,8 +3352,8 @@ const Index = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6"> {/* Changed from 3 to 4 */}
                   {/* Basic Information */}
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-                    <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <div className="bg-gradient-to-br from-[#377fa8]/10 to-[#377fa8]/20 p-4 rounded-lg border border-[#377fa8]/30">
+                    <h3 className="font-semibold text-[#102037] mb-3 flex items-center gap-2">
                       <User className="h-4 w-4" />
                       {isRTL ? "المعلومات الأساسية" : "Basic Information"}
                     </h3>
@@ -3391,7 +3391,7 @@ const Index = () => {
                       )}
 
                       {healthData.weight_kg && healthData.height_cm && (
-                        <div className="flex justify-between pt-2 border-t border-blue-200">
+                        <div className="flex justify-between pt-2 border-t border-[#377fa8]/30">
                           <span className="text-gray-600">BMI:</span>
                           <span className="font-medium">{calculatePatientStats(healthData).bmi}</span>
                         </div>
@@ -3532,7 +3532,7 @@ const Index = () => {
       {showBackToTop && (
         <Button
           onClick={scrollToTop}
-          className="back-to-top-btn fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 shadow-lg transition-all duration-300 hover:scale-110"
+          className="back-to-top-btn fixed bottom-6 right-6 z-50 bg-[#377fa8] hover:bg-[#102037] text-white rounded-full w-12 h-12 shadow-lg transition-all duration-300 hover:scale-110"
           size="sm"
         >
           <ChevronUp className="h-5 w-5" />
@@ -3543,3 +3543,4 @@ const Index = () => {
 };
 
 export default Index;
+

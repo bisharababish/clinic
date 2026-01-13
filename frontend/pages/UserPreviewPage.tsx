@@ -114,7 +114,7 @@ const UserPreviewPage: React.FC = () => {
                                 </Button>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-2xl shadow-lg">
+                                <div className="bg-gradient-to-r from-[#377fa8] to-[#102037] p-3 rounded-2xl shadow-lg">
                                     <User className="w-8 h-8 text-white" />
                                 </div>
                                 <div>

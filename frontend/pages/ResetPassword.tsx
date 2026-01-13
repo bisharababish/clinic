@@ -149,7 +149,7 @@ export default function ResetPassword() {
     if (initializing) {
         return (
             <div className={`min-h-screen flex flex-col ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-                <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
+                <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-[#377fa8]/5">
                     <div className={`text-center ${isRTL ? 'text-right' : 'text-center'}`}>
                         <Skeleton width={48} height={48} circle className="mx-auto mb-4" />
                         <Skeleton width={180} height={20} className="mx-auto mb-2" />
@@ -166,7 +166,7 @@ export default function ResetPassword() {
 
     return (
         <div className={`min-h-screen flex flex-col ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-            <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
+            <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-[#377fa8]/5">
                 <div className="w-full max-w-md">
                     <div className="text-center mb-8">
                         <h1 className="text-4xl font-bold text-primary mb-2">
@@ -269,3 +269,4 @@ export default function ResetPassword() {
         </div>
     );
 }
+

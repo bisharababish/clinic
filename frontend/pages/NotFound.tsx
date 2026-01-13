@@ -22,7 +22,7 @@ const NotFound = () => {
         <p className={`text-xl text-gray-600 mb-4 ${isRTL ? 'text-right' : 'text-center'}`}>
           {t('notFound.message') || 'Oops! Page not found'}
         </p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
+        <a href="/" className="text-[#377fa8] hover:text-[#377fa8] underline">
           {t('notFound.returnHome') || 'Return to Home'}
         </a>
       </div>

@@ -849,7 +849,7 @@ const DoctorManagement = () => {
                                         name="clinic_id"
                                         value={doctorFormData.clinic_id}
                                         onChange={(e) => handleDoctorClinicChange(e.target.value)}
-                                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : ''}`}
+                                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#377fa8] focus:border-[#377fa8]/30 ${isRTL ? 'text-left' : ''}`}
                                         required
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     >
@@ -1055,7 +1055,7 @@ const DoctorManagement = () => {
                                         name="day"
                                         value={newSlot.day}
                                         onChange={handleNewSlotChange}
-                                        className={`w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-left' : ''}`}
+                                        className={`w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#377fa8] focus:border-[#377fa8]/30 ${isRTL ? 'text-left' : ''}`}
                                         dir={isRTL ? 'rtl' : 'ltr'}
                                     >
                                         {weekdays.map(weekday => (

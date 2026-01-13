@@ -161,7 +161,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
     // Each role has a unique text color and unique background color
     const getRoleConfig = () => {
         return [
-            { key: 'patient', name: t('admin.patients'), color: '#2563eb', bgColor: '#dbeafe' }, // Blue text, light blue background
+            { key: 'patient', name: t('admin.patients'), color: '#377fa8', bgColor: '#e0f2fe' }, // Brand blue text, light blue background
             { key: 'admin', name: t('admin.administrators'), color: '#dc2626', bgColor: '#fee2e2' }, // Red text, light red background
             { key: 'secretary', name: t('admin.secretaries'), color: '#9333ea', bgColor: '#f3e8ff' }, // Purple text, light purple background
             { key: 'doctor', name: t('admin.doctors'), color: '#059669', bgColor: '#d1fae5' }, // Green text, light green background
@@ -274,11 +274,11 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
         <div className={`${isRTL ? 'rtl' : 'ltr'} text-${isRTL ? 'right' : 'left'}`} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Stats Cards Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <Card className={`border-l-4 ${isRTL ? 'border-r-4 border-l-0' : ''} border-l-blue-500 ${isRTL ? 'border-r-blue-500' : ''} shadow-md hover:shadow-lg transition-shadow duration-200`}>
+                <Card className={`border-l-4 ${isRTL ? 'border-r-4 border-l-0' : ''} border-l-[#377fa8] ${isRTL ? 'border-r-[#377fa8]' : ''} shadow-md hover:shadow-lg transition-shadow duration-200`}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-semibold text-blue-700">{t('admin.totalUsers')}</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <Users className="h-4 w-4 text-blue-600" />
+                        <CardTitle className="text-sm font-semibold text-[#102037]">{t('admin.totalUsers')}</CardTitle>
+                        <div className="h-8 w-8 rounded-full bg-[#377fa8]/20 flex items-center justify-center">
+                            <Users className="h-4 w-4 text-[#377fa8]" />
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -352,26 +352,26 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 {/* Chart Card */}
                 <Card className="shadow-md hover:shadow-lg transition-all duration-200">
-                    <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+                    <CardHeader className="bg-gradient-to-r from-[#377fa8]/10 to-[#377fa8]/20 border-b">
                         <div className="flex justify-between items-center">
-                            <CardTitle className="text-blue-800">{t('admin.userDistributionByRole')}</CardTitle>
+                            <CardTitle className="text-[#102037]">{t('admin.userDistributionByRole')}</CardTitle>
                             <div className="flex items-center space-x-2">
                                 <div className="flex bg-gray-100 rounded-md p-1">
                                     <button
                                         onClick={() => setChartType('pie')}
-                                        className={`px-2 py-1 text-xs rounded ${chartType === 'pie' ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
+                                        className={`px-2 py-1 text-xs rounded ${chartType === 'pie' ? 'bg-[#377fa8] text-white' : 'text-gray-600'}`}
                                     >
                                         {t('admin.pie')}
                                     </button>
                                     <button
                                         onClick={() => setChartType('bar')}
-                                        className={`px-2 py-1 text-xs rounded ${chartType === 'bar' ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
+                                        className={`px-2 py-1 text-xs rounded ${chartType === 'bar' ? 'bg-[#377fa8] text-white' : 'text-gray-600'}`}
                                     >
                                         {t('admin.bar')}
                                     </button>
                                 </div>
                                 <RefreshCw
-                                    className="h-4 w-4 text-blue-500 cursor-pointer hover:text-blue-700 transition-colors"
+                                    className="h-4 w-4 text-[#377fa8] cursor-pointer hover:text-[#102037] transition-colors"
                                     onClick={refreshReportData}
                                 />
                             </div>
@@ -547,7 +547,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     <Button
                         variant="outline"
-                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-blue-50 border-2 hover:border-blue-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-[#377fa8]/10 border-2 hover:border-[#377fa8]/30 transition-all duration-200 hover:shadow-md hover:scale-105"
                         onClick={() => {
                             setActiveTab('users');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -555,7 +555,7 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
 
                         }}
                     >
-                        <UserPlus className="h-6 w-6 mb-1 text-blue-600" />
+                        <UserPlus className="h-6 w-6 mb-1 text-[#377fa8]" />
                         <span className="text-sm font-medium">{t('admin.addUser')}</span>
                     </Button>
 
@@ -569,13 +569,13 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
 
                         }}
                     >
-                        <Calendar className="h-6 w-6 mb-1 text-green-600" />
+                        <Calendar className="h-6 w-6 mb-1 text-[#377fa8]" />
                         <span className="text-sm font-medium">{t('admin.viewAppointments')}</span>
                     </Button>
 
                     <Button
                         variant="outline"
-                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-purple-50 border-2 hover:border-purple-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-[#377fa8]/10 border-2 hover:border-[#377fa8]/30 transition-all duration-200 hover:shadow-md hover:scale-105"
                         onClick={() => {
                             setActiveTab('clinics');
                             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -583,16 +583,16 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
 
                         }}
                     >
-                        <Stethoscope className="h-6 w-6 mb-1 text-purple-600" />
+                        <Stethoscope className="h-6 w-6 mb-1 text-[#377fa8]" />
                         <span className="text-sm font-medium">{t('admin.manageClinics')}</span>
                     </Button>
 
                     <Button
                         variant="outline"
-                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-amber-50 border-2 hover:border-amber-200 transition-all duration-200 hover:shadow-md hover:scale-105"
+                        className="h-20 flex flex-col items-center justify-center bg-white hover:bg-[#377fa8]/10 border-2 hover:border-[#377fa8]/30 transition-all duration-200 hover:shadow-md hover:scale-105"
                         onClick={refreshReportData}
                     >
-                        <BarChart2 className="h-6 w-6 mb-1 text-amber-600" />
+                        <BarChart2 className="h-6 w-6 mb-1 text-[#377fa8]" />
                         <span className="text-sm font-medium">{t('admin.refreshData')}</span>
                     </Button>
                 </div>
@@ -602,4 +602,5 @@ const OverviewManagement: React.FC<OverviewManagementProps> = ({
 };
 
 export default OverviewManagement;
+
 

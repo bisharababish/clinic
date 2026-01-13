@@ -91,16 +91,16 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
 
     // 🎨 Clinic Color Mapping System
     const clinicColors = [
-        { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' },
-        { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' },
-        { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
-        { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
-        { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' },
-        { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' },
-        { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-200' },
-        { bg: 'bg-cyan-100', text: 'text-cyan-800', border: 'border-cyan-200' },
-        { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-200' },
-        { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' }
+        { bg: 'bg-[#377fa8]/20', text: 'text-[#377fa8]', border: 'border-[#377fa8]/30' },
+        { bg: 'bg-[#102037]/20', text: 'text-[#102037]', border: 'border-[#102037]/30' },
+        { bg: 'bg-[#377fa8]/15', text: 'text-[#377fa8]', border: 'border-[#377fa8]/25' },
+        { bg: 'bg-[#102037]/15', text: 'text-[#102037]', border: 'border-[#102037]/25' },
+        { bg: 'bg-[#377fa8]/10', text: 'text-[#377fa8]', border: 'border-[#377fa8]/20' },
+        { bg: 'bg-[#102037]/10', text: 'text-[#102037]', border: 'border-[#102037]/20' },
+        { bg: 'bg-[#377fa8]/25', text: 'text-[#377fa8]', border: 'border-[#377fa8]/35' },
+        { bg: 'bg-[#102037]/25', text: 'text-[#102037]', border: 'border-[#102037]/35' },
+        { bg: 'bg-[#377fa8]/30', text: 'text-[#377fa8]', border: 'border-[#377fa8]/40' },
+        { bg: 'bg-[#102037]/30', text: 'text-[#102037]', border: 'border-[#102037]/40' }
     ];
 
     // Function to get color for a clinic
@@ -328,7 +328,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'scheduled': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'scheduled': return 'bg-[#377fa8]/20 text-[#377fa8] border-[#377fa8]/30';
             case 'completed': return 'bg-green-100 text-green-800 border-green-200';
             case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
             default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -573,9 +573,9 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                     className={`
                                         min-h-[100px] p-1 border rounded-lg relative cursor-pointer transition-all duration-200
                                         ${day.isCurrentMonth ? 'bg-white' : 'bg-gray-50'}
-                                        ${isToday ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
+                                        ${isToday ? 'ring-2 ring-[#377fa8] bg-[#377fa8]/10' : ''}
                                         ${hasConflict ? 'border-red-500 bg-red-50' : ''}
-                                        ${day.appointments.length > 0 ? 'hover:bg-blue-50 border-blue-200' : 'hover:bg-gray-50'}
+                                        ${day.appointments.length > 0 ? 'hover:bg-[#377fa8]/10 border-[#377fa8]/30' : 'hover:bg-gray-50'}
                                         ${!day.isCurrentMonth ? 'opacity-60' : ''}
                                     `}
                                     onClick={() => handleDayClick(day)}
@@ -583,7 +583,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                     <div className={`
                                         text-sm font-medium mb-1
                                         ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
-                                        ${isToday ? 'text-blue-600 font-bold' : ''}
+                                        ${isToday ? 'text-[#377fa8] font-bold' : ''}
                                     `}>
                                         {day.date}
                                     </div>
@@ -615,7 +615,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                         })}
 
                                         {day.appointments.length > 3 && (
-                                            <div className="text-xs text-blue-600 p-1 font-medium bg-blue-50 rounded border border-blue-200">
+                                            <div className="text-xs text-[#377fa8] p-1 font-medium bg-[#377fa8]/10 rounded border border-[#377fa8]/30">
                                                 +{day.appointments.length - 3} {t('admin.more') || 'more'}
                                             </div>
                                         )}
@@ -659,7 +659,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                     type="checkbox"
                                     checked={showOfficeHours}
                                     onChange={(e) => setShowOfficeHours(e.target.checked)}
-                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                                    className="w-4 h-4 text-[#377fa8] bg-gray-100 border-gray-300 rounded focus:ring-[#377fa8] focus:ring-2"
                                 />
                             </div>
                         )}
@@ -1206,11 +1206,11 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                     <CardHeader className="pb-3">
                         <CardTitle className="text-lg">
                             <div className={`flex items-center gap-2 ${i18n.language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                <Calendar className="h-5 w-5 text-blue-600" />
+                                <Calendar className="h-5 w-5 text-[#377fa8]" />
                                 {t('admin.todaysAppointments') || "Today's Appointments"}
                             </div>
                         </CardTitle>
-                        <div className={`text-2xl font-bold text-blue-600 ${i18n.language === 'ar' ? 'text-right' : ''}`}
+                        <div className={`text-2xl font-bold text-[#377fa8] ${i18n.language === 'ar' ? 'text-right' : ''}`}
                             style={i18n.language === 'ar' ? { direction: 'rtl' } : {}}>
                             {i18n.language === 'ar' ? <><span>{todayAppointments.length}</span></> : <>{todayAppointments.length}</>}
                         </div>
@@ -1242,7 +1242,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => handleQuickAction('appointments')}
-                                            className="text-blue-600 hover:text-blue-800"
+                                            className="text-[#377fa8] hover:text-[#102037]"
                                         >
                                             {t('admin.viewAll') || 'View All'} ({todayAppointments.length})
                                         </Button>
@@ -1337,7 +1337,7 @@ const DoctorCalendarTab: React.FC<DoctorCalendarTabProps> = ({
                             </div>
                             <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
                                 <span className="text-sm text-gray-600">{t('admin.scheduled') || 'Scheduled'}</span>
-                                <span className="font-medium text-blue-600">{doctorStats.scheduledAppointments}</span>
+                                <span className="font-medium text-[#377fa8]">{doctorStats.scheduledAppointments}</span>
                             </div>
                             <div className={`flex ${i18n.language === 'ar' ? 'justify-between flex-row-reverse' : 'justify-between'}`}>
                                 <span className="text-sm text-gray-600">{t('admin.completed') || 'Completed'}</span>

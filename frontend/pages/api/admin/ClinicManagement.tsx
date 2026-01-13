@@ -1217,7 +1217,7 @@ const ClinicManagement = () => {
                                                 name="category_id"
                                                 value={clinicFormData.category_id}
                                                 onChange={(e) => handleClinicCategoryChange(e.target.value)}
-                                                className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${isRTL ? 'text-right' : ''}`}
+                                                className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#377fa8] focus:border-[#377fa8]/30 ${isRTL ? 'text-right' : ''}`}
                                                 required
                                                 dir={isRTL ? 'rtl' : 'ltr'}
                                                 style={{ textAlign: isRTL ? 'right' : 'left' }}

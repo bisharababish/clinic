@@ -577,7 +577,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                     {!error.includes('Access denied') && !error.includes('Please log in') && (
                         <button
                             onClick={handleRefresh}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                            className="bg-[#377fa8]/20 text-white px-4 py-2 rounded-md hover:bg-[#377fa8]/20 transition-colors"
                         >
                             {t('common.refresh') || 'Refresh'}
                         </button>
@@ -596,7 +596,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                                    <Image className="h-8 w-8 text-blue-600" />
+                                    <Image className="h-8 w-8 text-[#377fa8]" />
                                     {t('doctorPages.ultrasoundImages') || 'Ultrasound Images'}
                                 </h1>
                                 <p className="mt-1 text-sm text-gray-600">
@@ -606,7 +606,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                             <button
                                 onClick={handleRefresh}
                                 disabled={loading}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="bg-[#377fa8]/20 text-white px-4 py-2 rounded-md hover:bg-[#377fa8]/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -632,7 +632,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                                     setSearchTerm(e.target.value);
                                     if (error && !error.includes('Access denied')) setError(null);
                                 }} disabled={loading}
-                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#377fa8] disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
                         <div className="relative">
@@ -643,7 +643,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                                     setFilterBodyPart(e.target.value);
                                     if (error && !error.includes('Access denied')) setError(null);
                                 }} disabled={loading}
-                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#377fa8] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <option value="">{t('doctorPages.allBodyParts') || 'All Body Parts'}</option>
                                 <option value="neck">{t('ultrasound.bodyParts.neck') || 'Neck'}</option>
@@ -667,7 +667,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                                     setFilterDate(e.target.value);
                                     if (error && !error.includes('Access denied')) setError(null);
                                 }} disabled={loading}
-                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="pl-10 w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#377fa8] disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
                     </div>
@@ -761,7 +761,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                                     <div className="flex space-x-2">
                                         <button
                                             onClick={() => handleViewImage(image)}
-                                            className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-1"
+                                            className="flex-1 bg-[#377fa8]/20 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-[#377fa8]/20 flex items-center justify-center gap-1"
                                         >
                                             <Eye className="h-4 w-4" />
                                             {t('common.view') || 'View'}
@@ -952,7 +952,7 @@ const DoctorUltrasoundPage: React.FC = () => {
                                     <div className="pt-2">
                                         <button
                                             onClick={() => handleDownloadImage(selectedImage)}
-                                            className="w-full bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2 text-sm sm:text-base"
+                                            className="w-full bg-[#377fa8]/20 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-[#377fa8]/20 flex items-center justify-center gap-2 text-sm sm:text-base"
                                         >
                                             <Download className="h-4 w-4" />
                                             {t('doctorPages.downloadImage') || 'Download Image'}

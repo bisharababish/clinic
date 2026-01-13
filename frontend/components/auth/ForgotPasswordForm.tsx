@@ -119,8 +119,8 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onSwitchToLogin
         </div>
 
         <div className="space-y-4 text-center">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
+          <div className="p-4 bg-[#377fa8]/20 rounded-lg border border-[#377fa8]/30">
+            <p className="text-sm text-[#377fa8]">
               <strong>{t("forgotpassowrd.important") || "Important"}:</strong> {t("forgotpassowrd.checkSpamFolder") || "Please check your spam/junk folder if you don't see the email in your inbox within a few minutes."}
             </p>
           </div>

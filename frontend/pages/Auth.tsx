@@ -101,7 +101,7 @@ const Auth: React.FC = () => {
           </div>
         </div>
 
-        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50">
+        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-[#377fa8]/5">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <motion.div
@@ -175,3 +175,4 @@ const Auth: React.FC = () => {
 };
 
 export default Auth;
+

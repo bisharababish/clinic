@@ -297,7 +297,7 @@ const ServiceRequestsManagement: React.FC = () => {
             case 'pending':
                 return <Badge variant="secondary" className="flex items-center gap-1"><Clock className="h-3 w-3" /> {isRTL ? 'قيد الانتظار' : 'Pending'}</Badge>;
             case 'secretary_confirmed':
-                return <Badge variant="default" className="flex items-center gap-1 bg-blue-500"><CheckCircle className="h-3 w-3" /> {isRTL ? 'مؤكد' : 'Confirmed'}</Badge>;
+                return <Badge variant="default" className="flex items-center gap-1 bg-[#377fa8]/20"><CheckCircle className="h-3 w-3" /> {isRTL ? 'مؤكد' : 'Confirmed'}</Badge>;
             case 'payment_required':
                 return <Badge variant="default" className="flex items-center gap-1 bg-yellow-500"><Clock className="h-3 w-3" /> {isRTL ? 'دفع مطلوب' : 'Payment Required'}</Badge>;
             case 'in_progress':
@@ -453,7 +453,7 @@ const ServiceRequestsManagement: React.FC = () => {
                                                 variant="default"
                                                 size="sm"
                                                 onClick={() => handleConfirmPayment(request)}
-                                                className="bg-blue-600 hover:bg-blue-700 flex-1 md:flex-none"
+                                                className="bg-[#377fa8]/20 hover:bg-[#377fa8]/20 flex-1 md:flex-none"
                                             >
                                                 <CheckCircle className="h-4 w-4 mr-1" />
                                                 {isRTL ? 'تأكيد الدفع' : 'Confirm Payment'}

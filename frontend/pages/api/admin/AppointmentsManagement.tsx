@@ -675,7 +675,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
     const getStatusBadgeClass = (status: string) => {
         switch (status.toLowerCase()) {
             case 'scheduled':
-                return "bg-blue-100 text-blue-800 border-blue-200 appointments-badge";
+                return "bg-[#377fa8]/20 text-[#377fa8] border-[#377fa8]/30 appointments-badge";
             case 'completed':
                 return "bg-green-100 text-green-800 border-green-200 appointments-badge";
             case 'cancelled':
@@ -1810,7 +1810,7 @@ const AppointmentsManagement: React.FC<AppointmentsManagementProps> = ({
 
                                 {/* Show selected patient */}
                                 {selectedPatientId && !patientSearchQuery && (
-                                    <div className="selected-patient p-3 bg-blue-50 border rounded-md">
+                                    <div className="selected-patient p-3 bg-[#377fa8]/20 border rounded-md">
                                         {(() => {
                                             const selectedPatient = filteredPatients.find(p => p.userid.toString() === selectedPatientId);
                                             return selectedPatient ? (

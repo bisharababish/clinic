@@ -1042,7 +1042,7 @@ const Payment = () => {
 
     return (
         <div className={`max-w-3xl mx-auto py-8 px-4 ${isRTL ? 'text-left font-arabic' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
-            <Alert className={`mb-6 bg-blue-50 border-blue-200 ${isRTL ? 'text-left font-arabic' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
+            <Alert className={`mb-6 bg-[#377fa8]/20 border-[#377fa8]/30 ${isRTL ? 'text-left font-arabic' : 'text-left'}`} dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
                 <AlertDescription>
                     <span className="font-medium">{t('payment.securePayment')}:</span> {t('payment.allTransactionsEncrypted')}
                 </AlertDescription>
@@ -1138,12 +1138,12 @@ const Payment = () => {
                             }}
                             className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${
                                 paymentMethod === 'cash'
-                                    ? 'border-blue-600 bg-blue-50 shadow-md'
+                                    ? 'border-[#377fa8]/30 bg-[#377fa8]/20 shadow-md'
                                     : 'border-gray-300 hover:border-gray-400'
                             }`}
                         >
-                            <Banknote className={`h-6 w-6 ${paymentMethod === 'cash' ? 'text-blue-600' : 'text-gray-600'}`} />
-                            <span className={`font-medium ${paymentMethod === 'cash' ? 'text-blue-600' : 'text-gray-700'}`}>
+                            <Banknote className={`h-6 w-6 ${paymentMethod === 'cash' ? 'text-[#377fa8]' : 'text-gray-600'}`} />
+                            <span className={`font-medium ${paymentMethod === 'cash' ? 'text-[#377fa8]' : 'text-gray-700'}`}>
                                 {isRTL ? 'نقدي' : 'Cash'}
                             </span>
                         </button>
@@ -1152,12 +1152,12 @@ const Payment = () => {
                             onClick={() => setPaymentMethod('visa')}
                             className={`p-4 border-2 rounded-lg flex flex-col items-center gap-2 transition-all ${
                                 paymentMethod === 'visa'
-                                    ? 'border-blue-600 bg-blue-50 shadow-md'
+                                    ? 'border-[#377fa8]/30 bg-[#377fa8]/20 shadow-md'
                                     : 'border-gray-300 hover:border-gray-400'
                             }`}
                         >
-                            <CreditCard className={`h-6 w-6 ${paymentMethod === 'visa' ? 'text-blue-600' : 'text-gray-600'}`} />
-                            <span className={`font-medium ${paymentMethod === 'visa' ? 'text-blue-600' : 'text-gray-700'}`}>
+                            <CreditCard className={`h-6 w-6 ${paymentMethod === 'visa' ? 'text-[#377fa8]' : 'text-gray-600'}`} />
+                            <span className={`font-medium ${paymentMethod === 'visa' ? 'text-[#377fa8]' : 'text-gray-700'}`}>
                                 {isRTL ? 'بطاقة ائتمانية' : 'Credit Card'}
                             </span>
                         </button>
@@ -1256,7 +1256,7 @@ const Payment = () => {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleHostedCheckout} className="space-y-6 py-2" dir={isRTL ? "rtl" : "ltr"} style={isRTL ? { fontFamily: 'Noto Sans Arabic, Cairo, Tajawal, Segoe UI, Tahoma, Arial, sans-serif' } : {}}>
-                        <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-4 text-sm text-blue-800">
+                        <div className="rounded-lg border border-[#377fa8]/30 bg-[#377fa8]/20/70 p-4 text-sm text-[#377fa8]">
                             {isRTL
                                 ? 'ستتم إعادة توجيهك إلى صفحة الدفع الآمنة الخاصة بـ CyberSource لإدخال تفاصيل البطاقة وإكمال العملية.'
                                 : 'You will be redirected to CyberSource’s secure checkout page to enter your card details and complete the payment.'}

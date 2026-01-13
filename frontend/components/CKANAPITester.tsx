@@ -278,7 +278,7 @@ const CKANAPITester: React.FC = () => {
                                                         <div className="text-sm font-medium">Related Datasets Found:</div>
                                                         <div className="mt-1 space-y-1">
                                                             {verificationResult.datasets.slice(0, 3).map((dataset) => (
-                                                                <div key={dataset.id} className="text-xs text-blue-600 hover:text-blue-800">
+                                                                <div key={dataset.id} className="text-xs text-[#377fa8] hover:text-[#377fa8]">
                                                                     <a href={`https://data.gov.il/dataset/${dataset.name}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
                                                                         <ExternalLink className="h-3 w-3" />
                                                                         {dataset.title}

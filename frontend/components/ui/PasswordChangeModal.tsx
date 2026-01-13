@@ -255,8 +255,8 @@ export function PasswordChangeModal({
                 dir={isRTL ? 'rtl' : 'ltr'}
             >
                 <DialogHeader className="text-center pb-4">
-                    <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                        <Shield className="h-8 w-8 text-blue-600" />
+                    <div className="mx-auto w-16 h-16 bg-[#377fa8]/20 rounded-full flex items-center justify-center mb-4">
+                        <Shield className="h-8 w-8 text-[#377fa8]" />
                     </div>
                     <DialogTitle className="text-xl font-bold text-gray-800 flex items-center justify-center gap-2">
                         {isRTL ? (
@@ -430,7 +430,7 @@ export function PasswordChangeModal({
                         <Button
                             onClick={handlePasswordChange}
                             disabled={isChanging || !passwordStrength.isStrong || newPassword !== confirmPassword}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                            className="flex-1 bg-[#377fa8]/20 hover:bg-[#377fa8]/20 text-white"
                         >
                             {isChanging ? (
                                 <>
@@ -448,8 +448,8 @@ export function PasswordChangeModal({
                     </div>
 
                     {/* Security Notice */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                        <p className="text-xs text-blue-700">
+                    <div className="bg-[#377fa8]/20 border border-[#377fa8]/30 rounded-lg p-3 text-center">
+                        <p className="text-xs text-[#377fa8]">
                             {isRTL ?
                                 '💡 نصيحة: استخدم كلمة مرور قوية تحتوي على أحرف كبيرة وصغيرة وأرقام ورموز خاصة' :
                                 '💡 Tip: Use a strong password with uppercase, lowercase, numbers, and special characters'

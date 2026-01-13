@@ -23,13 +23,13 @@ const UserRoleBadge = ({ role }: UserRoleBadgeProps) => {
       case "admin":
         return "bg-red-100 text-red-800 border-red-200";
       case "doctor":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return "bg-[#377fa8]/20 text-[#377fa8] border-[#377fa8]/30";
       case "secretary":
         return "bg-purple-100 text-purple-800 border-purple-200";
       case "nurse":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "lab":
-        return "bg-indigo-100 text-indigo-800 border-indigo-200";
+        return "bg-[#377fa8]/20 text-[#377fa8] border-[#377fa8]/30";
       case "x ray":
       case "xray":
       case "x-ray":

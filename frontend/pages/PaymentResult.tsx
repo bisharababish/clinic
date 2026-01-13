@@ -260,7 +260,7 @@ const PaymentResult = () => {
                 <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-2xl font-semibold">
-                            {status === "processing" && <Loader2 className="h-6 w-6 animate-spin text-blue-600" />}
+                            {status === "processing" && <Loader2 className="h-6 w-6 animate-spin text-[#377fa8]" />}
                             {status === "success" && <CheckCircle2 className="h-6 w-6 text-green-600" />}
                             {status === "failed" && <XCircle className="h-6 w-6 text-red-600" />}
                             <span>

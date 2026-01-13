@@ -258,7 +258,7 @@ const DeletionRequestsTab: React.FC = () => {
 
     const getRequestorBadge = (role: string) => {
         const roleColors = {
-            'Secretary': 'bg-blue-100 text-blue-800',
+            'Secretary': 'bg-[#377fa8]/20 text-[#377fa8]',
             'Admin': 'bg-purple-100 text-purple-800',
             'Manager': 'bg-green-100 text-green-800'
         };
@@ -513,7 +513,7 @@ const DeletionRequestsTab: React.FC = () => {
                                             <h4 className={`font-medium text-xs sm:text-sm mb-2 ${isRTL ? 'text-right' : ''}`}>
                                                 {isRTL ? ':ملاحظات المشرف' : 'Admin Notes:'}
                                             </h4>
-                                            <div className="bg-blue-50 p-2 sm:p-3 rounded-lg">
+                                            <div className="bg-[#377fa8]/20 p-2 sm:p-3 rounded-lg">
                                                 <p className={`text-xs sm:text-sm ${isRTL ? 'text-right' : ''}`}>
                                                     {request.admin_notes}
                                                 </p>

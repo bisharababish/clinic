@@ -160,9 +160,9 @@ const SecureCardInput: React.FC<SecureCardInputProps> = ({
 
     return (
         <div className={`space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <Lock className="h-5 w-5 text-blue-600" />
-                <p className="text-sm text-blue-700">
+            <div className="flex items-center gap-2 mb-4 p-3 bg-[#377fa8]/20 rounded-lg border border-[#377fa8]/30">
+                <Lock className="h-5 w-5 text-[#377fa8]" />
+                <p className="text-sm text-[#377fa8]">
                     {isRTL 
                         ? 'معلومات بطاقتك مشفرة وآمنة. لن يتم حفظ بيانات البطاقة.'
                         : 'Your card information is encrypted and secure. Card details are never stored.'

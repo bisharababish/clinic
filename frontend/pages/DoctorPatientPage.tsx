@@ -552,7 +552,7 @@ const DoctorPatientsPage: React.FC = () => {
     // Get status color
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'active': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'active': return 'bg-[#377fa8]/20 text-[#377fa8] border-[#377fa8]/30';
             case 'completed': return 'bg-green-100 text-green-800 border-green-200';
             case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
             default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -661,7 +661,7 @@ const DoctorPatientsPage: React.FC = () => {
                     <p className="text-gray-600 mb-4">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                        className="bg-[#377fa8]/20 text-white px-4 py-2 rounded-md hover:bg-[#377fa8]/20 transition-colors"
                     >
                         Refresh
                     </button>
@@ -679,7 +679,7 @@ const DoctorPatientsPage: React.FC = () => {
                         <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <div className={isRTL ? 'order-2' : 'order-1'}>
                                 <h1 className={`text-2xl font-bold text-gray-900 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                    <Users className={`h-8 w-8 text-blue-600 ${isRTL ? 'order-2' : ''}`} />
+                                    <Users className={`h-8 w-8 text-[#377fa8] ${isRTL ? 'order-2' : ''}`} />
                                     <span className={isRTL ? 'order-1' : ''}>{isRTL ? 'إدارة المرضى' : 'Patient Management'}</span>
                                 </h1>
                                 <p className="mt-1 text-sm text-gray-600">
@@ -689,7 +689,7 @@ const DoctorPatientsPage: React.FC = () => {
                             <button
                                 onClick={fetchPatients}
                                 disabled={loading}
-                                className={`bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 ${isRTL ? 'order-1 flex-row-reverse' : 'order-2'}`}
+                                className={`bg-[#377fa8]/20 text-white px-4 py-2 rounded-md hover:bg-[#377fa8]/20 transition-colors flex items-center gap-2 disabled:opacity-50 ${isRTL ? 'order-1 flex-row-reverse' : 'order-2'}`}
                             >
                                 <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -711,7 +711,7 @@ const DoctorPatientsPage: React.FC = () => {
                             placeholder={isRTL ? 'البحث عن المرضى...' : 'Search patients...'}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                            className={`${isRTL ? 'pr-10' : 'pl-10'} w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#377fa8]`}
                         />
                     </div>
                     <div className="mt-4">
@@ -728,8 +728,8 @@ const DoctorPatientsPage: React.FC = () => {
                             <div className="p-6">
                                 <div className={`flex items-start justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                     <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
-                                        <div className={`w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center ${isRTL ? 'order-2' : ''}`}>
-                                            <User className="h-6 w-6 text-blue-600" />
+                                        <div className={`w-12 h-12 bg-[#377fa8]/20 rounded-full flex items-center justify-center ${isRTL ? 'order-2' : ''}`}>
+                                            <User className="h-6 w-6 text-[#377fa8]" />
                                         </div>
                                         <div className={`${isRTL ? 'order-1 text-right' : ''}`}>
                                             <h3 className={`font-semibold text-gray-900 ${isRTL ? 'text-right' : ''}`}>{patient.name}</h3>
@@ -748,7 +748,7 @@ const DoctorPatientsPage: React.FC = () => {
                                 <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} gap-2`}>
                                     <button
                                         onClick={() => handlePatientSelect(patient)}
-                                        className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-1"
+                                        className="flex-1 bg-[#377fa8]/20 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-[#377fa8]/20 flex items-center justify-center gap-1"
                                     >
                                         <Stethoscope className="h-4 w-4" />
                                         {isRTL ? 'الملاحظات السريرية' : 'Clinical Notes'}
@@ -797,7 +797,7 @@ const DoctorPatientsPage: React.FC = () => {
                                             setIsAddingNote(true);
                                             resetNoteForm();
                                         }}
-                                        className={`bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                        className={`bg-[#377fa8]/20 text-white px-4 py-2 rounded-md hover:bg-[#377fa8]/20 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                         <Plus className="h-4 w-4" />
                                         {isRTL ? 'إضافة ملاحظة' : 'Add Note'}
                                     </button>
@@ -820,7 +820,7 @@ const DoctorPatientsPage: React.FC = () => {
 
                         <div className="p-6">
                             {/* Patient Summary */}
-                            <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                            <div className="bg-[#377fa8]/20 rounded-lg p-4 mb-6">
                                 <h3 className="font-medium text-gray-900 mb-2">{isRTL ? 'ملخص المريض' : 'Patient Summary'}</h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                                     <div>
@@ -912,7 +912,7 @@ const DoctorPatientsPage: React.FC = () => {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 type="submit"
-                                                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+                                                className="bg-[#377fa8]/20 text-white px-4 py-2 rounded-md hover:bg-[#377fa8]/20 flex items-center gap-2"
                                             >
                                                 <Save className="h-4 w-4" />
                                                 {editingNote
@@ -960,7 +960,7 @@ const DoctorPatientsPage: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => setViewingNote(note)}
-                                                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                                        className="text-[#377fa8] hover:text-[#377fa8] flex items-center gap-1"
                                                         title={isRTL ? 'عرض الملاحظة' : 'View Note'}
                                                     >
                                                         <Eye className="h-4 w-4" />
@@ -1004,9 +1004,9 @@ const DoctorPatientsPage: React.FC = () => {
 
                                             {/* Additional fields if they exist */}
                                             {note.diagnosis && (
-                                                <div className="mt-3 p-3 bg-blue-50 rounded">
-                                                    <span className="font-medium text-blue-800">Diagnosis:</span>
-                                                    <p className="text-blue-700">{note.diagnosis}</p>
+                                                <div className="mt-3 p-3 bg-[#377fa8]/20 rounded">
+                                                    <span className="font-medium text-[#377fa8]">Diagnosis:</span>
+                                                    <p className="text-[#377fa8]">{note.diagnosis}</p>
                                                 </div>
                                             )}
 
@@ -1073,7 +1073,7 @@ const DoctorPatientsPage: React.FC = () => {
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('xray')
-                                            ? 'border-blue-600 bg-blue-50'
+                                            ? 'border-[#377fa8]/30 bg-[#377fa8]/20'
                                             : 'border-gray-300 hover:border-gray-400'
                                         }`}>
                                         <Checkbox
@@ -1085,7 +1085,7 @@ const DoctorPatientsPage: React.FC = () => {
                                         <span className="font-medium">{isRTL ? 'أشعة إكس' : 'X-Ray'}</span>
                                     </div>
                                     <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('ultrasound')
-                                            ? 'border-blue-600 bg-blue-50'
+                                            ? 'border-[#377fa8]/30 bg-[#377fa8]/20'
                                             : 'border-gray-300 hover:border-gray-400'
                                         }`}>
                                         <Checkbox
@@ -1097,7 +1097,7 @@ const DoctorPatientsPage: React.FC = () => {
                                         <span className="font-medium">{isRTL ? 'موجات فوق صوتية' : 'Ultrasound'}</span>
                                     </div>
                                     <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('lab')
-                                            ? 'border-blue-600 bg-blue-50'
+                                            ? 'border-[#377fa8]/30 bg-[#377fa8]/20'
                                             : 'border-gray-300 hover:border-gray-400'
                                         }`}>
                                         <Checkbox
@@ -1109,7 +1109,7 @@ const DoctorPatientsPage: React.FC = () => {
                                         <span className="font-medium">{isRTL ? 'مختبر' : 'Lab'}</span>
                                     </div>
                                     <div className={`p-4 border-2 rounded-lg flex items-center gap-3 transition-all ${selectedServiceTypes.has('audiometry')
-                                            ? 'border-blue-600 bg-blue-50'
+                                            ? 'border-[#377fa8]/30 bg-[#377fa8]/20'
                                             : 'border-gray-300 hover:border-gray-400'
                                         }`}>
                                         <Checkbox
@@ -1197,7 +1197,7 @@ const DoctorPatientsPage: React.FC = () => {
                                                                     setIsLoadingServicePricing(newLoading);
                                                                 }
                                                             }}
-                                                            className="p-4 border-2 rounded-lg text-left transition-all border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                                                            className="p-4 border-2 rounded-lg text-left transition-all border-gray-300 hover:border-[#377fa8]/30 hover:bg-[#377fa8]/20"
                                                         >
                                                             <div className="font-medium text-gray-900">
                                                                 {isRTL ? category.nameAr : category.name}
@@ -1234,7 +1234,7 @@ const DoctorPatientsPage: React.FC = () => {
                                                             setSelectedSubtypes(newSubtypes);
                                                             setLabSearchQuery('');
                                                         }}
-                                                        className="text-sm text-blue-600 hover:text-blue-800"
+                                                        className="text-sm text-[#377fa8] hover:text-[#377fa8]"
                                                     >
                                                         {isRTL ? '← العودة للفئات' : '← Back to Categories'}
                                                     </button>
@@ -1260,7 +1260,7 @@ const DoctorPatientsPage: React.FC = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => setLabSearchQuery('')}
-                                                            className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                                                            className="mt-2 text-sm text-[#377fa8] hover:text-[#377fa8]"
                                                         >
                                                             {isRTL ? 'مسح البحث' : 'Clear search'}
                                                         </button>
@@ -1297,7 +1297,7 @@ const DoctorPatientsPage: React.FC = () => {
                                                             key={p.id}
                                                             className={`p-4 border-2 rounded-lg text-left transition-all flex items-start gap-3 ${
                                                                 isSelected
-                                                                    ? 'border-blue-600 bg-blue-50 shadow-md'
+                                                                    ? 'border-[#377fa8]/30 bg-[#377fa8]/20 shadow-md'
                                                                     : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                                                             }`}
                                                         >
@@ -1316,7 +1316,7 @@ const DoctorPatientsPage: React.FC = () => {
                                                                     </div>
                                                                 )}
                                                                 <div className="text-sm text-gray-600 mt-1">
-                                                                    {isRTL ? 'السعر' : 'Price'}: <span className="font-bold text-blue-600">₪{p.price}</span> {p.currency}
+                                                                    {isRTL ? 'السعر' : 'Price'}: <span className="font-bold text-[#377fa8]">₪{p.price}</span> {p.currency}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1343,7 +1343,7 @@ const DoctorPatientsPage: React.FC = () => {
 
                             {/* Summary of Selected Services */}
                             {selectedSubtypes.size > 0 && (
-                                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div className="mb-6 p-4 bg-[#377fa8]/20 border border-[#377fa8]/30 rounded-lg">
                                     <div className="text-sm font-medium text-gray-700 mb-3">{isRTL ? 'الخدمات المختارة' : 'Selected Services'}</div>
                                     <div className="space-y-2">
                                         {Array.from(selectedSubtypes.values()).map((subtypeInfo, idx) => {
@@ -1358,14 +1358,14 @@ const DoctorPatientsPage: React.FC = () => {
                                                             ({subtypeInfo.serviceType})
                                                         </span>
                                                     </div>
-                                                    <span className="text-sm font-bold text-blue-600">₪{subtypeInfo.price}</span>
+                                                    <span className="text-sm font-bold text-[#377fa8]">₪{subtypeInfo.price}</span>
                                                 </div>
                                             );
                                         })}
                                     </div>
-                                    <div className="mt-3 pt-3 border-t border-blue-200 flex items-center justify-between">
+                                    <div className="mt-3 pt-3 border-t border-[#377fa8]/30 flex items-center justify-between">
                                         <span className="font-bold text-gray-900">{isRTL ? 'المجموع' : 'Total'}</span>
-                                        <span className="text-xl font-bold text-blue-600">
+                                        <span className="text-xl font-bold text-[#377fa8]">
                                             ₪{Array.from(selectedSubtypes.values()).reduce((sum, s) => sum + s.price, 0)}
                                         </span>
                                     </div>
@@ -1412,7 +1412,7 @@ const DoctorPatientsPage: React.FC = () => {
                                     disabled={selectedServiceTypes.size === 0 || (selectedServiceTypes.has('xray') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'xray')) || (selectedServiceTypes.has('ultrasound') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound')) || (selectedServiceTypes.has('audiometry') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry')) || (selectedServiceTypes.has('lab') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab'))}
                                     className={`px-6 py-2 rounded-md text-white font-medium flex items-center gap-2 ${selectedServiceTypes.size === 0 || (selectedServiceTypes.has('xray') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'xray')) || (selectedServiceTypes.has('ultrasound') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'ultrasound')) || (selectedServiceTypes.has('audiometry') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'audiometry')) || (selectedServiceTypes.has('lab') && !Array.from(selectedSubtypes.values()).some(s => s.serviceType === 'lab'))
                                             ? 'bg-gray-400 cursor-not-allowed'
-                                            : 'bg-blue-600 hover:bg-blue-700'
+                                            : 'bg-[#377fa8]/20 hover:bg-[#377fa8]/20'
                                         }`}
                                     onClick={async () => {
                                         if (selectedServiceTypes.size === 0 || !selectedPatient || !user) {
@@ -1601,7 +1601,7 @@ const DoctorPatientsPage: React.FC = () => {
                         <div className="p-6 border-b">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                    <Eye className="h-6 w-6 text-blue-600" />
+                                    <Eye className="h-6 w-6 text-[#377fa8]" />
                                     {isRTL ? 'عرض الملاحظة السريرية' : 'View Clinical Note'}
                                 </h2>
                                 <button
@@ -1659,7 +1659,7 @@ const DoctorPatientsPage: React.FC = () => {
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2">
                                             {isRTL ? 'الشكوى الرئيسية' : 'Chief Complaint'}
                                         </h3>
-                                        <div className="p-4 bg-blue-50 rounded-lg text-gray-800">
+                                        <div className="p-4 bg-[#377fa8]/20 rounded-lg text-gray-800">
                                             {viewingNote.chief_complaint}
                                         </div>
                                     </div>
@@ -1670,7 +1670,7 @@ const DoctorPatientsPage: React.FC = () => {
                                         <h3 className="text-lg font-semibold text-gray-900 mb-2">
                                             {isRTL ? 'التشخيص' : 'Diagnosis'}
                                         </h3>
-                                        <div className="p-4 bg-blue-50 rounded-lg text-gray-800">
+                                        <div className="p-4 bg-[#377fa8]/20 rounded-lg text-gray-800">
                                             {viewingNote.diagnosis}
                                         </div>
                                     </div>

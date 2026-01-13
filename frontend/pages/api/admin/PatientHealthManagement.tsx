@@ -1964,7 +1964,7 @@ const PatientHealthManagement: React.FC = () => {
     const getRoleColor = (role?: string) => {
         switch (role?.toLowerCase()) {
             case 'admin': return 'bg-red-100 text-red-800 border-red-200';
-            case 'doctor': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'doctor': return 'bg-[#377fa8]/20 text-[#377fa8] border-[#377fa8]/30';
             case 'nurse': return 'bg-green-100 text-green-800 border-green-200';
             case 'secretary': return 'bg-purple-100 text-purple-800 border-purple-200';
             case 'patient': return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -2060,11 +2060,11 @@ const PatientHealthManagement: React.FC = () => {
             <CardContent>
                 {/* Summary Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 patient-health-stats">
-                    <div className={`bg-blue-50 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
-                        <h3 className="text-sm font-medium text-blue-800 text-left">
+                    <div className={`bg-[#377fa8]/20 p-4 rounded-lg ${isRTL ? 'text-left' : ''}`}>
+                        <h3 className="text-sm font-medium text-[#377fa8] text-left">
                             {t('patientHealth.totalPatients') || 'Total Patients'}
                         </h3>
-                        <p className="text-2xl font-bold text-blue-600 text-left">{patients.length}</p>
+                        <p className="text-2xl font-bold text-[#377fa8] text-left">{patients.length}</p>
                     </div>
                     <div className="bg-green-50 p-4 rounded-lg">
                         <h3 className="text-sm font-medium text-green-800 text-left">

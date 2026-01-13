@@ -450,7 +450,7 @@ const Clinics = () => {
                                     selectedClinic.doctors.map(doctor => (
                                         <div
                                             key={doctor.id}
-                                            className={`border-b pb-4 cursor-pointer ${selectedDoctor?.id === doctor.id ? 'bg-blue-50 border rounded-lg p-4' : ''}`}
+                                            className={`border-b pb-4 cursor-pointer ${selectedDoctor?.id === doctor.id ? 'bg-[#377fa8]/20 border rounded-lg p-4' : ''}`}
                                             onClick={() => handleSelectDoctor(doctor)}
                                             dir={isRTL ? "rtl" : "ltr"}
                                         >

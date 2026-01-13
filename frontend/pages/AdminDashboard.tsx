@@ -336,8 +336,8 @@ const AdminDashboardContent = () => {
                 {/* Show loading indicator when data is still loading */}
                 {dataLoading && (
                     <div className="flex items-center mt-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                        <p className="text-sm text-blue-600">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#377fa8]/30 mr-2"></div>
+                        <p className="text-sm text-[#377fa8]">
                             {i18n.language === 'ar' ? 'جاري تحميل البيانات...' : 'Loading data...'}
                         </p>
                     </div>

@@ -44,7 +44,7 @@ const NotificationBell: React.FC = () => {
             case 'success': return 'text-green-600';
             case 'error': return 'text-red-600';
             case 'warning': return 'text-yellow-600';
-            default: return 'text-blue-600';
+            default: return 'text-[#377fa8]';
         }
     };
 
@@ -180,7 +180,7 @@ const NotificationBell: React.FC = () => {
                                 <DropdownMenuItem
                                     key={notification.id}
                                     className={`p-3 cursor-pointer hover:bg-gray-50 ${!notification.read ?
-                                        `bg-blue-50 ${isRTL ? 'border-r-4 border-r-blue-500' : 'border-l-4 border-l-blue-500'}` : ''
+                                        `bg-[#377fa8]/20 ${isRTL ? 'border-r-4 border-r-blue-500' : 'border-l-4 border-l-blue-500'}` : ''
                                         }`}
                                     onClick={() => handleNotificationClick(notification.id, notification.read)}
                                 >
@@ -196,7 +196,7 @@ const NotificationBell: React.FC = () => {
                                                     {translatedContent.title}
                                                 </span>
                                                 {!notification.read && (
-                                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                    <div className="w-2 h-2 bg-[#377fa8]/20 rounded-full"></div>
                                                 )}
                                             </div>
                                             <p className="text-xs text-gray-600 mb-1">

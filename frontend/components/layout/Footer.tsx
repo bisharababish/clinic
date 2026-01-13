@@ -183,9 +183,9 @@ const Footer: React.FC = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Facebook"
-                      className="group/social p-2 rounded-xl bg-white/60 hover:bg-blue-50 border border-primary/20 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
+                      className="group/social p-2 rounded-xl bg-white/60 hover:bg-[#377fa8]/20 border border-primary/20 hover:border-[#377fa8]/30 transition-all duration-300 shadow-sm hover:shadow-blue-200 transform hover:scale-110"
                     >
-                      <Facebook className="w-5 h-5 text-primary/80 group-hover/social:text-blue-600 transition-colors" />
+                      <Facebook className="w-5 h-5 text-primary/80 group-hover/social:text-[#377fa8] transition-colors" />
                     </a>
                     <a
                       href="https://www.instagram.com/yourclinicpage"
