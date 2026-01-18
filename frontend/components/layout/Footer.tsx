@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
                     <ul className="space-y-2" dir="rtl">
                       <li className="flex items-start">
                         <span className="ml-2 mt-1">•</span>
-                        <span>نقدم خدمات الرعاية الصحية عالية الجودة والمهنية منذ عام 2025.</span>
+                        <span>نقدم خدمات الرعاية الصحية عالية الجودة والمهنية منذ عام 2026.</span>
                       </li>
                       <li className="flex items-start">
                         <span className="ml-2 mt-1">•</span>
@@ -55,7 +55,7 @@ const Footer: React.FC = () => {
                     <ul className="space-y-2">
                       <li className="flex items-start">
                         <span className="mr-2 mt-1">•</span>
-                        <span>Providing high-quality and professional healthcare services since 2025.</span>
+                        <span>Providing high-quality and professional healthcare services since 2026.</span>
                       </li>
                       <li className="flex items-start">
                         <span className="mr-2 mt-1">•</span>

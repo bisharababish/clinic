@@ -68,8 +68,8 @@ export const TermsOfUseModal: React.FC<{ isOpen: boolean; onClose: () => void }>
 
     const content = isRTL ? {
         title: "شروط الاستخدام والخدمة",
-        lastUpdated: "آخر تحديث: 15 يونيو 2025",
-        effectiveDate: "تاريخ السريان: 15 يونيو 2025",
+        lastUpdated: "آخر تحديث: 15 يونيو 2026",
+        effectiveDate: "تاريخ السريان: 15 يونيو 2026",
         sections: [
             {
                 id: "acceptance",
@@ -160,8 +160,8 @@ export const TermsOfUseModal: React.FC<{ isOpen: boolean; onClose: () => void }>
         ]
     } : {
         title: "Terms of Use and Service",
-        lastUpdated: "Last updated: June 15, 2025",
-        effectiveDate: "Effective Date: June 15, 2025",
+        lastUpdated: "Last updated: June 15, 2026",
+        effectiveDate: "Effective Date: June 15, 2026",
         sections: [
             {
                 id: "acceptance",
@@ -336,8 +336,8 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
 
     const content = isRTL ? {
         title: "سياسة الخصوصية وحماية البيانات",
-        lastUpdated: "آخر تحديث: 15 يونيو 2025",
-        effectiveDate: "تاريخ السريان: 15 يونيو 2025",
+        lastUpdated: "آخر تحديث: 15 يونيو 2026",
+        effectiveDate: "تاريخ السريان: 15 يونيو 2026",
         sections: [
             {
                 id: "introduction",
@@ -388,9 +388,7 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                 id: "data-security",
                 title: "5. أمان البيانات",
                 content: [
-                    "نستخدم أحدث تقنيات التشفير لحماية معلوماتك أثناء النقل والتخزين.",
                     "نطبق ضوابط وصول صارمة لضمان وصول الموظفين المخولين فقط.",
-                    "نجري تدقيقات أمنية منتظمة ونحدث أنظمة الحماية باستمرار.",
                     "نتبع المعايير الدولية لأمان المعلومات الطبية (HIPAA, ISO 27001).",
                     "نحتفظ بنسخ احتياطية آمنة لضمان استمرارية الخدمة."
                 ]
@@ -402,9 +400,7 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                     "الحق في الوصول إلى سجلاتك الطبية والحصول على نسخ منها.",
                     "الحق في طلب تصحيح أي معلومات غير دقيقة في سجلاتك.",
                     "الحق في طلب تقييد استخدام أو مشاركة معلوماتك.",
-                    "الحق في سحب موافقتك على استخدام معلوماتك في أي وقت.",
-                    "الحق في رفع شكوى بشأن ممارسات الخصوصية لدينا.",
-                    "الحق في طلب حذف معلوماتك (مع مراعاة المتطلبات القانونية)."
+                    "الحق في سحب موافقتك على استخدام معلوماتك في أي وقت."
                 ]
             },
             {
@@ -422,21 +418,14 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                 id: "data-retention",
                 title: "8. الاحتفاظ بالبيانات",
                 content: [
-                    "نحتفظ بسجلاتك الطبية للمدة المطلوبة قانونياً (عادة 7-10 سنوات).",
-                    "قد نحتفظ ببعض المعلومات لفترة أطول لأغراض البحث العلمي (مع إخفاء الهوية).",
-                    "يتم حذف المعلومات غير الضرورية بشكل آمن وفقاً لجدول زمني محدد.",
-                    "في حالة وفاة المريض، قد نحتفظ بالسجلات لفترة إضافية وفقاً للقانون."
+                    "نحتفظ بسجلاتك الطبية للمدة المطلوبة قانونياً (عادة 7-10 سنوات)."
                 ]
             },
             {
                 id: "international-transfers",
                 title: "9. النقل الدولي للبيانات",
                 content: [
-                    "قد ننقل معلوماتك خارج فلسطين في حالات محدودة:",
-                    "• للحصول على استشارات طبية متخصصة",
-                    "• لمعالجة البيانات من قبل مزودي خدمات موثوقين",
-                    "• لأغراض البحث الطبي المعتمد",
-                    "نضمن أن أي نقل يتم وفقاً لمعايير الحماية الدولية المناسبة."
+                    "قد ننقل معلوماتك خارج فلسطين فقط للحصول على استشارة طبية متخصصة، إذا لزم الأمر."
                 ]
             },
             {
@@ -444,7 +433,6 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                 title: "10. التغييرات على السياسة",
                 content: [
                     "قد نحدث هذه السياسة من وقت لآخر لتعكس التغييرات في ممارساتنا أو القوانين.",
-                    "سنخطرك بأي تغييرات مهمة عبر البريد الإلكتروني أو إشعار على موقعنا.",
                     "تصبح السياسة المحدثة سارية المفعول فور نشرها على موقعنا.",
                     "استمرار استخدامك لخدماتنا يعني موافقتك على السياسة المحدثة."
                 ]
@@ -452,8 +440,8 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
         ]
     } : {
         title: "Privacy Policy and Data Protection",
-        lastUpdated: "Last updated: June 15, 2025",
-        effectiveDate: "Effective Date: June 15, 2025",
+        lastUpdated: "Last updated: June 15, 2026",
+        effectiveDate: "Effective Date: June 15, 2026",
         sections: [
             {
                 id: "introduction",
@@ -504,9 +492,7 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                 id: "data-security",
                 title: "5. Data Security",
                 content: [
-                    "We use state-of-the-art encryption technologies to protect your information during transmission and storage.",
                     "We implement strict access controls to ensure only authorized personnel can access your data.",
-                    "We conduct regular security audits and continuously update our protection systems.",
                     "We follow international standards for medical information security (HIPAA, ISO 27001).",
                     "We maintain secure backups to ensure service continuity."
                 ]
@@ -518,9 +504,7 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                     "The right to access your medical records and obtain copies.",
                     "The right to request correction of any inaccurate information in your records.",
                     "The right to request restrictions on the use or sharing of your information.",
-                    "The right to withdraw your consent for the use of your information at any time.",
-                    "The right to file a complaint about our privacy practices.",
-                    "The right to request deletion of your information (subject to legal requirements)."
+                    "The right to withdraw your consent for the use of your information at any time."
                 ]
             },
             {
@@ -538,21 +522,14 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                 id: "data-retention",
                 title: "8. Data Retention",
                 content: [
-                    "We retain your medical records for the legally required period (typically 7-10 years).",
-                    "Some information may be retained longer for scientific research purposes (anonymized).",
-                    "Unnecessary information is securely deleted according to a defined schedule.",
-                    "In case of patient death, records may be retained for an additional period as required by law."
+                    "We retain your medical records for the legally required period (typically 7-10 years)."
                 ]
             },
             {
                 id: "international-transfers",
                 title: "9. International Data Transfers",
                 content: [
-                    "We may transfer your information outside Palestine in limited cases:",
-                    "• To obtain specialized medical consultations",
-                    "• For data processing by trusted service providers",
-                    "• For approved medical research purposes",
-                    "We ensure any transfer complies with appropriate international protection standards."
+                    "We may transfer your information outside Palestine ONLY to obtain specialized medical consultation, if needed."
                 ]
             },
             {
@@ -560,7 +537,6 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                 title: "10. Changes to This Policy",
                 content: [
                     "We may update this policy from time to time to reflect changes in our practices or laws.",
-                    "We will notify you of any significant changes via email or notice on our website.",
                     "The updated policy becomes effective immediately upon posting on our website.",
                     "Continued use of our services constitutes acceptance of the updated policy."
                 ]
@@ -597,8 +573,8 @@ export const PrivacyPolicyModal: React.FC<{ isOpen: boolean; onClose: () => void
                                 </h4>
                                 <p className="text-[#377fa8] text-sm">
                                     {isRTL
-                                        ? "نحن ملتزمون بحماية خصوصيتك ومعلوماتك الطبية وفقاً لأعلى المعايير الدولية والقوانين المحلية."
-                                        : "We are committed to protecting your privacy and medical information according to the highest international standards and local laws."
+                                        ? "نحن ملتزمون بحماية خصوصيتك ومعلوماتك الطبية وفقاً لأعلى المعايير والقوانين المحلية."
+                                        : "We are committed to protecting your privacy and medical information according to the highest standards and local laws."
                                     }
                                 </p>
                             </div>
