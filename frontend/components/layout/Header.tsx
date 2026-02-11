@@ -305,7 +305,7 @@ export function Header() {
                             {/* Logo with Image */}
                             <div className={`relative ${isAdmin ? 'w-10 h-10' : 'w-12 h-12'} rounded-xl shadow-lg overflow-hidden group-hover:shadow-xl transition-all duration-200`}>
                                 <img
-                                    src="/images.png"
+                                    src="/logo.PNG"
                                     alt="Clinic Logo"
                                     className="w-full h-full object-cover object-center"
                                     onError={(e) => {
@@ -328,7 +328,7 @@ export function Header() {
                             {/* Clinic name with better typography */}
                             <div className="flex flex-col">
                                 <span className={`${isAdmin ? 'text-base' : 'text-xl'} font-bold text-gray-800 group-hover:text-[#377fa8] transition-colors duration-200 whitespace-nowrap`}>
-                                    {t('common.clinicName') || 'Bethlehem Med Center'}
+                                    {t('common.clinicName') || 'Bethlehem Medical Center'}
                                 </span>
                             </div>
                         </Link>

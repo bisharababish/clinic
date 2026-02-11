@@ -259,6 +259,7 @@ export const getMedicalTermTranslation = (
 
         // Common clinic names
         'bethlehem med center': 'payment.bethlehemMedCenter',
+        'bethlehem medical center': 'payment.bethlehemMedCenter',
         'al-makassed hospital': 'payment.alMakassedHospital',
         'hadassah hospital': 'payment.hadassahHospital',
         'al-shifa hospital': 'payment.alShifaHospital',
@@ -373,6 +374,7 @@ export const translateDoctorName = (
 
         // Common clinic names
         'bethlehem med center': 'payment.bethlehemMedCenter',
+        'bethlehem medical center': 'payment.bethlehemMedCenter',
         'al-makassed hospital': 'payment.alMakassedHospital',
         'hadassah hospital': 'payment.hadassahHospital',
         'al-shifa hospital': 'payment.alShifaHospital',

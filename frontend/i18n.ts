@@ -6,7 +6,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // English translations
 const enTranslations = {
     common: {
-        welcome: 'Welcome to Bethlehem Med Center',
+        welcome: 'Welcome to Bethlehem Medical Center',
         login: 'Login',
         signup: 'Sign Up',
         logout: 'Logout',
@@ -33,7 +33,7 @@ const enTranslations = {
         darkMode: 'Dark Mode',
         lightMode: 'Light Mode',
         loading: 'Loading...',
-        clinicName: 'Bethlehem Med Center',
+        clinicName: 'Bethlehem Medical Center',
         error: 'Error',
         success: 'Success',
         warning: 'Warning',
@@ -601,7 +601,7 @@ const enTranslations = {
         laboratory: 'Laboratory',
 
         // Common clinic names
-        bethlehemMedCenter: 'Bethlehem Med Center',
+        bethlehemMedCenter: 'Bethlehem Medical Center',
         alMakassedHospital: 'Al-Makassed Hospital',
         hadassahHospital: 'Hadassah Hospital',
         alShifaHospital: 'Al-Shifa Hospital',

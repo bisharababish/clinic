@@ -64,6 +64,16 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col relative">
+      {/* Logo Background with Low Opacity */}
+      <div 
+        className="fixed inset-0 z-0 opacity-[0.15] pointer-events-none"
+        style={{
+          backgroundImage: 'url(/logo.PNG)',
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+        }}
+      />
       <>
         {/* Language Switcher - Desktop/Tablet (kept top-right) */}
         <div className="hidden sm:block absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-6 z-50">
@@ -101,7 +111,7 @@ const Auth: React.FC = () => {
           </div>
         </div>
 
-        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-[#377fa8]/5">
+        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-[#377fa8]/5 relative z-10">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <motion.div
