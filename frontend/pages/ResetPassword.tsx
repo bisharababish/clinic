@@ -169,7 +169,7 @@ export default function ResetPassword() {
             <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-slate-50 to-[#377fa8]/5">
                 <div className="w-full max-w-md">
                     <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-[#13265C] mb-2">
+                        <h1 className="text-4xl font-bold text-[#00008b] mb-2">
                             Bethlehem Medical Center
                         </h1>
                     </div>

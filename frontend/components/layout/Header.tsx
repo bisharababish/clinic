@@ -327,7 +327,7 @@ export function Header() {
 
                             {/* Clinic name with better typography */}
                             <div className="flex flex-col">
-                                <span className={`${isAdmin ? 'text-base' : 'text-xl'} font-bold text-[#13265C] group-hover:text-[#13265C] transition-colors duration-200 whitespace-nowrap`}>
+                                <span className={`${isAdmin ? 'text-base' : 'text-xl'} font-bold text-[#00008b] group-hover:text-[#00008b] transition-colors duration-200 whitespace-nowrap`}>
                                     {t('common.clinicName') || 'Bethlehem Medical Center'}
                                 </span>
                             </div>

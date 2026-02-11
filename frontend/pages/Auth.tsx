@@ -119,7 +119,7 @@ const Auth: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <h1 className="text-4xl font-bold text-[#13265C] mb-2 ">
+                <h1 className="text-4xl font-bold text-[#00008b] mb-2 ">
                   {t('common.clinicName')}
                 </h1>
               </motion.div>
