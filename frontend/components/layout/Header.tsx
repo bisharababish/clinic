@@ -295,7 +295,7 @@ export function Header() {
                     <div className="flex items-center">
                         <Link
                             to="/"
-                            className={`flex items-center ${isAdmin ? 'gap-2' : 'gap-3'} group transition-all duration-200 hover:scale-105`}
+                            className={`flex items-center ${isAdmin ? 'gap-1.5' : 'gap-2'} group transition-all duration-200 hover:scale-105`}
                             onClick={(e) => {
                                 e.preventDefault();
                                 navigate('/home');
@@ -327,7 +327,7 @@ export function Header() {
 
                             {/* Clinic name with better typography */}
                             <div className="flex flex-col">
-                                <span className={`${isAdmin ? 'text-base' : 'text-xl'} font-bold text-[#253d91] group-hover:text-[#253d91] transition-colors duration-200 whitespace-nowrap`}>
+                                <span className={`${isAdmin ? 'text-base' : 'text-xl'} font-bold text-[#13265C] group-hover:text-[#13265C] transition-colors duration-200 whitespace-nowrap`}>
                                     {t('common.clinicName') || 'Bethlehem Medical Center'}
                                 </span>
                             </div>
