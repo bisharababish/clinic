@@ -33,7 +33,7 @@ const Footer: React.FC = () => {
                 <div className="p-2 bg-gradient-to-br from-primary to-primary/85 rounded-xl shadow-lg">
                   <Heart className="h-5 w-5 text-white" />
                 </div>
-                <h3 className="font-bold text-xl text-[#253d91]">
+                <h3 className="font-bold text-xl text-primary/85">
                   {t("common.clinicName")}
                 </h3>
               </div>
@@ -279,7 +279,7 @@ const Footer: React.FC = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/30 border border-muted/40">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
             <p className="text-sm font-medium text-muted-foreground">
-              © {currentYear} <span className="text-[#253d91]">{t("common.clinicName")}</span>. {t("footer.rights")}.
+              © {currentYear} {t("common.clinicName")}. {t("footer.rights")}.
             </p>
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
           </div>
